@@ -6,7 +6,7 @@
           <img
             src="/goose.svg"
             alt="Dostigus"
-            class="size-7"
+            class="size-7 rounded-md bg-white"
           >
           <span class="font-bold">{{ t('app.name') }}</span>
         </NuxtLink>
@@ -32,6 +32,11 @@
             color="neutral"
             variant="ghost"
             size="sm"
+          />
+          <UColorModeButton
+            size="sm"
+            color="neutral"
+            variant="ghost"
           />
         </nav>
       </UContainer>

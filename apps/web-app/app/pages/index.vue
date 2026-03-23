@@ -4,7 +4,7 @@
       <img
         src="/goose.svg"
         alt="Dostigus"
-        class="size-24"
+        class="size-24 rounded-2xl bg-white"
       >
 
       <div>
@@ -38,7 +38,7 @@
           <li
             v-for="item in items"
             :key="item.id"
-            class="flex items-center justify-between rounded-lg bg-stone-100 px-4 py-3"
+            class="flex items-center justify-between rounded-lg bg-elevated px-4 py-3"
           >
             <div>
               <span class="font-medium">{{ item.title }}</span>
