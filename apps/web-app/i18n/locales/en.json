@@ -36,7 +36,26 @@
     "search": "Search"
   },
   "catalog": {
-    "empty": "Nothing added yet"
+    "empty": "Nothing added yet",
+    "addItem": "Add entry",
+    "editItem": "Edit",
+    "deleteConfirm": "Delete this entry?",
+    "deleted": "Entry deleted",
+    "saved": "Entry saved",
+    "allTypes": "All types",
+    "allStatuses": "All statuses"
+  },
+  "form": {
+    "title": "Title",
+    "originalTitle": "Original title",
+    "author": "Author",
+    "year": "Year",
+    "type": "Type",
+    "status": "Status",
+    "rating": "Rating",
+    "notes": "Notes",
+    "startedAt": "Start date",
+    "completedAt": "Completion date"
   },
   "achievements": {
     "comingSoon": "Achievements coming soon"

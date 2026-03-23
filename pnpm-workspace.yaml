@@ -8,6 +8,8 @@ packages:
 
 autoInstallPeers: true
 
+catalog:
+  zod: ^4.3.6
 catalogs:
   dev:
     '@antfu/eslint-config': ^7.7.0

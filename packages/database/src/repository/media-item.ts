@@ -1,23 +1,33 @@
-import type { MediaType } from '../constants'
+import type { MediaStatus, MediaType } from '../constants'
 import type { Database } from '../database'
 import { and, desc, eq } from 'drizzle-orm'
 import { mediaItems } from '../tables'
 
 export function createMediaItemRepository(db: Database) {
   return {
-    async findAll(opts?: { limit?: number, offset?: number }) {
+    async findAll(opts?: { type?: MediaType, status?: MediaStatus, limit?: number, offset?: number }) {
+      const conditions = [
+        opts?.type ? eq(mediaItems.type, opts.type) : undefined,
+        opts?.status ? eq(mediaItems.status, opts.status) : undefined,
+      ].filter(Boolean)
+
       return db.query.mediaItems.findMany({
+        where: conditions.length ? and(...conditions) : undefined,
         orderBy: [desc(mediaItems.createdAt)],
         limit: opts?.limit,
         offset: opts?.offset,
       })
     },
 
-    async findByUserId(userId: string, opts?: { type?: MediaType, limit?: number, offset?: number }) {
+    async findByUserId(userId: string, opts?: { type?: MediaType, status?: MediaStatus, limit?: number, offset?: number }) {
+      const conditions = [
+        eq(mediaItems.userId, userId),
+        opts?.type ? eq(mediaItems.type, opts.type) : undefined,
+        opts?.status ? eq(mediaItems.status, opts.status) : undefined,
+      ].filter(Boolean)
+
       return db.query.mediaItems.findMany({
-        where: opts?.type
-          ? and(eq(mediaItems.userId, userId), eq(mediaItems.type, opts.type))
-          : eq(mediaItems.userId, userId),
+        where: and(...conditions),
         orderBy: [desc(mediaItems.createdAt)],
         limit: opts?.limit,
         offset: opts?.offset,

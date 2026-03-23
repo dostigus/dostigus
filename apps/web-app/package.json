@@ -21,7 +21,8 @@
     "@nuxtjs/sitemap": "catalog:integrations",
     "@vueuse/core": "catalog:integrations",
     "@vueuse/nuxt": "catalog:integrations",
-    "nuxt-auth-utils": "catalog:integrations"
+    "nuxt-auth-utils": "catalog:integrations",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@iconify-json/lucide": "catalog:dev",
