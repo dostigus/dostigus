@@ -12,6 +12,9 @@ export default defineNuxtConfig({
     databaseUrl: '',
     session: {
       password: '',
+      cookie: {
+        secure: import.meta.env?.NODE_ENV === 'production',
+      },
     },
     public: {
       dostigusCloud: false,

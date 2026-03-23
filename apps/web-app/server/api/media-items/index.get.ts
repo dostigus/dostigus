@@ -1,5 +1,10 @@
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  const session = await getUserSession(event)
   const { mediaItem } = useRepository()
 
-  return mediaItem.findAll({ limit: 20 })
+  if (!session.user) {
+    return []
+  }
+
+  return mediaItem.findByUserId(session.user.id, { limit: 20 })
 })

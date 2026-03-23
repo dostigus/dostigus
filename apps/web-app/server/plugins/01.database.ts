@@ -1,4 +1,4 @@
-import { useCreateDatabase, useMigrateDatabase } from '@dostigus/database'
+import { createRepository, useCreateDatabase, useMigrateDatabase } from '@dostigus/database'
 
 export default defineNitroPlugin(async () => {
   const config = useRuntimeConfig()
@@ -21,4 +21,22 @@ export default defineNitroPlugin(async () => {
   } catch (error) {
     logger.warn('Migration warning (may be already applied):', error)
   }
+
+  await seed(logger)
 })
+
+async function seed(logger: ReturnType<typeof useLogger>) {
+  const { user } = createRepository(useDatabase())
+
+  const existing = await user.findByEmail('goose@dostigus.ru')
+  if (existing) {
+    return
+  }
+
+  await user.create({
+    email: 'goose@dostigus.ru',
+    name: 'Гусь-достигатор',
+  })
+
+  logger.success('Seed user created')
+}

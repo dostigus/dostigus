@@ -38,6 +38,13 @@
             color="neutral"
             variant="ghost"
           />
+          <UButton
+            :label="t('nav.logout')"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            @click="logout"
+          />
         </nav>
       </UContainer>
     </header>
@@ -50,4 +57,11 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const { clear: clearSession } = useUserSession()
+
+async function logout() {
+  await $fetch('/api/auth/logout', { method: 'POST' })
+  await clearSession()
+  await navigateTo('/sign-in')
+}
 </script>
