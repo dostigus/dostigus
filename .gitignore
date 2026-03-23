@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+
+# Build
+.output
+.nuxt
+dist
+.nitro
+.cache
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+.eslintcache
+
+# Playwright
+test-results/
+playwright-report/

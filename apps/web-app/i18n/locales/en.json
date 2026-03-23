@@ -1,0 +1,52 @@
+{
+  "app": {
+    "name": "Dostigus",
+    "description": "Personal media tracker with AI Goose and achievement system"
+  },
+  "nav": {
+    "catalog": "Catalog",
+    "achievements": "Achievements",
+    "profile": "Profile",
+    "login": "Sign in",
+    "logout": "Sign out"
+  },
+  "media": {
+    "book": "Book",
+    "music": "Music",
+    "movie": "Movie",
+    "game": "Game",
+    "books": "Books",
+    "movies": "Movies",
+    "games": "Games",
+    "latest": "Latest entries"
+  },
+  "status": {
+    "planned": "Planned",
+    "in_progress": "In progress",
+    "completed": "Completed",
+    "dropped": "Dropped",
+    "on_hold": "On hold"
+  },
+  "actions": {
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search"
+  },
+  "catalog": {
+    "empty": "Nothing added yet"
+  },
+  "achievements": {
+    "comingSoon": "Achievements coming soon"
+  },
+  "profile": {
+    "loginRequired": "Sign in to see your profile"
+  },
+  "error": {
+    "notFound": "Page not found",
+    "generic": "Something went wrong",
+    "goHome": "Go home"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@dostigus/database",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./constants": "./src/constants.ts"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paralleldrive/cuid2": "catalog:integrations",
+    "drizzle-orm": "catalog:integrations",
+    "pg": "catalog:integrations"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:types",
+    "dotenv": "catalog:dev",
+    "drizzle-kit": "catalog:dev",
+    "tsx": "catalog:dev",
+    "typescript": "catalog:dev"
+  }
+}

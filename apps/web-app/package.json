@@ -1,0 +1,33 @@
+{
+  "name": "@dostigus/web-app",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev --host",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck",
+    "postinstall": "nuxt prepare",
+    "clean": "rm -rf .output",
+    "clean:modules": "rm -rf .nuxt .output node_modules"
+  },
+  "dependencies": {
+    "@dostigus/database": "workspace:*",
+    "@nuxt/ui": "catalog:integrations",
+    "@nuxtjs/i18n": "catalog:integrations",
+    "@nuxtjs/robots": "catalog:integrations",
+    "@nuxtjs/sitemap": "catalog:integrations",
+    "@vueuse/core": "catalog:integrations",
+    "@vueuse/nuxt": "catalog:integrations",
+    "nuxt-auth-utils": "catalog:integrations"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "catalog:dev",
+    "@iconify-json/simple-icons": "catalog:dev",
+    "@types/node": "catalog:types",
+    "nuxt": "catalog:dev",
+    "tailwindcss": "catalog:dev"
+  }
+}
