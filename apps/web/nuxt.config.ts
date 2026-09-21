@@ -5,6 +5,12 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
   css: ['~/assets/css/main.css'],
+  modules: ['@nuxt/fonts'],
+  fonts: {
+    families: [
+      { name: 'Nunito', provider: 'google', weights: [400, 600, 700] },
+    ],
+  },
   app: {
     head: {
       title: 'Dostigus',

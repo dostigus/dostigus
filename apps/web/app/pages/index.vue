@@ -125,7 +125,7 @@ function formatWhen(iso: string): string {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem 1.25rem;
+  padding: 1.15rem 1.4rem;
   border-bottom: 1px solid var(--line);
   background: var(--bg-raised);
 }
@@ -144,19 +144,19 @@ function formatWhen(iso: string): string {
 
 .plus {
   appearance: none;
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.6rem;
+  height: 2.6rem;
   border-radius: 999px;
-  border: 1px solid var(--accent-dim);
-  background: transparent;
-  color: var(--ink);
-  font-size: 1.4rem;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 1.45rem;
   line-height: 1;
   cursor: pointer;
 }
 
 .plus:hover {
-  border-color: var(--accent);
+  filter: brightness(1.05);
 }
 
 .stage {
@@ -167,7 +167,7 @@ function formatWhen(iso: string): string {
 .list {
   flex: 1;
   background: var(--bg-chat);
-  padding: 1.5rem 1.25rem 3rem;
+  padding: 1.75rem 1.4rem 3rem;
 }
 
 .empty {
@@ -203,10 +203,10 @@ h1 {
 
 .ghost {
   appearance: none;
-  border: 1px solid var(--accent-dim);
-  background: transparent;
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
   color: var(--ink);
-  padding: 0.55rem 1rem;
+  padding: 0.65rem 1.15rem;
   border-radius: 999px;
   cursor: pointer;
 }
@@ -222,7 +222,7 @@ h1 {
   max-width: 36rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.75rem;
 }
 
 .bot {
@@ -230,9 +230,9 @@ h1 {
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.9rem 1rem;
+  padding: 1.05rem 1.15rem;
   border: 1px solid var(--line);
-  border-radius: 0.85rem;
+  border-radius: var(--radius);
   background: var(--bg-raised);
   color: inherit;
   text-decoration: none;

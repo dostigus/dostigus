@@ -31,7 +31,7 @@ What the running Cluster does today:
   Host opens and migrates the Store on start.
 - Host UI: Bot list (empty state + `+` create, default name **New Bot**) and
   Chat (timeline + composer). Creating a Bot (or first open) stores an
-  assistant greeting that asks what the Bot is for.
+  assistant greeting that asks what the Bot is for. Host font is Nunito.
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post. Persist
   in SQLite. See [ADR 0008](adr/0008-host-store-routes.md).
 - LLM gateway (thin): if `OPENAI_COMPATIBLE_BASE_URL` and `LLM_API_KEY` (or

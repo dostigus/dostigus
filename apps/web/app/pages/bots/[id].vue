@@ -187,7 +187,7 @@ async function remove() {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1.25rem;
+  padding: 1rem 1.4rem;
   border-bottom: 1px solid var(--line);
   background: var(--bg-raised);
 }
@@ -244,7 +244,7 @@ h1 {
 .solid {
   border: 1px solid var(--accent-dim);
   background: var(--accent);
-  color: #1a140c;
+  color: var(--accent-ink);
 }
 
 .danger {
@@ -271,7 +271,7 @@ h1 {
   flex: 1;
   list-style: none;
   margin: 0;
-  padding: 1.15rem 1.25rem 1.4rem;
+  padding: 1.35rem 1.4rem 1.6rem;
   overflow: auto;
   background: var(--bg-chat);
   display: flex;
@@ -281,8 +281,8 @@ h1 {
 
 .bubble {
   max-width: min(36rem, 100%);
-  padding: 0.7rem 0.85rem;
-  border-radius: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--bg-raised);
 }
@@ -310,7 +310,7 @@ h1 {
   display: flex;
   gap: 0.7rem;
   align-items: flex-end;
-  padding: 0.8rem 1.25rem 1rem;
+  padding: 0.95rem 1.4rem 1.15rem;
   border-top: 1px solid var(--line);
   background: var(--bg-raised);
 }
@@ -331,8 +331,8 @@ textarea {
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--ink);
-  border-radius: 0.7rem;
-  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
   min-height: 3.1rem;
 }
 

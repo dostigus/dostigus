@@ -1,13 +1,16 @@
 :root {
-  color-scheme: dark;
-  --bg: #12141a;
-  --bg-raised: #1b1e27;
-  --bg-chat: #161920;
-  --line: #2a2f3c;
-  --ink: #e8e6df;
-  --muted: #9a9588;
-  --accent: #c4a574;
-  --accent-dim: #8a7349;
+  color-scheme: light;
+  --bg: #f6f3ee;
+  --bg-raised: #fffdf9;
+  --bg-chat: #f3efe8;
+  --line: #e6e0d6;
+  --ink: #2f2b26;
+  --muted: #7c756b;
+  --accent: #e07a5f;
+  --accent-dim: #d46b50;
+  --accent-ink: #fffdf9;
+  --radius: 1.25rem;
+  --radius-sm: 0.9rem;
 }
 
 *,
@@ -23,10 +26,19 @@ body,
   min-height: 100%;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-family: Nunito, ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }

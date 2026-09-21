@@ -30,6 +30,7 @@ pnpm check                        # lint → typecheck → test → build
 Open the Host, press **+**, create a Bot (default name **New Bot**), and Chat.
 The Bot greets and asks what it is for. Messages persist in the Store
 (SQLite). An LLM key is optional — see [`docs/deploy.md`](docs/deploy.md).
+Host UI text is **Nunito** (soft Kit chrome; not a landing page).
 
 ## Self-host
 

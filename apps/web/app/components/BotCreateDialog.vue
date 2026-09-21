@@ -113,8 +113,8 @@ async function create() {
   width: min(22rem, calc(100vw - 2rem));
   background: var(--bg-raised);
   border: 1px solid var(--line);
-  border-radius: 1rem;
-  padding: 1.15rem 1.25rem 1.25rem;
+  border-radius: var(--radius);
+  padding: 1.35rem 1.4rem 1.4rem;
 }
 
 h2 {
@@ -142,8 +142,8 @@ input {
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--ink);
-  border-radius: 0.6rem;
-  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
 }
 
 input:focus {
@@ -180,7 +180,7 @@ input:focus {
 .solid {
   border: 1px solid var(--accent-dim);
   background: var(--accent);
-  color: #1a140c;
+  color: var(--accent-ink);
 }
 
 .solid:disabled {

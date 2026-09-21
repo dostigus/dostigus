@@ -61,7 +61,7 @@ const emit = defineEmits<{
   z-index: 21;
   background: var(--bg-raised);
   border-top: 1px solid var(--line);
-  border-radius: 1rem 1rem 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   min-height: 42dvh;
   max-height: 80dvh;
   transform: translateY(110%);

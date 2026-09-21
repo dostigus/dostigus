@@ -22,6 +22,7 @@ one kit, and one place to learn the UI.
 - New Bot UI is a Kit binding + MCP surface, not a new Nuxt app.
 - Host empty states (Chat, Sheet) are first-class; do not replace them with a
   marketing landing page.
+- Host UI text is Nunito (headings and body), with rounded Kit chrome.
 
 ## Alternatives
 
