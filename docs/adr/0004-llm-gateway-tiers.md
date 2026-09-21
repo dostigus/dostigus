@@ -23,7 +23,9 @@ blur runtime and authoring.
 - Builder Jobs (if any) are a later, separate path — out of this MVP.
 - The Host Chat path calls an OpenAI-compatible LLM gateway
   (`POST {base}/chat/completions`) with conversation history and a system
-  prompt (new Bot, learn purpose, keep the Manifest).
+  prompt (new Bot, learn purpose, keep the Manifest). When a key is set,
+  that call includes Cluster MCP surface tools and a short tool loop
+  ([ADR 0011](0011-chat-mcp-tool-loop.md)).
 - Cluster settings live in the Store (`llm_gateway`: base URL, key
   server-side only, default Model tier, optional model overrides). The
   Owner can set them in Host Settings. Env vars remain override/bootstrap

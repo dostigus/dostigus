@@ -41,8 +41,9 @@ LLM gateway (base URL + key). Not a landing page. Store is SQLite
 (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
 First visit creates the Cluster Owner; later visits sign in. MCP surface
 is `/mcp` — set `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`) to enable
-tools; empty token leaves them disabled. That token is not the Owner
-session (`NUXT_SESSION_PASSWORD`).
+HTTP tools; empty token leaves them disabled. That token is not the Owner
+session (`NUXT_SESSION_PASSWORD`). Configured Chat invokes the same tool
+handlers in-process (no HTTP `/mcp`; delete is not a Chat tool).
 
 Self-host compose (Store volume + published image): see [`docs/deploy.md`](docs/deploy.md).
 

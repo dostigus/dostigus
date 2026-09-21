@@ -57,10 +57,13 @@ override these ids. The Host never returns the full key to the client
 
 User messages after the greeting call `POST {base}/chat/completions` with
 Chat history and a system prompt when a base URL and key are available (env
-or Store). If they are unset, the Host stores a stub reply and Chat shows
-“replies are stubs until you add a key”. If they are set and the call
-fails, the Host stores a clear error — not a stub. The greeting is always
-written to the Store.
+or Store). A configured Chat also sends Cluster MCP surface tools and
+invokes the same handlers in-process (Bots list/get/create/update and
+messages list/create; not delete). See
+[ADR 0011](adr/0011-chat-mcp-tool-loop.md). If they are unset, the Host
+stores a stub reply and Chat shows “replies are stubs until you add a
+key”. If they are set and the call fails, the Host stores a clear error —
+not a stub. The greeting is always written to the Store.
 
 Pass optional LLM vars through compose when you want env to supply the
 gateway:

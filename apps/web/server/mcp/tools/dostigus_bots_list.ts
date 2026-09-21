@@ -1,11 +1,7 @@
-import { listClusterBots, withClusterStore } from '../../utils/cluster-bots'
-import { mcpJson } from '../../utils/mcp'
 import { mcpToolsEnabled } from '../../utils/mcp-auth'
+import { registeredMcpToolOptions } from '../../utils/mcp-platform-tools'
 
 export default defineMcpTool({
-  name: 'dostigus_bots_list',
-  description: 'List Bots in the Cluster Store, newest first. Each Bot includes id, name, createdAt, and Manifest (modelTier, skillIds, modulePackageIds).',
-  annotations: { readOnlyHint: true },
+  ...registeredMcpToolOptions('dostigus_bots_list'),
   enabled: mcpToolsEnabled,
-  handler: async () => mcpJson(withClusterStore(listClusterBots)),
 })

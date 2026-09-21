@@ -57,10 +57,14 @@ What the running Cluster does today:
   OpenRouter-friendly default model ids. The Owner sets base URL + key in
   Host Settings (Store) or via compose env (env overrides Store). Chat
   sends greeting + history and a system prompt (new Bot, learn purpose,
-  keep Manifest). No key → stub reply + quiet banner. Configured call
-  that fails → clear error, not a stub. The full key is never returned
-  to the client or written to logs. Greeting is always stored. Keys are
-  **not** required for compose.
+  keep Manifest). When a key is set, Chat also sends Cluster MCP surface
+  tools and runs an in-process tool loop (same handlers as `/mcp`, no
+  HTTP hop). Day-1 tools: Bots list/get/create/update and messages
+  list/create. Delete stays off Chat. No key → stub reply + quiet banner
+  (no tools). Configured call that fails → clear error, not a stub. The
+  full key is never returned to the client or written to logs. Greeting
+  is always stored. Keys are **not** required for compose. See
+  [ADR 0011](adr/0011-chat-mcp-tool-loop.md).
 - `/health` stays `{ ok: true }`.
 - No seed/demo domain Bot. No Builder, Household, or Meal.
 

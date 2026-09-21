@@ -130,3 +130,21 @@ it('asks a new Bot to learn its purpose and keep the Manifest', () => {
     },
   })).toContain('You are new. Ask and learn what this Bot is for.')
 })
+
+it('tells a configured Chat Bot it may use the MCP surface', () => {
+  const prompt = chatSystemPrompt({
+    botName: 'Notes',
+    botId: 'bot-1',
+    tools: true,
+    manifest: {
+      name: 'Notes',
+      modelTier: 'strong',
+      skillIds: [],
+      modulePackageIds: [],
+    },
+  })
+  expect(prompt).toContain('This Chat is with Bot id=bot-1.')
+  expect(prompt).toContain('You may call Cluster MCP surface tools')
+  expect(prompt).toContain('This Cluster has one Owner')
+  expect(prompt).toContain('You cannot delete Bots from Chat')
+})

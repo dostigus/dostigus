@@ -1,3 +1,4 @@
+import { CHAT_MCP_TOOL_MAX_ITERATIONS } from '@dostigus/shared'
 import { expect, it } from 'vitest'
 import {
   completeAssistantReply,
@@ -30,14 +31,25 @@ it('reads the LLM gateway from OpenAI-compatible env', () => {
 })
 
 it('returns a stub reply when the LLM gateway has no key', async () => {
+  const invoked: string[] = []
+  const fetchImpl = (async () => {
+    throw new Error('LLM gateway must not be called without a key')
+  }) as typeof fetch
+
   const result = await completeAssistantReply({
     botName: 'New Bot',
     modelTier: 'strong',
     history: [],
     env: {},
+    fetchImpl,
+    invokeTool: async (name) => {
+      invoked.push(name)
+      return { ok: false, name, content: '{}' }
+    },
   })
   expect(result.via).toBe('stub')
   expect(result.content).toBe(stubAssistantReply())
+  expect(invoked).toEqual([])
 })
 
 it('calls chat completions with greeting history and the Manifest system prompt', async () => {
@@ -51,6 +63,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
 
   const result = await completeAssistantReply({
     botName: 'Notes later',
+    botId: 'b1',
     modelTier: 'strong',
     history: [
       {
@@ -102,6 +115,20 @@ it('calls chat completions with greeting history and the Manifest system prompt'
       },
     ],
   })
+  const payload = body as {
+    messages: Array<{ content: string }>
+    tools: Array<{ function: { name: string } }>
+  }
+  expect(payload.messages[0]?.content).toContain('You may call Cluster MCP surface tools')
+  expect(payload.tools.map((tool) => tool.function.name)).toEqual([
+    'dostigus_bots_list',
+    'dostigus_bots_get',
+    'dostigus_bots_create',
+    'dostigus_bots_update',
+    'dostigus_messages_list',
+    'dostigus_messages_create',
+  ])
+  expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_bots_delete')
   expect(JSON.stringify(body)).not.toContain('sk-test-secret-key')
 })
 
@@ -182,4 +209,156 @@ it('uses Store settings when env is unset', async () => {
     fetchImpl,
   })
   expect(result).toEqual({ via: 'llm', content: 'From Store key.' })
+})
+
+it('feeds tool errors back to the model and stores a final assistant reply', async () => {
+  const bodies: unknown[] = []
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body))
+    bodies.push(body)
+    if (bodies.length === 1) {
+      return new Response(JSON.stringify({
+        choices: [{
+          message: {
+            tool_calls: [{
+              id: 'call_1',
+              type: 'function',
+              function: {
+                name: 'dostigus_bots_get',
+                arguments: JSON.stringify({ id: 'missing' }),
+              },
+            }],
+          },
+        }],
+      }), { status: 200 })
+    }
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'That Bot is not in the Store.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    botId: 'b1',
+    modelTier: 'strong',
+    history: [],
+    env: {
+      OPENAI_COMPATIBLE_BASE_URL: 'https://example.test/v1',
+      LLM_API_KEY: 'sk-test',
+    },
+    fetchImpl,
+    invokeTool: async (name) => ({
+      ok: false,
+      name,
+      content: JSON.stringify({ error: 'Bot not found' }),
+    }),
+  })
+
+  expect(result).toEqual({
+    via: 'llm+tools',
+    content: 'That Bot is not in the Store.',
+  })
+  const followUp = bodies[1] as {
+    messages: Array<{ role: string, content?: string }>
+  }
+  expect(followUp.messages).toEqual(expect.arrayContaining([
+    {
+      role: 'tool',
+      tool_call_id: 'call_1',
+      content: JSON.stringify({ error: 'Bot not found' }),
+    },
+  ]))
+})
+
+it('stops the Chat MCP tool loop after the iteration cap', async () => {
+  let completions = 0
+  const invoked: string[] = []
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    completions += 1
+    const body = JSON.parse(String(init?.body)) as { tools?: unknown[] }
+    if (body.tools?.length) {
+      return new Response(JSON.stringify({
+        choices: [{
+          message: {
+            tool_calls: [{
+              id: `call_${completions}`,
+              type: 'function',
+              function: { name: 'dostigus_bots_list', arguments: '{}' },
+            }],
+          },
+        }],
+      }), { status: 200 })
+    }
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'I listed the Bots I could.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: {
+      OPENAI_COMPATIBLE_BASE_URL: 'https://example.test/v1',
+      LLM_API_KEY: 'sk-test',
+    },
+    fetchImpl,
+    invokeTool: async (name) => {
+      invoked.push(name)
+      return { ok: true, name, content: '{"bots":[]}' }
+    },
+  })
+
+  expect(result.via).toBe('llm+tools')
+  expect(result.content).toBe('I listed the Bots I could.')
+  expect(invoked).toHaveLength(CHAT_MCP_TOOL_MAX_ITERATIONS)
+  expect(invoked.every((name) => name === 'dostigus_bots_list')).toBe(true)
+  expect(completions).toBe(CHAT_MCP_TOOL_MAX_ITERATIONS + 1)
+})
+
+it('skips unknown tools and does not invoke delete from Chat', async () => {
+  const invoked: string[] = []
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body)) as {
+      messages: Array<{ role: string, content?: string }>
+    }
+    const last = body.messages.at(-1)
+    if (last?.role !== 'tool') {
+      return new Response(JSON.stringify({
+        choices: [{
+          message: {
+            tool_calls: [{
+              id: 'call_del',
+              type: 'function',
+              function: {
+                name: 'dostigus_bots_delete',
+                arguments: JSON.stringify({ id: 'b1' }),
+              },
+            }],
+          },
+        }],
+      }), { status: 200 })
+    }
+    expect(last.content).toContain('unknown or unavailable tool')
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'I cannot delete Bots from Chat.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: {
+      OPENAI_COMPATIBLE_BASE_URL: 'https://example.test/v1',
+      LLM_API_KEY: 'sk-test',
+    },
+    fetchImpl,
+    invokeTool: async (name) => {
+      invoked.push(name)
+      return { ok: true, name, content: '{}' }
+    },
+  })
+  expect(result.via).toBe('llm+tools')
+  expect(invoked).toEqual([])
 })

@@ -30,9 +30,11 @@ the MCP token. They do depend on the Owner cookie session.
 - Bot and Chat routes share Store helpers with MCP tools; do not grow a
   parallel REST model for Sheets or Module packages. See
   [ADR 0009](0009-mcp-toolkit-endpoint.md).
-- LLM gateway calls stay behind the Host message route. Settings persist
-  in the Store; env is override/bootstrap. The GET/PUT settings body never
-  includes the full key. See [ADR 0004](0004-llm-gateway-tiers.md).
+- LLM gateway calls stay behind the Host message route. When a key is
+  set, that route invokes the same MCP tool handlers in-process
+  ([ADR 0011](0011-chat-mcp-tool-loop.md)). Settings persist in the Store;
+  env is override/bootstrap. The GET/PUT settings body never includes the
+  full key. See [ADR 0004](0004-llm-gateway-tiers.md).
 - `/api/bots*` and `/api/settings/*` call `requireUserSession`. `/mcp`
   stays token-gated. See [ADR 0010](0010-owner-auth-session.md).
 

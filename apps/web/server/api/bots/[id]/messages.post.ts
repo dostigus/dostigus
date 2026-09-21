@@ -1,4 +1,5 @@
 import { getLlmGatewaySettings } from '@dostigus/db'
+import { invokeChatMcpTool } from '../../../utils/mcp-platform-tools'
 
 type PostBody = {
   content?: string
@@ -20,10 +21,12 @@ export default defineEventHandler(async (event) => {
     const { messages: history } = listClusterMessages(store, botId)
     const reply = await completeAssistantReply({
       botName: bot.name,
+      botId: bot.id,
       modelTier: bot.manifest.modelTier,
       history,
       manifest: bot.manifest,
       stored: getLlmGatewaySettings(store),
+      invokeTool: (name, args) => invokeChatMcpTool({ name, args, store }),
     })
     const assistant = appendClusterMessage(store, {
       botId,
