@@ -37,6 +37,12 @@ pnpm --filter @dostigus/web dev
 Nuxt 4 on **http://localhost:3000/**. The page is a Host stub: Chat empty
 state + Sheet empty state. Not a landing page.
 
+Self-host compose (Store volume + published image): see [`docs/deploy.md`](docs/deploy.md).
+
+```
+docker compose -f docker/compose.yml up --build
+```
+
 ## Commits
 
 Conventional commits (`feat:`, `docs:`, `fix:`, `chore:`). Do not force-push

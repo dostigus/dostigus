@@ -29,10 +29,17 @@ Lean monorepo + spec docs only:
 - pnpm workspace: `apps/*`, `packages/*`
 - `apps/web` — Nuxt 4 Host stub (Chat empty state + Sheet empty state)
 - `packages/ui-kit`, `packages/db`, `packages/shared` — placeholders
-- `docker/compose.yml` — self-host intent stub
+- `docker/compose.yml` — self-host Host + Store volume
 - MIT license, expanded README
 
 `pnpm install` and `pnpm check` must stay green.
+
+## Self-host (compose)
+
+`docker compose -f docker/compose.yml up --build` serves the Host on port 3000
+and mounts volume `cluster-data` for the Store. Image publishing is
+`ghcr.io/dostigus/dostigus` (see [ADR 0007](adr/0007-platform-image-tags.md)
+and [`docs/deploy.md`](deploy.md)).
 
 ## Out of scope (do not implement yet)
 

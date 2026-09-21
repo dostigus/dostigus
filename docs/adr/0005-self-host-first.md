@@ -19,8 +19,10 @@ surface.
 
 ## Consequences
 
-- `docker/compose.yml` stays in-tree as the self-host intent, even while it is
-  a stub.
+- `docker/compose.yml` boots the Host on port 3000 and mounts named volume
+  `cluster-data` at `/var/lib/dostigus` for the Store (`DATABASE_URL=file:...`).
+- Day-1 image is `ghcr.io/dostigus/dostigus` (see
+  [ADR 0007](0007-platform-image-tags.md)).
 - Do not assume SaaS auth, billing, or a central Bot registry in platform code.
 - SQLite is the day-1 store; keep the schema portable enough for Postgres later.
 - Household remains a glossary term only until a later ADR.
