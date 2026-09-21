@@ -1,14 +1,7 @@
 <template>
   <div class="shell">
     <header class="top">
-      <div>
-        <p class="mark">
-          Dostigus
-        </p>
-        <p class="sub">
-          Host · Cluster
-        </p>
-      </div>
+      <HostMark sub="Bots" />
       <div class="header-actions">
         <NuxtLink
           to="/settings"
@@ -54,8 +47,7 @@
           </p>
           <h1>No Bots yet</h1>
           <p class="hint">
-            Press + to create a Bot. Chat starts with a greeting asking what
-            it is for.
+            Create a Bot and start a Chat. You can tell it what it is for.
           </p>
           <button
             type="button"
@@ -139,18 +131,6 @@ function formatWhen(iso: string): string {
   background: var(--surface);
 }
 
-.mark {
-  margin: 0;
-  font-size: 1.05rem;
-  letter-spacing: 0.04em;
-}
-
-.sub {
-  margin: 0.2rem 0 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
 .header-actions {
   display: flex;
   align-items: center;
@@ -197,7 +177,7 @@ function formatWhen(iso: string): string {
 
 .empty {
   max-width: 26rem;
-  margin: 3rem auto 0;
+  margin: 3.25rem auto 0;
   text-align: center;
 }
 
@@ -211,43 +191,30 @@ function formatWhen(iso: string): string {
 
 h1 {
   margin: 0 0 0.6rem;
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-size: 1.7rem;
+  font-weight: 700;
 }
 
 .hint,
 .status {
-  margin: 0 0 1.25rem;
+  margin: 0 0 1.35rem;
   color: var(--text-muted);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .status.error {
   color: var(--accent);
 }
 
-.ghost,
 .solid {
   appearance: none;
-  padding: 0.65rem 1.25rem;
+  padding: 0.7rem 1.35rem;
   border-radius: 999px;
   cursor: pointer;
-}
-
-.ghost {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--text);
-}
-
-.ghost:hover {
-  border-color: var(--accent);
-}
-
-.solid {
   border: 0;
   background: var(--accent);
   color: var(--accent-ink);
+  font-weight: 600;
 }
 
 .solid:hover {
@@ -269,7 +236,7 @@ h1 {
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.05rem 1.15rem;
+  padding: 1.1rem 1.2rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -283,6 +250,7 @@ h1 {
 
 .bot-name {
   font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .bot-meta {

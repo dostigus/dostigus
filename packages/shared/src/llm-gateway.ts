@@ -18,10 +18,14 @@ export const DEFAULT_TIER_MODELS: Record<ModelTier, string> = {
 }
 
 export const STUB_ASSISTANT_REPLY
-  = 'Thanks — I will use that when we configure this Bot later. (LLM gateway is not configured; this is a stub reply.)'
+  = 'Got it. Add an OpenRouter key in Settings when you want live replies.'
 
 export const LLM_GATEWAY_ERROR_REPLY
-  = 'The LLM gateway could not complete this reply. Check the key and base URL in Settings.'
+  = 'Could not complete this reply. Check the key in Settings.'
+
+export const LLM_GATEWAY_PRESETS = ['openrouter', 'custom'] as const
+
+export type LlmGatewayPreset = typeof LLM_GATEWAY_PRESETS[number]
 
 export const LLM_GATEWAY_TIMEOUT_MS = 30_000
 export const LLM_GATEWAY_PING_TIMEOUT_MS = 10_000
@@ -260,4 +264,37 @@ export function emptyLlmGatewayStored(): LlmGatewayStored {
     defaultTier: DEFAULT_MODEL_TIER,
     modelOverrides: {},
   }
+}
+
+/** Strip trailing slashes so stored OpenRouter URLs match the default. */
+export function normalizeGatewayBaseUrl(value: string | null | undefined): string | null {
+  let normalized = trimOrUndefined(value)
+  if (!normalized) {
+    return null
+  }
+  while (normalized.endsWith('/')) {
+    normalized = normalized.slice(0, -1)
+  }
+  return normalized || null
+}
+
+export function llmGatewayPresetFromBaseUrl(
+  baseUrl: string | null | undefined,
+): LlmGatewayPreset {
+  const normalized = normalizeGatewayBaseUrl(baseUrl)
+  if (!normalized || normalized === OPENROUTER_DEFAULT_BASE_URL) {
+    return 'openrouter'
+  }
+  return 'custom'
+}
+
+/** OpenRouter is the default Settings path. Custom keeps the typed URL. */
+export function baseUrlForLlmGatewayPreset(
+  preset: LlmGatewayPreset,
+  customBaseUrl?: string | null,
+): string | null {
+  if (preset === 'openrouter') {
+    return OPENROUTER_DEFAULT_BASE_URL
+  }
+  return normalizeGatewayBaseUrl(customBaseUrl)
 }

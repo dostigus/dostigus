@@ -63,7 +63,7 @@
       v-else-if="gatewayUnset"
       class="quiet-banner"
     >
-      Replies are stubs until you add a key.
+      Replies stay quiet until you add an OpenRouter key.
       <NuxtLink to="/settings">
         Settings
       </NuxtLink>
@@ -86,11 +86,16 @@
         <p class="text">
           {{ message.content }}
         </p>
-        <p
-          v-if="isLastAssistant(message) && lastVia === 'llm+tools'"
-          class="tool-meta"
-        >
-          Used Cluster tools
+      </li>
+      <li
+        v-if="messages.length === 0 && !loadError"
+        class="empty-chat"
+      >
+        <p class="empty-title">
+          Start the Chat
+        </p>
+        <p class="empty-hint">
+          Say what this Bot is for.
         </p>
       </li>
     </ol>
@@ -122,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AssistantReplyVia, Bot, LlmGatewayPublic, Message, MessageRole } from '@dostigus/shared'
+import type { Bot, LlmGatewayPublic, Message, MessageRole } from '@dostigus/shared'
 
 const route = useRoute()
 const botId = computed(() => String(route.params.id ?? ''))
@@ -150,7 +155,6 @@ const draft = ref('')
 const sending = ref(false)
 const deleting = ref(false)
 const confirmDelete = ref(false)
-const lastVia = ref<AssistantReplyVia | null>(null)
 const threadEl = ref<HTMLOListElement | null>(null)
 
 watch(messages, () => {
@@ -169,11 +173,6 @@ function labelFor(role: MessageRole): string {
   return bot.value?.name ?? 'Bot'
 }
 
-function isLastAssistant(message: Message): boolean {
-  const last = [...messages.value].reverse().find((item) => item.role === 'assistant')
-  return last?.id === message.id
-}
-
 async function send() {
   const content = draft.value.trim()
   if (!content || sending.value || !bot.value) {
@@ -181,11 +180,10 @@ async function send() {
   }
   sending.value = true
   try {
-    const posted = await $fetch<{ via?: AssistantReplyVia }>(`/api/bots/${bot.value.id}/messages`, {
+    await $fetch(`/api/bots/${bot.value.id}/messages`, {
       method: 'POST',
       body: { content },
     })
-    lastVia.value = posted.via ?? null
     draft.value = ''
     await Promise.all([refresh(), refreshBot()])
   } finally {
@@ -362,9 +360,23 @@ h1 {
   line-height: 1.45;
 }
 
-.tool-meta {
-  margin: 0.45rem 0 0;
-  font-size: 0.72rem;
+.empty-chat {
+  margin: auto 0;
+  padding: 1.5rem 0.5rem 2.5rem;
+  text-align: center;
+  border: 0;
+  background: transparent;
+  align-self: center;
+}
+
+.empty-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.empty-hint {
+  margin: 0;
   color: var(--text-muted);
 }
 

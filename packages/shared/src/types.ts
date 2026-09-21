@@ -68,6 +68,14 @@ export const MODEL_TIERS = ['cheap', 'strong', 'code', 'toy'] as const
 
 export const DEFAULT_MODEL_TIER: ModelTier = 'strong'
 
+/** Short Host labels. Values stay the glossary Model tier names. */
+export const MODEL_TIER_LABELS: Record<ModelTier, string> = {
+  cheap: 'Cheap — everyday replies',
+  strong: 'Strong — best quality',
+  code: 'Code — technical work',
+  toy: 'Toy — experimental',
+}
+
 export function isModelTier(value: string): value is ModelTier {
   return (MODEL_TIERS as readonly string[]).includes(value)
 }

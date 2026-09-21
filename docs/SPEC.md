@@ -37,7 +37,9 @@ What the running Cluster does today:
   Register is disabled once an Owner exists. Logout clears the session.
   See [ADR 0010](adr/0010-owner-auth-session.md).
 - Host UI: Bot list (empty state + `+` create, default name **New Bot**),
-  Chat (timeline + composer), and Settings (LLM gateway). Creating a Bot
+  Chat (timeline + composer), and Settings. Settings presents OpenRouter
+  as the default LLM path (API key + Model tier). A collapsed custom
+  OpenAI-compatible URL remains for other gateways. Creating a Bot
   (or first open) stores an assistant greeting that asks what the Bot is
   for. Logged-out visitors cannot open those surfaces. Host font is
   Nunito; dark charcoal + coral-orange tokens
@@ -60,7 +62,7 @@ What the running Cluster does today:
   keep Manifest). When a key is set, Chat also sends Cluster MCP surface
   tools and runs an in-process tool loop (same handlers as `/mcp`, no
   HTTP hop). Day-1 tools: Bots list/get/create/update and messages
-  list/create. Delete stays off Chat. No key → stub reply + quiet banner
+  list/create. Delete stays off Chat. No key → quiet reply + banner
   (no tools). Configured call that fails → clear error, not a stub. The
   full key is never returned to the client or written to logs. Greeting
   is always stored. Keys are **not** required for compose. See

@@ -4,6 +4,7 @@ import {
   DEFAULT_BOT_NAME,
   DEFAULT_MODEL_TIER,
   isModelTier,
+  MODEL_TIER_LABELS,
   MODEL_TIERS,
   PRODUCT_NAME,
 } from '../../src/index'
@@ -13,6 +14,10 @@ it('exposes cheap, strong, code, and toy tiers', () => {
   expect(DEFAULT_MODEL_TIER).toBe('strong')
   expect(isModelTier('strong')).toBe(true)
   expect(isModelTier('smart')).toBe(false)
+  expect(MODEL_TIER_LABELS.cheap).toContain('Cheap')
+  expect(MODEL_TIER_LABELS.strong).toContain('Strong')
+  expect(MODEL_TIER_LABELS.code).toContain('Code')
+  expect(MODEL_TIER_LABELS.toy).toContain('Toy')
 })
 
 it('keeps the product name Dostigus', () => {

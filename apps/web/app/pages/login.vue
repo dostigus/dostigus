@@ -1,71 +1,50 @@
 <template>
-  <div class="shell">
-    <header class="top">
-      <div>
-        <p class="mark">
-          Dostigus
-        </p>
-        <p class="sub">
-          Host · Cluster
-        </p>
-      </div>
-    </header>
+  <HostAuthShell>
+    <form @submit.prevent="submit">
+      <p class="kicker">
+        Owner
+      </p>
+      <h1>Welcome back</h1>
+      <p class="hint">
+        Sign in as the Owner of this Host.
+      </p>
 
-    <main class="stage">
-      <form
-        class="card"
-        @submit.prevent="submit"
+      <label class="field">
+        <span>Email or username</span>
+        <input
+          v-model="login"
+          type="text"
+          autocomplete="username"
+          required
+        >
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input
+          v-model="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+      </label>
+
+      <p
+        v-if="message"
+        class="flash error"
       >
-        <p class="kicker">
-          Owner
-        </p>
-        <h1>Sign in</h1>
-        <p class="hint">
-          Sign in as the Cluster Owner. The Host session is a sealed cookie,
-          separate from the MCP token.
-        </p>
+        {{ message }}
+      </p>
 
-        <label class="field">
-          <span>Email or username</span>
-          <input
-            v-model="login"
-            type="text"
-            autocomplete="username"
-            required
-          >
-        </label>
-
-        <label class="field">
-          <span>Password</span>
-          <input
-            v-model="password"
-            type="password"
-            autocomplete="current-password"
-            required
-          >
-        </label>
-
-        <p
-          v-if="message"
-          class="flash error"
-        >
-          {{ message }}
-        </p>
-
-        <button
-          type="submit"
-          class="solid"
-          :disabled="busy"
-        >
-          {{ busy ? 'Signing in…' : 'Sign in' }}
-        </button>
-
-        <p class="note">
-          Password reset is not available yet.
-        </p>
-      </form>
-    </main>
-  </div>
+      <button
+        type="submit"
+        class="solid"
+        :disabled="busy"
+      >
+        {{ busy ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
+  </HostAuthShell>
 </template>
 
 <script setup lang="ts">
@@ -103,44 +82,6 @@ async function submit() {
 </script>
 
 <style scoped>
-.shell {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-.top {
-  padding: 1.15rem 1.4rem;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-}
-
-.mark {
-  margin: 0;
-  font-size: 1.05rem;
-  letter-spacing: 0.04em;
-}
-
-.sub {
-  margin: 0.2rem 0 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.stage {
-  flex: 1;
-  padding: 1.75rem 1.4rem 3rem;
-}
-
-.card {
-  max-width: 26rem;
-  margin: 2.5rem auto 0;
-  padding: 1.45rem 1.4rem 1.5rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
 .kicker {
   margin: 0 0 0.45rem;
   text-transform: uppercase;
@@ -151,31 +92,21 @@ async function submit() {
 
 h1 {
   margin: 0 0 0.55rem;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.hint,
-.note {
-  color: var(--text-muted);
-  line-height: 1.45;
+  font-size: 1.65rem;
+  font-weight: 700;
 }
 
 .hint {
-  margin: 0 0 1.15rem;
-}
-
-.note {
-  margin: 1rem 0 0;
-  font-size: 0.85rem;
-  text-align: center;
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.95rem;
   font-size: 0.85rem;
   color: var(--text-muted);
 }
@@ -186,7 +117,7 @@ input {
   background: var(--bg);
   color: var(--text);
   border-radius: var(--radius-sm);
-  padding: 0.7rem 0.85rem;
+  padding: 0.75rem 0.9rem;
 }
 
 input:focus {
@@ -207,10 +138,11 @@ input:focus {
   width: 100%;
   border: 0;
   border-radius: 999px;
-  padding: 0.7rem 1.1rem;
+  padding: 0.75rem 1.1rem;
   background: var(--accent);
   color: var(--accent-ink);
   cursor: pointer;
+  font-weight: 600;
 }
 
 .solid:hover:not(:disabled) {

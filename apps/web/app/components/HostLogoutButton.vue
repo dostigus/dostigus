@@ -5,7 +5,7 @@
     :disabled="busy"
     @click="logout"
   >
-    {{ busy ? 'Signing out…' : 'Log out' }}
+    {{ busy ? 'Signing out…' : 'Sign out' }}
   </button>
 </template>
 
