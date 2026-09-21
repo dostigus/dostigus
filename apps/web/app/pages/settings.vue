@@ -52,8 +52,7 @@
           replies until that server key is removed.
         </p>
         <p class="hint">
-          Add an OpenRouter key so Bots can reply. You can skip this and
-          still create Bots.
+          {{ hint }}
         </p>
 
         <div
@@ -204,11 +203,17 @@ const message = ref('')
 const messageError = ref(false)
 
 const busy = computed(() => saving.value || pinging.value)
+const hint = computed(() => {
+  if (preset.value === 'custom') {
+    return 'Add a key so Bots can reply. You can skip this and still create Bots.'
+  }
+  return 'Add an OpenRouter key so Bots can reply. You can skip this and still create Bots.'
+})
 const keyPlaceholder = computed(() => {
   if (gateway.value?.apiKeyMasked) {
     return `${gateway.value.apiKeyMasked} — paste to replace`
   }
-  return 'Paste your OpenRouter key'
+  return preset.value === 'openrouter' ? 'Paste your OpenRouter key' : 'Paste your API key'
 })
 
 function applyGateway(next?: LlmGatewayPublic) {
