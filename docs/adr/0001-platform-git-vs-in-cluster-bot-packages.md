@@ -19,7 +19,7 @@ the unit of data, and a Bot is a portable package inside it.
 ## Consequences
 
 - This repository stays the platform. Do not add `bots/*` git checkouts.
-- Persistence and packaging live in the Cluster store (`packages/db` stub now).
+- Persistence and packaging live in the Cluster Store (`packages/db`).
 - Sharing is export/import of packages; public share is narrow object links.
 - Contributors edit platform code here; they do not treat a user’s Bot as a PR.
 

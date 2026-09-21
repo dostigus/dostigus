@@ -6,8 +6,11 @@ export type ModulePackageId = string
 export type OwnerId = string
 export type JobId = string
 export type HouseholdId = string
+export type MessageId = string
 
 export const PRODUCT_NAME = 'Dostigus' as const
+
+export const DEFAULT_BOT_NAME = 'New Bot' as const
 
 export type Platform = {
   repo: 'dostigus/dostigus'
@@ -61,20 +64,36 @@ export type ModelTier = 'cheap' | 'strong' | 'code' | 'toy'
 
 export const MODEL_TIERS = ['cheap', 'strong', 'code', 'toy'] as const
 
+export const DEFAULT_MODEL_TIER: ModelTier = 'strong'
+
+export function isModelTier(value: string): value is ModelTier {
+  return (MODEL_TIERS as readonly string[]).includes(value)
+}
+
 export type Manifest = {
-  botId: BotId
-  persona: string
+  name: string
+  modelTier: ModelTier
   skillIds: string[]
   modulePackageIds: ModulePackageId[]
-  modelTier: ModelTier
 }
 
 export type Bot = {
   id: BotId
-  clusterId: ClusterId
-  slug: string
-  displayName: string
+  name: string
+  createdAt: string
   manifest: Manifest
+}
+
+export type MessageRole = 'user' | 'assistant' | 'system'
+
+export const MESSAGE_ROLES = ['user', 'assistant', 'system'] as const
+
+export type Message = {
+  id: MessageId
+  botId: BotId
+  role: MessageRole
+  content: string
+  createdAt: string
 }
 
 export type Orchestrator = Bot & {
@@ -130,4 +149,9 @@ export type Household = {
 export type ShareLink = {
   token: string
   objectId: string
+}
+
+/** First Chat line when a Bot is created (or first opened with no messages). */
+export function botGreetingContent(name: string): string {
+  return `Hello — I'm ${name}. I don't have a purpose yet. What should this Bot be for?`
 }

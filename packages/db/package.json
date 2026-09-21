@@ -12,6 +12,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@dostigus/shared": "workspace:*",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {

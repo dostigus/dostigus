@@ -22,6 +22,8 @@ verbs for Chat and for Sheets.
 - Host Cards/Sheets call the same tools the Bot calls.
 - `packages/db` is an implementation detail behind MCP, not a public app API.
 - Do not add REST “for the UI” that bypasses the contract.
+- Day-1 exception: Host Nitro routes write Bots and Chat until the MCP
+  surface exists ([ADR 0008](0008-host-store-routes.md)).
 
 ## Alternatives
 

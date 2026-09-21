@@ -19,18 +19,26 @@ Settled now, even if this repo only scaffolds them:
 | Self-host first | `docker compose up` is the intended path. See [ADR 0005](adr/0005-self-host-first.md). |
 | Declarative modules | SQL + templated MCP before arbitrary sandbox. See [ADR 0006](adr/0006-day-1-declarative-modules.md). |
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
-| Pilot shape | Meal-like loop: chat → card → Cook/Shopping Sheet via MCP. Not a Meal port. |
+| Pilot shape | Meal-like loop later: Chat → Card → Sheet via MCP. Not a Meal port. Day-1 is create Bot + Chat only. |
 
-## This scaffold (first PR)
+## This Host (create Bot + Chat)
 
-Lean monorepo + spec docs only:
+What the running Cluster does today:
 
-- `CONTEXT.md`, this SPEC, ADRs, `AGENTS.md`, Cursor spec-driven rule
-- pnpm workspace: `apps/*`, `packages/*`
-- `apps/web` — Nuxt 4 Host stub (Chat empty state + Sheet empty state)
-- `packages/ui-kit`, `packages/db`, `packages/shared` — placeholders
-- `docker/compose.yml` — self-host Host + Store volume
-- MIT license, expanded README
+- Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
+  `bots` (name, Manifest: `modelTier` default `strong`, empty skills/modules)
+  and `messages` (`botId`, role `user` \| `assistant` \| `system`, content).
+  Host opens and migrates the Store on start.
+- Host UI: Bot list (empty state + `+` create, default name **New Bot**) and
+  Chat (timeline + composer). Creating a Bot (or first open) stores an
+  assistant greeting that asks what the Bot is for.
+- Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post. Persist
+  in SQLite. See [ADR 0008](adr/0008-host-store-routes.md).
+- LLM gateway (thin): if `OPENAI_COMPATIBLE_BASE_URL` and `LLM_API_KEY` (or
+  `OPENROUTER_API_KEY`) are set, user messages get a real reply; otherwise a
+  stub. Greeting is always stored. Keys are **not** required for compose.
+- `/health` stays `{ ok: true }`.
+- No seed/demo domain Bot. No Builder, MCP surface, Household, or Meal.
 
 `pnpm install` and `pnpm check` must stay green.
 

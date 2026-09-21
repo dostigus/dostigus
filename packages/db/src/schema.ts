@@ -1,34 +1,25 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-/** One self-hosted Cluster (not a git remote). */
-export const clusters = sqliteTable('clusters', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-})
-
-/** Portable Bot inside a Cluster. */
+/** Portable Bot inside the Cluster Store. Manifest fields live on the row. */
 export const bots = sqliteTable('bots', {
   id: text('id').primaryKey(),
-  clusterId: text('cluster_id').notNull().references(() => clusters.id),
-  slug: text('slug').notNull(),
-  displayName: text('display_name').notNull(),
-  persona: text('persona'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  name: text('name').notNull(),
+  modelTier: text('model_tier').notNull().default('strong'),
+  skillsJson: text('skills_json').notNull().default('[]'),
+  modulesJson: text('modules_json').notNull().default('[]'),
+  createdAt: integer('created_at').notNull(),
 })
 
-/** Declarative Module package: schema + MCP surface + Kit bindings. */
-export const modules = sqliteTable('modules', {
+/** Chat line for a Bot. */
+export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(),
-  botId: text('bot_id').notNull().references(() => bots.id),
-  slug: text('slug').notNull(),
-  schemaJson: text('schema_json').notNull(),
-  mcpContractJson: text('mcp_contract_json').notNull(),
-  uiBindingsJson: text('ui_bindings_json').notNull(),
-  skillMd: text('skill_md'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-})
+  botId: text('bot_id').notNull().references(() => bots.id, { onDelete: 'cascade' }),
+  role: text('role').notNull(),
+  content: text('content').notNull(),
+  createdAt: integer('created_at').notNull(),
+}, (table) => [
+  index('messages_bot_id_created_at_idx').on(table.botId, table.createdAt),
+])
 
-export type ClusterRow = typeof clusters.$inferSelect
 export type BotRow = typeof bots.$inferSelect
-export type ModuleRow = typeof modules.$inferSelect
+export type MessageRow = typeof messages.$inferSelect

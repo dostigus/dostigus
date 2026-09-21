@@ -11,14 +11,39 @@ From the Platform checkout:
 docker compose -f docker/compose.yml up --build
 ```
 
-- Host: [http://localhost:3000/](http://localhost:3000/)
+- Host: [http://localhost:3000/](http://localhost:3000/) — Bot list; `+` creates a Bot and opens Chat
 - Health: [http://localhost:3000/health](http://localhost:3000/health)
 - Store path: `/var/lib/dostigus/cluster.sqlite` (`DATABASE_URL=file:...`)
 - Volume: `cluster-data` (compose project name `dostigus`)
+- LLM gateway is optional (see below). Compose does **not** require a key.
 
 Stop with Ctrl-C, or `docker compose -f docker/compose.yml down`. `down` does
 **not** delete `cluster-data`. Use `down -v` only when you intend to wipe the
 Store.
+
+## Environment
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `DATABASE_URL` | yes in compose | Store SQLite URL (`file:/var/lib/dostigus/cluster.sqlite`). Local `pnpm dev` defaults to `file:.data/cluster.sqlite`. |
+| `OPENAI_COMPATIBLE_BASE_URL` | no | LLM gateway base, including `/v1` (example: `https://openrouter.ai/api/v1`). |
+| `LLM_API_KEY` | no | Bearer token for that base. |
+| `OPENROUTER_API_KEY` | no | Used if `LLM_API_KEY` is unset. |
+| `LLM_MODEL` | no | Chat-completions `model`. Defaults from the Bot Model tier (`strong` → `gpt-4o`). |
+
+User messages after the greeting call `POST {base}/chat/completions` when both
+a base URL and a key are set. If they are unset (or the call fails), the Host
+stores a stub reply. The greeting is always written to the Store.
+
+Pass optional LLM vars through compose only when you want real replies:
+
+```bash
+OPENAI_COMPATIBLE_BASE_URL=https://openrouter.ai/api/v1 \
+OPENROUTER_API_KEY=sk-… \
+docker compose -f docker/compose.yml up --build
+```
+
+See [`.env.example`](../.env.example).
 
 ## Pull a published image
 

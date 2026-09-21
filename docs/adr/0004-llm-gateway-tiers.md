@@ -21,8 +21,8 @@ blur runtime and authoring.
 - Glossary term is **LLM gateway**; do not rename it per provider.
 - Tier names stay `cheap`, `strong`, `code` — no “fast/smart/opus” aliases.
 - Builder Jobs (if any) are a later, separate path — out of this MVP.
-- Gateway is not implemented in the first scaffold; the types live in
-  `packages/shared`.
+- Day-1 Host has a thin OpenAI-compatible call behind Chat (optional env;
+  stub replies if unset). Types live in `packages/shared`.
 
 ## Alternatives
 

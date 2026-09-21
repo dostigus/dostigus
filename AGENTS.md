@@ -34,8 +34,9 @@ That is `lint` → typecheck → vitest → build. Land a clean tree before
 pnpm --filter @dostigus/web dev
 ```
 
-Nuxt 4 on **http://localhost:3000/**. The page is a Host stub: Chat empty
-state + Sheet empty state. Not a landing page.
+Nuxt 4 on **http://localhost:3000/**. The Host is a Bot list + Chat. Press
+**+** to create a Bot (default **New Bot**). Not a landing page. Store is
+SQLite (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
 
 Self-host compose (Store volume + published image): see [`docs/deploy.md`](docs/deploy.md).
 

@@ -19,8 +19,12 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    prerender: {
+      crawlLinks: false,
+    },
     externals: {
-      inline: ['@dostigus/shared', '@dostigus/ui-kit'],
+      inline: ['@dostigus/db', '@dostigus/shared', '@dostigus/ui-kit'],
+      external: ['node:sqlite'],
     },
   },
 })
