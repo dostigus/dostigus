@@ -5,10 +5,11 @@
 
 ## Decision
 
-Until the MCP surface exists, the Host persists Bots and Chat through Nitro
-server routes (`/api/bots`, `/api/bots/:id/messages`) that write the Cluster
-Store (`@dostigus/db`, Drizzle schema + SQLite). These routes are Host
-internals, not a public Bot API and not a second contract for Sheets.
+Until the MCP surface exists, the Host persists Bots, Chat, and Cluster
+LLM gateway settings through Nitro server routes (`/api/bots`,
+`/api/bots/:id/messages`, `/api/settings/llm-gateway`) that write the
+Cluster Store (`@dostigus/db`, Drizzle schema + SQLite). These routes are
+Host internals, not a public Bot API and not a second contract for Sheets.
 
 ## Context
 
@@ -24,8 +25,9 @@ would leave the Host a stub.
 - Do not add a seed/demo domain Bot (no packaged Secretary / Notes / Meal).
 - When the MCP surface lands, these routes should call the same tools;
   do not grow a parallel REST model for Sheets or Module packages.
-- LLM gateway calls stay behind the Host message route (optional; stub if
-  unset). See [ADR 0004](0004-llm-gateway-tiers.md).
+- LLM gateway calls stay behind the Host message route. Settings persist
+  in the Store; env is override/bootstrap. The GET/PUT settings body never
+  includes the full key. See [ADR 0004](0004-llm-gateway-tiers.md).
 
 ## Alternatives
 

@@ -35,8 +35,9 @@ pnpm --filter @dostigus/web dev
 ```
 
 Nuxt 4 on **http://localhost:3000/**. The Host is a Bot list + Chat. Press
-**+** to create a Bot (default **New Bot**). Not a landing page. Store is
-SQLite (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
+**+** to create a Bot (default **New Bot**). **Settings** holds the Cluster
+LLM gateway (base URL + key). Not a landing page. Store is SQLite
+(`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
 
 Self-host compose (Store volume + published image): see [`docs/deploy.md`](docs/deploy.md).
 

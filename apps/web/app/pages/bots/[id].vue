@@ -16,6 +16,12 @@
         </div>
       </div>
       <div class="header-actions">
+        <NuxtLink
+          to="/settings"
+          class="settings"
+        >
+          Settings
+        </NuxtLink>
         <template v-if="confirmDelete">
           <button
             type="button"
@@ -51,6 +57,15 @@
       class="banner"
     >
       Could not open this Chat.
+    </p>
+    <p
+      v-else-if="gatewayUnset"
+      class="quiet-banner"
+    >
+      Replies are stubs until you add a key.
+      <NuxtLink to="/settings">
+        Settings
+      </NuxtLink>
     </p>
 
     <ol
@@ -100,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, Message, MessageRole } from '@dostigus/shared'
+import type { Bot, LlmGatewayPublic, Message, MessageRole } from '@dostigus/shared'
 
 const route = useRoute()
 const botId = computed(() => String(route.params.id ?? ''))
@@ -111,10 +126,14 @@ const { data: botData, error: botError } = await useFetch<{ bot: Bot }>(
 const { data: messageData, error: messageError, refresh } = await useFetch<{ messages: Message[] }>(
   () => `/api/bots/${botId.value}/messages`,
 )
+const { data: gatewayData } = await useFetch<{ llmGateway: LlmGatewayPublic }>(
+  '/api/settings/llm-gateway',
+)
 
 const bot = computed(() => botData.value?.bot)
 const messages = computed(() => messageData.value?.messages ?? [])
 const loadError = computed(() => Boolean(botError.value || messageError.value))
+const gatewayUnset = computed(() => gatewayData.value?.llmGateway.configured === false)
 
 useHead({
   title: computed(() => bot.value ? `Dostigus · ${bot.value.name}` : 'Dostigus · Chat'),
@@ -222,8 +241,16 @@ h1 {
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+}
+
+.settings {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.2rem;
 }
 
 .ghost,
@@ -265,6 +292,20 @@ h1 {
   padding: 0.7rem 1.25rem;
   color: var(--accent);
   border-bottom: 1px solid var(--line);
+}
+
+.quiet-banner {
+  margin: 0;
+  padding: 0.55rem 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.quiet-banner a {
+  color: var(--accent);
+  text-decoration: none;
 }
 
 .thread {

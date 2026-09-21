@@ -1,47 +1,64 @@
-import type { Message, ModelTier } from '@dostigus/shared'
+import type {
+  LlmGatewayStored,
+  Manifest,
+  Message,
+  ModelTier,
+  ResolvedLlmGateway,
+} from '@dostigus/shared'
 import process from 'node:process'
+import {
+  chatSystemPrompt,
+  isLlmGatewayConfigured as envOrStoreConfigured,
+  LLM_GATEWAY_ERROR_REPLY,
+  LLM_GATEWAY_PING_TIMEOUT_MS,
+  LLM_GATEWAY_TIMEOUT_MS,
+  readLlmGatewayEnv,
+  redactSecrets,
+  resolveLlmGateway,
+  STUB_ASSISTANT_REPLY,
+} from '@dostigus/shared'
 
-export const STUB_ASSISTANT_REPLY
-  = 'Thanks — I will use that when we configure this Bot later. (LLM gateway is not configured; this is a stub reply.)'
+export { readLlmGatewayEnv }
 
-type LlmEnv = {
-  baseUrl: string | undefined
-  apiKey: string | undefined
-  model: string | undefined
-}
-
-const TIER_MODELS: Record<ModelTier, string> = {
-  cheap: 'gpt-4o-mini',
-  strong: 'gpt-4o',
-  code: 'gpt-4o',
-  toy: 'gpt-4o-mini',
-}
-
-export function readLlmGatewayEnv(env: NodeJS.ProcessEnv = process.env): LlmEnv {
-  const baseUrl = trimOrUndefined(env.OPENAI_COMPATIBLE_BASE_URL)
-  const apiKey = trimOrUndefined(env.LLM_API_KEY) ?? trimOrUndefined(env.OPENROUTER_API_KEY)
-  const model = trimOrUndefined(env.LLM_MODEL)
-  return { baseUrl, apiKey, model }
-}
-
-export function isLlmGatewayConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
-  const { baseUrl, apiKey } = readLlmGatewayEnv(env)
-  return Boolean(baseUrl && apiKey)
+export function isLlmGatewayConfigured(
+  env: NodeJS.ProcessEnv = process.env,
+  stored?: LlmGatewayStored | null,
+): boolean {
+  return envOrStoreConfigured(env, stored)
 }
 
 export function stubAssistantReply(): string {
   return STUB_ASSISTANT_REPLY
 }
 
+export function gatewayErrorReply(): string {
+  return LLM_GATEWAY_ERROR_REPLY
+}
+
+export function resolveClusterLlmGateway(input: {
+  env?: NodeJS.ProcessEnv
+  stored?: LlmGatewayStored | null
+} = {}): ResolvedLlmGateway {
+  return resolveLlmGateway(
+    readLlmGatewayEnv(input.env ?? process.env),
+    input.stored,
+  )
+}
+
 export async function completeAssistantReply(input: {
   botName: string
   modelTier: ModelTier
   history: Message[]
+  manifest?: Manifest
   env?: NodeJS.ProcessEnv
+  stored?: LlmGatewayStored | null
   fetchImpl?: typeof fetch
-}): Promise<{ content: string, via: 'llm' | 'stub' }> {
-  const env = input.env ?? process.env
-  if (!isLlmGatewayConfigured(env)) {
+}): Promise<{ content: string, via: 'llm' | 'stub' | 'error' }> {
+  const resolved = resolveClusterLlmGateway({
+    env: input.env,
+    stored: input.stored,
+  })
+  if (!resolved.configured) {
     return { content: stubAssistantReply(), via: 'stub' }
   }
 
@@ -50,16 +67,77 @@ export async function completeAssistantReply(input: {
       botName: input.botName,
       modelTier: input.modelTier,
       history: input.history,
-      env,
+      manifest: input.manifest,
+      resolved,
       fetchImpl: input.fetchImpl ?? fetch,
     })
     const trimmed = content.trim()
     if (!trimmed) {
-      return { content: stubAssistantReply(), via: 'stub' }
+      return { content: gatewayErrorReply(), via: 'error' }
     }
     return { content: trimmed, via: 'llm' }
   } catch {
-    return { content: stubAssistantReply(), via: 'stub' }
+    // Do not log the key, headers, or provider body.
+    console.error('LLM gateway request failed')
+    return { content: gatewayErrorReply(), via: 'error' }
+  }
+}
+
+export async function pingLlmGateway(input: {
+  env?: NodeJS.ProcessEnv
+  stored?: LlmGatewayStored | null
+  fetchImpl?: typeof fetch
+} = {}): Promise<{ ok: boolean, error?: string }> {
+  const resolved = resolveClusterLlmGateway({
+    env: input.env,
+    stored: input.stored,
+  })
+  if (!resolved.configured || !resolved.baseUrl || !resolved.apiKey) {
+    return { ok: false, error: 'LLM gateway is not configured' }
+  }
+
+  const fetchImpl = input.fetchImpl ?? fetch
+  try {
+    const models = await fetchImpl(`${resolved.baseUrl.replace(/\/$/, '')}/models`, {
+      method: 'GET',
+      headers: gatewayHeaders(resolved.apiKey),
+      signal: AbortSignal.timeout(LLM_GATEWAY_PING_TIMEOUT_MS),
+    })
+    if (models.ok) {
+      return { ok: true }
+    }
+    if (models.status !== 404) {
+      return {
+        ok: false,
+        error: sanitizeGatewayError(`HTTP ${models.status}`, resolved.apiKey),
+      }
+    }
+
+    const completion = await fetchImpl(`${resolved.baseUrl.replace(/\/$/, '')}/chat/completions`, {
+      method: 'POST',
+      headers: gatewayHeaders(resolved.apiKey),
+      body: JSON.stringify({
+        model: resolved.modelIdFor(resolved.defaultTier),
+        max_tokens: 1,
+        messages: [{ role: 'user', content: 'ping' }],
+      }),
+      signal: AbortSignal.timeout(LLM_GATEWAY_PING_TIMEOUT_MS),
+    })
+    if (!completion.ok) {
+      return {
+        ok: false,
+        error: sanitizeGatewayError(`HTTP ${completion.status}`, resolved.apiKey),
+      }
+    }
+    return { ok: true }
+  } catch (error) {
+    return {
+      ok: false,
+      error: sanitizeGatewayError(
+        error instanceof Error ? error.message : 'LLM gateway ping failed',
+        resolved.apiKey,
+      ),
+    }
   }
 }
 
@@ -67,10 +145,11 @@ async function callOpenAiCompatible(input: {
   botName: string
   modelTier: ModelTier
   history: Message[]
-  env: NodeJS.ProcessEnv
+  manifest?: Manifest
+  resolved: ResolvedLlmGateway
   fetchImpl: typeof fetch
 }): Promise<string> {
-  const { baseUrl, apiKey, model } = readLlmGatewayEnv(input.env)
+  const { baseUrl, apiKey } = input.resolved
   if (!baseUrl || !apiKey) {
     throw new Error('LLM gateway is not configured')
   }
@@ -78,18 +157,21 @@ async function callOpenAiCompatible(input: {
   const url = `${baseUrl.replace(/\/$/, '')}/chat/completions`
   const response = await input.fetchImpl(url, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://github.com/dostigus/dostigus',
-      'X-Title': 'Dostigus',
-    },
+    headers: gatewayHeaders(apiKey),
     body: JSON.stringify({
-      model: model ?? TIER_MODELS[input.modelTier],
+      model: input.resolved.modelIdFor(input.modelTier),
       messages: [
         {
           role: 'system',
-          content: systemPrompt(input.botName),
+          content: chatSystemPrompt({
+            botName: input.botName,
+            manifest: input.manifest ?? {
+              name: input.botName,
+              modelTier: input.modelTier,
+              skillIds: [],
+              modulePackageIds: [],
+            },
+          }),
         },
         ...input.history
           .filter((message) => message.role !== 'system')
@@ -99,7 +181,7 @@ async function callOpenAiCompatible(input: {
           })),
       ],
     }),
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(LLM_GATEWAY_TIMEOUT_MS),
   })
 
   if (!response.ok) {
@@ -112,17 +194,22 @@ async function callOpenAiCompatible(input: {
   return payload.choices?.[0]?.message?.content ?? ''
 }
 
-function systemPrompt(botName: string): string {
-  return [
-    `You are ${botName}, a Bot in a Dostigus Cluster.`,
-    'The user is telling you what you are for.',
-    'Reply briefly and stay in character.',
-    'Do not claim you already have Skills or Module packages.',
-    'Configuration happens later. Do not offer to write Module packages — that is the Builder.',
-  ].join(' ')
+function gatewayHeaders(apiKey: string): Record<string, string> {
+  return {
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+    'HTTP-Referer': 'https://github.com/dostigus/dostigus',
+    'X-Title': 'Dostigus',
+  }
 }
 
-function trimOrUndefined(value: string | undefined): string | undefined {
-  const trimmed = value?.trim()
-  return trimmed || undefined
+function sanitizeGatewayError(message: string, apiKey: string | null): string {
+  const redacted = redactSecrets(message, [apiKey])
+  if (/HTTP \d{3}/.test(redacted)) {
+    return redacted.match(/HTTP \d{3}/)?.[0] ?? 'LLM gateway request failed'
+  }
+  if (/timeout|aborted|AbortError/i.test(redacted)) {
+    return 'LLM gateway timed out'
+  }
+  return 'LLM gateway request failed'
 }

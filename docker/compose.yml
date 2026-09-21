@@ -19,10 +19,16 @@ services:
       PORT: 3000
       DATABASE_URL: file:/var/lib/dostigus/cluster.sqlite
       # Optional LLM gateway — leave unset for stub Chat replies (see docs/deploy.md).
+      # Env overrides Host Settings. The Owner can also paste a key in Settings.
       # OPENAI_COMPATIBLE_BASE_URL: https://openrouter.ai/api/v1
       # LLM_API_KEY:
       # OPENROUTER_API_KEY:
       # LLM_MODEL:
+      # LLM_MODEL_CHEAP:
+      # LLM_MODEL_STRONG:
+      # LLM_MODEL_CODE:
+      # LLM_MODEL_TOY:
+      # LLM_DEFAULT_TIER:
     volumes:
       - cluster-data:/var/lib/dostigus
     healthcheck:

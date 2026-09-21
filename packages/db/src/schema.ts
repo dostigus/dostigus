@@ -10,6 +10,16 @@ export const bots = sqliteTable('bots', {
   createdAt: integer('created_at').notNull(),
 })
 
+/** Cluster LLM gateway settings. The API key stays in the Store (server-side only). */
+export const llmGateway = sqliteTable('llm_gateway', {
+  id: text('id').primaryKey(),
+  baseUrl: text('base_url'),
+  apiKey: text('api_key'),
+  defaultTier: text('default_tier').notNull().default('strong'),
+  modelsJson: text('models_json').notNull().default('{}'),
+  updatedAt: integer('updated_at').notNull(),
+})
+
 /** Chat line for a Bot. */
 export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(),
@@ -23,3 +33,4 @@ export const messages = sqliteTable('messages', {
 
 export type BotRow = typeof bots.$inferSelect
 export type MessageRow = typeof messages.$inferSelect
+export type LlmGatewayRow = typeof llmGateway.$inferSelect
