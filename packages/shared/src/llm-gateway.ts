@@ -266,13 +266,16 @@ export function emptyLlmGatewayStored(): LlmGatewayStored {
   }
 }
 
-/** Strip a trailing slash so stored OpenRouter URLs match the default. */
+/** Strip trailing slashes so stored OpenRouter URLs match the default. */
 export function normalizeGatewayBaseUrl(value: string | null | undefined): string | null {
-  const trimmed = trimOrUndefined(value)
-  if (!trimmed) {
+  let normalized = trimOrUndefined(value)
+  if (!normalized) {
     return null
   }
-  return trimmed.replace(/\/+$/, '')
+  while (normalized.endsWith('/')) {
+    normalized = normalized.slice(0, -1)
+  }
+  return normalized || null
 }
 
 export function llmGatewayPresetFromBaseUrl(

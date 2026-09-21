@@ -85,6 +85,7 @@ it('defaults Settings to the OpenRouter preset and keeps a custom URL', () => {
   expect(llmGatewayPresetFromBaseUrl('')).toBe('openrouter')
   expect(llmGatewayPresetFromBaseUrl(OPENROUTER_DEFAULT_BASE_URL)).toBe('openrouter')
   expect(llmGatewayPresetFromBaseUrl(`${OPENROUTER_DEFAULT_BASE_URL}/`)).toBe('openrouter')
+  expect(llmGatewayPresetFromBaseUrl(`${OPENROUTER_DEFAULT_BASE_URL}///`)).toBe('openrouter')
   expect(llmGatewayPresetFromBaseUrl('https://example.test/v1')).toBe('custom')
   expect(baseUrlForLlmGatewayPreset('openrouter')).toBe(OPENROUTER_DEFAULT_BASE_URL)
   expect(baseUrlForLlmGatewayPreset('openrouter', 'https://example.test/v1')).toBe(
