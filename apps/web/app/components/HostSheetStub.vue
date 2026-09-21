@@ -24,9 +24,9 @@
       </button>
     </header>
     <div class="empty">
-      <p>Nothing bound to this Sheet yet.</p>
+      <p>Nothing in this Sheet yet.</p>
       <p class="muted">
-        Module packages will fill Sheets through an MCP surface.
+        This space fills in when the Bot has something to show.
       </p>
     </div>
   </aside>

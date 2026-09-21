@@ -14,7 +14,7 @@
   >
     <h2>Create Bot</h2>
     <p class="hint">
-      Name this Bot. Chat will ask what it is for.
+      Give it a name. Chat will ask what it is for.
     </p>
     <form @submit.prevent="create">
       <label class="field">

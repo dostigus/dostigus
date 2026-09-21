@@ -150,7 +150,7 @@ it('fails clearly instead of stubbing when the LLM gateway is configured', async
 
   expect(result.via).toBe('error')
   expect(result.content).not.toBe(stubAssistantReply())
-  expect(result.content).toContain('Check the key and base URL in Settings')
+  expect(result.content).toContain('Check the key in Settings')
 })
 
 it('sanitizes ping errors so the key never appears', async () => {

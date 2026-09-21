@@ -37,7 +37,7 @@ export default defineNuxtConfig({
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         {
           name: 'description',
-          content: 'Self-host agent OS: portable bot packages + host UI sheets.',
+          content: 'Dostigus Host — Bots and Chat.',
         },
       ],
     },

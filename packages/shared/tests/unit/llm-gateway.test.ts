@@ -1,16 +1,19 @@
 import { expect, it } from 'vitest'
 import {
+  baseUrlForLlmGatewayPreset,
   chatSystemPrompt,
   DEFAULT_MODEL_TIER,
   DEFAULT_TIER_MODELS,
   emptyLlmGatewayStored,
   isLlmGatewayConfigured,
+  llmGatewayPresetFromBaseUrl,
   maskApiKey,
   OPENROUTER_DEFAULT_BASE_URL,
   readLlmGatewayEnv,
   redactSecrets,
   resolveLlmGateway,
   resolveModelId,
+  STUB_ASSISTANT_REPLY,
   toPublicLlmGateway,
 } from '../../src/index'
 
@@ -75,6 +78,29 @@ it('reads OpenAI-compatible env and treats env as override over Store', () => {
   expect(resolved.apiKey).toBe('sk-env')
   expect(resolved.defaultTier).toBe('cheap')
   expect(resolved.modelIdFor('strong')).toBe('openai/gpt-4o')
+})
+
+it('defaults Settings to the OpenRouter preset and keeps a custom URL', () => {
+  expect(llmGatewayPresetFromBaseUrl(null)).toBe('openrouter')
+  expect(llmGatewayPresetFromBaseUrl('')).toBe('openrouter')
+  expect(llmGatewayPresetFromBaseUrl(OPENROUTER_DEFAULT_BASE_URL)).toBe('openrouter')
+  expect(llmGatewayPresetFromBaseUrl(`${OPENROUTER_DEFAULT_BASE_URL}/`)).toBe('openrouter')
+  expect(llmGatewayPresetFromBaseUrl('https://example.test/v1')).toBe('custom')
+  expect(baseUrlForLlmGatewayPreset('openrouter')).toBe(OPENROUTER_DEFAULT_BASE_URL)
+  expect(baseUrlForLlmGatewayPreset('openrouter', 'https://example.test/v1')).toBe(
+    OPENROUTER_DEFAULT_BASE_URL,
+  )
+  expect(baseUrlForLlmGatewayPreset('custom', 'https://example.test/v1/')).toBe(
+    'https://example.test/v1',
+  )
+  expect(baseUrlForLlmGatewayPreset('custom', '   ')).toBe(null)
+})
+
+it('keeps an unconfigured Chat reply calm and product-facing', () => {
+  expect(STUB_ASSISTANT_REPLY).toContain('OpenRouter')
+  expect(STUB_ASSISTANT_REPLY).toContain('Settings')
+  expect(STUB_ASSISTANT_REPLY.toLowerCase()).not.toContain('stub')
+  expect(STUB_ASSISTANT_REPLY.toLowerCase()).not.toContain('llm gateway')
 })
 
 it('uses Store settings when env is unset, defaulting the base to OpenRouter', () => {

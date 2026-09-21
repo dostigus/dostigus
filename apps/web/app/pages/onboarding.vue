@@ -1,79 +1,63 @@
 <template>
-  <div class="shell">
-    <header class="top">
-      <div>
-        <p class="mark">
-          Dostigus
-        </p>
-        <p class="sub">
-          Host · Cluster
-        </p>
-      </div>
-    </header>
+  <HostAuthShell>
+    <form @submit.prevent="submit">
+      <p class="kicker">
+        First visit
+      </p>
+      <h1>Create your Owner</h1>
+      <p class="hint">
+        This Host needs one Owner. Choose a name or email and a password.
+      </p>
 
-    <main class="stage">
-      <form
-        class="card"
-        @submit.prevent="submit"
+      <label class="field">
+        <span>Email or username</span>
+        <input
+          v-model="login"
+          type="text"
+          autocomplete="username"
+          required
+        >
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input
+          v-model="password"
+          type="password"
+          autocomplete="new-password"
+          required
+          minlength="8"
+        >
+        <span class="field-hint">At least 8 characters</span>
+      </label>
+
+      <label class="field">
+        <span>Confirm password</span>
+        <input
+          v-model="confirm"
+          type="password"
+          autocomplete="new-password"
+          required
+          minlength="8"
+        >
+      </label>
+
+      <p
+        v-if="message"
+        class="flash error"
       >
-        <p class="kicker">
-          Owner
-        </p>
-        <h1>Create the Owner</h1>
-        <p class="hint">
-          This Cluster has no Owner yet. Choose an email or username and a
-          password. Day-1 allows exactly one Owner.
-        </p>
+        {{ message }}
+      </p>
 
-        <label class="field">
-          <span>Email or username</span>
-          <input
-            v-model="login"
-            type="text"
-            autocomplete="username"
-            required
-          >
-        </label>
-
-        <label class="field">
-          <span>Password</span>
-          <input
-            v-model="password"
-            type="password"
-            autocomplete="new-password"
-            required
-            minlength="8"
-          >
-        </label>
-
-        <label class="field">
-          <span>Confirm password</span>
-          <input
-            v-model="confirm"
-            type="password"
-            autocomplete="new-password"
-            required
-            minlength="8"
-          >
-        </label>
-
-        <p
-          v-if="message"
-          class="flash error"
-        >
-          {{ message }}
-        </p>
-
-        <button
-          type="submit"
-          class="solid"
-          :disabled="busy"
-        >
-          {{ busy ? 'Creating…' : 'Create Owner' }}
-        </button>
-      </form>
-    </main>
-  </div>
+      <button
+        type="submit"
+        class="solid"
+        :disabled="busy"
+      >
+        {{ busy ? 'Creating…' : 'Create Owner' }}
+      </button>
+    </form>
+  </HostAuthShell>
 </template>
 
 <script setup lang="ts">
@@ -119,44 +103,6 @@ async function submit() {
 </script>
 
 <style scoped>
-.shell {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-.top {
-  padding: 1.15rem 1.4rem;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-}
-
-.mark {
-  margin: 0;
-  font-size: 1.05rem;
-  letter-spacing: 0.04em;
-}
-
-.sub {
-  margin: 0.2rem 0 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.stage {
-  flex: 1;
-  padding: 1.75rem 1.4rem 3rem;
-}
-
-.card {
-  max-width: 26rem;
-  margin: 2.5rem auto 0;
-  padding: 1.45rem 1.4rem 1.5rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
 .kicker {
   margin: 0 0 0.45rem;
   text-transform: uppercase;
@@ -167,23 +113,27 @@ async function submit() {
 
 h1 {
   margin: 0 0 0.55rem;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.65rem;
+  font-weight: 700;
 }
 
 .hint {
-  margin: 0 0 1.15rem;
+  margin: 0 0 1.25rem;
   color: var(--text-muted);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.95rem;
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.field-hint {
+  font-size: 0.78rem;
 }
 
 input {
@@ -192,7 +142,7 @@ input {
   background: var(--bg);
   color: var(--text);
   border-radius: var(--radius-sm);
-  padding: 0.7rem 0.85rem;
+  padding: 0.75rem 0.9rem;
 }
 
 input:focus {
@@ -213,10 +163,11 @@ input:focus {
   width: 100%;
   border: 0;
   border-radius: 999px;
-  padding: 0.7rem 1.1rem;
+  padding: 0.75rem 1.1rem;
   background: var(--accent);
   color: var(--accent-ink);
   cursor: pointer;
+  font-weight: 600;
 }
 
 .solid:hover:not(:disabled) {
