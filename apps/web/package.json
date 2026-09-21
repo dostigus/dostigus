@@ -1,0 +1,24 @@
+{
+  "name": "@dostigus/web",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev --port 3000",
+    "preview": "nuxt preview",
+    "clean": "rm -rf .output",
+    "clean:modules": "rm -rf .nuxt node_modules",
+    "typecheck": "nuxt typecheck",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@dostigus/shared": "workspace:*",
+    "@dostigus/ui-kit": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "nuxt": "catalog:",
+    "vue-tsc": "catalog:"
+  }
+}

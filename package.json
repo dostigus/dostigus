@@ -1,0 +1,45 @@
+{
+  "name": "@dostigus/dostigus",
+  "private": true,
+  "packageManager": "pnpm@10.33.3",
+  "description": "Self-host agent OS: portable bot packages + host UI sheets",
+  "author": "Nick Kosarev <nick@kosarev.space>",
+  "license": "MIT",
+  "homepage": "https://github.com/dostigus/dostigus",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dostigus/dostigus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dostigus/dostigus/issues"
+  },
+  "keywords": [
+    "agent",
+    "self-host",
+    "mcp"
+  ],
+  "engines": {
+    "node": ">=22.14.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r run build",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "clean": "pnpm -r run clean",
+    "clean:modules": "pnpm -r run clean:modules && rm -rf node_modules",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build",
+    "check:full": "pnpm run lint:fix && pnpm run typecheck && pnpm run test && pnpm run build"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}
