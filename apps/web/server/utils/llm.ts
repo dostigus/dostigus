@@ -1,12 +1,16 @@
 import type {
+  AssistantReplyVia,
   LlmGatewayStored,
   Manifest,
   Message,
   ModelTier,
   ResolvedLlmGateway,
 } from '@dostigus/shared'
+import type { ChatToolInvokeResult } from './mcp-platform-tools'
+import type { OpenAiChatFunctionTool, OpenAiChatMessage, OpenAiToolCall } from './openai-tools'
 import process from 'node:process'
 import {
+  CHAT_MCP_TOOL_MAX_ITERATIONS,
   chatSystemPrompt,
   isLlmGatewayConfigured as envOrStoreConfigured,
   LLM_GATEWAY_ERROR_REPLY,
@@ -17,8 +21,16 @@ import {
   resolveLlmGateway,
   STUB_ASSISTANT_REPLY,
 } from '@dostigus/shared'
+import { chatMcpToolsAsOpenAi } from './mcp-platform-tools'
+import { isChatMcpTool } from './mcp-surface'
+import { collectToolCalls, toolResultError } from './openai-tools'
 
 export { readLlmGatewayEnv }
+
+export type ChatToolInvoker = (
+  name: string,
+  args: unknown,
+) => ChatToolInvokeResult | Promise<ChatToolInvokeResult>
 
 export function isLlmGatewayConfigured(
   env: NodeJS.ProcessEnv = process.env,
@@ -47,13 +59,16 @@ export function resolveClusterLlmGateway(input: {
 
 export async function completeAssistantReply(input: {
   botName: string
+  botId?: string
   modelTier: ModelTier
   history: Message[]
   manifest?: Manifest
   env?: NodeJS.ProcessEnv
   stored?: LlmGatewayStored | null
   fetchImpl?: typeof fetch
-}): Promise<{ content: string, via: 'llm' | 'stub' | 'error' }> {
+  invokeTool?: ChatToolInvoker
+  tools?: OpenAiChatFunctionTool[]
+}): Promise<{ content: string, via: AssistantReplyVia }> {
   const resolved = resolveClusterLlmGateway({
     env: input.env,
     stored: input.stored,
@@ -62,20 +77,36 @@ export async function completeAssistantReply(input: {
     return { content: stubAssistantReply(), via: 'stub' }
   }
 
+  const tools = input.tools ?? chatMcpToolsAsOpenAi()
+  const invokeTool = input.invokeTool ?? (async (name) => {
+    logChatTool(name, 'skip')
+    return {
+      ok: false,
+      name,
+      content: toolResultError('unknown or unavailable tool'),
+    }
+  })
+
   try {
-    const content = await callOpenAiCompatible({
+    const result = await callOpenAiCompatible({
       botName: input.botName,
+      botId: input.botId,
       modelTier: input.modelTier,
       history: input.history,
       manifest: input.manifest,
       resolved,
       fetchImpl: input.fetchImpl ?? fetch,
+      tools,
+      invokeTool,
     })
-    const trimmed = content.trim()
+    const trimmed = result.content.trim()
     if (!trimmed) {
       return { content: gatewayErrorReply(), via: 'error' }
     }
-    return { content: trimmed, via: 'llm' }
+    return {
+      content: trimmed,
+      via: result.usedTools ? 'llm+tools' : 'llm',
+    }
   } catch {
     // Do not log the key, headers, or provider body.
     console.error('LLM gateway request failed')
@@ -143,44 +174,136 @@ export async function pingLlmGateway(input: {
 
 async function callOpenAiCompatible(input: {
   botName: string
+  botId?: string
   modelTier: ModelTier
   history: Message[]
   manifest?: Manifest
   resolved: ResolvedLlmGateway
   fetchImpl: typeof fetch
-}): Promise<string> {
+  tools: OpenAiChatFunctionTool[]
+  invokeTool: ChatToolInvoker
+}): Promise<{ content: string, usedTools: boolean }> {
+  const messages: OpenAiChatMessage[] = [
+    {
+      role: 'system',
+      content: chatSystemPrompt({
+        botName: input.botName,
+        botId: input.botId,
+        tools: input.tools.length > 0,
+        manifest: input.manifest ?? {
+          name: input.botName,
+          modelTier: input.modelTier,
+          skillIds: [],
+          modulePackageIds: [],
+        },
+      }),
+    },
+    ...input.history
+      .filter((message) => message.role !== 'system')
+      .map((message) => ({
+        role: message.role,
+        content: message.content,
+      })),
+  ]
+
+  let usedTools = false
+
+  for (let iteration = 0; iteration < CHAT_MCP_TOOL_MAX_ITERATIONS; iteration += 1) {
+    const message = await postChatCompletion({
+      resolved: input.resolved,
+      modelTier: input.modelTier,
+      fetchImpl: input.fetchImpl,
+      messages,
+      tools: input.tools,
+    })
+    const toolCalls = collectToolCalls(message)
+    if (toolCalls.length === 0) {
+      return { content: message.content ?? '', usedTools }
+    }
+
+    usedTools = true
+    messages.push({
+      role: 'assistant',
+      content: message.content ?? null,
+      tool_calls: toolCalls,
+    })
+    await appendToolResults({
+      toolCalls,
+      messages,
+      invokeTool: input.invokeTool,
+    })
+  }
+
+  const finalMessage = await postChatCompletion({
+    resolved: input.resolved,
+    modelTier: input.modelTier,
+    fetchImpl: input.fetchImpl,
+    messages,
+  })
+  return { content: finalMessage.content ?? '', usedTools }
+}
+
+async function appendToolResults(input: {
+  toolCalls: OpenAiToolCall[]
+  messages: OpenAiChatMessage[]
+  invokeTool: ChatToolInvoker
+}): Promise<void> {
+  for (const call of input.toolCalls) {
+    const name = call.function?.name ?? ''
+    const toolCallId = call.id
+    if (!isChatMcpTool(name)) {
+      logChatTool(name || 'unknown', 'skip')
+      input.messages.push({
+        role: 'tool',
+        tool_call_id: toolCallId,
+        content: toolResultError('unknown or unavailable tool'),
+      })
+      continue
+    }
+
+    try {
+      const result = await input.invokeTool(name, call.function?.arguments ?? '{}')
+      input.messages.push({
+        role: 'tool',
+        tool_call_id: toolCallId,
+        content: result.content,
+      })
+    } catch {
+      logChatTool(name, 'fail')
+      input.messages.push({
+        role: 'tool',
+        tool_call_id: toolCallId,
+        content: toolResultError('tool failed'),
+      })
+    }
+  }
+}
+
+async function postChatCompletion(input: {
+  resolved: ResolvedLlmGateway
+  modelTier: ModelTier
+  fetchImpl: typeof fetch
+  messages: OpenAiChatMessage[]
+  tools?: OpenAiChatFunctionTool[]
+}): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
   const { baseUrl, apiKey } = input.resolved
   if (!baseUrl || !apiKey) {
     throw new Error('LLM gateway is not configured')
   }
 
   const url = `${baseUrl.replace(/\/$/, '')}/chat/completions`
+  const body: Record<string, unknown> = {
+    model: input.resolved.modelIdFor(input.modelTier),
+    messages: input.messages,
+  }
+  if (input.tools?.length) {
+    body.tools = input.tools
+  }
+
   const response = await input.fetchImpl(url, {
     method: 'POST',
     headers: gatewayHeaders(apiKey),
-    body: JSON.stringify({
-      model: input.resolved.modelIdFor(input.modelTier),
-      messages: [
-        {
-          role: 'system',
-          content: chatSystemPrompt({
-            botName: input.botName,
-            manifest: input.manifest ?? {
-              name: input.botName,
-              modelTier: input.modelTier,
-              skillIds: [],
-              modulePackageIds: [],
-            },
-          }),
-        },
-        ...input.history
-          .filter((message) => message.role !== 'system')
-          .map((message) => ({
-            role: message.role,
-            content: message.content,
-          })),
-      ],
-    }),
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(LLM_GATEWAY_TIMEOUT_MS),
   })
 
@@ -189,9 +312,9 @@ async function callOpenAiCompatible(input: {
   }
 
   const payload = await response.json() as {
-    choices?: Array<{ message?: { content?: string } }>
+    choices?: Array<{ message?: { content?: string | null, tool_calls?: OpenAiToolCall[] } }>
   }
-  return payload.choices?.[0]?.message?.content ?? ''
+  return payload.choices?.[0]?.message ?? {}
 }
 
 function gatewayHeaders(apiKey: string): Record<string, string> {
@@ -212,4 +335,8 @@ function sanitizeGatewayError(message: string, apiKey: string | null): string {
     return 'LLM gateway timed out'
   }
   return 'LLM gateway request failed'
+}
+
+function logChatTool(name: string, outcome: 'ok' | 'fail' | 'skip'): void {
+  console.warn(`Chat MCP tool ${name} ${outcome}`)
 }

@@ -32,8 +32,10 @@ them from the UI), so a shared Store service is the one code path.
   different gate ([ADR 0010](0010-owner-auth-session.md)): do not call
   `requireUserSession` on `/mcp`. Household is still out of scope.
 - Cursor / IDE clients are not same-origin; `allowedOrigins` is `*`.
-- LLM tool-calling in Chat, Sheets/Cards UI, Module package install, and
-  MCP Apps widgets stay out of scope.
+- Chat LLM tool-calling invokes the same file-based handlers in-process
+  (no HTTP `/mcp`, no Bearer). See [ADR 0011](0011-chat-mcp-tool-loop.md).
+  Sheets/Cards UI, Module package install, and MCP Apps widgets stay out
+  of scope.
 
 ## Alternatives
 

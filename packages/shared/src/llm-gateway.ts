@@ -26,6 +26,13 @@ export const LLM_GATEWAY_ERROR_REPLY
 export const LLM_GATEWAY_TIMEOUT_MS = 30_000
 export const LLM_GATEWAY_PING_TIMEOUT_MS = 10_000
 
+/** Chat completions that may call Cluster MCP tools. Includes a final text-only attempt. */
+export const CHAT_MCP_TOOL_MAX_ITERATIONS = 6
+
+export const ASSISTANT_REPLY_VIAS = ['llm', 'llm+tools', 'stub', 'error'] as const
+
+export type AssistantReplyVia = typeof ASSISTANT_REPLY_VIAS[number]
+
 const TIER_MODEL_ENV: Record<ModelTier, string> = {
   cheap: 'LLM_MODEL_CHEAP',
   strong: 'LLM_MODEL_STRONG',
@@ -212,6 +219,8 @@ export function chatSystemPrompt(input: {
     skillIds: string[]
     modulePackageIds: string[]
   }
+  botId?: string
+  tools?: boolean
 }): string {
   const skills = input.manifest.skillIds.length > 0
     ? input.manifest.skillIds.join(', ')
@@ -219,14 +228,29 @@ export function chatSystemPrompt(input: {
   const modules = input.manifest.modulePackageIds.length > 0
     ? input.manifest.modulePackageIds.join(', ')
     : 'none yet'
-  return [
+  const lines = [
     `You are ${input.botName}, a Bot in a Dostigus Cluster.`,
     'You are new. Ask and learn what this Bot is for.',
     'Keep the Manifest the user describes. Do not invent Skills or Module packages.',
     `Manifest: name=${input.manifest.name}; Model tier=${input.manifest.modelTier}; Skills=${skills}; Module packages=${modules}.`,
+  ]
+  if (input.botId) {
+    lines.push(`This Chat is with Bot id=${input.botId}.`)
+  }
+  if (input.tools) {
+    lines.push(
+      'You may call Cluster MCP surface tools to read and write Bots and Chat messages in this Owner Cluster.',
+      'Stay on this Bot\'s purpose. This Cluster has one Owner.',
+      'Prefer tools over guessing Store state.',
+      'The Host already stores this Chat turn; do not append it again unless asked.',
+      'You cannot delete Bots from Chat.',
+    )
+  }
+  lines.push(
     'Do not offer to write Module packages — that is the Builder.',
     'Reply briefly and stay in character.',
-  ].join(' ')
+  )
+  return lines.join(' ')
 }
 
 export function emptyLlmGatewayStored(): LlmGatewayStored {

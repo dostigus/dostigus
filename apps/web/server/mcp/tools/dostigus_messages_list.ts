@@ -1,14 +1,7 @@
-import { z } from 'zod'
-import { listClusterMessages, withClusterStore } from '../../utils/cluster-bots'
-import { mcpJson } from '../../utils/mcp'
 import { mcpToolsEnabled } from '../../utils/mcp-auth'
+import { registeredMcpToolOptions } from '../../utils/mcp-platform-tools'
 
 export default defineMcpTool({
-  name: 'dostigus_messages_list',
-  description: 'List Chat messages for a Bot in the Cluster Store, oldest first. Writes the assistant greeting if the Chat is empty.',
+  ...registeredMcpToolOptions('dostigus_messages_list'),
   enabled: mcpToolsEnabled,
-  inputSchema: {
-    botId: z.string().min(1),
-  },
-  handler: async ({ botId }) => mcpJson(withClusterStore((store) => listClusterMessages(store, botId))),
 })

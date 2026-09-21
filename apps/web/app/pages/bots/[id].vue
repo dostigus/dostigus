@@ -86,6 +86,12 @@
         <p class="text">
           {{ message.content }}
         </p>
+        <p
+          v-if="isLastAssistant(message) && lastVia === 'llm+tools'"
+          class="tool-meta"
+        >
+          Used Cluster tools
+        </p>
       </li>
     </ol>
 
@@ -116,12 +122,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, LlmGatewayPublic, Message, MessageRole } from '@dostigus/shared'
+import type { AssistantReplyVia, Bot, LlmGatewayPublic, Message, MessageRole } from '@dostigus/shared'
 
 const route = useRoute()
 const botId = computed(() => String(route.params.id ?? ''))
 
-const { data: botData, error: botError } = await useFetch<{ bot: Bot }>(
+const { data: botData, error: botError, refresh: refreshBot } = await useFetch<{ bot: Bot }>(
   () => `/api/bots/${botId.value}`,
 )
 const { data: messageData, error: messageError, refresh } = await useFetch<{ messages: Message[] }>(
@@ -144,6 +150,7 @@ const draft = ref('')
 const sending = ref(false)
 const deleting = ref(false)
 const confirmDelete = ref(false)
+const lastVia = ref<AssistantReplyVia | null>(null)
 const threadEl = ref<HTMLOListElement | null>(null)
 
 watch(messages, () => {
@@ -162,6 +169,11 @@ function labelFor(role: MessageRole): string {
   return bot.value?.name ?? 'Bot'
 }
 
+function isLastAssistant(message: Message): boolean {
+  const last = [...messages.value].reverse().find((item) => item.role === 'assistant')
+  return last?.id === message.id
+}
+
 async function send() {
   const content = draft.value.trim()
   if (!content || sending.value || !bot.value) {
@@ -169,12 +181,13 @@ async function send() {
   }
   sending.value = true
   try {
-    await $fetch(`/api/bots/${bot.value.id}/messages`, {
+    const posted = await $fetch<{ via?: AssistantReplyVia }>(`/api/bots/${bot.value.id}/messages`, {
       method: 'POST',
       body: { content },
     })
+    lastVia.value = posted.via ?? null
     draft.value = ''
-    await refresh()
+    await Promise.all([refresh(), refreshBot()])
   } finally {
     sending.value = false
   }
@@ -347,6 +360,12 @@ h1 {
   margin: 0;
   white-space: pre-wrap;
   line-height: 1.45;
+}
+
+.tool-meta {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 .composer {

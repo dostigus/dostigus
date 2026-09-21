@@ -61,6 +61,13 @@ it('keeps auth status, register, login, and health public', () => {
   }
 })
 
+it('invokes Chat MCP tools in-process from the Host message route', () => {
+  const src = readFileSync(join(apiRoot, 'bots/[id]/messages.post.ts'), 'utf8')
+  expect(src).toContain('invokeChatMcpTool')
+  expect(src).not.toMatch(/fetch\([^)]*\/mcp/)
+  expect(src).toContain('requireOwnerSession')
+})
+
 it('does not gate the MCP surface on the Host Owner session', () => {
   const mcpRoot = join(import.meta.dirname, '../../server/mcp')
   const files = [
