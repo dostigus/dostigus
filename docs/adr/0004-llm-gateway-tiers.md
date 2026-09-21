@@ -8,7 +8,7 @@
 The Cluster owns an LLM gateway. Users bring keys (OpenRouter, Anthropic,
 OpenAI, Ollama). Calls are routed by tier: `cheap` | `strong` | `code`.
 MCP Bots pin mid/`strong`. Free/random model roulette is toy only.
-The chat Bot is not the cloud agent that writes Module packages.
+The chat Bot is not the Builder that writes Module packages.
 
 ## Context
 
@@ -20,7 +20,7 @@ blur runtime and authoring.
 
 - Glossary term is **LLM gateway**; do not rename it per provider.
 - Tier names stay `cheap`, `strong`, `code` — no “fast/smart/opus” aliases.
-- Authoring agents (if any) are a later, separate path — out of this MVP.
+- Builder Jobs (if any) are a later, separate path — out of this MVP.
 - Gateway is not implemented in the first scaffold; the types live in
   `packages/shared`.
 

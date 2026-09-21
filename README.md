@@ -4,10 +4,10 @@ Self-host agent OS: portable bot packages + host UI sheets.
 
 ## Intent
 
-Run a **Cluster** on your machine. Bots are portable packages inside the Cluster
-(not git repos). The **Host shell** is one app: chat + cards + Sheets from a
-shared kit. Default path is self-host (`docker compose up`); managed hosting is
-optional and later.
+Run a **Cluster** on your machine. A **Bot** is a persona with a Manifest and
+bound Module packages (the Cluster is not a git repo). The **Host** is one app:
+Chat + Cards + Sheets from the Kit. Default path is self-host
+(`docker compose up`); managed hosting is optional and later.
 
 ## Docs
 

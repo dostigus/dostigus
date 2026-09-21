@@ -5,7 +5,7 @@
         Dostigus
       </p>
       <p class="sub">
-        Host shell · Cluster stub
+        Host · Cluster stub
       </p>
     </header>
 

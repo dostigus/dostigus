@@ -6,7 +6,7 @@
       </p>
       <h1>No messages yet</h1>
       <p class="hint">
-        A Bot will talk here. Cards and Sheets open from this thread — not a
+        A Bot will talk here. Cards and Sheets open from this Chat — not a
         separate site.
       </p>
       <button

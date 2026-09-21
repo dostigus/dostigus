@@ -9,55 +9,120 @@ code, docs, or UI copy.
 
 ## Language
 
+**Dostigus**:
+The self-host agent OS (Platform + Cluster runtime).
+_Avoid_: product (unqualified), app (the Host is the client app).
+
+**Platform**:
+The open-source monorepo (`dostigus/dostigus`): Host, Kit, runtimes. Evolves
+via git. The Platform is not a Cluster.
+_Avoid_: repo (unqualified), codebase (when you mean this monorepo).
+
 **Cluster**:
-One self-hosted instance. Holds bot manifests, module packages, the data store,
-and media/notes. A Cluster is not a git remote.
+One user’s (or Household’s) running instance: Store, Bots, Module packages,
+data. Not a git repo.
 _Avoid_: tenant, workspace, site, instance (unqualified).
 
-**Bot**:
-A portable package inside a Cluster: Storage → MCP surface → agent skills/persona.
-UI modules talk to the same MCP surface. A chat Bot is not the cloud agent that
-writes modules.
-_Avoid_: app, assistant, skill (a skill is a file inside a Module package).
+**Owner**:
+Primary account that controls the Cluster.
+_Avoid_: admin, user (unqualified).
 
-**Module package**:
-A unit a Bot can carry: schema/migrations, MCP contract, UI kit bindings, and
-`SKILL.md`. Day-1 modules are declarative (SQL + templated MCP), not arbitrary
-sandbox code.
-_Avoid_: plugin, extension, addon.
+**Host**:
+The single client app (web/PWA first): Chat + Cards + Sheets. **Host shell**
+is a synonym — prefer Host.
+_Avoid_: Host shell (prefer Host), mini-app, dashboard, admin (unqualified),
+per-bot SPA.
 
-**Host shell**:
-The single host app. Messenger chat + inline cards + Sheets from the shared
-design kit. One host — no per-bot domains or per-bot SPAs.
-_Avoid_: mini-app, dashboard, admin (unqualified).
+**Chat**:
+Message timeline with a Bot.
+_Avoid_: thread, messenger, inbox (unqualified).
+
+**Card**:
+Inline structured UI in the Chat (button, table, status).
+_Avoid_: widget, embed, attachment (unqualified).
 
 **Sheet**:
-A host overlay (drawer or modal) opened from chat or a card. Sheets are host UI
-kit surfaces bound to an MCP contract, not a separate site.
+Modal/drawer app slice from the Kit, not a separate site.
 _Avoid_: page, iframe, dialog (use Sheet; modal is a Sheet kind).
 
-**MCP contract**:
-The only Bot ↔ store (and UI ↔ store) interface. Tools, types, and permissions
-ship with the Module package. UI modules do not bypass MCP to touch storage.
-_Avoid_: API, REST, RPC (unqualified).
+**Kit**:
+Shared design system / building blocks the Host renders. Bots do not ship
+custom CSS apps.
+_Avoid_: theme, CSS app, per-bot design system.
+
+**Bot**:
+Long-lived persona in a Cluster (Skills, memory scope, MCP access). Talks to
+the user. A Bot is **not** a Module package.
+_Avoid_: app, assistant, Module package (a Bot binds packages; it is not one).
+
+**Orchestrator**:
+Optional Bot that routes inbox ideas / digests (hybrid topology; not required
+day-1).
+_Avoid_: router, dispatcher (use Orchestrator).
+
+**Builder**:
+Cluster-side coding worker that emits a Module package. Distinct from any
+Platform git agent.
+_Avoid_: cloud agent (bare), codegen bot, authoring agent.
+
+**Skill**:
+Policy/instructions a Bot follows. Not executable UI.
+_Avoid_: prompt (unqualified), tool, Module package.
+
+**Manifest**:
+Bot definition: persona, Skills, bound Module packages, Model tier.
+_Avoid_: config, profile (unqualified).
+
+**Module package**:
+Versioned unit: schema/migration, MCP tools, Kit UI bindings, Skill diffs.
+Lives in the Cluster Store. Not a Bot.
+_Avoid_: plugin, extension, addon, Bot.
+
+**Store**:
+Cluster database (SQLite day-1) holding domain data + Manifests + Module
+packages.
+_Avoid_: database (unqualified), repo.
+
+**MCP surface**:
+Tools a Bot calls to read/write the Store. The Host UI uses the same tools.
+**MCP contract** is the interface definition of that surface — prefer MCP
+surface as the runtime term.
+_Avoid_: API, REST, RPC (unqualified). Prefer MCP surface over MCP contract.
+
+**Job**:
+Approved request to run a Builder for a missing module/feature.
+_Avoid_: ticket, task (unqualified).
+
+**Apply**:
+Install a Module package into the live Cluster (after staging review).
+_Avoid_: deploy, merge, ship (unqualified).
 
 **LLM gateway**:
-The Cluster’s model router. User-supplied keys (OpenRouter / Anthropic / OpenAI
-/ Ollama). Tiers: `cheap` | `strong` | `code`. Pin mid/`strong` for MCP Bots;
-free/random is toy only.
+Cluster config mapping Model tiers to providers.
 _Avoid_: provider, model picker (the gateway owns tiers).
 
+**Model tier**:
+`cheap` | `strong` | `code` (and `toy` for unreliable free). MCP Bots pin
+strong/mid.
+_Avoid_: fast, smart, opus (aliases).
+
 **Household**:
-Later multi-user sharing of a Cluster. Not day-1. Public share is narrow object
-links, not Household.
+Optional shared membership with scoped access (later).
 _Avoid_: team, org, family (until Household ships).
+
+**Share link**:
+Narrow public token to one object, not the whole Cluster.
+_Avoid_: public share, invite (unqualified).
 
 ## Relationships
 
-- Git is only for the platform monorepo. Bots are not separate git repos.
-- A Cluster contains many Bots; a Bot contains Module packages.
-- Host shell talks to Bots through MCP contracts and renders Sheets from the
-  shared UI kit.
-- LLM gateway sits in front of every Bot call; the chat Bot does not write
-  Module packages.
-- Export/import moves Bot packages between Clusters.
+- Platform ≠ Cluster. Git is only for the Platform. A Cluster is not a git repo.
+- A Cluster has an Owner, a Store, Bots, and Module packages.
+- A Bot has a Manifest and bound Module packages. A Bot is not a Module package.
+- Builder writes Module packages via Job → Apply. Distinct from any Platform
+  git agent. The chat Bot does not write Module packages.
+- Host talks to Bots through the MCP surface and renders Cards and Sheets from
+  the Kit.
+- LLM gateway maps Model tiers to providers for every Bot call.
+- Household is later scoped membership. A Share link is a narrow public token
+  to one object, not the Cluster.

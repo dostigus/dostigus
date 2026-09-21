@@ -4,11 +4,15 @@
 
 1. Read [`docs/SPEC.md`](docs/SPEC.md) and the ADRs in [`docs/adr/`](docs/adr/).
 2. Use glossary terms from [`CONTEXT.md`](CONTEXT.md) only.
-   **Cluster, Bot, Module package, Host shell, Sheet, MCP contract, LLM gateway,
-   Household.** Do not invent synonyms. All repo docs are **English only** —
-   no mixed-language glossary or Russian product names.
-3. Stay inside SPEC scope. Do not implement agent runtime, Meal port,
-   cloud-agent module writer, marketplace, or Household/auth in this phase.
+   **Dostigus, Platform, Cluster, Owner, Host, Chat, Card, Sheet, Kit, Bot,
+   Orchestrator, Builder, Skill, Manifest, Module package, Store, MCP surface,
+   Job, Apply, LLM gateway, Model tier, Household, Share link.**
+   Prefer **Host** (Host shell is a synonym). Prefer **MCP surface** (MCP
+   contract is its interface definition). A Bot is not a Module package. Avoid
+   bare “cloud agent” — use Builder. Do not invent synonyms. All repo docs are
+   **English only**.
+3. Stay inside SPEC scope. Do not implement agent runtime, Meal port, Builder
+   Module-package writer, marketplace, or Household/auth in this phase.
 
 ## Before every commit
 
@@ -24,13 +28,13 @@ That is `lint` → typecheck → vitest → build. Land a clean tree before
 - Never `--no-verify` unless the user explicitly asks.
 - Docs-only commits still need a clean working tree if app code changed.
 
-## Local preview (Host shell)
+## Local preview (Host)
 
 ```
 pnpm --filter @dostigus/web dev
 ```
 
-Nuxt 4 on **http://localhost:3000/**. The page is a Host shell stub: chat empty
+Nuxt 4 on **http://localhost:3000/**. The page is a Host stub: Chat empty
 state + Sheet empty state. Not a landing page.
 
 ## Commits

@@ -26,7 +26,7 @@
     <div class="empty">
       <p>Nothing bound to this Sheet yet.</p>
       <p class="muted">
-        Module packages will fill Sheets through an MCP contract.
+        Module packages will fill Sheets through an MCP surface.
       </p>
     </div>
   </aside>

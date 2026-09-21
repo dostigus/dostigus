@@ -17,7 +17,7 @@ export const bots = sqliteTable('bots', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 })
 
-/** Declarative Module package: schema + MCP contract + kit bindings. */
+/** Declarative Module package: schema + MCP surface + Kit bindings. */
 export const modules = sqliteTable('modules', {
   id: text('id').primaryKey(),
   botId: text('bot_id').notNull().references(() => bots.id),

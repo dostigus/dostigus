@@ -6,7 +6,7 @@
 ## Decision
 
 Day-1 Module packages are declarative: SQL schema/migrations + a templated MCP
-contract + UI kit bindings + `SKILL.md`. Arbitrary in-cluster sandbox code
+surface + Kit UI bindings + Skill diffs. Arbitrary in-cluster sandbox code
 (eval, containers of user JS/Python, unrestricted tools) is out of scope until
 a later ADR. This is an MVP constraint, not a claim that sandbox will never
 exist.
@@ -15,14 +15,14 @@ exist.
 
 A Meal-like pilot (chat → card → Cook/Shopping Sheet) does not need a general
 code runtime. Shipping a sandbox on day-1 would dominate security, packaging,
-and the Host shell before the MCP contract is real.
+and the Host before the MCP surface is real.
 
 ## Consequences
 
 - Do not add a module runner that executes user-supplied code in this MVP.
 - MCP tools are declared and templated against SQL, not generated from random
   scripts.
-- Cloud-agent “write me a module” authoring is also out of scope (see SPEC).
+- Builder “write me a module” Jobs are also out of scope (see SPEC).
 - Revisit sandbox only after declarative install/export and Host Sheets work.
 
 ## Alternatives

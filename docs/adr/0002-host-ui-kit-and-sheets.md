@@ -5,10 +5,9 @@
 
 ## Decision
 
-One Host shell. Chat, inline cards, and Sheets / modals come from a
-shared design kit. Bots do not ship their own SPA, domain, or iframe app.
-UI modules bind to kit components and talk to storage only through the Bot’s
-MCP contract.
+One Host. Chat, Cards, and Sheets / modals come from the Kit. Bots do not
+ship their own SPA, domain, or iframe app. UI modules bind to Kit components
+and talk to the Store only through the Bot’s MCP surface.
 
 ## Context
 
@@ -19,9 +18,9 @@ one kit, and one place to learn the UI.
 ## Consequences
 
 - `apps/web` is the only user-facing app in this monorepo.
-- `packages/ui-kit` is the component barrel for Sheets and cards.
-- New Bot UI is a kit binding + MCP contract, not a new Nuxt app.
-- Host empty states (chat, Sheet) are first-class; do not replace them with a
+- `packages/ui-kit` is the Kit barrel for Sheets and Cards.
+- New Bot UI is a Kit binding + MCP surface, not a new Nuxt app.
+- Host empty states (Chat, Sheet) are first-class; do not replace them with a
   marketing landing page.
 
 ## Alternatives
