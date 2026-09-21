@@ -1,0 +1,18 @@
+# Self-host intent (ADR 0005). Stub — not a production image yet.
+# Later: `docker compose -f docker/compose.yml up` should boot the Host shell
+# and a Cluster SQLite volume.
+
+services:
+  web:
+    image: node:22-bookworm
+    working_dir: /workspace
+    command: [echo, Dostigus compose stub]
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: file:/var/lib/dostigus/cluster.sqlite
+    volumes:
+      - cluster-data:/var/lib/dostigus
+
+volumes:
+  cluster-data:

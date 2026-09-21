@@ -1,0 +1,29 @@
+# ADR 0002: Host UI kit and Sheets
+
+- Status: accepted
+- Date: 2026-09-21
+
+## Decision
+
+One Host. Chat, Cards, and Sheets / modals come from the Kit. Bots do not
+ship their own SPA, domain, or iframe app. UI modules bind to Kit components
+and talk to the Store only through the Bot’s MCP surface.
+
+## Context
+
+Per-bot sites (e.g. `meal.kosarev.space`) split the product into many frontends
+and break portability. A messenger-shaped host plus Sheets keeps one chrome,
+one kit, and one place to learn the UI.
+
+## Consequences
+
+- `apps/web` is the only user-facing app in this monorepo.
+- `packages/ui-kit` is the Kit barrel for Sheets and Cards.
+- New Bot UI is a Kit binding + MCP surface, not a new Nuxt app.
+- Host empty states (Chat, Sheet) are first-class; do not replace them with a
+  marketing landing page.
+
+## Alternatives
+
+- Per-bot Nuxt apps under `apps/*` — rejected; explodes chrome and domains.
+- Headless API + arbitrary client — rejected for day-1; the host *is* the UI.

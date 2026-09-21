@@ -1,0 +1,6 @@
+---
+description: Spec-driven Dostigus — read SPEC/ADRs, keep glossary stable
+alwaysApply: true
+---
+
+Before writing code, read `docs/SPEC.md` and `docs/adr/`. Use only CONTEXT.md terms (Host not Host shell; MCP surface not MCP contract as the runtime name; Bot ≠ Module package; Builder not “cloud agent”). Do not invent synonyms. Docs and glossary are English only. Stay in SPEC scope (no agent runtime, Meal port, marketplace, Household). Run `pnpm check` before commit.
