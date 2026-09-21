@@ -1,4 +1,4 @@
-import { getLlmGatewaySettings, insertMessage, listMessages, requireBot } from '@dostigus/db'
+import { getLlmGatewaySettings } from '@dostigus/db'
 
 type PostBody = {
   content?: string
@@ -10,13 +10,13 @@ export default defineEventHandler(async (event) => {
 
   try {
     const store = useStore()
-    const bot = requireBot(store, botId)
-    const user = insertMessage(store, {
+    const { bot } = getClusterBot(store, botId)
+    const user = appendClusterMessage(store, {
       botId,
       role: 'user',
       content: body?.content ?? '',
     })
-    const history = listMessages(store, botId)
+    const { messages: history } = listClusterMessages(store, botId)
     const reply = await completeAssistantReply({
       botName: bot.name,
       modelTier: bot.manifest.modelTier,
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
       manifest: bot.manifest,
       stored: getLlmGatewaySettings(store),
     })
-    const assistant = insertMessage(store, {
+    const assistant = appendClusterMessage(store, {
       botId,
       role: 'assistant',
       content: reply.content,

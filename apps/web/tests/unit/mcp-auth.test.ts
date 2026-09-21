@@ -1,0 +1,75 @@
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { expect, it } from 'vitest'
+import { authorizeMcpAgent, mcpToolsEnabled, readAuthorizationHeader } from '../../server/utils/mcp-auth'
+import { PLATFORM_MCP_TOOLS } from '../../server/utils/mcp-surface'
+
+function event() {
+  return { context: {} as { agentOk?: boolean } }
+}
+
+it('leaves tools disabled when the expected token is empty', () => {
+  const ev = event()
+  authorizeMcpAgent(ev, 'Bearer anything', '')
+  expect(ev.context.agentOk).toBeUndefined()
+  expect(mcpToolsEnabled(ev)).toBe(false)
+})
+
+it('does not authorize a missing or non-Bearer header', () => {
+  const missing = event()
+  authorizeMcpAgent(missing, undefined, 'secret')
+  expect(mcpToolsEnabled(missing)).toBe(false)
+
+  const basic = event()
+  authorizeMcpAgent(basic, 'Basic secret', 'secret')
+  expect(mcpToolsEnabled(basic)).toBe(false)
+})
+
+it('does not authorize a wrong Bearer token', () => {
+  const ev = event()
+  authorizeMcpAgent(ev, 'Bearer nope', 'secret')
+  expect(mcpToolsEnabled(ev)).toBe(false)
+})
+
+it('reads Authorization from Node, Headers, and plain header maps', () => {
+  expect(readAuthorizationHeader({
+    node: { req: { headers: { authorization: 'Bearer node' } } },
+  })).toBe('Bearer node')
+  expect(readAuthorizationHeader({
+    headers: { get: (name) => name === 'authorization' ? 'Bearer web' : null },
+  })).toBe('Bearer web')
+  expect(readAuthorizationHeader({
+    req: { headers: { authorization: 'Bearer req' } },
+  })).toBe('Bearer req')
+  expect(readAuthorizationHeader({})).toBeUndefined()
+})
+
+it('authorizes a matching Bearer token so tools can enable', () => {
+  const ev = event()
+  authorizeMcpAgent(ev, 'Bearer secret', 'secret')
+  expect(ev.context.agentOk).toBe(true)
+  expect(mcpToolsEnabled(ev)).toBe(true)
+})
+
+it('lists the Platform MCP surface tools', () => {
+  expect(PLATFORM_MCP_TOOLS).toEqual([
+    'dostigus_bots_list',
+    'dostigus_bots_get',
+    'dostigus_bots_create',
+    'dostigus_bots_update',
+    'dostigus_bots_delete',
+    'dostigus_messages_list',
+    'dostigus_messages_create',
+  ])
+})
+
+it('gates every file-based MCP tool with mcpToolsEnabled', () => {
+  const dir = join(import.meta.dirname, '../../server/mcp/tools')
+  const files = readdirSync(dir).filter((name) => name.endsWith('.ts')).sort()
+  expect(files).toEqual([...PLATFORM_MCP_TOOLS].map((name) => `${name}.ts`).sort())
+  for (const file of files) {
+    const src = readFileSync(join(dir, file), 'utf8')
+    expect(src, file).toContain('enabled: mcpToolsEnabled')
+    expect(src, file).toContain(`name: '${file.replace(/\.ts$/, '')}'`)
+  }
+})

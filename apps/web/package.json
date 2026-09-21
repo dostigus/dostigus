@@ -16,7 +16,9 @@
     "@dostigus/db": "workspace:*",
     "@dostigus/shared": "workspace:*",
     "@dostigus/ui-kit": "workspace:*",
-    "@nuxt/fonts": "catalog:"
+    "@nuxt/fonts": "catalog:",
+    "@nuxtjs/mcp-toolkit": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

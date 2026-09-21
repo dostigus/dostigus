@@ -15,7 +15,7 @@ Chat + Cards + Sheets from the Kit. Default path is self-host
 |------|------|
 | [`CONTEXT.md`](CONTEXT.md) | Glossary — keep terms stable |
 | [`docs/SPEC.md`](docs/SPEC.md) | MVP in / out of scope |
-| [`docs/deploy.md`](docs/deploy.md) | Self-host compose, GHCR, Store volume |
+| [`docs/deploy.md`](docs/deploy.md) | Self-host compose, GHCR, Store volume, MCP token |
 | [`docs/ui.md`](docs/ui.md) | Host tokens (Nunito, dark charcoal + coral) |
 | [`docs/adr/`](docs/adr/) | Architecture decisions |
 | [`AGENTS.md`](AGENTS.md) | Agent rules + `pnpm check` |
@@ -34,6 +34,11 @@ The Bot greets and asks what it is for. Messages persist in the Store
 [`docs/deploy.md`](docs/deploy.md).
 Host UI is dark by default: **Nunito**, charcoal canvas, coral-orange CTAs.
 See [`docs/ui.md`](docs/ui.md).
+
+The Cluster MCP surface is `/mcp` (`@nuxtjs/mcp-toolkit`). Set
+`NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`) so a Cursor/MCP client can
+call Platform tools against the Store. Empty token → tools stay disabled.
+See [`docs/deploy.md`](docs/deploy.md).
 
 ## Self-host
 

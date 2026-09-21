@@ -13,6 +13,7 @@ docker compose -f docker/compose.yml up --build
 
 - Host: [http://localhost:3000/](http://localhost:3000/) — Bot list; `+` creates a Bot and opens Chat
 - Health: [http://localhost:3000/health](http://localhost:3000/health)
+- MCP surface: [http://localhost:3000/mcp](http://localhost:3000/mcp) — tools stay disabled until `NUXT_AGENT_TOKEN` is set
 - Store path: `/var/lib/dostigus/cluster.sqlite` (`DATABASE_URL=file:...`)
 - Volume: `cluster-data` (compose project name `dostigus`)
 - LLM gateway is optional (see below). Compose does **not** require a key.
@@ -37,6 +38,8 @@ key in the Host.
 | `LLM_MODEL` | no | Overrides every Model tier’s model id. |
 | `LLM_MODEL_CHEAP` / `LLM_MODEL_STRONG` / `LLM_MODEL_CODE` / `LLM_MODEL_TOY` | no | Per–Model tier override. |
 | `LLM_DEFAULT_TIER` | no | Default Model tier (`cheap` \| `strong` \| `code` \| `toy`). |
+| `NUXT_AGENT_TOKEN` | no | Bearer for the MCP surface at `/mcp`. Empty → tools stay disabled. |
+| `DOSTIGUS_MCP_TOKEN` | no | Alias for `NUXT_AGENT_TOKEN` when that var is unset. |
 
 ### Model tier defaults (OpenRouter-friendly)
 
@@ -69,6 +72,39 @@ docker compose -f docker/compose.yml up --build
 
 Or open **Settings** on the Host and paste the same base + key. See
 [`.env.example`](../.env.example) and [ADR 0004](adr/0004-llm-gateway-tiers.md).
+
+## MCP surface
+
+The Host serves the Cluster MCP surface at `/mcp` (`@nuxtjs/mcp-toolkit`,
+name `Dostigus`). Tools wrap the same Store helpers as `/api/bots*`: Bots
+list/get/create/update/delete and Chat messages list/append. See
+[ADR 0009](adr/0009-mcp-toolkit-endpoint.md).
+
+Set a token and send it as `Authorization: Bearer …`. An empty token (the
+compose default) leaves tools disabled. The handler does **not** return
+401 — MCP clients treat that as OAuth discovery.
+
+```bash
+NUXT_AGENT_TOKEN=replace-me \
+docker compose -f docker/compose.yml up --build
+```
+
+Cursor (or any Streamable HTTP MCP client):
+
+```json
+{
+  "mcpServers": {
+    "dostigus": {
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer replace-me"
+      }
+    }
+  }
+}
+```
+
+The Host UI does not need this token.
 
 ## Pull a published image
 
