@@ -13,6 +13,7 @@ FROM base AS build
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json apps/web/package.json
 COPY packages/db/package.json packages/db/package.json
+COPY packages/mcp/package.json packages/mcp/package.json
 COPY packages/shared/package.json packages/shared/package.json
 COPY packages/ui-kit/package.json packages/ui-kit/package.json
 RUN pnpm install --frozen-lockfile --ignore-scripts

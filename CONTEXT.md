@@ -86,7 +86,9 @@ _Avoid_: database (unqualified), repo.
 **MCP surface**:
 Tools a Bot calls to read/write the Store. The Host UI uses the same tools.
 **MCP contract** is the interface definition of that surface — prefer MCP
-surface as the runtime term.
+surface as the runtime term. Day-1 platform tools: `bots.list`, `bots.get`,
+`bots.create`, `bots.update`, `bots.delete`, `messages.list`,
+`messages.create`.
 _Avoid_: API, REST, RPC (unqualified). Prefer MCP surface over MCP contract.
 
 **Job**:

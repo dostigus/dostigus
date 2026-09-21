@@ -36,9 +36,16 @@ What the running Cluster does today:
   (or first open) stores an assistant greeting that asks what the Bot is
   for. Host font is Nunito; dark charcoal + coral-orange tokens
   ([`docs/ui.md`](ui.md)).
-- Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
-  `/api/settings/llm-gateway` get/put/ping. Persist in SQLite. See
-  [ADR 0008](adr/0008-host-store-routes.md).
+- MCP surface (`@dostigus/mcp`): platform tools `bots.list` / `bots.get` /
+  `bots.create` / `bots.update` / `bots.delete` / `messages.list` /
+  `messages.create` wrap the Store. Host server code invokes them
+  in-process. HTTP MCP is `POST /mcp` (Streamable HTTP JSON), off until
+  `DOSTIGUS_MCP_TOKEN` or `NUXT_AGENT_TOKEN` is set. See
+  [ADR 0009](adr/0009-mcp-endpoint.md).
+- Host routes: `/api/bots` CRUD and `/api/bots/:id/messages` list/post
+  call the same tools (ADR 0008 exception, still Host-only URLs).
+  `/api/settings/llm-gateway` get/put/ping stays a Host route. Persist
+  in SQLite.
 - LLM gateway: OpenAI-compatible client, Model tiers mapped to
   OpenRouter-friendly default model ids. The Owner sets base URL + key in
   Host Settings (Store) or via compose env (env overrides Store). Chat
@@ -48,7 +55,8 @@ What the running Cluster does today:
   to the client or written to logs. Greeting is always stored. Keys are
   **not** required for compose.
 - `/health` stays `{ ok: true }`.
-- No seed/demo domain Bot. No Builder, MCP surface, Household, or Meal.
+- No seed/demo domain Bot. No Builder, Household, or Meal. Chat does not
+  yet call tools via the LLM (next slice).
 
 `pnpm install` and `pnpm check` must stay green.
 

@@ -1,9 +1,5 @@
-import { requireBot } from '@dostigus/db'
-
-export default defineEventHandler((event) => {
-  try {
-    return { bot: requireBot(useStore(), getRouterParam(event, 'id') ?? '') }
-  } catch (error) {
-    throwStoreError(error)
-  }
+export default defineEventHandler(async (event) => {
+  return await callPlatformTool('bots.get', {
+    id: getRouterParam(event, 'id') ?? '',
+  })
 })

@@ -5,26 +5,27 @@
 
 ## Decision
 
-Until the MCP surface exists, the Host persists Bots, Chat, and Cluster
-LLM gateway settings through Nitro server routes (`/api/bots`,
-`/api/bots/:id/messages`, `/api/settings/llm-gateway`) that write the
-Cluster Store (`@dostigus/db`, Drizzle schema + SQLite). These routes are
-Host internals, not a public Bot API and not a second contract for Sheets.
+The Host keeps Nitro URLs for Bots, Chat, and Cluster LLM gateway settings
+(`/api/bots`, `/api/bots/:id/messages`, `/api/settings/llm-gateway`).
+`/api/bots*` is not a public Bot API and not a second contract for Sheets.
+Those Bot and Chat routes invoke the platform MCP surface in-process
+([ADR 0009](0009-mcp-endpoint.md)). LLM gateway settings stay Host-only
+until a later tool slice.
 
 ## Context
 
 [ADR 0003](0003-mcp-as-bot-store-contract.md) keeps one verb surface for the
-Bot and the Host UI. The MCP surface is still out of scope. Nick's day-1
-path is: create a Bot, open Chat, persist messages. Blocking that on MCP
-would leave the Host a stub.
+Bot and the Host UI. Persistence landed before the MCP surface
+(`/api/bots*` wrote `@dostigus/db` directly). The surface now exists;
+the URLs remain as a Host exception so the current UI does not change.
 
 ## Consequences
 
 - `@dostigus/db` opens `DATABASE_URL` and applies Store migrations on Host
   start.
 - Do not add a seed/demo domain Bot (no packaged Secretary / Notes / Meal).
-- When the MCP surface lands, these routes should call the same tools;
-  do not grow a parallel REST model for Sheets or Module packages.
+- New Host code prefers `invoke` / `callPlatformTool`, not new Drizzle
+  queries. Do not grow a parallel REST model for Sheets or Module packages.
 - LLM gateway calls stay behind the Host message route. Settings persist
   in the Store; env is override/bootstrap. The GET/PUT settings body never
   includes the full key. See [ADR 0004](0004-llm-gateway-tiers.md).
@@ -34,3 +35,5 @@ would leave the Host a stub.
 - Wait for MCP before any persistence — rejected; Chat would not survive
   refresh or compose restart.
 - Direct Drizzle from Vue — rejected; the Host server owns the Store.
+- Drop `/api/bots*` when MCP lands — rejected for this slice; the Host UI
+  still uses those URLs.

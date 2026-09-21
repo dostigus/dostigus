@@ -37,6 +37,8 @@ key in the Host.
 | `LLM_MODEL` | no | Overrides every Model tier’s model id. |
 | `LLM_MODEL_CHEAP` / `LLM_MODEL_STRONG` / `LLM_MODEL_CODE` / `LLM_MODEL_TOY` | no | Per–Model tier override. |
 | `LLM_DEFAULT_TIER` | no | Default Model tier (`cheap` \| `strong` \| `code` \| `toy`). |
+| `DOSTIGUS_MCP_TOKEN` | no | Cluster agent token for `POST /mcp`. Unset → MCP endpoint off (404). |
+| `NUXT_AGENT_TOKEN` | no | Alias for `DOSTIGUS_MCP_TOKEN` if that var is unset. |
 
 ### Model tier defaults (OpenRouter-friendly)
 
@@ -69,6 +71,42 @@ docker compose -f docker/compose.yml up --build
 
 Or open **Settings** on the Host and paste the same base + key. See
 [`.env.example`](../.env.example) and [ADR 0004](adr/0004-llm-gateway-tiers.md).
+
+## MCP surface
+
+`POST /mcp` is the Cluster MCP surface (Streamable HTTP JSON). The Host UI
+already uses the same platform tools in-process (`bots.*`, `messages.*`).
+See [ADR 0009](adr/0009-mcp-endpoint.md).
+
+The endpoint is **off** until you set a Cluster agent token. Clients send
+`Authorization: Bearer <token>`.
+
+```bash
+DOSTIGUS_MCP_TOKEN=replace-me \
+docker compose -f docker/compose.yml up --build
+```
+
+```bash
+# Missing token → 404 (disabled)
+curl -sS -o /dev/null -w '%{http_code}\n' -X POST http://localhost:3000/mcp
+
+# Wrong token → 401
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  -H 'Authorization: Bearer wrong' \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+  http://localhost:3000/mcp
+
+# List platform tools
+curl -sS \
+  -H "Authorization: Bearer $DOSTIGUS_MCP_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+  http://localhost:3000/mcp
+```
+
+Do not commit a real token. Local `pnpm dev` can set `DOSTIGUS_MCP_TOKEN`
+in the environment or in a gitignored `.env`.
 
 ## Pull a published image
 

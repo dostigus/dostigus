@@ -29,7 +29,7 @@ export default defineNuxtConfig({
       crawlLinks: false,
     },
     externals: {
-      inline: ['@dostigus/db', '@dostigus/shared', '@dostigus/ui-kit'],
+      inline: ['@dostigus/db', '@dostigus/mcp', '@dostigus/shared', '@dostigus/ui-kit'],
       external: ['node:sqlite'],
     },
   },

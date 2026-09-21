@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@dostigus/db": "workspace:*",
+    "@dostigus/mcp": "workspace:*",
     "@dostigus/shared": "workspace:*",
     "@dostigus/ui-kit": "workspace:*",
     "@nuxt/fonts": "catalog:"

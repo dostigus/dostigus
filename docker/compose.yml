@@ -29,6 +29,9 @@ services:
       # LLM_MODEL_CODE:
       # LLM_MODEL_TOY:
       # LLM_DEFAULT_TIER:
+      # Cluster MCP surface — unset keeps POST /mcp off (404).
+      # DOSTIGUS_MCP_TOKEN:
+      # NUXT_AGENT_TOKEN:
     volumes:
       - cluster-data:/var/lib/dostigus
     healthcheck:
