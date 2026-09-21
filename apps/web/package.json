@@ -18,6 +18,7 @@
     "@dostigus/ui-kit": "workspace:*",
     "@nuxt/fonts": "catalog:",
     "@nuxtjs/mcp-toolkit": "catalog:",
+    "nuxt-auth-utils": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

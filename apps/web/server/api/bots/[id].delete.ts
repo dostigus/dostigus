@@ -1,3 +1,3 @@
-export default defineEventHandler((event) => {
-  return withClusterStore((store) => deleteClusterBot(store, getRouterParam(event, 'id') ?? ''))
+export default defineEventHandler(async (event) => {
+  return withOwnerStore(event, (store) => deleteClusterBot(store, getRouterParam(event, 'id') ?? ''))
 })

@@ -5,6 +5,7 @@ type PostBody = {
 }
 
 export default defineEventHandler(async (event) => {
+  await requireOwnerSession(event)
   const botId = getRouterParam(event, 'id') ?? ''
   const body = await readBody<PostBody>(event).catch(() => ({} as PostBody))
 

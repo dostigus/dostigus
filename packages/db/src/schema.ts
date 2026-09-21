@@ -20,6 +20,16 @@ export const llmGateway = sqliteTable('llm_gateway', {
   updatedAt: integer('updated_at').notNull(),
 })
 
+/** Single Cluster Owner. Day-1 allows exactly one row (`singleton`). */
+export const owners = sqliteTable('owners', {
+  id: text('id').primaryKey(),
+  email: text('email').unique(),
+  username: text('username').unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: integer('created_at').notNull(),
+  singleton: integer('singleton').notNull().default(1).unique(),
+})
+
 /** Chat line for a Bot. */
 export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(),
@@ -34,3 +44,4 @@ export const messages = sqliteTable('messages', {
 export type BotRow = typeof bots.$inferSelect
 export type MessageRow = typeof messages.$inferSelect
 export type LlmGatewayRow = typeof llmGateway.$inferSelect
+export type OwnerRow = typeof owners.$inferSelect

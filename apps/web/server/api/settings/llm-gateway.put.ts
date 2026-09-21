@@ -10,6 +10,7 @@ type PutBody = {
 }
 
 export default defineEventHandler(async (event) => {
+  await requireOwnerSession(event)
   const body = await readBody<PutBody>(event).catch(() => ({} as PutBody))
   try {
     upsertLlmGatewaySettings(useStore(), {

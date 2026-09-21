@@ -1,3 +1,4 @@
 export default defineEventHandler(async (event) => {
-  return withOwnerStore(event, listClusterBots)
+  await endOwnerSession(event)
+  return { ok: true }
 })

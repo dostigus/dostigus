@@ -16,6 +16,7 @@
         >
           Settings
         </NuxtLink>
+        <HostLogoutButton />
         <button
           type="button"
           class="plus"

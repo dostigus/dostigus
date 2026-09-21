@@ -27,23 +27,31 @@ What the running Cluster does today:
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, empty skills/modules),
-  `messages` (`botId`, role `user` \| `assistant` \| `system`, content), and
+  `messages` (`botId`, role `user` \| `assistant` \| `system`, content),
   `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
-  default Model tier, optional model overrides). Host opens and migrates
-  the Store on start.
+  default Model tier, optional model overrides), and `owners` (exactly one
+  Cluster Owner: unique email and/or username, password hash, createdAt).
+  Host opens and migrates the Store on start.
+- Owner auth: `nuxt-auth-utils` sealed cookie session. Fresh Cluster →
+  `/onboarding` (email or username + password). Later visits → `/login`.
+  Register is disabled once an Owner exists. Logout clears the session.
+  See [ADR 0010](adr/0010-owner-auth-session.md).
 - Host UI: Bot list (empty state + `+` create, default name **New Bot**),
   Chat (timeline + composer), and Settings (LLM gateway). Creating a Bot
   (or first open) stores an assistant greeting that asks what the Bot is
-  for. Host font is Nunito; dark charcoal + coral-orange tokens
+  for. Logged-out visitors cannot open those surfaces. Host font is
+  Nunito; dark charcoal + coral-orange tokens
   ([`docs/ui.md`](ui.md)).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
   `/api/settings/llm-gateway` get/put/ping. Persist in SQLite via the
-  same Store helpers as the MCP surface. See
+  same Store helpers as the MCP surface. These routes require an Owner
+  session (`requireUserSession`). See
   [ADR 0008](adr/0008-host-store-routes.md).
 - MCP surface: `@nuxtjs/mcp-toolkit` at `/mcp` (name `Dostigus`). File-based
   tools under `apps/web/server/mcp/tools/` wrap Bots and Chat messages.
   Bearer `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`); empty token → tools
-  stay disabled. Soft auth (no 401). See
+  stay disabled. Soft auth (no 401). The MCP token is **not** the Host
+  Owner session. See
   [ADR 0009](adr/0009-mcp-toolkit-endpoint.md).
 - LLM gateway: OpenAI-compatible client, Model tiers mapped to
   OpenRouter-friendly default model ids. The Owner sets base URL + key in
@@ -71,7 +79,7 @@ and [`docs/deploy.md`](deploy.md)).
 - Meal product port
 - Builder that writes Module packages (chat Bot ≠ Builder)
 - Marketplace
-- Auth / Household (multi-user)
+- Household (multi-user), OAuth, passkeys, email verify, password reset
 - Mobile native
 - Per-bot domains (the `meal.kosarev.space` pattern is temporary and to be replaced)
 - Arbitrary in-cluster sandbox code

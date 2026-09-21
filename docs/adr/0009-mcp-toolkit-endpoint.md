@@ -28,8 +28,9 @@ them from the UI), so a shared Store service is the one code path.
   Chat messages list/append.
 - Soft Bearer auth: do not throw 401 from `/mcp` (clients treat it as
   OAuth). Tools use `enabled` after middleware sets `event.context.agentOk`.
-- The Host UI does not need the token. Household auth is still out of
-  scope.
+- The Host UI does not need the token. The Owner cookie session is a
+  different gate ([ADR 0010](0010-owner-auth-session.md)): do not call
+  `requireUserSession` on `/mcp`. Household is still out of scope.
 - Cursor / IDE clients are not same-origin; `allowedOrigins` is `*`.
 - LLM tool-calling in Chat, Sheets/Cards UI, Module package install, and
   MCP Apps widgets stay out of scope.

@@ -37,6 +37,22 @@ CREATE TABLE \`llm_gateway\` (
 );
 `,
   },
+  {
+    id: '0002_owners',
+    sql: `
+CREATE TABLE \`owners\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`email\` text,
+  \`username\` text,
+  \`password_hash\` text NOT NULL,
+  \`created_at\` integer NOT NULL,
+  \`singleton\` integer DEFAULT 1 NOT NULL
+);
+CREATE UNIQUE INDEX \`owners_email_unique\` ON \`owners\` (\`email\`);
+CREATE UNIQUE INDEX \`owners_username_unique\` ON \`owners\` (\`username\`);
+CREATE UNIQUE INDEX \`owners_singleton_unique\` ON \`owners\` (\`singleton\`);
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

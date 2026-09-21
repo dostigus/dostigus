@@ -24,6 +24,8 @@ surface.
 - Day-1 image is `ghcr.io/dostigus/dostigus` (see
   [ADR 0007](0007-platform-image-tags.md)).
 - Do not assume SaaS auth, billing, or a central Bot registry in platform code.
+  The Cluster Owner is a local Store row plus a Host cookie session
+  ([ADR 0010](0010-owner-auth-session.md)), not a hosted identity.
 - SQLite is the day-1 store; keep the schema portable enough for Postgres later.
 - Household remains a glossary term only until a later ADR.
 

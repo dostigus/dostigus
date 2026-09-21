@@ -24,7 +24,9 @@ export type Cluster = {
 
 export type Owner = {
   id: OwnerId
-  clusterId: ClusterId
+  email: string | null
+  username: string | null
+  createdAt: string
 }
 
 /** Host shell is a synonym — prefer Host. */

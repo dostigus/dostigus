@@ -11,9 +11,9 @@ From the Platform checkout:
 docker compose -f docker/compose.yml up --build
 ```
 
-- Host: [http://localhost:3000/](http://localhost:3000/) — Bot list; `+` creates a Bot and opens Chat
+- Host: [http://localhost:3000/](http://localhost:3000/) — first visit creates the Owner; later visits sign in, then Bot list (`+` creates a Bot and opens Chat)
 - Health: [http://localhost:3000/health](http://localhost:3000/health)
-- MCP surface: [http://localhost:3000/mcp](http://localhost:3000/mcp) — tools stay disabled until `NUXT_AGENT_TOKEN` is set
+- MCP surface: [http://localhost:3000/mcp](http://localhost:3000/mcp) — tools stay disabled until `NUXT_AGENT_TOKEN` is set. This token is not the Owner session.
 - Store path: `/var/lib/dostigus/cluster.sqlite` (`DATABASE_URL=file:...`)
 - Volume: `cluster-data` (compose project name `dostigus`)
 - LLM gateway is optional (see below). Compose does **not** require a key.
@@ -32,6 +32,7 @@ key in the Host.
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `DATABASE_URL` | yes in compose | Store SQLite URL (`file:/var/lib/dostigus/cluster.sqlite`). Local `pnpm dev` defaults to `file:.data/cluster.sqlite`. |
+| `NUXT_SESSION_PASSWORD` | yes in production | Seals the Host Owner session cookie. Must be ≥32 characters. Local `pnpm dev` generates one if unset. Compose defaults to a localhost-only placeholder — set your own for any Cluster that is reachable beyond this machine. |
 | `OPENAI_COMPATIBLE_BASE_URL` | no | LLM gateway base, including `/v1` (example: `https://openrouter.ai/api/v1`). |
 | `LLM_API_KEY` | no | Bearer token for that base. |
 | `OPENROUTER_API_KEY` | no | Used if `LLM_API_KEY` is unset. |
@@ -104,7 +105,25 @@ Cursor (or any Streamable HTTP MCP client):
 }
 ```
 
-The Host UI does not need this token.
+The Host UI does not need this token. The Owner signs in with email or
+username + password; that sealed cookie is a different secret from
+`NUXT_AGENT_TOKEN`. Do not reuse `NUXT_SESSION_PASSWORD` as the MCP
+Bearer. See [ADR 0010](adr/0010-owner-auth-session.md).
+
+## Owner session
+
+`nuxt-auth-utils` stores the signed-in Owner in a sealed cookie. Generate a
+production password (≥32 characters) and pass it through compose:
+
+```bash
+NUXT_SESSION_PASSWORD="$(openssl rand -base64 32)" \
+docker compose -f docker/compose.yml up --build
+```
+
+A fresh Store shows **Create the Owner**. After that, the Host shows
+**Sign in**. Restart keeps the Owner row; only the cookie is new. Without
+a session, `/api/bots*` and `/api/settings/*` return 401. `/health` stays
+public.
 
 ## Pull a published image
 
