@@ -29,6 +29,9 @@ services:
       # LLM_MODEL_CODE:
       # LLM_MODEL_TOY:
       # LLM_DEFAULT_TIER:
+      # MCP surface — empty → tools stay disabled (see docs/deploy.md).
+      # NUXT_AGENT_TOKEN:
+      # DOSTIGUS_MCP_TOKEN:
     volumes:
       - cluster-data:/var/lib/dostigus
     healthcheck:
