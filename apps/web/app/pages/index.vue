@@ -9,14 +9,22 @@
           Host · Cluster
         </p>
       </div>
-      <button
-        type="button"
-        class="plus"
-        aria-label="Create Bot"
-        @click="openCreate"
-      >
-        +
-      </button>
+      <div class="header-actions">
+        <NuxtLink
+          to="/settings"
+          class="settings"
+        >
+          Settings
+        </NuxtLink>
+        <button
+          type="button"
+          class="plus"
+          aria-label="Create Bot"
+          @click="openCreate"
+        >
+          +
+        </button>
+      </div>
     </header>
 
     <main class="stage">
@@ -140,6 +148,22 @@ function formatWhen(iso: string): string {
   margin: 0.2rem 0 0;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.settings {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.settings:hover {
+  color: var(--text);
 }
 
 .plus {

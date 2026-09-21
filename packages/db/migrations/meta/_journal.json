@@ -8,6 +8,13 @@
       "when": 1758460800000,
       "tag": "0000_bots_and_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1758464400000,
+      "tag": "0001_llm_gateway",
+      "breakpoints": true
     }
   ]
 }

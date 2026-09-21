@@ -7,6 +7,7 @@ import {
   createBot,
   deleteBot,
   ensureGreeting,
+  getLlmGatewaySettings,
   insertMessage,
   listBots,
   listMessages,
@@ -14,6 +15,7 @@ import {
   StoreError,
   storeFilePath,
   updateBot,
+  upsertLlmGatewaySettings,
 } from '../../src/index'
 
 const opened: Array<ReturnType<typeof openStore>> = []
@@ -105,6 +107,38 @@ it('updates name and Model tier, and cascade-deletes messages', () => {
 it('rejects an unknown Model tier', () => {
   const store = memoryStore()
   expect(() => createBot(store, { modelTier: 'smart' })).toThrow(/Model tier/)
+})
+
+it('persists Cluster LLM gateway settings and keeps the key unless cleared', () => {
+  const store = memoryStore()
+  expect(getLlmGatewaySettings(store).apiKey).toBeNull()
+
+  const saved = upsertLlmGatewaySettings(store, {
+    baseUrl: 'https://openrouter.ai/api/v1/',
+    apiKey: 'sk-store-secret',
+    defaultTier: 'cheap',
+    modelOverrides: { cheap: 'openai/gpt-4.1-mini' },
+  })
+  expect(saved.baseUrl).toBe('https://openrouter.ai/api/v1')
+  expect(saved.apiKey).toBe('sk-store-secret')
+  expect(saved.defaultTier).toBe('cheap')
+  expect(saved.modelOverrides).toEqual({ cheap: 'openai/gpt-4.1-mini' })
+
+  const kept = upsertLlmGatewaySettings(store, {
+    defaultTier: 'strong',
+  })
+  expect(kept.apiKey).toBe('sk-store-secret')
+  expect(kept.defaultTier).toBe('strong')
+
+  const cleared = upsertLlmGatewaySettings(store, { clearApiKey: true })
+  expect(cleared.apiKey).toBeNull()
+})
+
+it('rejects a non-http LLM gateway base URL', () => {
+  const store = memoryStore()
+  expect(() => upsertLlmGatewaySettings(store, {
+    baseUrl: 'ftp://example.test',
+  })).toThrow(/http/)
 })
 
 it('writes a SQLite file on a volume-like path', () => {

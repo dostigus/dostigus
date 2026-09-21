@@ -21,8 +21,22 @@ blur runtime and authoring.
 - Glossary term is **LLM gateway**; do not rename it per provider.
 - Tier names stay `cheap`, `strong`, `code` — no “fast/smart/opus” aliases.
 - Builder Jobs (if any) are a later, separate path — out of this MVP.
-- Day-1 Host has a thin OpenAI-compatible call behind Chat (optional env;
-  stub replies if unset). Types live in `packages/shared`.
+- The Host Chat path calls an OpenAI-compatible LLM gateway
+  (`POST {base}/chat/completions`) with conversation history and a system
+  prompt (new Bot, learn purpose, keep the Manifest).
+- Cluster settings live in the Store (`llm_gateway`: base URL, key
+  server-side only, default Model tier, optional model overrides). The
+  Owner can set them in Host Settings. Env vars remain override/bootstrap
+  for compose (`OPENAI_COMPATIBLE_BASE_URL`, `LLM_API_KEY` /
+  `OPENROUTER_API_KEY`, optional `LLM_MODEL` / `LLM_MODEL_*`).
+- Default model ids are OpenRouter-friendly (`strong` → `openai/gpt-4o`,
+  `cheap` / `toy` → `openai/gpt-4o-mini`, `code` → `openai/gpt-4o`) and
+  overridable. A key with no base URL uses
+  `https://openrouter.ai/api/v1`.
+- No key: Chat still works; replies are stubs and Chat shows a quiet
+  banner. Configured but failed: persist a clear error, do not stub.
+- Never echo the full key to the client or logs (mask last four).
+- Types and mapping live in `packages/shared`.
 
 ## Alternatives
 

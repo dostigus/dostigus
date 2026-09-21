@@ -12,12 +12,14 @@ export {
   deleteBot,
   ensureGreeting,
   getBot,
+  getLlmGatewaySettings,
   insertMessage,
   listBots,
   listMessages,
   requireBot,
   StoreError,
   updateBot,
+  upsertLlmGatewaySettings,
 } from './queries'
-export { type BotRow, bots, type MessageRow, messages } from './schema'
+export { type BotRow, bots, llmGateway, type LlmGatewayRow, type MessageRow, messages } from './schema'
 export { type OpenedStore, openStore } from './store'

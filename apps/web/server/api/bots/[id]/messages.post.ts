@@ -1,4 +1,4 @@
-import { insertMessage, listMessages, requireBot } from '@dostigus/db'
+import { getLlmGatewaySettings, insertMessage, listMessages, requireBot } from '@dostigus/db'
 
 type PostBody = {
   content?: string
@@ -21,6 +21,8 @@ export default defineEventHandler(async (event) => {
       botName: bot.name,
       modelTier: bot.manifest.modelTier,
       history,
+      manifest: bot.manifest,
+      stored: getLlmGatewaySettings(store),
     })
     const assistant = insertMessage(store, {
       botId,

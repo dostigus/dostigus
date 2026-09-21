@@ -135,9 +135,13 @@ export type Apply = {
 
 export type LlmProvider = 'openrouter' | 'anthropic' | 'openai' | 'ollama'
 
+export type LlmGatewayModelOverrides = Partial<Record<ModelTier, string>>
+
 export type LlmGateway = {
   providers: LlmProvider[]
   defaultTier: ModelTier
+  baseUrl?: string
+  modelOverrides?: LlmGatewayModelOverrides
 }
 
 /** Later scoped membership. Not day-1. */

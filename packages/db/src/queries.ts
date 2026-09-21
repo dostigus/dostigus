@@ -1,4 +1,4 @@
-import type { Bot, Message, MessageRole, ModelTier } from '@dostigus/shared'
+import type { Bot, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
 import type { BotRecord, MessageRecord } from './map'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
@@ -6,7 +6,10 @@ import {
   botGreetingContent,
   DEFAULT_BOT_NAME,
   DEFAULT_MODEL_TIER,
+  emptyLlmGatewayStored,
   isModelTier,
+  MODEL_TIERS,
+  trimOrUndefined,
 } from '@dostigus/shared'
 import { toBot, toMessage } from './map'
 
@@ -188,4 +191,145 @@ export function updateBot(
 export function deleteBot(store: OpenedStore, id: string): void {
   requireBot(store, id)
   store.sqlite.prepare('DELETE FROM bots WHERE id = ?').run(id)
+}
+
+const LLM_GATEWAY_ID = 'cluster'
+const BASE_URL_MAX = 500
+const MODEL_ID_MAX = 200
+
+type LlmGatewayRecord = {
+  id: string
+  base_url: string | null
+  api_key: string | null
+  default_tier: string
+  models_json: string
+  updated_at: number
+}
+
+function parseModelOverrides(raw: string): Partial<Record<ModelTier, string>> {
+  try {
+    const value = JSON.parse(raw) as unknown
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return {}
+    }
+    const out: Partial<Record<ModelTier, string>> = {}
+    for (const tier of MODEL_TIERS) {
+      const item = (value as Record<string, unknown>)[tier]
+      if (typeof item === 'string' && item.trim()) {
+        out[tier] = item.trim()
+      }
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
+function toLlmGatewayStored(row: LlmGatewayRecord): LlmGatewayStored {
+  return {
+    baseUrl: row.base_url,
+    apiKey: row.api_key,
+    defaultTier: isModelTier(row.default_tier) ? row.default_tier : DEFAULT_MODEL_TIER,
+    modelOverrides: parseModelOverrides(row.models_json),
+  }
+}
+
+function normalizeBaseUrl(value: string | null | undefined): string | null {
+  const trimmed = trimOrUndefined(value) ?? null
+  if (!trimmed) {
+    return null
+  }
+  if (trimmed.length > BASE_URL_MAX) {
+    throw new StoreError(`LLM gateway base URL must be ${BASE_URL_MAX} characters or fewer`, 400)
+  }
+  let parsed: URL
+  try {
+    parsed = new URL(trimmed)
+  } catch {
+    throw new StoreError('LLM gateway base URL must be an http(s) URL', 400)
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new StoreError('LLM gateway base URL must be an http(s) URL', 400)
+  }
+  return trimmed.replace(/\/$/, '')
+}
+
+function normalizeModelOverrides(
+  value: Partial<Record<ModelTier, string>> | undefined,
+): Partial<Record<ModelTier, string>> {
+  if (!value) {
+    return {}
+  }
+  const out: Partial<Record<ModelTier, string>> = {}
+  for (const tier of MODEL_TIERS) {
+    const item = trimOrUndefined(value[tier])
+    if (!item) {
+      continue
+    }
+    if (item.length > MODEL_ID_MAX) {
+      throw new StoreError(`Model id must be ${MODEL_ID_MAX} characters or fewer`, 400)
+    }
+    out[tier] = item
+  }
+  return out
+}
+
+export function getLlmGatewaySettings(store: OpenedStore): LlmGatewayStored {
+  const row = store.sqlite.prepare(`
+    SELECT id, base_url, api_key, default_tier, models_json, updated_at
+    FROM llm_gateway
+    WHERE id = ?
+  `).get(LLM_GATEWAY_ID) as LlmGatewayRecord | undefined
+  return row ? toLlmGatewayStored(row) : emptyLlmGatewayStored()
+}
+
+export function upsertLlmGatewaySettings(
+  store: OpenedStore,
+  input: {
+    baseUrl?: string | null
+    apiKey?: string | null
+    clearApiKey?: boolean
+    defaultTier?: string
+    modelOverrides?: Partial<Record<ModelTier, string>>
+  },
+): LlmGatewayStored {
+  const current = getLlmGatewaySettings(store)
+  const baseUrl = input.baseUrl !== undefined ? normalizeBaseUrl(input.baseUrl) : current.baseUrl
+  const defaultTier = input.defaultTier !== undefined
+    ? normalizeTier(input.defaultTier)
+    : current.defaultTier
+  const modelOverrides = input.modelOverrides !== undefined
+    ? normalizeModelOverrides(input.modelOverrides)
+    : current.modelOverrides
+
+  let apiKey = current.apiKey
+  if (input.clearApiKey) {
+    apiKey = null
+  } else if (input.apiKey !== undefined) {
+    const trimmed = trimOrUndefined(input.apiKey) ?? null
+    if (trimmed) {
+      apiKey = trimmed
+    }
+  }
+
+  const updatedAt = nowMs()
+  store.sqlite.prepare(`
+    INSERT INTO llm_gateway (id, base_url, api_key, default_tier, models_json, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      base_url = excluded.base_url,
+      api_key = excluded.api_key,
+      default_tier = excluded.default_tier,
+      models_json = excluded.models_json,
+      updated_at = excluded.updated_at
+  `).run(
+    LLM_GATEWAY_ID,
+    baseUrl,
+    apiKey,
+    defaultTier,
+    JSON.stringify(modelOverrides),
+    updatedAt,
+  )
+
+  return getLlmGatewaySettings(store)
 }

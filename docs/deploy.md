@@ -16,6 +16,7 @@ docker compose -f docker/compose.yml up --build
 - Store path: `/var/lib/dostigus/cluster.sqlite` (`DATABASE_URL=file:...`)
 - Volume: `cluster-data` (compose project name `dostigus`)
 - LLM gateway is optional (see below). Compose does **not** require a key.
+  The Owner can also paste a key in Host **Settings**.
 
 Stop with Ctrl-C, or `docker compose -f docker/compose.yml down`. `down` does
 **not** delete `cluster-data`. Use `down -v` only when you intend to wipe the
@@ -23,19 +24,42 @@ Store.
 
 ## Environment
 
+Env vars **override** (and can bootstrap) Cluster LLM gateway settings stored
+by Host Settings. Unset env and use Settings if the Owner should manage the
+key in the Host.
+
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `DATABASE_URL` | yes in compose | Store SQLite URL (`file:/var/lib/dostigus/cluster.sqlite`). Local `pnpm dev` defaults to `file:.data/cluster.sqlite`. |
 | `OPENAI_COMPATIBLE_BASE_URL` | no | LLM gateway base, including `/v1` (example: `https://openrouter.ai/api/v1`). |
 | `LLM_API_KEY` | no | Bearer token for that base. |
 | `OPENROUTER_API_KEY` | no | Used if `LLM_API_KEY` is unset. |
-| `LLM_MODEL` | no | Chat-completions `model`. Defaults from the Bot Model tier (`strong` → `gpt-4o`). |
+| `LLM_MODEL` | no | Overrides every Model tier’s model id. |
+| `LLM_MODEL_CHEAP` / `LLM_MODEL_STRONG` / `LLM_MODEL_CODE` / `LLM_MODEL_TOY` | no | Per–Model tier override. |
+| `LLM_DEFAULT_TIER` | no | Default Model tier (`cheap` \| `strong` \| `code` \| `toy`). |
 
-User messages after the greeting call `POST {base}/chat/completions` when both
-a base URL and a key are set. If they are unset (or the call fails), the Host
-stores a stub reply. The greeting is always written to the Store.
+### Model tier defaults (OpenRouter-friendly)
 
-Pass optional LLM vars through compose only when you want real replies:
+| Model tier | Default `model` id |
+|------------|--------------------|
+| `cheap` | `openai/gpt-4o-mini` |
+| `strong` | `openai/gpt-4o` |
+| `code` | `openai/gpt-4o` |
+| `toy` | `openai/gpt-4o-mini` |
+
+A key with no base URL uses `https://openrouter.ai/api/v1`. Settings can
+override these ids. The Host never returns the full key to the client
+(masked last four) and does not log it.
+
+User messages after the greeting call `POST {base}/chat/completions` with
+Chat history and a system prompt when a base URL and key are available (env
+or Store). If they are unset, the Host stores a stub reply and Chat shows
+“replies are stubs until you add a key”. If they are set and the call
+fails, the Host stores a clear error — not a stub. The greeting is always
+written to the Store.
+
+Pass optional LLM vars through compose when you want env to supply the
+gateway:
 
 ```bash
 OPENAI_COMPATIBLE_BASE_URL=https://openrouter.ai/api/v1 \
@@ -43,7 +67,8 @@ OPENROUTER_API_KEY=sk-… \
 docker compose -f docker/compose.yml up --build
 ```
 
-See [`.env.example`](../.env.example).
+Or open **Settings** on the Host and paste the same base + key. See
+[`.env.example`](../.env.example) and [ADR 0004](adr/0004-llm-gateway-tiers.md).
 
 ## Pull a published image
 

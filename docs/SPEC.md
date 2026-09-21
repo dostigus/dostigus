@@ -26,18 +26,27 @@ Settled now, even if this repo only scaffolds them:
 What the running Cluster does today:
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
-  `bots` (name, Manifest: `modelTier` default `strong`, empty skills/modules)
-  and `messages` (`botId`, role `user` \| `assistant` \| `system`, content).
-  Host opens and migrates the Store on start.
-- Host UI: Bot list (empty state + `+` create, default name **New Bot**) and
-  Chat (timeline + composer). Creating a Bot (or first open) stores an
-  assistant greeting that asks what the Bot is for. Host font is Nunito;
-  dark charcoal + coral-orange tokens ([`docs/ui.md`](ui.md)).
-- Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post. Persist
-  in SQLite. See [ADR 0008](adr/0008-host-store-routes.md).
-- LLM gateway (thin): if `OPENAI_COMPATIBLE_BASE_URL` and `LLM_API_KEY` (or
-  `OPENROUTER_API_KEY`) are set, user messages get a real reply; otherwise a
-  stub. Greeting is always stored. Keys are **not** required for compose.
+  `bots` (name, Manifest: `modelTier` default `strong`, empty skills/modules),
+  `messages` (`botId`, role `user` \| `assistant` \| `system`, content), and
+  `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
+  default Model tier, optional model overrides). Host opens and migrates
+  the Store on start.
+- Host UI: Bot list (empty state + `+` create, default name **New Bot**),
+  Chat (timeline + composer), and Settings (LLM gateway). Creating a Bot
+  (or first open) stores an assistant greeting that asks what the Bot is
+  for. Host font is Nunito; dark charcoal + coral-orange tokens
+  ([`docs/ui.md`](ui.md)).
+- Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
+  `/api/settings/llm-gateway` get/put/ping. Persist in SQLite. See
+  [ADR 0008](adr/0008-host-store-routes.md).
+- LLM gateway: OpenAI-compatible client, Model tiers mapped to
+  OpenRouter-friendly default model ids. The Owner sets base URL + key in
+  Host Settings (Store) or via compose env (env overrides Store). Chat
+  sends greeting + history and a system prompt (new Bot, learn purpose,
+  keep Manifest). No key → stub reply + quiet banner. Configured call
+  that fails → clear error, not a stub. The full key is never returned
+  to the client or written to logs. Greeting is always stored. Keys are
+  **not** required for compose.
 - `/health` stays `{ ok: true }`.
 - No seed/demo domain Bot. No Builder, MCP surface, Household, or Meal.
 
