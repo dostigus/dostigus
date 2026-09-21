@@ -1,4 +1,4 @@
-# Dostigus
+# Dostigus 🪿
 
 Self-host agent OS: portable bot packages + host UI sheets.
 
