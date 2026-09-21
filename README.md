@@ -15,6 +15,7 @@ Chat + Cards + Sheets from the Kit. Default path is self-host
 |------|------|
 | [`CONTEXT.md`](CONTEXT.md) | Glossary — keep terms stable |
 | [`docs/SPEC.md`](docs/SPEC.md) | MVP in / out of scope |
+| [`docs/deploy.md`](docs/deploy.md) | Self-host compose, GHCR, Store volume |
 | [`docs/adr/`](docs/adr/) | Architecture decisions |
 | [`AGENTS.md`](AGENTS.md) | Agent rules + `pnpm check` |
 
@@ -26,7 +27,17 @@ pnpm --filter @dostigus/web dev   # http://localhost:3000/
 pnpm check                        # lint → typecheck → test → build
 ```
 
-Compose stub (self-host intent, not a production image yet): [`docker/compose.yml`](docker/compose.yml).
+## Self-host
+
+```bash
+docker compose -f docker/compose.yml up --build
+```
+
+Host: [http://localhost:3000/](http://localhost:3000/). Cluster Store SQLite
+lives on named volume `cluster-data` (`DATABASE_URL=file:/var/lib/dostigus/cluster.sqlite`).
+
+Published image: `ghcr.io/dostigus/dostigus` (`:latest` on `main`, `:vX.Y.Z` on
+Platform tags). See [`docs/deploy.md`](docs/deploy.md).
 
 ## License
 
