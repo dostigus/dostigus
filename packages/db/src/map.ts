@@ -1,4 +1,4 @@
-import type { Bot, Message, MessageRole, ModelTier } from '@dostigus/shared'
+import type { Bot, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
 import { DEFAULT_MODEL_TIER, isModelTier } from '@dostigus/shared'
 
 export type BotRecord = {
@@ -45,6 +45,23 @@ export function toBot(row: BotRecord): Bot {
       skillIds: parseStringList(row.skills_json),
       modulePackageIds: parseStringList(row.modules_json),
     },
+  }
+}
+
+export type OwnerRecord = {
+  id: string
+  email: string | null
+  username: string | null
+  password_hash: string
+  created_at: number
+}
+
+export function toOwner(row: OwnerRecord): Owner {
+  return {
+    id: row.id,
+    email: row.email,
+    username: row.username,
+    createdAt: new Date(row.created_at).toISOString(),
   }
 }
 

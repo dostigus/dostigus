@@ -12,7 +12,8 @@
    bare “cloud agent” — use Builder. Do not invent synonyms. All repo docs are
    **English only**.
 3. Stay inside SPEC scope. Do not implement agent runtime, Meal port, Builder
-   Module-package writer, marketplace, or Household/auth in this phase.
+   Module-package writer, marketplace, or Household (multi-user) in this
+   phase. The Cluster has a single Owner session ([ADR 0010](docs/adr/0010-owner-auth-session.md)).
 
 ## Before every commit
 
@@ -38,8 +39,10 @@ Nuxt 4 on **http://localhost:3000/**. The Host is a Bot list + Chat. Press
 **+** to create a Bot (default **New Bot**). **Settings** holds the Cluster
 LLM gateway (base URL + key). Not a landing page. Store is SQLite
 (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
-MCP surface is `/mcp` — set `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`)
-to enable tools; empty token leaves them disabled.
+First visit creates the Cluster Owner; later visits sign in. MCP surface
+is `/mcp` — set `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`) to enable
+tools; empty token leaves them disabled. That token is not the Owner
+session (`NUXT_SESSION_PASSWORD`).
 
 Self-host compose (Store volume + published image): see [`docs/deploy.md`](docs/deploy.md).
 

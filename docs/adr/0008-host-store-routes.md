@@ -11,7 +11,8 @@ Nitro server routes (`/api/bots`, `/api/bots/:id/messages`,
 (`@dostigus/db`, Drizzle schema + SQLite). Bot and Chat routes call the
 same Store helpers as the MCP surface ([ADR 0009](0009-mcp-toolkit-endpoint.md)).
 These routes are Host internals, not a public Bot API and not a second
-contract for Sheets.
+contract for Sheets. They require an Owner session
+([ADR 0010](0010-owner-auth-session.md)).
 
 ## Context
 
@@ -19,7 +20,7 @@ contract for Sheets.
 Bot and the Host UI. The MCP surface now exists ([ADR 0009](0009-mcp-toolkit-endpoint.md)).
 Nick's day-1 path is: create a Bot, open Chat, persist messages. These
 routes remain so the Host UI and Chat LLM completion do not depend on
-the MCP token.
+the MCP token. They do depend on the Owner cookie session.
 
 ## Consequences
 
@@ -32,6 +33,8 @@ the MCP token.
 - LLM gateway calls stay behind the Host message route. Settings persist
   in the Store; env is override/bootstrap. The GET/PUT settings body never
   includes the full key. See [ADR 0004](0004-llm-gateway-tiers.md).
+- `/api/bots*` and `/api/settings/*` call `requireUserSession`. `/mcp`
+  stays token-gated. See [ADR 0010](0010-owner-auth-session.md).
 
 ## Alternatives
 

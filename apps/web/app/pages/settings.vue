@@ -15,6 +15,7 @@
           LLM gateway
         </p>
       </div>
+      <HostLogoutButton />
     </header>
 
     <main class="stage">
@@ -265,6 +266,10 @@ async function ping() {
 }
 
 .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 1.15rem 1.4rem;
   border-bottom: 1px solid var(--line);
   background: var(--surface);

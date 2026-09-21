@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
   css: ['~/assets/css/main.css'],
-  modules: ['@nuxt/fonts', '@nuxtjs/mcp-toolkit'],
+  modules: ['@nuxt/fonts', '@nuxtjs/mcp-toolkit', 'nuxt-auth-utils'],
   mcp: {
     name: 'Dostigus',
     route: '/mcp',
@@ -19,6 +19,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Bearer for /mcp (NUXT_AGENT_TOKEN or DOSTIGUS_MCP_TOKEN). Empty → tools stay disabled.
     agentToken: process.env.NUXT_AGENT_TOKEN || process.env.DOSTIGUS_MCP_TOKEN || '',
+    // Sealed Host Owner session. NUXT_SESSION_PASSWORD (≥32 chars) is required in production.
+    session: {
+      password: process.env.NUXT_SESSION_PASSWORD || '',
+    },
   },
   fonts: {
     families: [

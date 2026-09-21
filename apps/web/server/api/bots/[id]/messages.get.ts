@@ -1,3 +1,3 @@
-export default defineEventHandler((event) => {
-  return withClusterStore((store) => listClusterMessages(store, getRouterParam(event, 'id') ?? ''))
+export default defineEventHandler(async (event) => {
+  return withOwnerStore(event, (store) => listClusterMessages(store, getRouterParam(event, 'id') ?? ''))
 })

@@ -15,6 +15,13 @@
       "when": 1758464400000,
       "tag": "0001_llm_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1758470000000,
+      "tag": "0002_owners",
+      "breakpoints": true
     }
   ]
 }

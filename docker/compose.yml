@@ -18,6 +18,9 @@ services:
       HOST: 0.0.0.0
       PORT: 3000
       DATABASE_URL: file:/var/lib/dostigus/cluster.sqlite
+      # Sealed Host Owner session (≥32 chars). Replace for any Cluster
+      # reachable beyond localhost. See docs/deploy.md.
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:-dostigus-dev-session-password-change-me}
       # Optional LLM gateway — leave unset for stub Chat replies (see docs/deploy.md).
       # Env overrides Host Settings. The Owner can also paste a key in Settings.
       # OPENAI_COMPATIBLE_BASE_URL: https://openrouter.ai/api/v1

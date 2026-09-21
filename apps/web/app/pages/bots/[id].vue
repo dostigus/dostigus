@@ -22,6 +22,7 @@
         >
           Settings
         </NuxtLink>
+        <HostLogoutButton />
         <template v-if="confirmDelete">
           <button
             type="button"
