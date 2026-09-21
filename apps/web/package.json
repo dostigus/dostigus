@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev --port 3000",
+    "dev": "NUXT_TELEMETRY_DISABLED=1 nuxt dev --port 3000",
     "preview": "nuxt preview",
     "clean": "rm -rf .output",
     "clean:modules": "rm -rf .nuxt node_modules",
