@@ -16,6 +16,7 @@ Chat + Cards + Sheets from the Kit. Default path is self-host
 | [`CONTEXT.md`](CONTEXT.md) | Glossary — keep terms stable |
 | [`docs/SPEC.md`](docs/SPEC.md) | MVP in / out of scope |
 | [`docs/deploy.md`](docs/deploy.md) | Self-host compose, GHCR, Store volume |
+| [`docs/ui.md`](docs/ui.md) | Host tokens (Nunito, dark charcoal + coral) |
 | [`docs/adr/`](docs/adr/) | Architecture decisions |
 | [`AGENTS.md`](AGENTS.md) | Agent rules + `pnpm check` |
 
@@ -26,6 +27,12 @@ pnpm install
 pnpm --filter @dostigus/web dev   # http://localhost:3000/
 pnpm check                        # lint → typecheck → test → build
 ```
+
+Open the Host, press **+**, create a Bot (default name **New Bot**), and Chat.
+The Bot greets and asks what it is for. Messages persist in the Store
+(SQLite). An LLM key is optional — see [`docs/deploy.md`](docs/deploy.md).
+Host UI is dark by default: **Nunito**, charcoal canvas, coral-orange CTAs.
+See [`docs/ui.md`](docs/ui.md).
 
 ## Self-host
 

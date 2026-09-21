@@ -5,6 +5,12 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
   css: ['~/assets/css/main.css'],
+  modules: ['@nuxt/fonts'],
+  fonts: {
+    families: [
+      { name: 'Nunito', provider: 'google', weights: [400, 600, 700] },
+    ],
+  },
   app: {
     head: {
       title: 'Dostigus',
@@ -19,8 +25,12 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    prerender: {
+      crawlLinks: false,
+    },
     externals: {
-      inline: ['@dostigus/shared', '@dostigus/ui-kit'],
+      inline: ['@dostigus/db', '@dostigus/shared', '@dostigus/ui-kit'],
+      external: ['node:sqlite'],
     },
   },
 })
