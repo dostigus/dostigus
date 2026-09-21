@@ -111,7 +111,7 @@ async function create() {
   z-index: 21;
   transform: translate(-50%, -50%);
   width: min(22rem, calc(100vw - 2rem));
-  background: var(--bg-raised);
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 1.35rem 1.4rem 1.4rem;
@@ -124,7 +124,7 @@ h2 {
 
 .hint {
   margin: 0 0 1rem;
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 0.9rem;
   line-height: 1.4;
 }
@@ -134,14 +134,14 @@ h2 {
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 input {
   appearance: none;
   border: 1px solid var(--line);
   background: var(--bg);
-  color: var(--ink);
+  color: var(--text);
   border-radius: var(--radius-sm);
   padding: 0.7rem 0.85rem;
 }
@@ -174,11 +174,11 @@ input:focus {
 .ghost {
   border: 1px solid var(--line);
   background: transparent;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .solid {
-  border: 1px solid var(--accent-dim);
+  border: 0;
   background: var(--accent);
   color: var(--accent-ink);
 }

@@ -1,16 +1,21 @@
 :root {
-  color-scheme: light;
-  --bg: #f6f3ee;
-  --bg-raised: #fffdf9;
-  --bg-chat: #f3efe8;
-  --line: #e6e0d6;
-  --ink: #2f2b26;
-  --muted: #7c756b;
-  --accent: #e07a5f;
-  --accent-dim: #d46b50;
-  --accent-ink: #fffdf9;
-  --radius: 1.25rem;
-  --radius-sm: 0.9rem;
+  color-scheme: dark;
+  --bg: #121212;
+  --surface: #1c1c1c;
+  --line: #2a2a2a;
+  --text: #f4f1ec;
+  --text-muted: #9a958c;
+  --accent: #ff5c35;
+  --accent-dim: #e04e2c;
+  --accent-ink: #fff7f3;
+  --radius: 1.35rem;
+  --radius-sm: 1rem;
+
+  /* Aliases used by older Host chrome */
+  --bg-raised: var(--surface);
+  --bg-chat: var(--bg);
+  --ink: var(--text);
+  --muted: var(--text-muted);
 }
 
 *,
@@ -25,7 +30,7 @@ body,
   margin: 0;
   min-height: 100%;
   background: var(--bg);
-  color: var(--ink);
+  color: var(--text);
   font-family: Nunito, ui-sans-serif, system-ui, sans-serif;
   font-weight: 400;
   line-height: 1.5;

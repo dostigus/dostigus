@@ -59,7 +59,7 @@ const emit = defineEmits<{
   right: 0;
   bottom: 0;
   z-index: 21;
-  background: var(--bg-raised);
+  background: var(--surface);
   border-top: 1px solid var(--line);
   border-radius: var(--radius) var(--radius) 0 0;
   min-height: 42dvh;
@@ -97,16 +97,16 @@ h2 {
   appearance: none;
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.25rem;
 }
 
 .empty {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .muted {
-  color: var(--muted);
+  color: var(--text-muted);
 }
 </style>

@@ -189,7 +189,7 @@ async function remove() {
   gap: 1rem;
   padding: 1rem 1.4rem;
   border-bottom: 1px solid var(--line);
-  background: var(--bg-raised);
+  background: var(--surface);
 }
 
 .lead {
@@ -216,7 +216,7 @@ h1 {
 
 .sub {
   margin: 0.15rem 0 0;
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 0.8rem;
 }
 
@@ -238,11 +238,11 @@ h1 {
 .ghost {
   border: 1px solid var(--line);
   background: transparent;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .solid {
-  border: 1px solid var(--accent-dim);
+  border: 0;
   background: var(--accent);
   color: var(--accent-ink);
 }
@@ -273,7 +273,7 @@ h1 {
   margin: 0;
   padding: 1.35rem 1.4rem 1.6rem;
   overflow: auto;
-  background: var(--bg-chat);
+  background: var(--bg);
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -284,12 +284,13 @@ h1 {
   padding: 0.85rem 1rem;
   border-radius: var(--radius);
   border: 1px solid var(--line);
-  background: var(--bg-raised);
+  background: var(--surface);
 }
 
 .bubble.user {
   align-self: flex-end;
-  border-color: var(--accent-dim);
+  border-color: transparent;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
 }
 
 .who {
@@ -297,7 +298,7 @@ h1 {
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .text {
@@ -312,7 +313,7 @@ h1 {
   align-items: flex-end;
   padding: 0.95rem 1.4rem 1.15rem;
   border-top: 1px solid var(--line);
-  background: var(--bg-raised);
+  background: var(--surface);
 }
 
 .sr {
@@ -321,7 +322,7 @@ h1 {
   flex-direction: column;
   gap: 0.3rem;
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 textarea {
@@ -330,7 +331,7 @@ textarea {
   appearance: none;
   border: 1px solid var(--line);
   background: var(--bg);
-  color: var(--ink);
+  color: var(--text);
   border-radius: var(--radius-sm);
   padding: 0.7rem 0.85rem;
   min-height: 3.1rem;

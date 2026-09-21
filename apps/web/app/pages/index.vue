@@ -50,7 +50,7 @@
           </p>
           <button
             type="button"
-            class="ghost"
+            class="solid"
             @click="openCreate"
           >
             Create Bot
@@ -127,7 +127,7 @@ function formatWhen(iso: string): string {
   gap: 1rem;
   padding: 1.15rem 1.4rem;
   border-bottom: 1px solid var(--line);
-  background: var(--bg-raised);
+  background: var(--surface);
 }
 
 .mark {
@@ -138,7 +138,7 @@ function formatWhen(iso: string): string {
 
 .sub {
   margin: 0.2rem 0 0;
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
@@ -166,7 +166,7 @@ function formatWhen(iso: string): string {
 
 .list {
   flex: 1;
-  background: var(--bg-chat);
+  background: var(--bg);
   padding: 1.75rem 1.4rem 3rem;
 }
 
@@ -193,7 +193,7 @@ h1 {
 .hint,
 .status {
   margin: 0 0 1.25rem;
-  color: var(--muted);
+  color: var(--text-muted);
   line-height: 1.45;
 }
 
@@ -201,18 +201,32 @@ h1 {
   color: var(--accent);
 }
 
-.ghost {
+.ghost,
+.solid {
   appearance: none;
-  border: 1px solid var(--line);
-  background: var(--bg-raised);
-  color: var(--ink);
-  padding: 0.65rem 1.15rem;
+  padding: 0.65rem 1.25rem;
   border-radius: 999px;
   cursor: pointer;
 }
 
+.ghost {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
 .ghost:hover {
   border-color: var(--accent);
+}
+
+.solid {
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.solid:hover {
+  filter: brightness(1.05);
 }
 
 .bots {
@@ -233,7 +247,7 @@ h1 {
   padding: 1.05rem 1.15rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--bg-raised);
+  background: var(--surface);
   color: inherit;
   text-decoration: none;
 }
@@ -247,7 +261,7 @@ h1 {
 }
 
 .bot-meta {
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 0.8rem;
   white-space: nowrap;
 }
