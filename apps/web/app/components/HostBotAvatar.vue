@@ -4,6 +4,7 @@
     :shape="shape"
     :color="fill"
     :size="size"
+    :state="state"
   />
   <span
     v-else
@@ -15,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import type { BotAvatarShape } from '@dostigus/shared'
+import type { BotAvatarShape, BotAvatarState } from '@dostigus/shared'
 import { KitBotAvatar } from '@dostigus/ui-kit'
 
 const props = withDefaults(defineProps<{
@@ -26,12 +27,15 @@ const props = withDefaults(defineProps<{
   color?: string
   shape?: BotAvatarShape | ''
   avatarColor?: string
+  /** Goose mark motion; Host list/header use idle. */
+  state?: BotAvatarState
 }>(), {
   seed: '',
   size: 'md',
   color: '',
   shape: '',
   avatarColor: '',
+  state: 'idle',
 })
 
 const letters = computed(() => initialsFromName(props.name))

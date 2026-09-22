@@ -53,7 +53,8 @@ image upload, or custom hex outside the palette.
 - MCP `dostigus_bots_create` / `dostigus_bots_update` accept the same
   optional fields as the Host PATCH.
 - Out of this change: AI generate, image upload, custom hex, unread
-  badges, file attach.
+  badges, file attach. Superseded silhouette language and palette order
+  are in [ADR 0017](0017-goose-mark-avatar.md).
 
 ## Alternatives
 

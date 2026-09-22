@@ -77,6 +77,19 @@ ALTER TABLE \`bots\` ADD \`avatar_shape\` text DEFAULT 'circle' NOT NULL;
 ALTER TABLE \`bots\` ADD \`avatar_color\` text DEFAULT '#1F7AE5' NOT NULL;
 `,
   },
+  {
+    id: '0005_goose_mark_shapes',
+    sql: `
+UPDATE bots SET avatar_shape = 'round' WHERE avatar_shape = 'circle';
+UPDATE bots SET avatar_shape = 'plump' WHERE avatar_shape = 'bean';
+UPDATE bots SET avatar_shape = 'squat' WHERE avatar_shape = 'squircle';
+UPDATE bots SET avatar_shape = 'tall' WHERE avatar_shape = 'capsule';
+UPDATE bots SET avatar_shape = 'lean' WHERE avatar_shape = 'triangle';
+UPDATE bots SET avatar_shape = 'chick' WHERE avatar_shape = 'hex';
+UPDATE bots SET avatar_shape = 'honk' WHERE avatar_shape = 'cloud';
+UPDATE bots SET avatar_shape = 'peek' WHERE avatar_shape = 'teardrop';
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

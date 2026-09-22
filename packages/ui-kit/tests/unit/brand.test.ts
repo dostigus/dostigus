@@ -48,16 +48,22 @@ it('registers the Sheet shell, Dialog, Button, and Bot avatar', () => {
   })
 })
 
-it('ships Bot accent tokens and eight avatar shapes', () => {
+it('ships Bot accent tokens and eight Goose mark shapes', () => {
   const accents = readFileSync(join(root, 'src/bot-accents.css'), 'utf8')
-  expect(accents).toContain('--bot-accent-01: #1f7ae5')
-  expect(accents).toContain('--bot-accent-16: #dc4acd')
+  expect(accents).toContain('--bot-accent-01: #e47134')
+  expect(accents).toContain('--bot-accent-10: #1f7ae5')
+  expect(accents).toContain('--bot-accent-16: #de3957')
   expect(readFileSync(join(root, 'src/kit.css'), 'utf8')).toContain('bot-accents.css')
   const avatar = readFileSync(join(root, 'src/components/KitBotAvatar.vue'), 'utf8')
-  for (const shape of ['circle', 'bean', 'squircle', 'capsule', 'triangle', 'hex', 'cloud', 'teardrop']) {
+  for (const shape of ['round', 'tall', 'squat', 'lean', 'plump', 'chick', 'honk', 'peek']) {
     expect(avatar).toContain(shape)
   }
-  expect(avatar).toContain('kit-bot-avatar__eye')
+  expect(avatar).toContain('kit-bot-avatar__body')
+  expect(avatar).toContain('kit-bot-avatar__beak')
+  expect(avatar).toContain('kit-bot-avatar__eye-l')
+  expect(avatar).toContain('kit-bot-avatar__eye-r')
+  expect(avatar).toContain('kit-bot-idle-breathe')
+  expect(avatar).toContain('kit-bot-avatar--idle')
 })
 
 it('builds the Sheet shell on Reka Dialog', () => {
