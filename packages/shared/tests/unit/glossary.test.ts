@@ -1,10 +1,11 @@
 import { expect, it } from 'vitest'
 import {
-  beakColorFromBody,
   BOT_ACCENT_TOKENS,
+  BOT_AVATAR_SHAPE_LABELS,
   BOT_AVATAR_SHAPES,
   botAccentCssVar,
   botGreetingContent,
+  botMarkPalette,
   DEFAULT_AVATAR_COLOR,
   DEFAULT_AVATAR_SHAPE,
   DEFAULT_BOT_NAME,
@@ -30,34 +31,54 @@ it('exposes cheap, strong, code, and toy tiers', () => {
   expect(MODEL_TIER_LABELS.toy).toContain('Toy')
 })
 
-it('exposes Goose mark shapes and a hue-ordered accent palette', () => {
+it('exposes the flock shapes and a hue-ordered accent palette', () => {
   expect(BOT_AVATAR_SHAPES).toEqual([
-    'round',
-    'tall',
-    'squat',
-    'lean',
-    'plump',
+    'goose',
+    'duck',
+    'swan',
     'chick',
-    'honk',
-    'peek',
+    'parrot',
+    'heron',
+    'puffin',
+    'owl',
   ])
-  expect(DEFAULT_AVATAR_SHAPE).toBe('round')
+  expect(DEFAULT_AVATAR_SHAPE).toBe('goose')
+  expect(BOT_AVATAR_SHAPE_LABELS.puffin).toBe('Puffin')
   expect(DEFAULT_AVATAR_COLOR).toBe('#1F7AE5')
   expect(BOT_ACCENT_TOKENS).toHaveLength(16)
   expect(BOT_ACCENT_TOKENS[0]?.hex).toBe('#E47134')
   expect(BOT_ACCENT_TOKENS[9]?.hex).toBe('#1F7AE5')
   expect(BOT_ACCENT_TOKENS[15]?.hex).toBe('#DE3957')
-  expect(isBotAvatarShape('honk')).toBe(true)
-  expect(isBotAvatarShape('circle')).toBe(false)
-  expect(migrateBotAvatarShape('circle')).toBe('round')
-  expect(migrateBotAvatarShape('hex')).toBe('chick')
-  expect(LEGACY_AVATAR_SHAPE_MAP.teardrop).toBe('peek')
+  expect(isBotAvatarShape('owl')).toBe(true)
+  expect(isBotAvatarShape('honk')).toBe(false)
   expect(normalizeBotAccentHex('#0aac7b')).toBe('#0AAC7B')
   expect(normalizeBotAccentHex('#ffffff')).toBeUndefined()
   expect(botAccentCssVar('#1F7AE5')).toBe('--bot-accent-10')
   expect(botAccentCssVar('#DE3957')).toBe('--bot-accent-16')
-  expect(beakColorFromBody('#1F7AE5')).toMatch(/^#[0-9A-F]{6}$/)
-  expect(beakColorFromBody('#1F7AE5')).not.toBe('#1F7AE5')
+})
+
+it('migrates both older shape generations onto a bird', () => {
+  expect(migrateBotAvatarShape('circle')).toBe('goose')
+  expect(migrateBotAvatarShape('round')).toBe('goose')
+  expect(migrateBotAvatarShape('hex')).toBe('chick')
+  expect(migrateBotAvatarShape('honk')).toBe('parrot')
+  expect(migrateBotAvatarShape('teardrop')).toBe('owl')
+  expect(migrateBotAvatarShape('nonsense')).toBe('goose')
+  expect(LEGACY_AVATAR_SHAPE_MAP.peek).toBe('owl')
+  expect(LEGACY_AVATAR_SHAPE_MAP.plump).toBe('puffin')
+})
+
+it('derives mark tones that stay apart from the body on every accent', () => {
+  for (const { hex } of BOT_ACCENT_TOKENS) {
+    const palette = botMarkPalette(hex)
+    expect(palette.body).toBe(hex)
+    for (const tone of [palette.shade, palette.light, palette.beak]) {
+      expect(tone).toMatch(/^#[0-9A-F]{6}$/)
+      expect(tone).not.toBe(palette.body)
+    }
+    expect(palette.ink).toBe('#17140F')
+  }
+  expect(botMarkPalette('#ffffff').body).toBe(DEFAULT_AVATAR_COLOR)
 })
 
 it('keeps the product name Dostigus', () => {

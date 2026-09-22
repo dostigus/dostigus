@@ -14,6 +14,7 @@
           :seed="bot?.id ?? ''"
           :shape="bot?.manifest.avatarShape"
           :avatar-color="bot?.manifest.avatarColor"
+          :state="markState"
           size="sm"
         />
         <span class="name">{{ bot?.name ?? 'Bot' }}</span>
@@ -151,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, Message } from '@dostigus/shared'
+import type { Bot, BotAvatarState, Message } from '@dostigus/shared'
 
 definePageMeta({ layout: 'host' })
 
@@ -188,13 +189,37 @@ const sending = ref(false)
 const botPending = ref(false)
 const sendError = ref('')
 const optimistic = ref<TimelineLine | null>(null)
+const replying = ref(false)
 const settingsOpen = ref(false)
 const threadEl = ref<HTMLOListElement | null>(null)
 
 const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
+/** The header mark thinks while the reply is in flight, then speaks it. */
+const markState = computed<BotAvatarState>(() => {
+  if (botPending.value) {
+    return 'think'
+  }
+  return replying.value ? 'reply' : 'idle'
+})
+
+let replyTimer: ReturnType<typeof setTimeout> | undefined
+
+function speakReply() {
+  replying.value = true
+  clearTimeout(replyTimer)
+  replyTimer = setTimeout(() => {
+    replying.value = false
+  }, 2200)
+}
+
+onUnmounted(() => {
+  clearTimeout(replyTimer)
+})
 
 watch(botId, () => {
   optimistic.value = null
+  replying.value = false
+  clearTimeout(replyTimer)
   botPending.value = false
   sending.value = false
   sendError.value = ''
@@ -264,6 +289,9 @@ async function deliver(raw: string, existing: TimelineLine | null) {
     }
     await Promise.all([refresh(), refreshBot(), refreshBots()])
     optimistic.value = null
+    if (messages.value.length > before) {
+      speakReply()
+    }
   } catch {
     if (botId.value !== targetId) {
       return

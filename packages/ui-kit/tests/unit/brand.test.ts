@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { BOT_AVATAR_SHAPES } from '@dostigus/shared'
 import { expect, it } from 'vitest'
+import { BOT_MARKS, renderPiece } from '../../src/bot-marks'
 import { GOOSE_STICKERS, gooseFavicon, gooseLogoSrc, gooseStickerSrc } from '../../src/brand'
 import { uiKitComponents } from '../../src/components'
 
@@ -48,22 +50,59 @@ it('registers the Sheet shell, Dialog, Button, and Bot avatar', () => {
   })
 })
 
-it('ships Bot accent tokens and eight Goose mark shapes', () => {
+it('ships Bot accent tokens and the eight-bird flock', () => {
   const accents = readFileSync(join(root, 'src/bot-accents.css'), 'utf8')
   expect(accents).toContain('--bot-accent-01: #e47134')
   expect(accents).toContain('--bot-accent-10: #1f7ae5')
   expect(accents).toContain('--bot-accent-16: #de3957')
   expect(readFileSync(join(root, 'src/kit.css'), 'utf8')).toContain('bot-accents.css')
-  const avatar = readFileSync(join(root, 'src/components/KitBotAvatar.vue'), 'utf8')
-  for (const shape of ['round', 'tall', 'squat', 'lean', 'plump', 'chick', 'honk', 'peek']) {
-    expect(avatar).toContain(shape)
+
+  expect(Object.keys(BOT_MARKS)).toEqual(BOT_AVATAR_SHAPES)
+  for (const shape of BOT_AVATAR_SHAPES) {
+    const mark = BOT_MARKS[shape]
+    expect(mark.body.length).toBeGreaterThan(0)
+    expect(mark.head.length).toBeGreaterThan(0)
+    expect(mark.beak.length).toBeGreaterThan(0)
+    expect(mark.jaw.length).toBeGreaterThan(0)
+    expect(mark.wing.length).toBeGreaterThan(0)
+    expect(mark.eyes.length).toBeGreaterThan(0)
+    for (const eye of mark.eyes) {
+      expect(eye.pupil).toBeLessThan(eye.r)
+    }
   }
-  expect(avatar).toContain('kit-bot-avatar__body')
-  expect(avatar).toContain('kit-bot-avatar__beak')
-  expect(avatar).toContain('kit-bot-avatar__eye-l')
-  expect(avatar).toContain('kit-bot-avatar__eye-r')
-  expect(avatar).toContain('kit-bot-idle-breathe')
-  expect(avatar).toContain('kit-bot-avatar--idle')
+  expect(BOT_MARKS.owl.eyes).toHaveLength(2)
+  expect(BOT_MARKS.parrot.crest.length).toBe(3)
+  expect(BOT_MARKS.puffin.belly.length).toBe(1)
+})
+
+it('renders mark pieces as plain SVG element props', () => {
+  expect(renderPiece({ tag: 'circle', cx: 1, cy: 2, r: 3 })).toEqual({
+    tag: 'circle',
+    attrs: { cx: 1, cy: 2, r: 3 },
+  })
+  const tilted = renderPiece({ tag: 'ellipse', cx: 4, cy: 5, rx: 6, ry: 7, rotate: -8 })
+  expect(tilted.tag).toBe('ellipse')
+  expect(tilted.attrs.transform).toBe('rotate(-8 4 5)')
+  const tube = renderPiece({ tag: 'tube', d: 'M0 0 L1 1', width: 2 })
+  expect(tube.tag).toBe('path')
+  expect(tube.attrs['stroke-width']).toBe(2)
+  expect(tube.attrs.style).toBe('fill:none')
+})
+
+it('draws every flock part and every motion state in the Kit avatar', () => {
+  const avatar = readFileSync(join(root, 'src/components/KitBotAvatar.vue'), 'utf8')
+  for (const part of ['tail', 'body', 'belly', 'wing', 'feet', 'crest', 'skull', 'beak', 'jaw', 'eye']) {
+    expect(avatar).toContain(`kit-bot-avatar__${part}`)
+  }
+  for (const motion of ['mark-motion', 'head-motion', 'jaw-motion', 'wing-motion', 'eye-motion']) {
+    expect(avatar).toContain(`kit-bot-avatar__${motion}`)
+  }
+  expect(avatar).toContain('kit-bot-breathe')
+  expect(avatar).toContain('kit-bot-blink')
+  expect(avatar).toContain('kit-bot-think-head')
+  expect(avatar).toContain('kit-bot-talk')
+  expect(avatar).toContain('kit-bot-flap')
+  expect(avatar).toContain('prefers-reduced-motion')
 })
 
 it('builds the Sheet shell on Reka Dialog', () => {

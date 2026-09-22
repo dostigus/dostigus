@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<{
   color?: string
   shape?: BotAvatarShape | ''
   avatarColor?: string
-  /** Goose mark motion; Host list/header use idle. */
+  /** Bot mark motion; the Host list and Chat header use idle. */
   state?: BotAvatarState
 }>(), {
   seed: '',

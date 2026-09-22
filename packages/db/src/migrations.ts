@@ -90,6 +90,19 @@ UPDATE bots SET avatar_shape = 'honk' WHERE avatar_shape = 'cloud';
 UPDATE bots SET avatar_shape = 'peek' WHERE avatar_shape = 'teardrop';
 `,
   },
+  {
+    id: '0006_flock_shapes',
+    sql: `
+UPDATE bots SET avatar_shape = 'goose' WHERE avatar_shape IN ('round', 'circle');
+UPDATE bots SET avatar_shape = 'swan' WHERE avatar_shape IN ('tall', 'capsule');
+UPDATE bots SET avatar_shape = 'duck' WHERE avatar_shape IN ('squat', 'squircle');
+UPDATE bots SET avatar_shape = 'heron' WHERE avatar_shape IN ('lean', 'triangle');
+UPDATE bots SET avatar_shape = 'puffin' WHERE avatar_shape IN ('plump', 'bean');
+UPDATE bots SET avatar_shape = 'chick' WHERE avatar_shape = 'hex';
+UPDATE bots SET avatar_shape = 'parrot' WHERE avatar_shape IN ('honk', 'cloud');
+UPDATE bots SET avatar_shape = 'owl' WHERE avatar_shape IN ('peek', 'teardrop');
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

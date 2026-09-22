@@ -47,7 +47,7 @@ it('creates a Bot with default name, strong Model tier, and greeting', () => {
   expect(bot.manifest).toEqual({
     name: DEFAULT_BOT_NAME,
     modelTier: DEFAULT_MODEL_TIER,
-    avatarShape: 'round',
+    avatarShape: 'goose',
     avatarColor: '#1F7AE5',
     skillIds: [],
     modulePackageIds: [],
@@ -97,13 +97,13 @@ it('updates name, Model tier, and avatar fields, and cascade-deletes messages', 
   const updated = updateBot(store, bot.id, {
     name: 'Renamed',
     modelTier: 'code',
-    avatarShape: 'chick',
+    avatarShape: 'owl',
     avatarColor: '#0AAC7B',
   })
   expect(updated.name).toBe('Renamed')
   expect(updated.manifest.modelTier).toBe('code')
   expect(updated.manifest.name).toBe('Renamed')
-  expect(updated.manifest.avatarShape).toBe('chick')
+  expect(updated.manifest.avatarShape).toBe('owl')
   expect(updated.manifest.avatarColor).toBe('#0AAC7B')
 
   deleteBot(store, bot.id)

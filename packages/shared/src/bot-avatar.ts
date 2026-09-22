@@ -1,33 +1,56 @@
-/** Bot Goose mark shapes and accent palette — see ADR 0016 / ADR 0017. */
+/** Bot mark cast, palette, and mark tones — see ADR 0016 / ADR 0018. */
 
+/**
+ * The Dostigus flock. Eight birds, one per silhouette, chosen so ten Bots in
+ * the sidebar stay apart by outline alone before color helps.
+ */
 export const BOT_AVATAR_SHAPES = [
-  'round',
-  'tall',
-  'squat',
-  'lean',
-  'plump',
+  'goose',
+  'duck',
+  'swan',
   'chick',
-  'honk',
-  'peek',
+  'parrot',
+  'heron',
+  'puffin',
+  'owl',
 ] as const
 
 export type BotAvatarShape = (typeof BOT_AVATAR_SHAPES)[number]
 
-export const DEFAULT_AVATAR_SHAPE: BotAvatarShape = 'round'
+export const DEFAULT_AVATAR_SHAPE: BotAvatarShape = 'goose'
+
+/** Display names for the appearance editor and screen readers. */
+export const BOT_AVATAR_SHAPE_LABELS = {
+  goose: 'Goose',
+  duck: 'Duck',
+  swan: 'Swan',
+  chick: 'Chick',
+  parrot: 'Parrot',
+  heron: 'Heron',
+  puffin: 'Puffin',
+  owl: 'Owl',
+} as const satisfies Record<BotAvatarShape, string>
 
 /**
- * Legacy geometric silhouettes from ADR 0016 → nearest Goose mark (ADR 0017).
- * Match stored values by name; migrate on read.
+ * Stored ids from earlier releases → a flock bird. ADR 0016 shipped geometric
+ * ids, ADR 0017 shipped goose marks; both migrate on read and in the Store.
  */
 export const LEGACY_AVATAR_SHAPE_MAP = {
-  circle: 'round',
-  bean: 'plump',
-  squircle: 'squat',
-  capsule: 'tall',
-  triangle: 'lean',
+  circle: 'goose',
+  round: 'goose',
+  capsule: 'swan',
+  tall: 'swan',
+  squircle: 'duck',
+  squat: 'duck',
+  triangle: 'heron',
+  lean: 'heron',
+  bean: 'puffin',
+  plump: 'puffin',
   hex: 'chick',
-  cloud: 'honk',
-  teardrop: 'peek',
+  cloud: 'parrot',
+  honk: 'parrot',
+  teardrop: 'owl',
+  peek: 'owl',
 } as const satisfies Record<string, BotAvatarShape>
 
 export type LegacyBotAvatarShape = keyof typeof LEGACY_AVATAR_SHAPE_MAP
@@ -64,7 +87,7 @@ export const BOT_ACCENT_HEXES = BOT_ACCENT_TOKENS.map((item) => item.hex) as unk
   ...BotAccentHex[],
 ]
 
-/** Default fill — palette hex (now `--bot-accent-10` after hue reorder). */
+/** Default fill — palette hex (`--bot-accent-10`). */
 export const DEFAULT_AVATAR_COLOR: BotAccentHex = '#1F7AE5'
 
 export const BOT_AVATAR_STATES = ['none', 'idle', 'think', 'reply', 'work'] as const
@@ -85,7 +108,7 @@ export function isLegacyBotAvatarShape(value: string): value is LegacyBotAvatarS
   return Object.prototype.hasOwnProperty.call(LEGACY_AVATAR_SHAPE_MAP, value)
 }
 
-/** Map a stored shape id (current or legacy) to a Goose mark shape. */
+/** Map a stored shape id (current or legacy) to a flock bird. */
 export function migrateBotAvatarShape(value: string | undefined | null): BotAvatarShape {
   if (value == null || value === '') {
     return DEFAULT_AVATAR_SHAPE
@@ -124,17 +147,93 @@ export function botAccentCssVar(hex: string): string | undefined {
   return BOT_ACCENT_TOKENS.find((item) => item.hex === normalized)?.cssVar
 }
 
+/** Tones a Bot mark paints with. Every tone derives from the body accent. */
+export type BotMarkPalette = {
+  /** Body, neck, head — the Manifest accent itself. */
+  body: string
+  /** Wing, tail, tuft — the accent pushed darker for depth. */
+  shade: string
+  /** Eye whites and belly patch — a warm near-cream tinted by the accent. */
+  light: string
+  /** Beak and feet — a warm tone held apart from the body on all sixteen accents. */
+  beak: string
+  /** Pupils. */
+  ink: string
+}
+
+type Hsl = { h: number, s: number, l: number }
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function hexToHsl(hex: string): Hsl {
+  const r = Number.parseInt(hex.slice(1, 3), 16) / 255
+  const g = Number.parseInt(hex.slice(3, 5), 16) / 255
+  const b = Number.parseInt(hex.slice(5, 7), 16) / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const l = (max + min) / 2
+  const span = max - min
+  if (span === 0) {
+    return { h: 0, s: 0, l }
+  }
+  const s = span / (1 - Math.abs(2 * l - 1))
+  let h = 0
+  if (max === r) {
+    h = ((g - b) / span) % 6
+  } else if (max === g) {
+    h = (b - r) / span + 2
+  } else {
+    h = (r - g) / span + 4
+  }
+  h *= 60
+  return { h: h < 0 ? h + 360 : h, s, l }
+}
+
+function hslToHex({ h, s, l }: Hsl): string {
+  const chroma = (1 - Math.abs(2 * l - 1)) * s
+  const hue = ((h % 360) + 360) % 360
+  const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1))
+  const m = l - chroma / 2
+  const [r, g, b] = hue < 60
+    ? [chroma, x, 0]
+    : hue < 120
+      ? [x, chroma, 0]
+      : hue < 180
+        ? [0, chroma, x]
+        : hue < 240
+          ? [0, x, chroma]
+          : hue < 300
+            ? [x, 0, chroma]
+            : [chroma, 0, x]
+  return `#${[r, g, b]
+    .map((channel) => Math.round((channel + m) * 255).toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase()}`
+}
+
 /**
- * Beak fill derived from the body accent: darker and slightly warmer,
- * not a second palette pick.
+ * Warm accents would swallow a coral beak, so a saturated warm body gets a
+ * deep brick beak and everything else gets the bright brand coral.
  */
-export function beakColorFromBody(hex: string): string {
+function beakHsl(body: Hsl): Hsl {
+  const warmHue = body.h <= 55 || body.h >= 330
+  if (warmHue && body.s > 0.3 && body.l > 0.42) {
+    return { h: 12, s: 0.72, l: clamp(body.l - 0.28, 0.24, 0.34) }
+  }
+  return { h: 20, s: 0.88, l: 0.62 }
+}
+
+/** Every tone a Bot mark needs, derived from one palette accent. */
+export function botMarkPalette(hex: string): BotMarkPalette {
   const normalized = normalizeBotAccentHex(hex) ?? DEFAULT_AVATAR_COLOR
-  const r = Number.parseInt(normalized.slice(1, 3), 16)
-  const g = Number.parseInt(normalized.slice(3, 5), 16)
-  const b = Number.parseInt(normalized.slice(5, 7), 16)
-  const nextR = Math.min(255, Math.round(r * 0.72 + 28))
-  const nextG = Math.round(g * 0.55)
-  const nextB = Math.round(b * 0.42)
-  return `#${[nextR, nextG, nextB].map((n) => n.toString(16).padStart(2, '0')).join('').toUpperCase()}`
+  const body = hexToHsl(normalized)
+  return {
+    body: normalized,
+    shade: hslToHex({ h: body.h, s: clamp(body.s * 1.05, 0, 1), l: clamp(body.l * 0.79, 0.1, 0.82) }),
+    light: hslToHex({ h: body.h, s: clamp(body.s * 0.35, 0, 0.3), l: 0.94 }),
+    beak: hslToHex(beakHsl(body)),
+    ink: '#17140F',
+  }
 }

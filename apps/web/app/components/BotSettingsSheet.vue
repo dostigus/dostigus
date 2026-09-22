@@ -54,6 +54,7 @@
             :shape="item"
             :color="color"
             size="lg"
+            :state="shape === item ? 'idle' : 'none'"
           />
         </button>
       </div>
@@ -172,6 +173,7 @@
 import type { Bot, BotAccentHex, BotAvatarShape, ModelTier } from '@dostigus/shared'
 import {
   BOT_ACCENT_TOKENS,
+  BOT_AVATAR_SHAPE_LABELS,
   BOT_AVATAR_SHAPES,
   DEFAULT_AVATAR_COLOR,
   DEFAULT_AVATAR_SHAPE,
@@ -230,7 +232,7 @@ function syncFromBot() {
 }
 
 function shapeLabel(value: BotAvatarShape): string {
-  return value.charAt(0).toUpperCase() + value.slice(1)
+  return BOT_AVATAR_SHAPE_LABELS[value]
 }
 
 function pickShape(value: BotAvatarShape) {
@@ -355,16 +357,22 @@ async function remove() {
   appearance: none;
   border: 0;
   background: transparent;
-  padding: 0.45rem;
+  padding: 0.35rem 0.2rem;
   border-radius: var(--radius);
   cursor: pointer;
   display: grid;
   place-items: center;
+  transition: background 120ms ease;
+}
+
+.shape:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
 }
 
 .shape.selected {
-  outline: 2px solid var(--line);
-  outline-offset: 1px;
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+  outline: 2px solid var(--accent-dim);
+  outline-offset: -1px;
 }
 
 .shape:disabled {

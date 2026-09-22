@@ -1,9 +1,13 @@
 # ADR 0017: Goose mark avatar + hue-ordered palette
 
-- Status: accepted
+- Status: superseded by [ADR 0018](0018-bot-mark-flock.md)
 - Date: 2026-09-22
 
 ## Decision
+
+> Superseded. The silhouette language and the shape ids below were replaced
+> by the eight-bird flock in [ADR 0018](0018-bot-mark-flock.md). The
+> hue-ordered palette from this ADR still stands.
 
 Bot avatars are **Goose marks** — soft goose-character silhouettes tied to
 the Dostigus Brand — not generic geometric blobs. The Kit component

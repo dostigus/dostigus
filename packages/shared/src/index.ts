@@ -1,7 +1,7 @@
 export {
-  beakColorFromBody,
   BOT_ACCENT_HEXES,
   BOT_ACCENT_TOKENS,
+  BOT_AVATAR_SHAPE_LABELS,
   BOT_AVATAR_SHAPES,
   BOT_AVATAR_STATES,
   botAccentCssVar,
@@ -9,6 +9,8 @@ export {
   type BotAccentToken,
   type BotAvatarShape,
   type BotAvatarState,
+  botMarkPalette,
+  type BotMarkPalette,
   DEFAULT_AVATAR_COLOR,
   DEFAULT_AVATAR_SHAPE,
   DEFAULT_AVATAR_STATE,

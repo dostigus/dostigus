@@ -27,7 +27,7 @@ What the running Cluster does today:
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
-  default `round` (Goose mark), `avatarColor` default `#1F7AE5` /
+  default `goose` (Bot mark), `avatarColor` default `#1F7AE5` /
   `--bot-accent-10`, empty skills/modules),
   `messages` (`botId`, role `user` \| `assistant` \| `system`, content),
   `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
@@ -56,18 +56,19 @@ What the running Cluster does today:
   Nunito; charcoal canvas + firm coral-orange tokens
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
-  Brand goose marks and stickers live in the Kit. The Host mark uses the
-  goose logo. Empty Bots shows a sticker. Add Member opens a Sheet. See
+  The Brand goose logo, stickers, and Bot marks live in the Kit. The Host
+  mark uses the goose logo. Empty Bots shows a sticker. Add Member opens a Sheet. See
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
   is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
   an icon rail. Each row shows an avatar, the Bot name, and the latest
   Chat line. Search filters that list in the Host. The Owner's `+`
   creates a Bot. A user button opens Settings (`/settings`), Members
   (`/members`), and Sign out.   Chat has a narrow header: avatar and name
-  open a right Sheet (appearance Goose mark + color, rename, Model tier,
+  open a right Sheet (appearance Bot mark + color, rename, Model tier,
   delete for the Owner), unlabeled bubbles, and a composer. Sidebar Bot
-  rows and the Chat header show the Manifest Goose mark (`KitBotAvatar`
-  with idle breathe), not a generic mark. The composer has a disabled
+  rows and the Chat header show the Manifest Bot mark (`KitBotAvatar`
+  idle); the header thinks while a reply is in flight and speaks it when it
+  lands. The composer has a disabled
   attachments control and
   shows a send arrow when there is text. On a narrow screen the sidebar
   is a drawer. Sending a line shows it at once, then a pending Bot reply,
@@ -75,7 +76,7 @@ What the running Cluster does today:
   opens that Chat. See [ADR 0014](adr/0014-host-messenger-shell.md),
   [ADR 0015](adr/0015-host-desktop-shell.md),
   [ADR 0016](adr/0016-bot-avatar-tokens.md), and
-  [ADR 0017](adr/0017-goose-mark-avatar.md).
+  [ADR 0018](adr/0018-bot-mark-flock.md).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
   `/api/members` list/create and `/api/members/:id/disable`,
   `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured
