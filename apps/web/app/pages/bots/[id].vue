@@ -637,7 +637,8 @@ async function onBotDeleted() {
   gap: 0.25rem;
   align-items: flex-end;
   padding: 0.3rem 0.35rem 0.3rem 0.3rem;
-  border: 0;
+  /* Between --surface and --line, so the rim reads without the old --line bar. */
+  border: 1px solid color-mix(in srgb, var(--line) 80%, var(--surface));
   border-radius: 9999px;
   background: var(--surface);
   transition: border-radius 160ms ease;
