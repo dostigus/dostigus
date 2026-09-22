@@ -14,6 +14,7 @@
           :seed="bot?.id ?? ''"
           :shape="bot?.manifest.avatarShape"
           :avatar-color="bot?.manifest.avatarColor"
+          :state="markState"
           size="sm"
         />
         <span class="name">{{ bot?.name ?? 'Bot' }}</span>
@@ -122,6 +123,8 @@
             placeholder="Tell this Bot what it is for…"
             :disabled="!bot"
             @keydown.enter.exact.prevent="send"
+            @focus="listening = true"
+            @blur="listening = false"
           />
         </label>
         <button
@@ -151,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, Message } from '@dostigus/shared'
+import type { Bot, BotAvatarState, Message } from '@dostigus/shared'
 
 definePageMeta({ layout: 'host' })
 
@@ -188,13 +191,97 @@ const sending = ref(false)
 const botPending = ref(false)
 const sendError = ref('')
 const optimistic = ref<TimelineLine | null>(null)
+const replying = ref(false)
+const cheering = ref(false)
+const greeting = ref(false)
+const listening = ref(false)
+const markFailed = ref(false)
 const settingsOpen = ref(false)
 const threadEl = ref<HTMLOListElement | null>(null)
 
 const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
+/**
+ * Header mark states, strongest first: a failed send beats a reply in
+ * flight, which beats the reply landing, its cheer, the opening greet and
+ * the composer lean. With no key the Bot cannot answer, so it sleeps.
+ */
+const markState = computed<BotAvatarState>(() => {
+  if (markFailed.value) {
+    return 'error'
+  }
+  if (botPending.value) {
+    return 'think'
+  }
+  if (replying.value) {
+    return 'reply'
+  }
+  if (cheering.value) {
+    return 'celebrate'
+  }
+  if (greeting.value) {
+    return 'greet'
+  }
+  if (listening.value) {
+    return 'listen'
+  }
+  return gatewayUnset.value ? 'sleep' : 'idle'
+})
+
+let markTimers: ReturnType<typeof setTimeout>[] = []
+
+function clearMarkTimers() {
+  for (const timer of markTimers) {
+    clearTimeout(timer)
+  }
+  markTimers = []
+}
+
+function resetMark() {
+  clearMarkTimers()
+  replying.value = false
+  cheering.value = false
+  greeting.value = false
+  markFailed.value = false
+}
+
+/** A nod and a wave when the Chat opens. */
+function greetOnOpen() {
+  resetMark()
+  greeting.value = true
+  markTimers.push(setTimeout(() => {
+    greeting.value = false
+  }, 1200))
+}
+
+/** Talk the reply out, then one hop of a cheer. */
+function speakReply() {
+  resetMark()
+  replying.value = true
+  markTimers.push(setTimeout(() => {
+    replying.value = false
+    cheering.value = true
+    markTimers.push(setTimeout(() => {
+      cheering.value = false
+    }, 1100))
+  }, 1800))
+}
+
+function showMarkError() {
+  resetMark()
+  markFailed.value = true
+  markTimers.push(setTimeout(() => {
+    markFailed.value = false
+  }, 4000))
+}
+
+onMounted(greetOnOpen)
+
+onUnmounted(clearMarkTimers)
 
 watch(botId, () => {
   optimistic.value = null
+  listening.value = false
+  greetOnOpen()
   botPending.value = false
   sending.value = false
   sendError.value = ''
@@ -254,6 +341,7 @@ async function deliver(raw: string, existing: TimelineLine | null) {
     failed: false,
   }
   botPending.value = true
+  resetMark()
   try {
     await $fetch(`/api/bots/${targetId}/messages`, {
       method: 'POST',
@@ -264,6 +352,9 @@ async function deliver(raw: string, existing: TimelineLine | null) {
     }
     await Promise.all([refresh(), refreshBot(), refreshBots()])
     optimistic.value = null
+    if (messages.value.length > before) {
+      speakReply()
+    }
   } catch {
     if (botId.value !== targetId) {
       return
@@ -275,6 +366,7 @@ async function deliver(raw: string, existing: TimelineLine | null) {
       optimistic.value = { ...optimistic.value, pending: false, failed: true }
     }
     sendError.value = 'Could not send that message.'
+    showMarkError()
   } finally {
     if (botId.value === targetId) {
       sending.value = false

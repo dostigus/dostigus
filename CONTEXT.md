@@ -56,9 +56,9 @@ custom CSS apps.
 _Avoid_: theme, CSS app, per-bot design system.
 
 **Brand**:
-Goose marks and stickers shipped with the Kit. The Host imports them from
-the Kit. Bot avatars are Goose marks (`KitBotAvatar`), not geometric
-blobs.
+The goose logo, the stickers, and the Bot marks shipped with the Kit. The
+Host imports them from the Kit. A Bot avatar is a Bot mark — one bird of
+the eight-bird flock drawn by `KitBotAvatar` — not a geometric blob.
 _Avoid_: theme, mascot pack, logo set.
 
 **Sticker**:

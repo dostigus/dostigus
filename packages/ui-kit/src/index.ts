@@ -1,3 +1,11 @@
+export {
+  BOT_MARKS,
+  type BotMark,
+  MARK_VIEWBOX,
+  type MarkEye,
+  type MarkPiece,
+  renderPiece,
+} from './bot-marks'
 export type { GooseLogoMark, GooseStickerName } from './brand'
 export {
   GOOSE_LOGO_MARKS,

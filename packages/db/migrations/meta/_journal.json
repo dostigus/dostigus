@@ -43,6 +43,13 @@
       "when": 1758630000000,
       "tag": "0005_goose_mark_shapes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1758700000000,
+      "tag": "0006_flock_shapes",
+      "breakpoints": true
     }
   ]
 }

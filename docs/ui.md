@@ -39,7 +39,7 @@ Named CSS tokens in the Kit and Host (`--bot-accent-01` …
 `--bot-accent-16`), ordered by hue (color-wheel). Manifest `avatarColor`
 stores the hex and resolves by value, not by token index. See
 [ADR 0016](adr/0016-bot-avatar-tokens.md) and
-[ADR 0017](adr/0017-goose-mark-avatar.md). The appearance editor centers
+[ADR 0018](adr/0018-bot-mark-flock.md). The appearance editor centers
 the last incomplete swatch row.
 
 | Token | Hex |
@@ -61,16 +61,38 @@ the last incomplete swatch row.
 | `--bot-accent-15` | `#DD547E` |
 | `--bot-accent-16` | `#DE3957` |
 
-## Bot Goose marks
+## Bot marks — the flock
 
-Kit `KitBotAvatar` draws eight goose-character silhouettes with named
-parts (`body`, `beak`, `eye-l`, `eye-r`): `round`, `tall`, `squat`,
-`lean`, `plump`, `chick`, `honk`, `peek`. Body fill is the Manifest
-accent; the beak is derived (darker / warmer). States: `none` | `idle` |
-`think` | `reply` | `work` — this Host uses `idle` (light breathe) on
-sidebar and Chat header. Defaults are `round` and `#1F7AE5`
-(`--bot-accent-10`). The Host Bot settings Sheet edits shape and color
-for the Owner.
+Kit `KitBotAvatar` draws one of eight birds: `goose`, `duck`, `swan`,
+`chick`, `parrot`, `heron`, `puffin`, `owl`. Geometry is data in
+`packages/ui-kit/src/bot-marks.ts`, built from named parts — `tail`,
+`body`, `belly`, `wing`, `feet`, `crest`, `head`, `beak`, `jaw`, `eyes` —
+so motion can target a piece.
+
+All tones derive from the Manifest accent through `botMarkPalette`: the
+body is the accent, the wing and tail a shade of it, eye whites and the
+puffin chest a warm near-cream, and the bill and feet a warm tone held
+apart from the body on every accent.
+
+States: `none` | `idle` | `think` | `reply` | `work` | `greet` | `listen` |
+`celebrate` | `error` | `sleep`. `greet` and `celebrate` play once; the
+caller returns to `idle` after them.
+
+| State | Host call site |
+|-------|----------------|
+| `idle` | sidebar rows, Chat header at rest |
+| `greet` | Chat open; the picked bird in the appearance editor |
+| `listen` | Chat composer focused |
+| `think` | reply in flight |
+| `reply` | reply landing |
+| `celebrate` | just after the reply finishes |
+| `error` | failed send |
+| `sleep` | no OpenRouter key, so the Bot cannot answer |
+| `work` | Kit only for now |
+
+Under `prefers-reduced-motion` nothing animates, and the states that mean
+something hold a static pose instead. Defaults are `goose` and `#1F7AE5`
+(`--bot-accent-10`). See [ADR 0018](adr/0018-bot-mark-flock.md).
 
 ## Sheet shell
 
@@ -123,7 +145,7 @@ Its menu opens Settings, Members (Owner), and Sign out. Those links are
 not pinned in the sidebar.
 
 Chat has a narrow header. The Bot avatar and name open a right Sheet
-(`KitSheet` with `edge="end"`): appearance (**Bot** tab: Goose mark grid
+(`KitSheet` with `edge="end"`): appearance (**Bot** tab: the flock grid
 and hue-ordered color swatches with a centered last row, plus **Reset**),
 name, Model tier, and delete for the
 Owner. Members see the chosen avatar and may read those fields. Bubbles

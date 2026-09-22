@@ -54,6 +54,7 @@
             :shape="item"
             :color="color"
             size="lg"
+            :state="markState(item)"
           />
         </button>
       </div>
@@ -169,9 +170,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, BotAccentHex, BotAvatarShape, ModelTier } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, BotAvatarState, ModelTier } from '@dostigus/shared'
 import {
   BOT_ACCENT_TOKENS,
+  BOT_AVATAR_SHAPE_LABELS,
   BOT_AVATAR_SHAPES,
   DEFAULT_AVATAR_COLOR,
   DEFAULT_AVATAR_SHAPE,
@@ -200,6 +202,7 @@ const tier = ref<ModelTier>('strong')
 const shape = ref<BotAvatarShape>(DEFAULT_AVATAR_SHAPE)
 const color = ref<BotAccentHex>(DEFAULT_AVATAR_COLOR)
 const saving = ref(false)
+const picked = ref(false)
 const deleting = ref(false)
 const confirmDelete = ref(false)
 const error = ref('')
@@ -211,8 +214,11 @@ watch(() => props.bot?.id, () => {
 watch(open, (isOpen) => {
   if (isOpen) {
     syncFromBot()
+    playGreet()
     return
   }
+  clearTimeout(greetTimer)
+  picked.value = false
   confirmDelete.value = false
   error.value = ''
 })
@@ -230,7 +236,28 @@ function syncFromBot() {
 }
 
 function shapeLabel(value: BotAvatarShape): string {
-  return value.charAt(0).toUpperCase() + value.slice(1)
+  return BOT_AVATAR_SHAPE_LABELS[value]
+}
+
+/** The chosen bird greets when the Sheet opens or you pick it; the rest hold still. */
+function markState(value: BotAvatarShape): BotAvatarState {
+  if (shape.value !== value) {
+    return 'none'
+  }
+  return picked.value ? 'greet' : 'idle'
+}
+
+let greetTimer: ReturnType<typeof setTimeout>
+
+function playGreet() {
+  picked.value = false
+  clearTimeout(greetTimer)
+  void nextTick(() => {
+    picked.value = true
+    greetTimer = setTimeout(() => {
+      picked.value = false
+    }, 1200)
+  })
 }
 
 function pickShape(value: BotAvatarShape) {
@@ -238,6 +265,7 @@ function pickShape(value: BotAvatarShape) {
     return
   }
   shape.value = value
+  playGreet()
 }
 
 function pickColor(value: BotAccentHex) {
@@ -282,6 +310,10 @@ async function save() {
     saving.value = false
   }
 }
+
+onUnmounted(() => {
+  clearTimeout(greetTimer)
+})
 
 async function remove() {
   if (!props.bot || !isOwner.value || deleting.value) {
@@ -355,16 +387,22 @@ async function remove() {
   appearance: none;
   border: 0;
   background: transparent;
-  padding: 0.45rem;
+  padding: 0.35rem 0.2rem;
   border-radius: var(--radius);
   cursor: pointer;
   display: grid;
   place-items: center;
+  transition: background 120ms ease;
+}
+
+.shape:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
 }
 
 .shape.selected {
-  outline: 2px solid var(--line);
-  outline-offset: 1px;
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+  outline: 2px solid var(--accent-dim);
+  outline-offset: -1px;
 }
 
 .shape:disabled {

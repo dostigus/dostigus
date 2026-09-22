@@ -10,7 +10,7 @@ function bot(name: string, preview: string | null): BotListItem {
     manifest: {
       name,
       modelTier: 'strong',
-      avatarShape: 'round',
+      avatarShape: 'goose',
       avatarColor: '#1F7AE5',
       skillIds: [],
       modulePackageIds: [],
