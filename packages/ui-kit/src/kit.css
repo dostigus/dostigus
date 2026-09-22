@@ -14,9 +14,9 @@
 .kit-dialog,
 .kit-sheet {
   z-index: 21;
-  background: var(--surface, #1c1c1c);
-  color: var(--text, #f4f1ec);
-  border: 1px solid var(--line, #2a2a2a);
+  background: var(--card, #000000);
+  color: var(--text, #ffffff);
+  border: 1px solid var(--line, #333333);
   font-family: inherit;
 }
 
@@ -28,7 +28,7 @@
   width: min(24rem, calc(100vw - 2rem));
   max-height: min(85dvh, 40rem);
   overflow: auto;
-  border-radius: var(--radius, 1.35rem);
+  border-radius: var(--radius-card, 1.75rem);
   padding: 1.25rem 1.35rem 1.35rem;
   box-shadow: 0 18px 50px rgb(0 0 0 / 40%);
 }
@@ -46,7 +46,7 @@
   margin-inline: auto;
   max-height: 85dvh;
   overflow: auto;
-  border-radius: var(--radius, 1.35rem) var(--radius, 1.35rem) 0 0;
+  border-radius: var(--radius-card, 1.75rem) var(--radius-card, 1.75rem) 0 0;
   padding: 0.45rem 1.25rem calc(1.4rem + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -12px 40px rgb(0 0 0 / 35%);
 }
@@ -65,7 +65,7 @@
   max-height: none;
   margin: 0;
   border-radius: 0;
-  border-left: 1px solid var(--line, #2a2a2a);
+  border-left: 1px solid var(--line, #333333);
   padding: 1.15rem 1.25rem calc(1.4rem + env(safe-area-inset-bottom, 0px));
   box-shadow: -12px 0 40px rgb(0 0 0 / 35%);
 }
@@ -78,7 +78,7 @@
   width: 2.75rem;
   height: 0.35rem;
   border-radius: 999px;
-  background: #8a857c;
+  background: var(--text-muted, #a4a4a4);
   margin: 0.35rem auto 0.85rem;
 }
 
@@ -97,7 +97,7 @@
 
 .kit-desc {
   margin: 0.35rem 0 0;
-  color: var(--text-muted, #9a958c);
+  color: var(--text-muted, #a4a4a4);
   font-size: 0.9rem;
   line-height: 1.45;
   font-weight: 400;
@@ -108,20 +108,20 @@
   flex: none;
   border: 0;
   background: transparent;
-  color: var(--text-muted, #9a958c);
+  color: var(--text-muted, #a4a4a4);
   cursor: pointer;
   padding: 0.15rem 0.1rem;
   font: inherit;
 }
 
 .kit-close:hover {
-  color: var(--text, #f4f1ec);
+  color: var(--text, #ffffff);
 }
 
 .kit-close:focus-visible {
-  outline: 2px solid var(--accent, #ff5c35);
+  outline: 2px solid var(--accent, #f25630);
   outline-offset: 2px;
-  border-radius: 0.4rem;
+  border-radius: var(--radius, 0.75rem);
 }
 
 .kit-media {
@@ -139,13 +139,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: var(--radius, 0.75rem);
   padding: 0.7rem 1.35rem;
   cursor: pointer;
   font: inherit;
   font-weight: 600;
   border: 0;
-  background: var(--accent, #ff5c35);
+  background: var(--accent, #f25630);
   color: var(--accent-ink, #fff7f3);
 }
 
@@ -154,7 +154,7 @@
 }
 
 .kit-button:focus-visible {
-  outline: 2px solid var(--accent, #ff5c35);
+  outline: 2px solid var(--accent, #f25630);
   outline-offset: 2px;
 }
 
@@ -164,15 +164,16 @@
 }
 
 .kit-button--ghost {
-  border: 1px solid var(--line, #2a2a2a);
+  border: 1px solid var(--line, #333333);
   background: transparent;
-  color: var(--text, #f4f1ec);
+  color: var(--text, #ffffff);
 }
 
 .kit-button--icon {
   width: 2.6rem;
   height: 2.6rem;
   padding: 0;
+  border-radius: 999px;
   font-size: 1.45rem;
   line-height: 1;
   font-weight: 500;

@@ -16,6 +16,7 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
 }
 
 .top {
@@ -36,7 +37,7 @@
   width: min(26rem, 100%);
   padding: 1.7rem 1.5rem 1.6rem;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border-radius: var(--radius-card);
+  background: var(--card);
 }
 </style>

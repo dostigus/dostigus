@@ -7,7 +7,7 @@
 
 The Kit (`@dostigus/ui-kit`) sits on [Reka UI](https://github.com/unovue/reka-ui)
 (`reka-ui` Vue primitives) and the Host tokens in [`docs/ui.md`](../ui.md):
-`#121212` / `#FF5C35` / Nunito / soft radii. Reka stays headless. Color,
+`#212121` / `#F25630` / Nunito / card radii. Reka stays headless. Color,
 radius, and type come from those tokens. The Host font stays Nunito.
 
 A thin **Sheet shell** (`SheetShell`) wraps Reka `Dialog`. Two styled
@@ -74,3 +74,11 @@ same route, presented by the Sheet shell.
   tokens already in the Host.
 - Leave Add Member as an inline card — rejected. The Sheet shell needs a
   real Host flow, and Add Member is that flow.
+
+## Note (palette)
+
+Host chrome tokens moved off Day-1 charcoal `#121212` / coral `#FF5C35`
+(cream text). Current Host tokens live in [`docs/ui.md`](../ui.md):
+canvas `#212121`, Chat `#000000`, cards `#000000`, accent `#F25630`,
+white / `#A4A4A4` text, `--radius-card` ≈ 28px and `--radius` ≈ 12px.
+Bot accents (`--bot-accent-01`…`16`) stay separate from Host `--accent`.

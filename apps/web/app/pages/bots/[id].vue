@@ -300,7 +300,7 @@ async function onBotDeleted() {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: var(--bg-chat);
 }
 
 .top {
@@ -383,7 +383,7 @@ async function onBotDeleted() {
 .bubble {
   max-width: min(34rem, 86%);
   padding: 0.7rem 0.95rem;
-  border-radius: 1.15rem;
+  border-radius: var(--radius);
   border: 0;
   background: var(--surface);
 }
@@ -471,7 +471,7 @@ async function onBotDeleted() {
   align-items: flex-end;
   padding: 0.3rem 0.35rem 0.3rem 0.3rem;
   border: 1px solid var(--line);
-  border-radius: 1.6rem;
+  border-radius: var(--radius);
   background: var(--surface);
 }
 
@@ -489,7 +489,7 @@ async function onBotDeleted() {
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text-muted);
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.35rem 0.8rem;
   cursor: pointer;
   font: inherit;

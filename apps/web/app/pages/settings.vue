@@ -360,8 +360,8 @@ async function ping() {
   margin: 0 auto;
   padding: 1.5rem 1.45rem 1.5rem;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border-radius: var(--radius-card);
+  background: var(--card);
 }
 
 .status-row {
@@ -375,7 +375,7 @@ async function ping() {
   display: inline-flex;
   align-items: center;
   padding: 0.2rem 0.7rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-size: 0.78rem;
   letter-spacing: 0.04em;
 }
@@ -416,7 +416,7 @@ async function ping() {
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--text-muted);
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.45rem 0.9rem;
   cursor: pointer;
   font-size: 0.85rem;
@@ -486,7 +486,7 @@ summary {
 .ghost,
 .solid {
   appearance: none;
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.55rem 1rem;
   cursor: pointer;
 }

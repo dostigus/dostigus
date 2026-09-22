@@ -137,7 +137,7 @@ input:focus {
   appearance: none;
   width: 100%;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.75rem 1.1rem;
   background: var(--accent);
   color: var(--accent-ink);

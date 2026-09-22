@@ -22,8 +22,8 @@ one kit, and one place to learn the UI.
 - New Bot UI is a Kit binding + MCP surface, not a new Nuxt app.
 - Host empty states (Chat, Sheet) are first-class; do not replace them with a
   marketing landing page.
-- Host UI text is Nunito (headings and body). Dark charcoal canvas, coral
-  accent, rounded Kit chrome. Tokens: [`docs/ui.md`](../ui.md).
+- Host UI text is Nunito (headings and body). Dark charcoal canvas, firm
+  coral accent, rounded Kit chrome. Tokens: [`docs/ui.md`](../ui.md).
 - Kit implementation (Reka UI, Sheet shell, Brand) is
   [ADR 0013](0013-kit-reka-ui-and-brand.md).
 - The wide-screen Host (sidebar plus Chat) and optimistic send are

@@ -53,7 +53,7 @@ What the running Cluster does today:
   password. A Member sees the same Bot list and Chat, without create,
   delete, Members, or Settings. Turning off sign-in keeps their name on
   the Chat line. Logged-out visitors cannot open those surfaces. Host font is
-  Nunito; dark charcoal + coral-orange tokens
+  Nunito; charcoal canvas + firm coral-orange tokens
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
   Brand goose marks and stickers live in the Kit. The Host mark uses the
