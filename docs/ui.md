@@ -126,7 +126,6 @@ Do not add poses.
 Where the Host uses them today:
 
 - Host mark: goose logo (sign-in)
-- Empty Bots: `wave` and **Create a Bot** (opens the picker)
 - Empty Members: `peek`
 - Add Member: `KitSheet` and an `ok` sticker
 
@@ -138,13 +137,14 @@ icon rail (avatars, the picker control, user button). The width and
 collapsed state stay in the browser.
 
 The top of the sidebar is search and a small `+`. Search filters the
-loaded Bot list. The `+` opens a picker over the Chat pane (sheet chrome
-on the black pane): **To**, a name filter, **Create new Bot** for the
-Owner, and existing Bots (mark, name, latest Chat line). **Close**,
-Escape, or a click outside dismisses it. Search does not create a Bot
-from the query. A Member sees search and existing Bots only. Each sidebar
-row is an avatar, the Bot name, and a one-line preview of the latest Chat
-line. The bottom is a user button.
+loaded Bot list. With no Bots, the sidebar is a short muted line. The `+`
+replaces the Chat pane with the picker: a **To:** field across the pane,
+then **Create new Bot** for the Owner, then existing Bots (mark, name,
+latest Chat line). The sidebar stays. There is no **Close** control.
+Escape, choosing a Bot, creating a Bot, or a sidebar Bot row dismisses
+it. Search does not create a Bot from the query. A Member sees search and
+existing Bots only. Each sidebar row is an avatar, the Bot name, and a
+one-line preview of the latest Chat line. The bottom is a user button.
 Its menu opens Settings, Members (Owner), and Sign out. Those links are
 not pinned in the sidebar.
 

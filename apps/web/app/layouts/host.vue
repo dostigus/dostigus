@@ -9,7 +9,6 @@
     />
     <HostSidebar />
     <div class="pane">
-      <slot />
       <BotPicker
         v-if="createOpen"
         :bots="bots"
@@ -17,6 +16,7 @@
         @created="onCreated"
         @open-bot="onOpenBot"
       />
+      <slot v-else />
     </div>
   </div>
 </template>

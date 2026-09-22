@@ -10,7 +10,6 @@ function read(rel: string): string {
 
 it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   const mark = read('app/components/HostMark.vue')
-  const empty = read('app/components/HostBotEmpty.vue')
   const sidebar = read('app/components/HostSidebar.vue')
   const layout = read('app/layouts/host.vue')
   const picker = read('app/components/BotPicker.vue')
@@ -21,9 +20,9 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
 
   expect(mark).toContain('GooseLogo')
   expect(mark).not.toContain('🪿')
-  expect(empty).toContain('name="wave"')
-  expect(empty).toContain('KitButton')
-  expect(empty).toContain('Create a Bot')
+  expect(sidebar).toContain('No Bots yet')
+  expect(sidebar).not.toContain('HostBotEmpty')
+  expect(sidebar).not.toContain('name="wave"')
   expect(sidebar).toContain('KitButton')
   expect(sidebar).toContain('placeholder="Search"')
   expect(sidebar).toContain('Collapse sidebar')
@@ -63,6 +62,7 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   expect(read('app/pages/bots/[id].vue')).toContain('avatarShape')
   expect(read('app/pages/bots/[id].vue')).toContain('BotSettingsSheet')
   expect(layout).toContain('BotPicker')
+  expect(layout).toContain('<slot v-else />')
   expect(layout).not.toContain('BotCreateDialog')
   expect(picker).toContain('Create new Bot')
   expect(picker).toContain('Find or create a Bot')
@@ -74,6 +74,8 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   expect(picker).toContain('v-if="isOwner"')
   expect(picker).toContain('HostBotAvatar')
   expect(picker).not.toContain('KitDialog')
+  expect(picker).not.toContain('aria-modal')
+  expect(picker).not.toContain('Close')
   expect(picker).not.toContain('Group')
   expect(picker).not.toContain('⌘')
   expect(picker).not.toContain('metaKey')

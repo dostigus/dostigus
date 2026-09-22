@@ -1,42 +1,30 @@
 <template>
-  <div
-    ref="layerEl"
-    class="layer"
-    @click.self="requestClose"
+  <section
+    class="picker"
+    aria-labelledby="bot-picker-title"
   >
-    <div
-      class="panel"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="bot-picker-title"
-    >
-      <header class="head">
-        <h2
-          id="bot-picker-title"
-          class="sr-only"
+    <header class="head">
+      <HostMenuButton />
+      <h2
+        id="bot-picker-title"
+        class="sr-only"
+      >
+        {{ isOwner ? 'Find or create a Bot' : 'Find a Bot' }}
+      </h2>
+      <label class="search">
+        <span class="to">To:</span>
+        <input
+          ref="searchEl"
+          v-model="query"
+          type="search"
+          :placeholder="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
+          autocomplete="off"
+          @keydown.enter.prevent
         >
-          {{ isOwner ? 'Find or create a Bot' : 'Find a Bot' }}
-        </h2>
-        <label class="search">
-          <span class="to">To</span>
-          <input
-            ref="searchEl"
-            v-model="query"
-            type="search"
-            :placeholder="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
-            autocomplete="off"
-            @keydown.enter.prevent
-          >
-        </label>
-        <button
-          type="button"
-          class="close"
-          @click="requestClose"
-        >
-          Close
-        </button>
-      </header>
+      </label>
+    </header>
 
+    <div class="body">
       <p
         v-if="error"
         class="error"
@@ -98,7 +86,7 @@
         {{ query.trim() ? 'No matching Bots.' : 'No Bots yet.' }}
       </p>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -121,16 +109,19 @@ const { isOwner } = useHostAccount()
 const query = ref('')
 const busy = ref(false)
 const error = ref('')
-const layerEl = ref<HTMLElement | null>(null)
 const searchEl = ref<HTMLInputElement | null>(null)
 
 const visible = computed(() => filterBotsByName(props.bots, query.value))
+
+useHead({
+  title: computed(() => isOwner.value ? 'Dostigus · Find or create a Bot' : 'Dostigus · Find a Bot'),
+})
 
 function isCurrent(id: string): boolean {
   return String(route.params.id ?? '') === id
 }
 
-function requestClose() {
+function dismiss() {
   if (busy.value) {
     return
   }
@@ -160,74 +151,44 @@ async function createNew() {
   }
 }
 
-function onPointerDown(event: PointerEvent) {
-  const layer = layerEl.value
-  if (!layer || busy.value) {
-    return
-  }
-  if (event.target instanceof Node && layer.contains(event.target)) {
-    return
-  }
-  emit('close')
-}
-
 function onKeydown(event: KeyboardEvent) {
   if (event.key !== 'Escape') {
     return
   }
-  requestClose()
+  dismiss()
 }
-
-let stopped = false
 
 onMounted(() => {
   searchEl.value?.focus()
-  nextTick(() => {
-    if (stopped) {
-      return
-    }
-    document.addEventListener('pointerdown', onPointerDown)
-    window.addEventListener('keydown', onKeydown)
-  })
+  window.addEventListener('keydown', onKeydown)
 })
 
 onUnmounted(() => {
-  stopped = true
-  document.removeEventListener('pointerdown', onPointerDown)
   window.removeEventListener('keydown', onKeydown)
 })
 </script>
 
 <style scoped>
-.layer {
-  position: absolute;
-  inset: 0;
-  z-index: 24;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 4.25rem 1.25rem 1.5rem;
-  background: rgb(0 0 0 / 55%);
-}
-
-.panel {
-  width: min(36rem, 100%);
-  max-height: min(70dvh, 36rem);
+.picker {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--sheet);
+  background: var(--bg-chat);
   color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  box-shadow: 0 18px 50px rgb(0 0 0 / 45%);
-  overflow: hidden;
 }
 
 .head {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 0.9rem 0.7rem;
+  gap: 0.65rem;
+  padding: 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.head:focus-within {
+  border-bottom-color: var(--accent);
 }
 
 .search {
@@ -236,71 +197,50 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  height: 2.4rem;
-  padding: 0 0.85rem;
-  border-radius: var(--radius);
-  background: var(--surface);
-  border: 1px solid var(--line);
-}
-
-.search:focus-within {
-  border-color: var(--accent);
 }
 
 .to {
   flex: none;
   color: var(--text-muted);
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 1rem;
 }
 
 .search input {
   flex: 1;
   min-width: 0;
   border: 0;
-  padding: 0;
+  padding: 0.35rem 0;
   background: transparent;
   color: var(--text);
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 
 .search input:focus {
   outline: none;
 }
 
+.search input::placeholder {
+  color: var(--text-muted);
+}
+
 .search input::-webkit-search-cancel-button {
   cursor: pointer;
 }
 
-.close {
-  appearance: none;
-  flex: none;
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.15rem 0.1rem;
-  font: inherit;
-  font-weight: 700;
-}
-
-.close:hover {
-  color: var(--text);
-}
-
-.close:focus-visible,
-.row:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
 .error,
 .empty {
   margin: 0;
-  padding: 0.15rem 1.1rem 0.75rem;
+  padding: 0.85rem 1.25rem 0;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .error {
@@ -310,8 +250,7 @@ onUnmounted(() => {
 .rows {
   list-style: none;
   margin: 0;
-  padding: 0.15rem 0.4rem 0.55rem;
-  overflow: auto;
+  padding: 0.4rem 0.55rem 0.6rem;
 }
 
 .row {
@@ -319,20 +258,25 @@ onUnmounted(() => {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.8rem;
   text-align: left;
   border: 0;
   border-radius: var(--radius);
   background: transparent;
   color: inherit;
   font: inherit;
-  padding: 0.5rem 0.55rem;
+  padding: 0.55rem 0.7rem;
   cursor: pointer;
 }
 
 .row:hover:not(:disabled),
 .row.current {
   background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .row:disabled {
@@ -363,7 +307,7 @@ onUnmounted(() => {
 
 .name {
   font-weight: 700;
-  font-size: 0.98rem;
+  font-size: 1rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -371,7 +315,7 @@ onUnmounted(() => {
 
 .preview {
   color: var(--text-muted);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 400;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -388,11 +332,5 @@ onUnmounted(() => {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-@media (max-width: 52rem) {
-  .layer {
-    padding: 3.25rem 0.75rem 1rem;
-  }
 }
 </style>

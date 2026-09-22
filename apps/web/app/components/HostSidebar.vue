@@ -58,10 +58,12 @@
         >
           Could not load Bots.
         </p>
-        <HostBotEmpty
+        <p
           v-else-if="bots.length === 0 && !rail"
-          compact
-        />
+          class="status"
+        >
+          No Bots yet
+        </p>
         <p
           v-else-if="visible.length === 0 && !rail"
           class="status"
@@ -82,7 +84,7 @@
               :to="`/bots/${bot.id}`"
               :aria-label="bot.name"
               :title="bot.name"
-              @click="close"
+              @click="onRow(bot.id)"
             >
               <HostBotAvatar
                 :name="bot.name"
@@ -95,7 +97,7 @@
               v-else
               class="bot"
               :to="`/bots/${bot.id}`"
-              @click="close"
+              @click="onRow(bot.id)"
             >
               <HostBotAvatar
                 :name="bot.name"
@@ -159,9 +161,10 @@
 <script setup lang="ts">
 import { KitButton } from '@dostigus/ui-kit'
 
+const route = useRoute()
 const { isOwner } = useHostAccount()
 const { open, narrow, close } = useHostNav()
-const { openCreate } = useHostCreate()
+const { openCreate, closeCreate } = useHostCreate()
 const { bots, pending, error } = await useHostBots()
 const { width, collapsed, resizeTo, toggleCollapsed } = useHostSidebar()
 
@@ -178,6 +181,13 @@ const frameStyle = computed(() => {
 })
 
 let drag: { pointerId: number, startX: number, origin: number } | null = null
+
+function onRow(id: string) {
+  close()
+  if (route.path === `/bots/${id}`) {
+    closeCreate()
+  }
+}
 
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0 || narrow.value) {

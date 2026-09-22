@@ -47,8 +47,8 @@ What the running Cluster does today:
   unlabeled bubbles), Settings, and Members. Settings presents OpenRouter
   as the default LLM path (API key + Model tier) and stays with the Owner.
   A collapsed custom OpenAI-compatible URL remains for other gateways.
-  The `+` and the empty-state **Create a Bot** open a picker over the Chat
-  pane ([ADR 0019](adr/0019-bot-picker-and-chat-purpose.md)). Search there
+  The `+` replaces the Chat pane with a picker
+  ([ADR 0019](adr/0019-bot-picker-and-chat-purpose.md)). Search there
   filters Bots by name. The Owner row **Create new Bot** stores a Bot named
   **New Bot** with a random flock mark and accent, then opens that Chat.
   A Member's picker is search and existing Bots only. Creating a Bot (or
@@ -63,7 +63,7 @@ What the running Cluster does today:
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
   The Brand goose logo, stickers, and Bot marks live in the Kit. The Host
-  mark uses the goose logo. Empty Bots shows a sticker. Add Member opens a Sheet. See
+  mark uses the goose logo. An empty Bot list is a short line. Add Member opens a Sheet. See
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
   is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
   an icon rail. Each row shows an avatar, the Bot name, and the latest
@@ -79,8 +79,8 @@ What the running Cluster does today:
   attachments control and
   shows a send arrow when there is text. On a narrow screen the sidebar
   is a drawer. Sending a line shows it at once, then a pending Bot reply,
-  then the stored reply. An empty Bot list offers **Create a Bot**, which
-  opens the picker. Creating a Bot opens that Chat. See
+  then the stored reply. An empty Bot list is a short line. The `+` opens
+  the picker as that pane. Creating a Bot opens that Chat. See
   [ADR 0014](adr/0014-host-messenger-shell.md),
   [ADR 0015](adr/0015-host-desktop-shell.md),
   [ADR 0016](adr/0016-bot-avatar-tokens.md),

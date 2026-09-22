@@ -19,7 +19,12 @@
       >
         Could not load Bots.
       </p>
-      <HostBotEmpty v-else-if="bots.length === 0" />
+      <p
+        v-else-if="bots.length === 0"
+        class="status"
+      >
+        No Bots yet
+      </p>
       <div
         v-else
         class="pick"
@@ -47,6 +52,7 @@ const { bots, pending, error } = await useHostBots()
   min-height: 0;
   display: flex;
   flex-direction: column;
+  background: var(--bg-chat);
 }
 
 .top {
