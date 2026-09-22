@@ -114,7 +114,10 @@
           Try again
         </button>
       </p>
-      <div class="composer-row">
+      <div
+        class="composer-row"
+        :class="{ multiline: composerMultiline }"
+      >
         <button
           type="button"
           class="attach"
@@ -127,6 +130,7 @@
         <label class="draft">
           <span class="sr-only">Message</span>
           <textarea
+            ref="draftEl"
             v-model="draft"
             rows="1"
             maxlength="16000"
@@ -197,6 +201,8 @@ useHead({
 })
 
 const draft = ref('')
+const draftEl = ref<HTMLTextAreaElement | null>(null)
+const composerMultiline = ref(false)
 const sending = ref(false)
 const botPending = ref(false)
 const sendError = ref('')
@@ -300,13 +306,48 @@ function showMarkError() {
   }, 4000))
 }
 
-onMounted(greetOnOpen)
+/** Pill on one line; `--radius-card` once the field is taller than that. */
+function measureComposer() {
+  const el = draftEl.value
+  if (!el) {
+    composerMultiline.value = false
+    return
+  }
+  const style = getComputedStyle(el)
+  const line = Number.parseFloat(style.lineHeight)
+  const pad = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
+  if (!Number.isFinite(line) || line <= 0) {
+    composerMultiline.value = el.value.includes('\n')
+    return
+  }
+  const oneLine = line + (Number.isFinite(pad) ? pad : 0)
+  composerMultiline.value = el.scrollHeight > oneLine + line * 0.5
+}
+
+let composerObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  greetOnOpen()
+  measureComposer()
+  const el = draftEl.value
+  if (el && typeof ResizeObserver !== 'undefined') {
+    composerObserver = new ResizeObserver(() => {
+      measureComposer()
+    })
+    composerObserver.observe(el)
+  }
+})
 
 onUnmounted(() => {
   clearMarkTimers()
+  composerObserver?.disconnect()
   if (botId.value) {
     setLive(botId.value, false)
   }
+})
+
+watch(draft, () => {
+  nextTick(measureComposer)
 })
 
 watch(botId, () => {
@@ -599,6 +640,11 @@ async function onBotDeleted() {
   border: 0;
   border-radius: 9999px;
   background: var(--surface);
+  transition: border-radius 160ms ease;
+}
+
+.composer-row.multiline {
+  border-radius: var(--radius-card);
 }
 
 .send-error {
@@ -706,5 +752,11 @@ textarea {
 
 textarea:focus {
   outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composer-row {
+    transition: none;
+  }
 }
 </style>

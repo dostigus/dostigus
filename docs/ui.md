@@ -31,9 +31,9 @@ Shape: large card radii (`--radius-card`), soft messenger bubbles
 (`border-radius: 9999px`), circular icon buttons, generous padding. The Kit
 reads these Host variables. Nunito is inherited from the Host.
 
-The composer pill is the field itself (`--surface` fill, full pill radius).
-It has no border stroke, so nothing sits above or beside the input on the
-Chat canvas.
+The composer is the field itself (`--surface` fill, no border stroke), so
+nothing sits above or beside the input on the Chat canvas. One line keeps
+the full pill radius. Two or more lines use `--radius-card` (~28px).
 
 `--bot-accent-01`…`16` are a separate Bot avatar palette — not the Host
 `--accent`. See below.
