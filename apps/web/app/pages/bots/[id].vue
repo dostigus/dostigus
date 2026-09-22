@@ -1,5 +1,8 @@
 <template>
-  <div class="page">
+  <div
+    ref="pageEl"
+    class="page"
+  >
     <header class="top">
       <HostMenuButton />
       <button
@@ -96,6 +99,7 @@
     </ol>
 
     <form
+      ref="composerEl"
       class="composer"
       @submit.prevent="send"
     >
@@ -203,6 +207,8 @@ useHead({
 
 const draft = ref('')
 const draftEl = ref<HTMLTextAreaElement | null>(null)
+const pageEl = ref<HTMLElement | null>(null)
+const composerEl = ref<HTMLFormElement | null>(null)
 const composerRowEl = ref<HTMLElement | null>(null)
 const composerMultiline = ref(false)
 /** Bumps when a newer corner ease should win over an in-flight one. */
@@ -363,6 +369,59 @@ function setComposerMultiline(next: boolean) {
 }
 
 let composerObserver: ResizeObserver | null = null
+let composerFrameObserver: ResizeObserver | null = null
+
+/** Close enough to the end that a layout change should keep the latest line in view. */
+const NEAR_END_PX = 64
+
+function threadNearEnd(): boolean {
+  const el = threadEl.value
+  if (!el) {
+    return true
+  }
+  return el.scrollHeight - el.clientHeight - el.scrollTop <= NEAR_END_PX
+}
+
+function pinThreadToEnd() {
+  const el = threadEl.value
+  if (!el?.isConnected) {
+    return
+  }
+  el.scrollTop = el.scrollHeight
+}
+
+/** Pin after the overlay padding is in the scroll height, not only on the next tick. */
+function pinAfterLayout() {
+  pinThreadToEnd()
+  if (typeof requestAnimationFrame !== 'function') {
+    return
+  }
+  requestAnimationFrame(() => {
+    pinThreadToEnd()
+    requestAnimationFrame(pinThreadToEnd)
+  })
+}
+
+/**
+ * Thread end padding tracks the overlay so the latest line rests above the
+ * field. Follow only when the pane was already at the end.
+ */
+function syncComposerClearance() {
+  const page = pageEl.value
+  const form = composerEl.value
+  if (!page || !form) {
+    return
+  }
+  const next = `${Math.ceil(form.getBoundingClientRect().height)}px`
+  if (page.style.getPropertyValue('--composer-clearance') === next) {
+    return
+  }
+  const follow = threadNearEnd()
+  page.style.setProperty('--composer-clearance', next)
+  if (follow) {
+    pinThreadToEnd()
+  }
+}
 
 onMounted(() => {
   greetOnOpen()
@@ -374,11 +433,24 @@ onMounted(() => {
     })
     composerObserver.observe(el)
   }
+  const form = composerEl.value
+  if (form && typeof ResizeObserver !== 'undefined') {
+    composerFrameObserver = new ResizeObserver(() => {
+      syncComposerClearance()
+    })
+    composerFrameObserver.observe(form)
+  }
+  syncComposerClearance()
+  pinAfterLayout()
+  void document.fonts?.ready.then(() => {
+    pinAfterLayout()
+  })
 })
 
 onUnmounted(() => {
   clearMarkTimers()
   composerObserver?.disconnect()
+  composerFrameObserver?.disconnect()
   if (botId.value) {
     setLive(botId.value, false)
   }
@@ -397,6 +469,7 @@ watch(botId, () => {
   sendError.value = ''
   draft.value = ''
   settingsOpen.value = false
+  pinAfterLayout()
 })
 
 watch([botId, botLive], ([id, live], previous) => {
@@ -410,10 +483,8 @@ watch([botId, botLive], ([id, live], previous) => {
 }, { immediate: true })
 
 watch([timeline, botPending, showPurpose], () => {
-  nextTick(() => {
-    threadEl.value?.scrollTo({ top: threadEl.value.scrollHeight })
-  })
-}, { immediate: true })
+  pinAfterLayout()
+}, { flush: 'post', immediate: true })
 
 function isMine(message: TimelineLine): boolean {
   if (message.role !== 'user') {
@@ -512,23 +583,30 @@ async function onBotDeleted() {
 
 <style scoped>
 .page {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: var(--bg-chat);
   --avatar-ring: var(--bg-chat);
   /* Thread and composer share this so the block lines up with bubbles. */
   --thread-inset: 1.15rem;
+  /* Fallback until the overlay is measured. One line plus the screen-edge gap. */
+  --composer-clearance: 4.5rem;
 }
 
 .top {
+  position: relative;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 0.35rem;
   min-height: 3rem;
   padding: 0.35rem 0.75rem;
   border-bottom: 1px solid var(--line-soft);
+  background: var(--bg-chat);
 }
 
 .identity {
@@ -569,18 +647,24 @@ async function onBotDeleted() {
 }
 
 .banner {
+  position: relative;
+  z-index: 3;
   margin: 0;
   padding: 0.7rem 1.25rem;
   color: var(--accent);
   border-bottom: 1px solid var(--line);
+  background: var(--bg-chat);
 }
 
 .quiet-banner {
+  position: relative;
+  z-index: 3;
   margin: 0;
   padding: 0.55rem 1.25rem;
   color: var(--text-muted);
   font-size: 0.88rem;
   border-bottom: 1px solid var(--line);
+  background: var(--bg-chat);
 }
 
 .quiet-banner a {
@@ -593,8 +677,11 @@ async function onBotDeleted() {
   min-height: 0;
   list-style: none;
   margin: 0;
-  padding: 0.6rem var(--thread-inset) 0;
+  /* End padding is the overlay, so the latest line can rest above the field
+     while earlier lines scroll behind it. */
+  padding: 0.6rem var(--thread-inset) var(--composer-clearance);
   overflow: auto;
+  overflow-anchor: none;
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
@@ -666,20 +753,31 @@ async function onBotDeleted() {
 }
 
 .composer {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  /* Inset matches the thread. Transparent so the side margins stay Chat
-     canvas — no full-width --composer bar under the padding. */
-  padding: 0 var(--thread-inset) 0;
+  /* Inset matches the thread. Transparent so the side margins and the
+     screen-edge gap stay Chat canvas — only the row is painted. */
+  padding: 0.35rem var(--thread-inset) calc(0.85rem + env(safe-area-inset-bottom, 0px));
   background: transparent;
+  pointer-events: none;
+}
+
+.composer-row,
+.send-error {
+  pointer-events: auto;
 }
 
 .composer-row {
   display: flex;
   gap: 0.25rem;
   align-items: flex-end;
-  padding: 0.5rem 0.65rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.3rem 0.4rem;
   /* A step lighter than the fill so the rim still reads on Chat black. */
   border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));
   border-radius: 9999px;
