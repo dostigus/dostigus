@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 import {
+  beakColorFromBody,
   BOT_ACCENT_TOKENS,
   BOT_AVATAR_SHAPES,
   botAccentCssVar,
@@ -10,6 +11,8 @@ import {
   DEFAULT_MODEL_TIER,
   isBotAvatarShape,
   isModelTier,
+  LEGACY_AVATAR_SHAPE_MAP,
+  migrateBotAvatarShape,
   MODEL_TIER_LABELS,
   MODEL_TIERS,
   normalizeBotAccentHex,
@@ -27,25 +30,34 @@ it('exposes cheap, strong, code, and toy tiers', () => {
   expect(MODEL_TIER_LABELS.toy).toContain('Toy')
 })
 
-it('exposes Bot avatar shapes and the accent palette', () => {
+it('exposes Goose mark shapes and a hue-ordered accent palette', () => {
   expect(BOT_AVATAR_SHAPES).toEqual([
-    'circle',
-    'bean',
-    'squircle',
-    'capsule',
-    'triangle',
-    'hex',
-    'cloud',
-    'teardrop',
+    'round',
+    'tall',
+    'squat',
+    'lean',
+    'plump',
+    'chick',
+    'honk',
+    'peek',
   ])
-  expect(DEFAULT_AVATAR_SHAPE).toBe('circle')
+  expect(DEFAULT_AVATAR_SHAPE).toBe('round')
   expect(DEFAULT_AVATAR_COLOR).toBe('#1F7AE5')
   expect(BOT_ACCENT_TOKENS).toHaveLength(16)
-  expect(isBotAvatarShape('hex')).toBe(true)
-  expect(isBotAvatarShape('square')).toBe(false)
+  expect(BOT_ACCENT_TOKENS[0]?.hex).toBe('#E47134')
+  expect(BOT_ACCENT_TOKENS[9]?.hex).toBe('#1F7AE5')
+  expect(BOT_ACCENT_TOKENS[15]?.hex).toBe('#DE3957')
+  expect(isBotAvatarShape('honk')).toBe(true)
+  expect(isBotAvatarShape('circle')).toBe(false)
+  expect(migrateBotAvatarShape('circle')).toBe('round')
+  expect(migrateBotAvatarShape('hex')).toBe('chick')
+  expect(LEGACY_AVATAR_SHAPE_MAP.teardrop).toBe('peek')
   expect(normalizeBotAccentHex('#0aac7b')).toBe('#0AAC7B')
   expect(normalizeBotAccentHex('#ffffff')).toBeUndefined()
-  expect(botAccentCssVar('#DC4ACD')).toBe('--bot-accent-16')
+  expect(botAccentCssVar('#1F7AE5')).toBe('--bot-accent-10')
+  expect(botAccentCssVar('#DE3957')).toBe('--bot-accent-16')
+  expect(beakColorFromBody('#1F7AE5')).toMatch(/^#[0-9A-F]{6}$/)
+  expect(beakColorFromBody('#1F7AE5')).not.toBe('#1F7AE5')
 })
 
 it('keeps the product name Dostigus', () => {

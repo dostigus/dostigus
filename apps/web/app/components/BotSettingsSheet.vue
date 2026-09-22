@@ -377,17 +377,20 @@ async function remove() {
 }
 
 .swatches {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 0.7rem 0.55rem;
-  justify-items: center;
+  width: 100%;
   padding: 0.15rem 0.25rem 0.35rem;
 }
 
 .swatch {
   appearance: none;
-  width: 1.55rem;
-  height: 1.55rem;
+  flex: 0 0 calc((100% - 5 * 0.55rem) / 6);
+  width: calc((100% - 5 * 0.55rem) / 6);
+  aspect-ratio: 1;
+  height: auto;
   border-radius: 999px;
   border: 0;
   padding: 0;

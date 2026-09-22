@@ -23,34 +23,41 @@ Host.
 
 Sixteen accents for Bot avatars (and other UI accents that need this set).
 Named CSS tokens in the Kit and Host (`--bot-accent-01` …
-`--bot-accent-16`). Manifest `avatarColor` stores the hex. See
-[ADR 0016](adr/0016-bot-avatar-tokens.md).
+`--bot-accent-16`), ordered by hue (color-wheel). Manifest `avatarColor`
+stores the hex and resolves by value, not by token index. See
+[ADR 0016](adr/0016-bot-avatar-tokens.md) and
+[ADR 0017](adr/0017-goose-mark-avatar.md). The appearance editor centers
+the last incomplete swatch row.
 
 | Token | Hex |
 |-------|-----|
-| `--bot-accent-01` | `#1F7AE5` |
-| `--bot-accent-02` | `#B656D7` |
-| `--bot-accent-03` | `#8190AE` |
-| `--bot-accent-04` | `#529098` |
+| `--bot-accent-01` | `#E47134` |
+| `--bot-accent-02` | `#B2774F` |
+| `--bot-accent-03` | `#9B8F7E` |
+| `--bot-accent-04` | `#D5AC1B` |
 | `--bot-accent-05` | `#A0A24F` |
-| `--bot-accent-06` | `#0AAC7B` |
-| `--bot-accent-07` | `#9B8F7E` |
-| `--bot-accent-08` | `#D5AC1B` |
-| `--bot-accent-09` | `#E47134` |
-| `--bot-accent-10` | `#DE3957` |
-| `--bot-accent-11` | `#73B125` |
-| `--bot-accent-12` | `#B2774F` |
-| `--bot-accent-13` | `#8354E6` |
-| `--bot-accent-14` | `#28A2D6` |
+| `--bot-accent-06` | `#73B125` |
+| `--bot-accent-07` | `#0AAC7B` |
+| `--bot-accent-08` | `#529098` |
+| `--bot-accent-09` | `#28A2D6` |
+| `--bot-accent-10` | `#1F7AE5` |
+| `--bot-accent-11` | `#8190AE` |
+| `--bot-accent-12` | `#8354E6` |
+| `--bot-accent-13` | `#B656D7` |
+| `--bot-accent-14` | `#DC4ACD` |
 | `--bot-accent-15` | `#DD547E` |
-| `--bot-accent-16` | `#DC4ACD` |
+| `--bot-accent-16` | `#DE3957` |
 
-## Bot avatar shapes
+## Bot Goose marks
 
-Kit `KitBotAvatar` draws eight silhouettes with two simple eyes:
-`circle`, `bean`, `squircle`, `capsule`, `triangle`, `hex`, `cloud`,
-`teardrop`. Defaults are `circle` and `--bot-accent-01`. The Host Bot
-settings Sheet (right edge) edits shape and color for the Owner.
+Kit `KitBotAvatar` draws eight goose-character silhouettes with named
+parts (`body`, `beak`, `eye-l`, `eye-r`): `round`, `tall`, `squat`,
+`lean`, `plump`, `chick`, `honk`, `peek`. Body fill is the Manifest
+accent; the beak is derived (darker / warmer). States: `none` | `idle` |
+`think` | `reply` | `work` — this Host uses `idle` (light breathe) on
+sidebar and Chat header. Defaults are `round` and `#1F7AE5`
+(`--bot-accent-10`). The Host Bot settings Sheet edits shape and color
+for the Owner.
 
 ## Sheet shell
 
@@ -103,8 +110,9 @@ Its menu opens Settings, Members (Owner), and Sign out. Those links are
 not pinned in the sidebar.
 
 Chat has a narrow header. The Bot avatar and name open a right Sheet
-(`KitSheet` with `edge="end"`): appearance (**Bot** tab: shape grid and
-color swatches, plus **Reset**), name, Model tier, and delete for the
+(`KitSheet` with `edge="end"`): appearance (**Bot** tab: Goose mark grid
+and hue-ordered color swatches with a centered last row, plus **Reset**),
+name, Model tier, and delete for the
 Owner. Members see the chosen avatar and may read those fields. Bubbles
 have no author label. The composer stays on screen. A `+` on the left is
 reserved for attachments and stays disabled. A send arrow in a circle

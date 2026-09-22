@@ -5,7 +5,7 @@ export const bots = sqliteTable('bots', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   modelTier: text('model_tier').notNull().default('strong'),
-  avatarShape: text('avatar_shape').notNull().default('circle'),
+  avatarShape: text('avatar_shape').notNull().default('round'),
   avatarColor: text('avatar_color').notNull().default('#1F7AE5'),
   skillsJson: text('skills_json').notNull().default('[]'),
   modulesJson: text('modules_json').notNull().default('[]'),

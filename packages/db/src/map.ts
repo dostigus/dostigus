@@ -1,10 +1,9 @@
 import type { Bot, BotAccentHex, BotAvatarShape, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
 import {
   DEFAULT_AVATAR_COLOR,
-  DEFAULT_AVATAR_SHAPE,
   DEFAULT_MODEL_TIER,
-  isBotAvatarShape,
   isModelTier,
+  migrateBotAvatarShape,
   normalizeBotAccentHex,
 } from '@dostigus/shared'
 
@@ -55,7 +54,7 @@ export function modelTierFromRow(value: string): ModelTier {
 }
 
 export function avatarShapeFromRow(value: string): BotAvatarShape {
-  return isBotAvatarShape(value) ? value : DEFAULT_AVATAR_SHAPE
+  return migrateBotAvatarShape(value)
 }
 
 export function avatarColorFromRow(value: string): BotAccentHex {
