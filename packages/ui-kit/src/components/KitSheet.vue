@@ -2,6 +2,7 @@
   <SheetShell
     v-model:open="open"
     kind="sheet"
+    :edge="edge"
     :title="title"
     :description="description"
   >
@@ -18,10 +19,14 @@
 <script setup lang="ts">
 import SheetShell from './SheetShell.vue'
 
-defineProps<{
+withDefaults(defineProps<{
   title: string
   description?: string
-}>()
+  /** `bottom` is the default drawer. `end` is a right-edge drawer. */
+  edge?: 'bottom' | 'end'
+}>(), {
+  edge: 'bottom',
+})
 
 const open = defineModel<boolean>('open', { required: true })
 </script>

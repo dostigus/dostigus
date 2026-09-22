@@ -42,7 +42,7 @@ What the running Cluster does today:
   [ADR 0010](adr/0010-owner-auth-session.md) and
   [ADR 0012](adr/0012-household-members.md).
 - Host UI: Bot list (empty state + Owner `+` create, default name **New Bot**),
-  Chat (timeline + composer, author name on user lines), Settings, and
+  Chat (timeline + composer, unlabeled bubbles), Settings, and
   Members. Settings presents OpenRouter as the default LLM path (API key +
   Model tier) and stays with the Owner. A collapsed custom
   OpenAI-compatible URL remains for other gateways. Creating a Bot
@@ -50,20 +50,26 @@ What the running Cluster does today:
   for. The Owner adds a Member with a display name, email or username, and
   password. A Member sees the same Bot list and Chat, without create,
   delete, Members, or Settings. Turning off sign-in keeps their name on
-  Chat. Logged-out visitors cannot open those surfaces. Host font is
+  the Chat line. Logged-out visitors cannot open those surfaces. Host font is
   Nunito; dark charcoal + coral-orange tokens
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
   Brand goose marks and stickers live in the Kit. The Host mark uses the
   goose logo. Empty Bots shows a sticker. Add Member opens a Sheet. See
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
-  is a sidebar of Bots beside Chat (Bot name, timeline, composer). Members
-  and Settings are quiet links at the bottom of that sidebar. Settings
-  stays `/settings`. Members stays `/members`. On a narrow screen the
-  sidebar collapses to a drawer. Sending a line shows it at once, then a
-  pending Bot reply, then the stored reply. An empty Bot list offers
-  **Create a Bot** and opens that Chat. See
-  [ADR 0014](adr/0014-host-messenger-shell.md).
+  is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
+  an icon rail. Each row shows an avatar, the Bot name, and the latest
+  Chat line. Search filters that list in the Host. The Owner's `+`
+  creates a Bot. A user button opens Settings (`/settings`), Members
+  (`/members`), and Sign out. Chat has a narrow header: avatar and name
+  open a right Sheet (rename, Model tier, delete for the Owner),
+  unlabeled bubbles, and a composer. The composer has a disabled
+  attachments control and shows a send arrow when there is text. On a
+  narrow screen the sidebar is a drawer. Sending a line shows it at once,
+  then a pending Bot reply, then the stored reply. An empty Bot list
+  offers **Create a Bot** and opens that Chat. See
+  [ADR 0014](adr/0014-host-messenger-shell.md) and
+  [ADR 0015](adr/0015-host-desktop-shell.md).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
   `/api/members` list/create and `/api/members/:id/disable`,
   `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured

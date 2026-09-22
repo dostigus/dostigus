@@ -37,7 +37,7 @@ export type ChatToolInvokeResult = {
 const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   dostigus_bots_list: {
     name: 'dostigus_bots_list',
-    description: 'List Bots in the Cluster Store, newest first. Each Bot includes id, name, createdAt, and Manifest (modelTier, skillIds, modulePackageIds).',
+    description: 'List Bots in the Cluster Store, newest first. Each Bot includes id, name, createdAt, Manifest (modelTier, skillIds, modulePackageIds), and lastMessage (latest Chat line preview, or null).',
     annotations: { readOnlyHint: true },
     chat: true,
     run: (_input, store) => listClusterBots(store),

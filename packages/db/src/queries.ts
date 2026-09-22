@@ -1,4 +1,4 @@
-import type { Bot, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
+import type { Bot, BotLastMessage, BotListItem, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
 import type { BotRecord, MessageRecord } from './map'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
@@ -15,6 +15,15 @@ import { toBot, toMessage } from './map'
 
 const BOT_NAME_MAX = 120
 const MESSAGE_MAX = 16_000
+const PREVIEW_MAX = 140
+
+function chatPreview(content: string): string {
+  const oneLine = content.replace(/\s+/g, ' ').trim()
+  if (oneLine.length <= PREVIEW_MAX) {
+    return oneLine
+  }
+  return `${oneLine.slice(0, PREVIEW_MAX - 1)}…`
+}
 
 export class StoreError extends Error {
   constructor(
@@ -68,13 +77,51 @@ function selectBot(store: OpenedStore, id: string): BotRecord | undefined {
   `).get(id) as BotRecord | undefined
 }
 
-export function listBots(store: OpenedStore): Bot[] {
+type BotListRecord = BotRecord & {
+  last_content: string | null
+  last_created_at: number | null
+}
+
+function lastMessageFromRow(row: BotListRecord): BotLastMessage | null {
+  if (row.last_content == null || row.last_created_at == null) {
+    return null
+  }
+  return {
+    content: chatPreview(row.last_content),
+    createdAt: new Date(row.last_created_at).toISOString(),
+  }
+}
+
+export function listBots(store: OpenedStore): BotListItem[] {
   const rows = store.sqlite.prepare(`
-    SELECT id, name, model_tier, skills_json, modules_json, created_at
+    SELECT
+      id,
+      name,
+      model_tier,
+      skills_json,
+      modules_json,
+      created_at,
+      (
+        SELECT content
+        FROM messages
+        WHERE bot_id = bots.id
+        ORDER BY created_at DESC, rowid DESC
+        LIMIT 1
+      ) AS last_content,
+      (
+        SELECT created_at
+        FROM messages
+        WHERE bot_id = bots.id
+        ORDER BY created_at DESC, rowid DESC
+        LIMIT 1
+      ) AS last_created_at
     FROM bots
     ORDER BY created_at DESC, rowid DESC
-  `).all() as BotRecord[]
-  return rows.map(toBot)
+  `).all() as BotListRecord[]
+  return rows.map((row) => ({
+    ...toBot(row),
+    lastMessage: lastMessageFromRow(row),
+  }))
 }
 
 export function getBot(store: OpenedStore, id: string): Bot | undefined {

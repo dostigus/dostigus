@@ -28,6 +28,8 @@ one kit, and one place to learn the UI.
   [ADR 0013](0013-kit-reka-ui-and-brand.md).
 - The wide-screen Host (sidebar plus Chat) and optimistic send are
   [ADR 0014](0014-host-messenger-shell.md).
+- Desktop sidebar grammar (resize, collapse, user menu, Bot Sheet) is
+  [ADR 0015](0015-host-desktop-shell.md).
 
 ## Alternatives
 

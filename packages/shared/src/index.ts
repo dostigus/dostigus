@@ -54,6 +54,8 @@ export {
   type Bot,
   botGreetingContent,
   type BotId,
+  type BotLastMessage,
+  type BotListItem,
   type Builder,
   type Card,
   type CardKind,

@@ -3,12 +3,12 @@
     <DialogPortal>
       <DialogOverlay class="kit-overlay" />
       <DialogContent
-        :class="kind === 'sheet' ? 'kit-sheet' : 'kit-dialog'"
+        :class="contentClass"
         v-bind="contentAttrs"
         @open-auto-focus="focusField"
       >
         <div
-          v-if="kind === 'sheet'"
+          v-if="kind === 'sheet' && edge !== 'end'"
           class="kit-handle"
           aria-hidden="true"
         />
@@ -58,13 +58,23 @@ import {
 } from 'reka-ui'
 import { computed } from 'vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   kind: SheetKind
   title: string
   description?: string
-}>()
+  edge?: 'bottom' | 'end'
+}>(), {
+  edge: 'bottom',
+})
 
 const open = defineModel<boolean>('open', { required: true })
+
+const contentClass = computed(() => {
+  if (props.kind !== 'sheet') {
+    return 'kit-dialog'
+  }
+  return props.edge === 'end' ? 'kit-sheet kit-sheet--end' : 'kit-sheet'
+})
 
 const contentAttrs = computed(() => {
   if (props.description) {
