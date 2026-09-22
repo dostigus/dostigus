@@ -293,7 +293,7 @@ const pivots = computed(() => {
 }
 
 .kit-bot-avatar--selected {
-  outline: 2px solid #3a3a3a;
+  outline: 2px solid var(--line, #333333);
   outline-offset: 3px;
   border-radius: 0.55rem;
 }

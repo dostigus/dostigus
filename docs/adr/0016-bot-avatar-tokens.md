@@ -55,7 +55,8 @@ image upload, or custom hex outside the palette.
   optional fields as the Host PATCH.
 - Out of this change: AI generate, image upload, custom hex, unread
   badges, file attach. Superseded silhouette language and palette order
-  are in [ADR 0017](0017-goose-mark-avatar.md).
+  are in [ADR 0017](0017-goose-mark-avatar.md) and
+  [ADR 0018](0018-bot-mark-flock.md).
 
 ## Alternatives
 
