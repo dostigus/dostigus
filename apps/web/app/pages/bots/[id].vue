@@ -115,6 +115,7 @@
         </button>
       </p>
       <div
+        ref="composerRowEl"
         class="composer-row"
         :class="{ multiline: composerMultiline }"
       >
@@ -202,7 +203,10 @@ useHead({
 
 const draft = ref('')
 const draftEl = ref<HTMLTextAreaElement | null>(null)
+const composerRowEl = ref<HTMLElement | null>(null)
 const composerMultiline = ref(false)
+/** Bumps when a newer corner ease should win over an in-flight one. */
+let composerRadiusTicket = 0
 const sending = ref(false)
 const botPending = ref(false)
 const sendError = ref('')
@@ -306,22 +310,56 @@ function showMarkError() {
   }, 4000))
 }
 
-/** Pill on one line; `--radius-card` once the field is taller than that. */
+/**
+ * Pill on one line; `--radius-card` once the field is taller than that.
+ * Easing `9999px` down to 28px stays a pill until the last moment, so the
+ * transition is pinned to the corner already on screen (half the row).
+ */
 function measureComposer() {
   const el = draftEl.value
   if (!el) {
-    composerMultiline.value = false
+    setComposerMultiline(false)
     return
   }
   const style = getComputedStyle(el)
   const line = Number.parseFloat(style.lineHeight)
   const pad = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
   if (!Number.isFinite(line) || line <= 0) {
-    composerMultiline.value = el.value.includes('\n')
+    setComposerMultiline(el.value.includes('\n'))
     return
   }
   const oneLine = line + (Number.isFinite(pad) ? pad : 0)
-  composerMultiline.value = el.scrollHeight > oneLine + line * 0.5
+  setComposerMultiline(el.scrollHeight > oneLine + line * 0.5)
+}
+
+function setComposerMultiline(next: boolean) {
+  if (next === composerMultiline.value) {
+    return
+  }
+  const row = composerRowEl.value
+  const reduce = typeof window !== 'undefined'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (!row || reduce) {
+    if (row) {
+      row.style.transition = ''
+      row.style.borderRadius = ''
+    }
+    composerMultiline.value = next
+    return
+  }
+  const ticket = ++composerRadiusTicket
+  const used = `${row.getBoundingClientRect().height / 2}px`
+  row.style.transition = 'none'
+  row.style.borderRadius = used
+  composerMultiline.value = next
+  nextTick(() => {
+    if (ticket !== composerRadiusTicket || !row.isConnected) {
+      return
+    }
+    void row.offsetWidth
+    row.style.transition = ''
+    row.style.borderRadius = ''
+  })
 }
 
 let composerObserver: ResizeObserver | null = null
@@ -480,6 +518,8 @@ async function onBotDeleted() {
   flex-direction: column;
   background: var(--bg-chat);
   --avatar-ring: var(--bg-chat);
+  /* Thread and composer share this so the block lines up with bubbles. */
+  --thread-inset: 1.15rem;
 }
 
 .top {
@@ -553,7 +593,7 @@ async function onBotDeleted() {
   min-height: 0;
   list-style: none;
   margin: 0;
-  padding: 0.6rem 1.15rem 1.1rem;
+  padding: 0.6rem var(--thread-inset) 0;
   overflow: auto;
   display: flex;
   flex-direction: column;
@@ -629,19 +669,25 @@ async function onBotDeleted() {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  padding: 0.35rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  /* Inset matches the thread. Transparent so the side margins stay Chat
+     canvas — no full-width --composer bar under the padding. */
+  padding: 0 var(--thread-inset) 0;
+  background: transparent;
 }
 
 .composer-row {
   display: flex;
   gap: 0.25rem;
   align-items: flex-end;
-  padding: 0.3rem 0.35rem 0.3rem 0.3rem;
-  /* Between --surface and --line, so the rim reads without the old --line bar. */
-  border: 1px solid color-mix(in srgb, var(--line) 80%, var(--surface));
+  padding: 0.5rem 0.65rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  /* A step lighter than the fill so the rim still reads on Chat black. */
+  border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));
   border-radius: 9999px;
-  background: var(--surface);
-  transition: border-radius 160ms ease;
+  background: var(--composer);
+  /* Same clock for the corner, the rim, and the fill so the stroke does not hitch. */
+  transition-property: border-radius, border-color, background-color;
+  transition-duration: 640ms;
+  transition-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
 }
 
 .composer-row.multiline {
