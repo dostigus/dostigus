@@ -1,6 +1,8 @@
 type PatchBody = {
   name?: string
   modelTier?: string
+  avatarShape?: string
+  avatarColor?: string
 }
 
 export default defineEventHandler(async (event) => {
@@ -8,5 +10,7 @@ export default defineEventHandler(async (event) => {
   return withOwnerStore(event, (store) => updateClusterBot(store, getRouterParam(event, 'id') ?? '', {
     name: body?.name,
     modelTier: body?.modelTier,
+    avatarShape: body?.avatarShape,
+    avatarColor: body?.avatarColor,
   }))
 })

@@ -1,0 +1,19 @@
+/* Bot accent palette — see ADR 0016 and docs/ui.md */
+:root {
+  --bot-accent-01: #1f7ae5;
+  --bot-accent-02: #b656d7;
+  --bot-accent-03: #8190ae;
+  --bot-accent-04: #529098;
+  --bot-accent-05: #a0a24f;
+  --bot-accent-06: #0aac7b;
+  --bot-accent-07: #9b8f7e;
+  --bot-accent-08: #d5ac1b;
+  --bot-accent-09: #e47134;
+  --bot-accent-10: #de3957;
+  --bot-accent-11: #73b125;
+  --bot-accent-12: #b2774f;
+  --bot-accent-13: #8354e6;
+  --bot-accent-14: #28a2d6;
+  --bot-accent-15: #dd547e;
+  --bot-accent-16: #dc4acd;
+}

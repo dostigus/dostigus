@@ -3,8 +3,81 @@
     v-model:open="open"
     edge="end"
     title="Bot"
-    description="Name and Model tier."
+    description="Appearance, name, and Model tier."
   >
+    <section
+      v-if="bot"
+      class="appearance"
+      aria-label="Appearance"
+    >
+      <div
+        class="tabs"
+        role="tablist"
+        aria-label="Appearance tools"
+      >
+        <button
+          type="button"
+          class="tab active"
+          role="tab"
+          aria-selected="true"
+        >
+          Bot
+        </button>
+        <button
+          v-if="isOwner"
+          type="button"
+          class="tab action"
+          :disabled="saving || deleting"
+          @click="resetAppearance"
+        >
+          Reset
+        </button>
+      </div>
+
+      <div
+        class="shapes"
+        role="group"
+        aria-label="Avatar shape"
+      >
+        <button
+          v-for="item in shapes"
+          :key="item"
+          type="button"
+          class="shape"
+          :class="{ selected: shape === item }"
+          :disabled="!isOwner || saving"
+          :aria-label="shapeLabel(item)"
+          :aria-pressed="shape === item"
+          @click="pickShape(item)"
+        >
+          <KitBotAvatar
+            :shape="item"
+            :color="color"
+            size="lg"
+          />
+        </button>
+      </div>
+
+      <div
+        class="swatches"
+        role="group"
+        aria-label="Avatar color"
+      >
+        <button
+          v-for="swatch in accents"
+          :key="swatch.hex"
+          type="button"
+          class="swatch"
+          :class="{ selected: color === swatch.hex }"
+          :style="{ background: `var(${swatch.cssVar})` }"
+          :disabled="!isOwner || saving"
+          :aria-label="`Color ${swatch.token}`"
+          :aria-pressed="color === swatch.hex"
+          @click="pickColor(swatch.hex)"
+        />
+      </div>
+    </section>
+
     <form
       v-if="isOwner && bot"
       class="form"
@@ -96,9 +169,16 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, ModelTier } from '@dostigus/shared'
-import { MODEL_TIER_LABELS, MODEL_TIERS } from '@dostigus/shared'
-import { KitButton, KitSheet } from '@dostigus/ui-kit'
+import type { Bot, BotAccentHex, BotAvatarShape, ModelTier } from '@dostigus/shared'
+import {
+  BOT_ACCENT_TOKENS,
+  BOT_AVATAR_SHAPES,
+  DEFAULT_AVATAR_COLOR,
+  DEFAULT_AVATAR_SHAPE,
+  MODEL_TIER_LABELS,
+  MODEL_TIERS,
+} from '@dostigus/shared'
+import { KitBotAvatar, KitButton, KitSheet } from '@dostigus/ui-kit'
 
 const props = defineProps<{
   bot: Bot | undefined
@@ -113,8 +193,12 @@ const open = defineModel<boolean>('open', { required: true })
 
 const { isOwner } = useHostAccount()
 const tiers = MODEL_TIERS
+const shapes = BOT_AVATAR_SHAPES
+const accents = BOT_ACCENT_TOKENS
 const name = ref('')
 const tier = ref<ModelTier>('strong')
+const shape = ref<BotAvatarShape>(DEFAULT_AVATAR_SHAPE)
+const color = ref<BotAccentHex>(DEFAULT_AVATAR_COLOR)
 const saving = ref(false)
 const deleting = ref(false)
 const confirmDelete = ref(false)
@@ -139,8 +223,36 @@ function syncFromBot() {
   }
   name.value = props.bot.name
   tier.value = props.bot.manifest.modelTier
+  shape.value = props.bot.manifest.avatarShape
+  color.value = props.bot.manifest.avatarColor
   error.value = ''
   confirmDelete.value = false
+}
+
+function shapeLabel(value: BotAvatarShape): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function pickShape(value: BotAvatarShape) {
+  if (!isOwner.value) {
+    return
+  }
+  shape.value = value
+}
+
+function pickColor(value: BotAccentHex) {
+  if (!isOwner.value) {
+    return
+  }
+  color.value = value
+}
+
+function resetAppearance() {
+  if (!isOwner.value) {
+    return
+  }
+  shape.value = DEFAULT_AVATAR_SHAPE
+  color.value = DEFAULT_AVATAR_COLOR
 }
 
 async function save() {
@@ -156,7 +268,12 @@ async function save() {
   try {
     await $fetch(`/api/bots/${props.bot.id}`, {
       method: 'PATCH',
-      body: { name: nextName, modelTier: tier.value },
+      body: {
+        name: nextName,
+        modelTier: tier.value,
+        avatarShape: shape.value,
+        avatarColor: color.value,
+      },
     })
     emit('saved')
   } catch {
@@ -184,6 +301,115 @@ async function remove() {
 </script>
 
 <style scoped>
+.appearance {
+  margin: 0 0 1.25rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  cursor: default;
+}
+
+.tab.active {
+  background: #2a2a2a;
+  color: var(--text);
+}
+
+.tab.action {
+  cursor: pointer;
+}
+
+.tab.action:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.tab.action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shapes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem 0.45rem;
+  margin-bottom: 1.15rem;
+}
+
+.shape {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0.45rem;
+  border-radius: 0.85rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.shape.selected {
+  outline: 2px solid #3a3a3a;
+  outline-offset: 1px;
+}
+
+.shape:disabled {
+  cursor: default;
+}
+
+.shape:focus-visible {
+  outline: 2px solid var(--accent-dim);
+  outline-offset: 2px;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.7rem 0.55rem;
+  justify-items: center;
+  padding: 0.15rem 0.25rem 0.35rem;
+}
+
+.swatch {
+  appearance: none;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 18%);
+}
+
+.swatch.selected {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 3.5px #3a3a3a;
+}
+
+.swatch:disabled {
+  cursor: default;
+}
+
+.swatch:focus-visible {
+  outline: 2px solid var(--accent-dim);
+  outline-offset: 2px;
+}
+
 .form,
 .read {
   margin: 0;

@@ -1,5 +1,7 @@
 /** Stable glossary types — names match CONTEXT.md. Do not invent synonyms. */
 
+import type { BotAccentHex, BotAvatarShape } from './bot-avatar'
+
 export type ClusterId = string
 export type BotId = string
 export type ModulePackageId = string
@@ -95,6 +97,10 @@ export function isModelTier(value: string): value is ModelTier {
 export type Manifest = {
   name: string
   modelTier: ModelTier
+  /** Kit silhouette id — see ADR 0016. */
+  avatarShape: BotAvatarShape
+  /** One of the Bot accent palette hexes — see ADR 0016. */
+  avatarColor: BotAccentHex
   skillIds: string[]
   modulePackageIds: ModulePackageId[]
 }

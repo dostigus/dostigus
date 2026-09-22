@@ -1,4 +1,6 @@
 export {
+  avatarColorFromRow,
+  avatarShapeFromRow,
   type BotRecord,
   type MemberRecord,
   type MessageRecord,

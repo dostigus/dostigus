@@ -1,10 +1,19 @@
-import type { Bot, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
-import { DEFAULT_MODEL_TIER, isModelTier } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
+import {
+  DEFAULT_AVATAR_COLOR,
+  DEFAULT_AVATAR_SHAPE,
+  DEFAULT_MODEL_TIER,
+  isBotAvatarShape,
+  isModelTier,
+  normalizeBotAccentHex,
+} from '@dostigus/shared'
 
 export type BotRecord = {
   id: string
   name: string
   model_tier: string
+  avatar_shape: string
+  avatar_color: string
   skills_json: string
   modules_json: string
   created_at: number
@@ -45,6 +54,14 @@ export function modelTierFromRow(value: string): ModelTier {
   return isModelTier(value) ? value : DEFAULT_MODEL_TIER
 }
 
+export function avatarShapeFromRow(value: string): BotAvatarShape {
+  return isBotAvatarShape(value) ? value : DEFAULT_AVATAR_SHAPE
+}
+
+export function avatarColorFromRow(value: string): BotAccentHex {
+  return normalizeBotAccentHex(value) ?? DEFAULT_AVATAR_COLOR
+}
+
 export function toBot(row: BotRecord): Bot {
   return {
     id: row.id,
@@ -53,6 +70,8 @@ export function toBot(row: BotRecord): Bot {
     manifest: {
       name: row.name,
       modelTier: modelTierFromRow(row.model_tier),
+      avatarShape: avatarShapeFromRow(row.avatar_shape),
+      avatarColor: avatarColorFromRow(row.avatar_color),
       skillIds: parseStringList(row.skills_json),
       modulePackageIds: parseStringList(row.modules_json),
     },

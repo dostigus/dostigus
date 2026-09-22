@@ -12,6 +12,8 @@
         <HostBotAvatar
           :name="bot?.name ?? 'Bot'"
           :seed="bot?.id ?? ''"
+          :shape="bot?.manifest.avatarShape"
+          :avatar-color="bot?.manifest.avatarColor"
           size="sm"
         />
         <span class="name">{{ bot?.name ?? 'Bot' }}</span>

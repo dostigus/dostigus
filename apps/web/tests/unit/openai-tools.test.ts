@@ -20,6 +20,40 @@ it('maps MCP Zod tools to OpenAI function schemas', () => {
   expect(update?.function.parameters).toEqual({
     type: 'object',
     properties: {
+      avatarColor: {
+        type: 'string',
+        enum: [
+          '#1F7AE5',
+          '#B656D7',
+          '#8190AE',
+          '#529098',
+          '#A0A24F',
+          '#0AAC7B',
+          '#9B8F7E',
+          '#D5AC1B',
+          '#E47134',
+          '#DE3957',
+          '#73B125',
+          '#B2774F',
+          '#8354E6',
+          '#28A2D6',
+          '#DD547E',
+          '#DC4ACD',
+        ],
+      },
+      avatarShape: {
+        type: 'string',
+        enum: [
+          'circle',
+          'bean',
+          'squircle',
+          'capsule',
+          'triangle',
+          'hex',
+          'cloud',
+          'teardrop',
+        ],
+      },
       id: { type: 'string', minLength: 1 },
       name: { type: 'string' },
       modelTier: {

@@ -1,14 +1,18 @@
-import type { Bot, BotLastMessage, BotListItem, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, BotLastMessage, BotListItem, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
 import type { BotRecord, MessageRecord } from './map'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
 import {
   botGreetingContent,
+  DEFAULT_AVATAR_COLOR,
+  DEFAULT_AVATAR_SHAPE,
   DEFAULT_BOT_NAME,
   DEFAULT_MODEL_TIER,
   emptyLlmGatewayStored,
+  isBotAvatarShape,
   isModelTier,
   MODEL_TIERS,
+  normalizeBotAccentHex,
   trimOrUndefined,
 } from '@dostigus/shared'
 import { toBot, toMessage } from './map'
@@ -58,6 +62,27 @@ function normalizeTier(value: string | undefined): ModelTier {
   return value
 }
 
+function normalizeAvatarShape(value: string | undefined): BotAvatarShape {
+  if (value == null || value === '') {
+    return DEFAULT_AVATAR_SHAPE
+  }
+  if (!isBotAvatarShape(value)) {
+    throw new StoreError(`Unknown avatar shape: ${value}`, 400)
+  }
+  return value
+}
+
+function normalizeAvatarColor(value: string | undefined): BotAccentHex {
+  if (value == null || value === '') {
+    return DEFAULT_AVATAR_COLOR
+  }
+  const hex = normalizeBotAccentHex(value)
+  if (!hex) {
+    throw new StoreError(`Unknown avatar color: ${value}`, 400)
+  }
+  return hex
+}
+
 function normalizeContent(content: string | undefined): string {
   const trimmed = content?.trim() ?? ''
   if (trimmed.length === 0) {
@@ -71,7 +96,7 @@ function normalizeContent(content: string | undefined): string {
 
 function selectBot(store: OpenedStore, id: string): BotRecord | undefined {
   return store.sqlite.prepare(`
-    SELECT id, name, model_tier, skills_json, modules_json, created_at
+    SELECT id, name, model_tier, avatar_shape, avatar_color, skills_json, modules_json, created_at
     FROM bots
     WHERE id = ?
   `).get(id) as BotRecord | undefined
@@ -98,6 +123,8 @@ export function listBots(store: OpenedStore): BotListItem[] {
       id,
       name,
       model_tier,
+      avatar_shape,
+      avatar_color,
       skills_json,
       modules_json,
       created_at,
@@ -197,17 +224,24 @@ export function ensureGreeting(store: OpenedStore, botId: string): Message {
 
 export function createBot(
   store: OpenedStore,
-  input: { name?: string, modelTier?: string } = {},
+  input: {
+    name?: string
+    modelTier?: string
+    avatarShape?: string
+    avatarColor?: string
+  } = {},
 ): { bot: Bot, greeting: Message } {
   const name = normalizeName(input.name)
   const modelTier = normalizeTier(input.modelTier)
+  const avatarShape = normalizeAvatarShape(input.avatarShape)
+  const avatarColor = normalizeAvatarColor(input.avatarColor)
   const createdAt = nowMs()
   const id = randomUUID()
 
   store.sqlite.prepare(`
-    INSERT INTO bots (id, name, model_tier, skills_json, modules_json, created_at)
-    VALUES (?, ?, ?, '[]', '[]', ?)
-  `).run(id, name, modelTier, createdAt)
+    INSERT INTO bots (id, name, model_tier, avatar_shape, avatar_color, skills_json, modules_json, created_at)
+    VALUES (?, ?, ?, ?, ?, '[]', '[]', ?)
+  `).run(id, name, modelTier, avatarShape, avatarColor, createdAt)
 
   const greeting = insertMessageRow(store, {
     botId: id,
@@ -221,19 +255,30 @@ export function createBot(
 export function updateBot(
   store: OpenedStore,
   id: string,
-  input: { name?: string, modelTier?: string },
+  input: {
+    name?: string
+    modelTier?: string
+    avatarShape?: string
+    avatarColor?: string
+  },
 ): Bot {
   const current = requireBot(store, id)
   const name = input.name !== undefined ? normalizeName(input.name) : current.name
   const modelTier = input.modelTier !== undefined
     ? normalizeTier(input.modelTier)
     : current.manifest.modelTier
+  const avatarShape = input.avatarShape !== undefined
+    ? normalizeAvatarShape(input.avatarShape)
+    : current.manifest.avatarShape
+  const avatarColor = input.avatarColor !== undefined
+    ? normalizeAvatarColor(input.avatarColor)
+    : current.manifest.avatarColor
 
   store.sqlite.prepare(`
     UPDATE bots
-    SET name = ?, model_tier = ?
+    SET name = ?, model_tier = ?, avatar_shape = ?, avatar_color = ?
     WHERE id = ?
-  `).run(name, modelTier, id)
+  `).run(name, modelTier, avatarShape, avatarColor, id)
 
   return requireBot(store, id)
 }

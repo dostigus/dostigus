@@ -1,5 +1,12 @@
 <template>
+  <KitBotAvatar
+    v-if="shape"
+    :shape="shape"
+    :color="fill"
+    :size="size"
+  />
   <span
+    v-else
     class="avatar"
     :class="size"
     :style="{ background: fill }"
@@ -8,19 +15,32 @@
 </template>
 
 <script setup lang="ts">
+import type { BotAvatarShape } from '@dostigus/shared'
+import { KitBotAvatar } from '@dostigus/ui-kit'
+
 const props = withDefaults(defineProps<{
   name: string
   seed?: string
   size?: 'sm' | 'md'
+  /** Initials-mode fill (person button). Ignored when shape is set. */
   color?: string
+  shape?: BotAvatarShape | ''
+  avatarColor?: string
 }>(), {
   seed: '',
   size: 'md',
   color: '',
+  shape: '',
+  avatarColor: '',
 })
 
 const letters = computed(() => initialsFromName(props.name))
-const fill = computed(() => props.color || avatarColor(props.seed || props.name))
+const fill = computed(() => {
+  if (props.shape) {
+    return props.avatarColor || props.color
+  }
+  return props.color || avatarColor(props.seed || props.name)
+})
 </script>
 
 <style scoped>

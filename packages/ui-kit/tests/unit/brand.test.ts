@@ -36,7 +36,7 @@ it('maps stickers, the logo, and favicon onto /brand', () => {
   expect(gooseFavicon.appleTouch).toBe('/brand/favicon/apple-touch-icon.png')
 })
 
-it('registers the Sheet shell, Dialog, and Button', () => {
+it('registers the Sheet shell, Dialog, Button, and Bot avatar', () => {
   expect(uiKitComponents).toMatchObject({
     button: 'KitButton',
     dialog: 'KitDialog',
@@ -44,7 +44,20 @@ it('registers the Sheet shell, Dialog, and Button', () => {
     sheetShell: 'SheetShell',
     gooseSticker: 'GooseSticker',
     gooseLogo: 'GooseLogo',
+    botAvatar: 'KitBotAvatar',
   })
+})
+
+it('ships Bot accent tokens and eight avatar shapes', () => {
+  const accents = readFileSync(join(root, 'src/bot-accents.css'), 'utf8')
+  expect(accents).toContain('--bot-accent-01: #1f7ae5')
+  expect(accents).toContain('--bot-accent-16: #dc4acd')
+  expect(readFileSync(join(root, 'src/kit.css'), 'utf8')).toContain('bot-accents.css')
+  const avatar = readFileSync(join(root, 'src/components/KitBotAvatar.vue'), 'utf8')
+  for (const shape of ['circle', 'bean', 'squircle', 'capsule', 'triangle', 'hex', 'cloud', 'teardrop']) {
+    expect(avatar).toContain(shape)
+  }
+  expect(avatar).toContain('kit-bot-avatar__eye')
 })
 
 it('builds the Sheet shell on Reka Dialog', () => {

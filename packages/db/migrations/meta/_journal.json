@@ -29,6 +29,13 @@
       "when": 1758560000000,
       "tag": "0003_members",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1758624000000,
+      "tag": "0004_bot_avatar",
+      "breakpoints": true
     }
   ]
 }

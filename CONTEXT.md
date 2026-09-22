@@ -90,7 +90,8 @@ Policy/instructions a Bot follows. Not executable UI.
 _Avoid_: prompt (unqualified), tool, Module package.
 
 **Manifest**:
-Bot definition: persona, Skills, bound Module packages, Model tier.
+Bot definition: persona, Skills, bound Module packages, Model tier,
+avatar shape, and avatar color (Bot accent palette).
 _Avoid_: config, profile (unqualified).
 
 **Module package**:

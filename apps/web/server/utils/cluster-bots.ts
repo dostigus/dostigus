@@ -14,6 +14,8 @@ import {
 export type ClusterBotInput = {
   name?: string
   modelTier?: string
+  avatarShape?: string
+  avatarColor?: string
 }
 
 export type ClusterMessageInput = {
