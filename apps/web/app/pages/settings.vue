@@ -1,13 +1,8 @@
 <template>
-  <div class="shell">
+  <div class="page">
     <header class="top">
+      <HostMenuButton />
       <div>
-        <NuxtLink
-          to="/"
-          class="back"
-        >
-          Bots
-        </NuxtLink>
         <p class="mark">
           Settings
         </p>
@@ -15,7 +10,6 @@
           OpenRouter
         </p>
       </div>
-      <HostLogoutButton />
     </header>
 
     <main class="stage">
@@ -184,6 +178,8 @@ import {
   OPENROUTER_DEFAULT_BASE_URL,
 } from '@dostigus/shared'
 
+definePageMeta({ layout: 'host' })
+
 useHead({ title: 'Dostigus · Settings' })
 
 const tiers = MODEL_TIERS
@@ -317,8 +313,9 @@ async function ping() {
 </script>
 
 <style scoped>
-.shell {
-  min-height: 100dvh;
+.page {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -326,21 +323,15 @@ async function ping() {
 .top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: flex-start;
+  gap: 0.75rem;
   padding: 1.15rem 1.4rem;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
 }
 
-.back {
-  color: var(--accent);
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-
 .mark {
-  margin: 0.35rem 0 0;
+  margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -354,6 +345,8 @@ async function ping() {
 
 .stage {
   flex: 1;
+  min-height: 0;
+  overflow: auto;
   padding: 1.6rem 1.4rem 3rem;
 }
 

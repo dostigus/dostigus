@@ -50,8 +50,24 @@ Do not add poses.
 
 Where the Host uses them today:
 
-- Host mark: goose logo (Bots, sign-in, Members)
-- Empty Bots: `wave`
+- Host mark: goose logo (sidebar, sign-in)
+- Empty Bots: `wave` and **Create a Bot**
 - Create Bot: `KitDialog` and an `ok` sticker
 - Empty Members: `peek`
 - Add Member: `KitSheet` and an `ok` sticker
+
+## Host layout
+
+Wide screens keep a narrow sidebar beside the open page. The sidebar lists
+Bots, offers create, and links to Members and Settings at the bottom. Chat
+shows the Bot name, the timeline, and the composer. The composer stays
+visible while that Bot is open.
+
+Settings is the `/settings` page. Members is the `/members` page. Neither
+opens as a Sheet over Chat.
+
+Narrow screens (under `52rem`) hide the sidebar behind a Bots control.
+
+A sent line appears in the timeline immediately. The Bot then shows
+**Replying…** until the stored reply replaces it. Chat does not cover the
+Host with a spinner.

@@ -1,15 +1,9 @@
 <template>
-  <div class="shell">
+  <div class="page">
     <header class="top">
       <div class="lead">
-        <GooseLogo alt="" />
+        <HostMenuButton />
         <div>
-          <NuxtLink
-            to="/"
-            class="back"
-          >
-            Bots
-          </NuxtLink>
           <p class="mark">
             Members
           </p>
@@ -25,7 +19,6 @@
         >
           Add Member
         </KitButton>
-        <HostLogoutButton />
       </div>
     </header>
 
@@ -211,7 +204,9 @@
 
 <script setup lang="ts">
 import type { Member } from '@dostigus/shared'
-import { GooseLogo, GooseSticker, KitButton, KitSheet } from '@dostigus/ui-kit'
+import { GooseSticker, KitButton, KitSheet } from '@dostigus/ui-kit'
+
+definePageMeta({ layout: 'host' })
 
 useHead({ title: 'Dostigus · Members' })
 
@@ -290,8 +285,9 @@ async function turnOff(id: string) {
 </script>
 
 <style scoped>
-.shell {
-  min-height: 100dvh;
+.page {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -319,14 +315,8 @@ async function turnOff(id: string) {
   gap: 0.85rem;
 }
 
-.back {
-  color: var(--accent);
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-
 .mark {
-  margin: 0.35rem 0 0;
+  margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -340,6 +330,8 @@ async function turnOff(id: string) {
 
 .stage {
   flex: 1;
+  min-height: 0;
+  overflow: auto;
   padding: 1.6rem 1.4rem 3rem;
 }
 

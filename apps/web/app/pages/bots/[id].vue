@@ -1,36 +1,14 @@
 <template>
-  <div class="shell">
+  <div class="page">
     <header class="top">
+      <HostMenuButton />
       <div class="lead">
-        <NuxtLink
-          to="/"
-          class="back"
-        >
-          Bots
-        </NuxtLink>
-        <div>
-          <h1>{{ bot?.name ?? 'Bot' }}</h1>
-          <p class="sub">
-            Chat
-          </p>
-        </div>
+        <h1>{{ bot?.name ?? 'Bot' }}</h1>
+        <p class="sub">
+          Chat
+        </p>
       </div>
       <div class="header-actions">
-        <NuxtLink
-          v-if="isOwner"
-          to="/members"
-          class="settings"
-        >
-          Members
-        </NuxtLink>
-        <NuxtLink
-          v-if="isOwner"
-          to="/settings"
-          class="settings"
-        >
-          Settings
-        </NuxtLink>
-        <HostLogoutButton />
         <template v-if="isOwner && confirmDelete">
           <button
             type="button"
@@ -88,10 +66,10 @@
       aria-label="Chat"
     >
       <li
-        v-for="message in messages"
+        v-for="message in timeline"
         :key="message.id"
         class="bubble"
-        :class="[message.role, { mine: isMine(message) }]"
+        :class="[message.role, { mine: isMine(message), failed: message.failed }]"
       >
         <p
           v-if="labelFor(message)"
@@ -104,7 +82,25 @@
         </p>
       </li>
       <li
-        v-if="messages.length === 0 && !loadError"
+        v-if="botPending"
+        class="bubble assistant pending"
+        aria-live="polite"
+      >
+        <p class="who">
+          {{ bot?.name ?? 'Bot' }}
+        </p>
+        <p class="text typing">
+          <span
+            class="dots"
+            aria-hidden="true"
+          >
+            <span /><span /><span />
+          </span>
+          Replying…
+        </p>
+      </li>
+      <li
+        v-if="timeline.length === 0 && !botPending && !loadError"
         class="empty-chat"
       >
         <p class="empty-title">
@@ -120,24 +116,41 @@
       class="composer"
       @submit.prevent="send"
     >
-      <label class="sr">
-        Message
-        <textarea
-          v-model="draft"
-          rows="2"
-          maxlength="16000"
-          placeholder="Tell this Bot what it is for…"
-          :disabled="sending || !bot"
-          @keydown.enter.exact.prevent="send"
-        />
-      </label>
-      <button
-        type="submit"
-        class="solid"
-        :disabled="sending || !draft.trim() || !bot"
+      <p
+        v-if="sendError"
+        class="send-error"
       >
-        {{ sending ? 'Sending…' : 'Send' }}
-      </button>
+        {{ sendError }}
+        <button
+          v-if="optimistic?.failed"
+          type="button"
+          class="retry"
+          :disabled="sending"
+          @click="retry"
+        >
+          Try again
+        </button>
+      </p>
+      <div class="composer-row">
+        <label class="sr">
+          Message
+          <textarea
+            v-model="draft"
+            rows="2"
+            maxlength="16000"
+            placeholder="Tell this Bot what it is for…"
+            :disabled="!bot"
+            @keydown.enter.exact.prevent="send"
+          />
+        </label>
+        <button
+          type="submit"
+          class="solid"
+          :disabled="sending || !draft.trim() || !bot"
+        >
+          Send
+        </button>
+      </div>
     </form>
   </div>
 </template>
@@ -145,10 +158,17 @@
 <script setup lang="ts">
 import type { Bot, Message } from '@dostigus/shared'
 
+definePageMeta({ layout: 'host' })
+
 type ChatMessage = Message & { authorName: string | null }
+type TimelineLine = ChatMessage & {
+  pending?: boolean
+  failed?: boolean
+}
 
 const route = useRoute()
 const { user, isOwner } = useHostAccount()
+const { refresh: refreshBots } = await useHostBots()
 const botId = computed(() => String(route.params.id ?? ''))
 
 const { data: botData, error: botError, refresh: refreshBot } = await useFetch<{ bot: Bot }>(
@@ -172,15 +192,29 @@ const draft = ref('')
 const sending = ref(false)
 const deleting = ref(false)
 const confirmDelete = ref(false)
+const botPending = ref(false)
+const sendError = ref('')
+const optimistic = ref<TimelineLine | null>(null)
 const threadEl = ref<HTMLOListElement | null>(null)
 
-watch(messages, () => {
+const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
+
+watch(botId, () => {
+  optimistic.value = null
+  botPending.value = false
+  sending.value = false
+  sendError.value = ''
+  draft.value = ''
+  confirmDelete.value = false
+})
+
+watch([timeline, botPending], () => {
   nextTick(() => {
     threadEl.value?.scrollTo({ top: threadEl.value.scrollHeight })
   })
 }, { immediate: true })
 
-function labelFor(message: ChatMessage): string {
+function labelFor(message: TimelineLine): string {
   if (message.role === 'user') {
     return message.authorName ?? ''
   }
@@ -190,7 +224,7 @@ function labelFor(message: ChatMessage): string {
   return bot.value?.name ?? 'Bot'
 }
 
-function isMine(message: ChatMessage): boolean {
+function isMine(message: TimelineLine): boolean {
   if (message.role !== 'user') {
     return false
   }
@@ -200,21 +234,68 @@ function isMine(message: ChatMessage): boolean {
   return isOwner.value
 }
 
-async function send() {
-  const content = draft.value.trim()
+function send() {
+  void deliver(draft.value, null)
+}
+
+function retry() {
+  const failed = optimistic.value
+  if (!failed?.failed || sending.value) {
+    return
+  }
+  void deliver(failed.content, failed)
+}
+
+async function deliver(raw: string, existing: TimelineLine | null) {
+  const content = raw.trim()
   if (!content || sending.value || !bot.value) {
     return
   }
+  const targetId = bot.value.id
+  const before = messages.value.length
   sending.value = true
+  sendError.value = ''
+  if (!existing) {
+    draft.value = ''
+  }
+  optimistic.value = {
+    id: existing?.id ?? `pending-${crypto.randomUUID()}`,
+    botId: targetId,
+    role: 'user',
+    content,
+    createdAt: existing?.createdAt ?? new Date().toISOString(),
+    personId: user.value?.id ?? null,
+    authorName: user.value?.displayName ?? null,
+    pending: true,
+    failed: false,
+  }
+  botPending.value = true
   try {
-    await $fetch(`/api/bots/${bot.value.id}/messages`, {
+    await $fetch(`/api/bots/${targetId}/messages`, {
       method: 'POST',
       body: { content },
     })
-    draft.value = ''
+    if (botId.value !== targetId) {
+      return
+    }
     await Promise.all([refresh(), refreshBot()])
+    optimistic.value = null
+  } catch {
+    if (botId.value !== targetId) {
+      return
+    }
+    await refresh().catch(() => {})
+    if (messages.value.length > before) {
+      optimistic.value = null
+    } else if (optimistic.value) {
+      optimistic.value = { ...optimistic.value, pending: false, failed: true }
+    }
+    sendError.value = 'Could not send that message.'
   } finally {
-    sending.value = false
+    if (botId.value === targetId) {
+      sending.value = false
+      botPending.value = false
+    }
   }
 }
 
@@ -225,6 +306,7 @@ async function remove() {
   deleting.value = true
   try {
     await $fetch(`/api/bots/${bot.value.id}`, { method: 'DELETE' })
+    await refreshBots()
     await navigateTo('/')
   } finally {
     deleting.value = false
@@ -234,8 +316,9 @@ async function remove() {
 </script>
 
 <style scoped>
-.shell {
-  min-height: 100dvh;
+.page {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -243,24 +326,15 @@ async function remove() {
 .top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.4rem;
+  gap: 0.75rem;
+  padding: 0.85rem 1.15rem;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
 }
 
 .lead {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
   min-width: 0;
-}
-
-.back {
-  color: var(--accent);
-  text-decoration: none;
-  font-size: 0.9rem;
+  flex: 1;
 }
 
 h1 {
@@ -273,7 +347,7 @@ h1 {
 }
 
 .sub {
-  margin: 0.15rem 0 0;
+  margin: 0.1rem 0 0;
   color: var(--text-muted);
   font-size: 0.8rem;
 }
@@ -285,23 +359,18 @@ h1 {
   flex-shrink: 0;
 }
 
-.settings {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.9rem;
-  padding: 0.4rem 0.2rem;
-}
-
 .ghost,
 .solid,
-.danger {
+.danger,
+.retry {
   appearance: none;
   border-radius: 999px;
   padding: 0.4rem 0.9rem;
   cursor: pointer;
 }
 
-.ghost {
+.ghost,
+.retry {
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text-muted);
@@ -321,7 +390,8 @@ h1 {
 
 .solid:disabled,
 .ghost:disabled,
-.danger:disabled {
+.danger:disabled,
+.retry:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -349,6 +419,7 @@ h1 {
 
 .thread {
   flex: 1;
+  min-height: 0;
   list-style: none;
   margin: 0;
   padding: 1.35rem 1.4rem 1.6rem;
@@ -377,6 +448,10 @@ h1 {
   background: color-mix(in srgb, var(--accent) 18%, var(--surface));
 }
 
+.bubble.failed {
+  border-color: var(--accent-dim);
+}
+
 .who {
   margin: 0 0 0.3rem;
   font-size: 0.78rem;
@@ -388,6 +463,34 @@ h1 {
   margin: 0;
   white-space: pre-wrap;
   line-height: 1.45;
+}
+
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-muted);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 0.22rem;
+}
+
+.dots span {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: var(--text-muted);
+  animation: blink 1.2s infinite;
+}
+
+.dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.dots span:nth-child(3) {
+  animation-delay: 0.3s;
 }
 
 .empty-chat {
@@ -412,11 +515,26 @@ h1 {
 
 .composer {
   display: flex;
-  gap: 0.7rem;
-  align-items: flex-end;
-  padding: 0.95rem 1.4rem 1.15rem;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 1.15rem calc(1rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--line);
   background: var(--surface);
+}
+
+.composer-row {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-end;
+}
+
+.send-error {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .sr {
@@ -442,5 +560,24 @@ textarea {
 
 textarea:focus {
   outline: 1px solid var(--accent-dim);
+}
+
+@keyframes blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+
+  40% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dots span {
+    animation: none;
+    opacity: 0.8;
+  }
 }
 </style>
