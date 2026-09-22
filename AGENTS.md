@@ -59,6 +59,24 @@ Self-host compose (Store volume + published image): see [`docs/deploy.md`](docs/
 docker compose -f docker/compose.yml up --build
 ```
 
+## Friction report
+
+Before finishing a pull request or a final report, include a short **Friction**
+section. The same requirement is in
+[`.cursor/rules/friction-report.mdc`](.cursor/rules/friction-report.mdc). It
+applies to every Cursor agent on this repo (a Platform git agent, distinct
+from Builder).
+
+Required bullets (write “none” when a bullet is empty):
+
+1. What took abnormally long, and why.
+2. Hacks or workarounds.
+3. Broken or misleading tooling, docs, CI, scripts, or paths to fix next.
+4. What would make the same task about 2× faster next time.
+
+Prefer honest process pain over a clean story. Do not skip the section because
+`pnpm check` is green.
+
 ## Commits
 
 Conventional commits (`feat:`, `docs:`, `fix:`, `chore:`). Do not force-push
