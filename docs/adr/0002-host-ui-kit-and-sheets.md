@@ -26,6 +26,8 @@ one kit, and one place to learn the UI.
   accent, rounded Kit chrome. Tokens: [`docs/ui.md`](../ui.md).
 - Kit implementation (Reka UI, Sheet shell, Brand) is
   [ADR 0013](0013-kit-reka-ui-and-brand.md).
+- The wide-screen Host (sidebar plus Chat) and optimistic send are
+  [ADR 0014](0014-host-messenger-shell.md).
 
 ## Alternatives
 

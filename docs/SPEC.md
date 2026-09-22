@@ -56,7 +56,14 @@ What the running Cluster does today:
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
   Brand goose marks and stickers live in the Kit. The Host mark uses the
   goose logo. Empty Bots shows a sticker. Add Member opens a Sheet. See
-  [ADR 0013](adr/0013-kit-reka-ui-and-brand.md).
+  [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
+  is a sidebar of Bots beside Chat (Bot name, timeline, composer). Members
+  and Settings are quiet links at the bottom of that sidebar. Settings
+  stays `/settings`. Members stays `/members`. On a narrow screen the
+  sidebar collapses to a drawer. Sending a line shows it at once, then a
+  pending Bot reply, then the stored reply. An empty Bot list offers
+  **Create a Bot** and opens that Chat. See
+  [ADR 0014](adr/0014-host-messenger-shell.md).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
   `/api/members` list/create and `/api/members/:id/disable`,
   `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured
