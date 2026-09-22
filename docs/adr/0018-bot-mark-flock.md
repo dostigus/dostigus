@@ -45,18 +45,28 @@ pivots are set per part instead of relying on a default origin.
 
 ### Motion
 
-`state` stays `none` | `idle` | `think` | `reply` | `work`, and all four
-moving states now ship:
+`state` drives CSS on the part groups. Nine states ship:
 
-- `idle` — a slow breath, a small head settle, a rare blink.
-- `think` — bill up, a long sway.
-- `reply` — the jaw talks, the head bobs with it, the wing flicks.
-- `work` — a steady flap.
+| State | What moves | Host call site |
+|-------|-----------|----------------|
+| `none` | nothing | appearance editor, unpicked birds |
+| `idle` | slow breath, small head settle, rare blink | sidebar rows, Chat header at rest |
+| `think` | bill up, long sway, gaze searching | Chat header while a reply is in flight |
+| `reply` | jaw talks three syllables a cycle, head rides them, one wing flick | Chat header as the reply lands |
+| `work` | steady flap | Kit only — no Host Job surface yet |
+| `greet` | one nod and a wing wave, then still | Chat open, and the picked bird in the editor |
+| `listen` | leans in, gaze forward, slower blink | Chat composer focused |
+| `celebrate` | one hop and a wing cheer | Chat header after the reply finishes |
+| `error` | confused head wobble, slow blink | Chat header on a failed send |
+| `sleep` | eyes shut to a slit, head down, long breath | Chat header when no LLM gateway key is set, so the Bot cannot answer |
 
-Motion is CSS on the part groups and stops under
-`prefers-reduced-motion: reduce`. The Host sidebar and the Chat header pass
-`idle`; the Chat header passes `think` while a reply is in flight and
-`reply` for a moment after it lands.
+`greet` and `celebrate` play once (`ONE_SHOT_AVATAR_STATES`); the Host drops
+back to `idle` when they finish. A pupil group (`gaze`) sits inside each eye
+so a state can move the look without moving the eye.
+
+Under `prefers-reduced-motion: reduce` nothing animates, but a state that
+carries meaning keeps its pose: the thinker holds its bill up, the listener
+leans in, the confused bird stays tilted, and the sleeper stays shut.
 
 ### Tones
 
@@ -98,7 +108,8 @@ the quality holds.
 ## Consequences
 
 - Shared exports the flock ids, their labels, the legacy map covering both
-  older generations, and `botMarkPalette`. `beakColorFromBody` is gone.
+  older generations, the nine motion states with the one-shot pair, and
+  `botMarkPalette`. `beakColorFromBody` is gone.
 - Kit exports `BOT_MARKS`, `MARK_VIEWBOX` and `renderPiece` next to
   `KitBotAvatar`, so the geometry is testable without mounting Vue.
 - The appearance editor grid shows the eight birds, names them for screen
@@ -117,4 +128,6 @@ the quality holds.
 - One species with eight poses — rejected for the same sameness reason.
 - Static marks with an idle breathe only — rejected once `think` and
   `reply` read cleanly at sidebar and header size.
+- Sprite sheets or Lottie for the richer states — rejected. CSS on named
+  parts costs nothing to ship and scales with the mark.
 - Per-part color pickers — rejected. One accent, derived tones.

@@ -67,8 +67,9 @@ What the running Cluster does today:
   open a right Sheet (appearance Bot mark + color, rename, Model tier,
   delete for the Owner), unlabeled bubbles, and a composer. Sidebar Bot
   rows and the Chat header show the Manifest Bot mark (`KitBotAvatar`
-  idle); the header thinks while a reply is in flight and speaks it when it
-  lands. The composer has a disabled
+  idle); the header greets on open, listens at the composer, thinks while a
+  reply is in flight, speaks and cheers it when it lands, tilts on a failed
+  send, and sleeps while no key is set. The composer has a disabled
   attachments control and
   shows a send arrow when there is text. On a narrow screen the sidebar
   is a drawer. Sending a line shows it at once, then a pending Bot reply,

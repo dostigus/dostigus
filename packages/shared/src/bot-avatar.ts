@@ -90,7 +90,25 @@ export const BOT_ACCENT_HEXES = BOT_ACCENT_TOKENS.map((item) => item.hex) as unk
 /** Default fill — palette hex (`--bot-accent-10`). */
 export const DEFAULT_AVATAR_COLOR: BotAccentHex = '#1F7AE5'
 
-export const BOT_AVATAR_STATES = ['none', 'idle', 'think', 'reply', 'work'] as const
+/**
+ * Bot mark motion. `greet` and `celebrate` play once — the Host drops back
+ * to `idle` when they are done. See ADR 0018.
+ */
+export const BOT_AVATAR_STATES = [
+  'none',
+  'idle',
+  'think',
+  'reply',
+  'work',
+  'greet',
+  'listen',
+  'celebrate',
+  'error',
+  'sleep',
+] as const
+
+/** States that play once and then need the Host to change state. */
+export const ONE_SHOT_AVATAR_STATES = ['greet', 'celebrate'] as const
 
 export type BotAvatarState = (typeof BOT_AVATAR_STATES)[number]
 

@@ -22,6 +22,7 @@ export {
   type LegacyBotAvatarShape,
   migrateBotAvatarShape,
   normalizeBotAccentHex,
+  ONE_SHOT_AVATAR_STATES,
 } from './bot-avatar'
 export {
   ASSISTANT_REPLY_VIAS,

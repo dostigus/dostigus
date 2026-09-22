@@ -3,6 +3,7 @@ import {
   BOT_ACCENT_TOKENS,
   BOT_AVATAR_SHAPE_LABELS,
   BOT_AVATAR_SHAPES,
+  BOT_AVATAR_STATES,
   botAccentCssVar,
   botGreetingContent,
   botMarkPalette,
@@ -11,12 +12,14 @@ import {
   DEFAULT_BOT_NAME,
   DEFAULT_MODEL_TIER,
   isBotAvatarShape,
+  isBotAvatarState,
   isModelTier,
   LEGACY_AVATAR_SHAPE_MAP,
   migrateBotAvatarShape,
   MODEL_TIER_LABELS,
   MODEL_TIERS,
   normalizeBotAccentHex,
+  ONE_SHOT_AVATAR_STATES,
   PRODUCT_NAME,
 } from '../../src/index'
 
@@ -66,6 +69,27 @@ it('migrates both older shape generations onto a bird', () => {
   expect(migrateBotAvatarShape('nonsense')).toBe('goose')
   expect(LEGACY_AVATAR_SHAPE_MAP.peek).toBe('owl')
   expect(LEGACY_AVATAR_SHAPE_MAP.plump).toBe('puffin')
+})
+
+it('exposes nine mark motion states, two of them one-shot', () => {
+  expect(BOT_AVATAR_STATES).toEqual([
+    'none',
+    'idle',
+    'think',
+    'reply',
+    'work',
+    'greet',
+    'listen',
+    'celebrate',
+    'error',
+    'sleep',
+  ])
+  expect(ONE_SHOT_AVATAR_STATES).toEqual(['greet', 'celebrate'])
+  for (const state of ONE_SHOT_AVATAR_STATES) {
+    expect(isBotAvatarState(state)).toBe(true)
+  }
+  expect(isBotAvatarState('sleep')).toBe(true)
+  expect(isBotAvatarState('dance')).toBe(false)
 })
 
 it('derives mark tones that stay apart from the body on every accent', () => {

@@ -54,7 +54,7 @@
             :shape="item"
             :color="color"
             size="lg"
-            :state="shape === item ? 'idle' : 'none'"
+            :state="markState(item)"
           />
         </button>
       </div>
@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, BotAccentHex, BotAvatarShape, ModelTier } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, BotAvatarState, ModelTier } from '@dostigus/shared'
 import {
   BOT_ACCENT_TOKENS,
   BOT_AVATAR_SHAPE_LABELS,
@@ -202,6 +202,7 @@ const tier = ref<ModelTier>('strong')
 const shape = ref<BotAvatarShape>(DEFAULT_AVATAR_SHAPE)
 const color = ref<BotAccentHex>(DEFAULT_AVATAR_COLOR)
 const saving = ref(false)
+const picked = ref(false)
 const deleting = ref(false)
 const confirmDelete = ref(false)
 const error = ref('')
@@ -213,8 +214,11 @@ watch(() => props.bot?.id, () => {
 watch(open, (isOpen) => {
   if (isOpen) {
     syncFromBot()
+    playGreet()
     return
   }
+  clearTimeout(greetTimer)
+  picked.value = false
   confirmDelete.value = false
   error.value = ''
 })
@@ -235,11 +239,33 @@ function shapeLabel(value: BotAvatarShape): string {
   return BOT_AVATAR_SHAPE_LABELS[value]
 }
 
+/** The chosen bird greets when the Sheet opens or you pick it; the rest hold still. */
+function markState(value: BotAvatarShape): BotAvatarState {
+  if (shape.value !== value) {
+    return 'none'
+  }
+  return picked.value ? 'greet' : 'idle'
+}
+
+let greetTimer: ReturnType<typeof setTimeout>
+
+function playGreet() {
+  picked.value = false
+  clearTimeout(greetTimer)
+  void nextTick(() => {
+    picked.value = true
+    greetTimer = setTimeout(() => {
+      picked.value = false
+    }, 1200)
+  })
+}
+
 function pickShape(value: BotAvatarShape) {
   if (!isOwner.value) {
     return
   }
   shape.value = value
+  playGreet()
 }
 
 function pickColor(value: BotAccentHex) {
@@ -284,6 +310,10 @@ async function save() {
     saving.value = false
   }
 }
+
+onUnmounted(() => {
+  clearTimeout(greetTimer)
+})
 
 async function remove() {
   if (!props.bot || !isOwner.value || deleting.value) {

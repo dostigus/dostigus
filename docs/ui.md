@@ -74,13 +74,25 @@ body is the accent, the wing and tail a shade of it, eye whites and the
 puffin chest a warm near-cream, and the bill and feet a warm tone held
 apart from the body on every accent.
 
-States: `none` | `idle` | `think` | `reply` | `work`. `idle` breathes and
-blinks, `think` lifts the bill and sways, `reply` opens the jaw and bobs
-the head, `work` flaps. Motion stops under `prefers-reduced-motion`. The
-Host passes `idle` in the sidebar and Chat header, `think` while a reply is
-in flight, and `reply` just after it lands. Defaults are `goose` and
-`#1F7AE5` (`--bot-accent-10`). See
-[ADR 0018](adr/0018-bot-mark-flock.md).
+States: `none` | `idle` | `think` | `reply` | `work` | `greet` | `listen` |
+`celebrate` | `error` | `sleep`. `greet` and `celebrate` play once; the
+caller returns to `idle` after them.
+
+| State | Host call site |
+|-------|----------------|
+| `idle` | sidebar rows, Chat header at rest |
+| `greet` | Chat open; the picked bird in the appearance editor |
+| `listen` | Chat composer focused |
+| `think` | reply in flight |
+| `reply` | reply landing |
+| `celebrate` | just after the reply finishes |
+| `error` | failed send |
+| `sleep` | no OpenRouter key, so the Bot cannot answer |
+| `work` | Kit only for now |
+
+Under `prefers-reduced-motion` nothing animates, and the states that mean
+something hold a static pose instead. Defaults are `goose` and `#1F7AE5`
+(`--bot-accent-10`). See [ADR 0018](adr/0018-bot-mark-flock.md).
 
 ## Sheet shell
 

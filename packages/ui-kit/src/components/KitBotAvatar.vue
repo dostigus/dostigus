@@ -118,18 +118,20 @@
                 :cy="eye.cy"
                 :r="eye.r"
               />
-              <circle
-                class="kit-bot-avatar__pupil"
-                :cx="eye.cx + eye.r * 0.22"
-                :cy="eye.cy"
-                :r="eye.pupil"
-              />
-              <circle
-                class="kit-bot-avatar__glint"
-                :cx="eye.cx + eye.r * 0.22 - eye.pupil * 0.45"
-                :cy="eye.cy - eye.pupil * 0.5"
-                :r="eye.pupil * 0.36"
-              />
+              <g class="kit-bot-avatar__gaze">
+                <circle
+                  class="kit-bot-avatar__pupil"
+                  :cx="eye.cx + eye.r * 0.22"
+                  :cy="eye.cy"
+                  :r="eye.pupil"
+                />
+                <circle
+                  class="kit-bot-avatar__glint"
+                  :cx="eye.cx + eye.r * 0.22 - eye.pupil * 0.45"
+                  :cy="eye.cy - eye.pupil * 0.5"
+                  :r="eye.pupil * 0.36"
+                />
+              </g>
             </g>
           </g>
         </g>
@@ -158,7 +160,11 @@ const props = withDefaults(defineProps<{
   color?: string
   size?: 'sm' | 'md' | 'lg'
   selected?: boolean
-  /** `idle` breathes and blinks, `think` looks up, `reply` talks, `work` flaps. */
+  /**
+   * Motion. `idle` breathes, `think` lifts the bill, `reply` talks,
+   * `work` flaps, `greet` and `celebrate` play once, `listen` leans in,
+   * `error` tilts confused, `sleep` shuts the eyes.
+   */
   state?: BotAvatarState
 }>(), {
   shape: DEFAULT_AVATAR_SHAPE,
@@ -300,48 +306,131 @@ const pivots = computed(() => {
 
 /* idle: a slow breath, a small head settle, and a rare blink. */
 .kit-bot-avatar--idle .kit-bot-avatar__mark-motion {
-  animation: kit-bot-breathe 3.6s ease-in-out infinite;
+  animation: kit-bot-breathe 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 .kit-bot-avatar--idle .kit-bot-avatar__head-motion {
-  animation: kit-bot-idle-head 3.6s ease-in-out infinite;
+  animation: kit-bot-idle-head 4.2s ease-in-out infinite;
 }
 
-.kit-bot-avatar--idle .kit-bot-avatar__eye-motion,
-.kit-bot-avatar--think .kit-bot-avatar__eye-motion,
-.kit-bot-avatar--reply .kit-bot-avatar__eye-motion {
-  animation: kit-bot-blink 5.4s ease-in-out infinite;
+.kit-bot-avatar--idle .kit-bot-avatar__eye-motion {
+  animation: kit-bot-blink 6.4s ease-in-out infinite;
 }
 
-/* think: beak up, a long sway, wing tucked still. */
+/* think: bill up, a long sway, eyes searching the ceiling. */
 .kit-bot-avatar--think .kit-bot-avatar__head-motion {
-  animation: kit-bot-think-head 2.8s ease-in-out infinite;
+  animation: kit-bot-think-head 3.2s ease-in-out infinite;
 }
 
 .kit-bot-avatar--think .kit-bot-avatar__mark-motion {
-  animation: kit-bot-think-sway 2.8s ease-in-out infinite;
+  animation: kit-bot-think-sway 3.2s ease-in-out infinite;
 }
 
-/* reply: the jaw talks, the head bobs with it, the wing flicks. */
+.kit-bot-avatar--think .kit-bot-avatar__gaze {
+  animation: kit-bot-think-gaze 3.2s ease-in-out infinite;
+}
+
+.kit-bot-avatar--think .kit-bot-avatar__eye-motion {
+  animation: kit-bot-slow-blink 5.2s ease-in-out infinite;
+}
+
+/* reply: three syllables a cycle, the head riding them, one wing flick. */
 .kit-bot-avatar--reply .kit-bot-avatar__jaw-motion {
-  animation: kit-bot-talk 0.42s ease-in-out infinite;
+  animation: kit-bot-talk 0.92s ease-in-out infinite;
 }
 
 .kit-bot-avatar--reply .kit-bot-avatar__head-motion {
-  animation: kit-bot-reply-head 0.84s ease-in-out infinite;
+  animation: kit-bot-reply-head 0.92s ease-in-out infinite;
 }
 
 .kit-bot-avatar--reply .kit-bot-avatar__wing-motion {
-  animation: kit-bot-wing-flick 1.68s ease-in-out infinite;
+  animation: kit-bot-wing-flick 1.84s ease-in-out infinite;
 }
 
-/* work: a steady flap. */
+.kit-bot-avatar--reply .kit-bot-avatar__eye-motion {
+  animation: kit-bot-blink 6.4s ease-in-out infinite;
+}
+
+/* work: a steady flap that loops without a seam. */
 .kit-bot-avatar--work .kit-bot-avatar__wing-motion {
-  animation: kit-bot-flap 0.68s ease-in-out infinite;
+  animation: kit-bot-flap 0.62s ease-in-out infinite;
 }
 
 .kit-bot-avatar--work .kit-bot-avatar__mark-motion {
-  animation: kit-bot-work-bob 0.68s ease-in-out infinite;
+  animation: kit-bot-work-bob 0.62s ease-in-out infinite;
+}
+
+.kit-bot-avatar--work .kit-bot-avatar__eye-motion {
+  animation: kit-bot-blink 6.4s ease-in-out infinite;
+}
+
+/* greet: one nod and a wave, then still. The Host drops back to idle. */
+.kit-bot-avatar--greet .kit-bot-avatar__head-motion {
+  animation: kit-bot-greet-head 1.15s ease-in-out 1 both;
+}
+
+.kit-bot-avatar--greet .kit-bot-avatar__wing-motion {
+  animation: kit-bot-greet-wing 1.15s ease-in-out 1 both;
+}
+
+.kit-bot-avatar--greet .kit-bot-avatar__mark-motion {
+  animation: kit-bot-greet-hop 1.15s ease-out 1 both;
+}
+
+/* listen: leaning in, eyes forward, breathing held small. */
+.kit-bot-avatar--listen .kit-bot-avatar__head-motion {
+  animation: kit-bot-listen-head 2.8s ease-in-out infinite;
+}
+
+.kit-bot-avatar--listen .kit-bot-avatar__mark-motion {
+  animation: kit-bot-listen-lean 2.8s ease-in-out infinite;
+}
+
+.kit-bot-avatar--listen .kit-bot-avatar__gaze {
+  animation: kit-bot-listen-gaze 2.8s ease-in-out infinite;
+}
+
+.kit-bot-avatar--listen .kit-bot-avatar__eye-motion {
+  animation: kit-bot-blink 7.6s ease-in-out infinite;
+}
+
+/* celebrate: one hop and a wing cheer after a reply lands. */
+.kit-bot-avatar--celebrate .kit-bot-avatar__mark-motion {
+  animation: kit-bot-celebrate-hop 1.05s cubic-bezier(0.3, 1.4, 0.5, 1) 1 both;
+}
+
+.kit-bot-avatar--celebrate .kit-bot-avatar__wing-motion {
+  animation: kit-bot-celebrate-wing 1.05s ease-in-out 1 both;
+}
+
+.kit-bot-avatar--celebrate .kit-bot-avatar__head-motion {
+  animation: kit-bot-celebrate-head 1.05s ease-in-out 1 both;
+}
+
+/* error: a confused tilt and a slower blink. */
+.kit-bot-avatar--error .kit-bot-avatar__head-motion {
+  animation: kit-bot-error-head 3.6s ease-in-out infinite;
+}
+
+.kit-bot-avatar--error .kit-bot-avatar__mark-motion {
+  animation: kit-bot-error-sway 3.6s ease-in-out infinite;
+}
+
+.kit-bot-avatar--error .kit-bot-avatar__eye-motion {
+  animation: kit-bot-slow-blink 3.2s ease-in-out infinite;
+}
+
+/* sleep: eyes shut to a slit, head down, a long breath. */
+.kit-bot-avatar--sleep .kit-bot-avatar__mark-motion {
+  animation: kit-bot-sleep-breathe 5.6s ease-in-out infinite;
+}
+
+.kit-bot-avatar--sleep .kit-bot-avatar__head-motion {
+  animation: kit-bot-sleep-head 5.6s ease-in-out infinite;
+}
+
+.kit-bot-avatar--sleep .kit-bot-avatar__eye-motion {
+  transform: scaleY(0.16);
 }
 
 @keyframes kit-bot-breathe {
@@ -351,7 +440,7 @@ const pivots = computed(() => {
   }
 
   50% {
-    transform: scale(1.015, 0.985) translateY(0.4px);
+    transform: scale(1.018, 0.982) translateY(0.5px);
   }
 }
 
@@ -361,25 +450,42 @@ const pivots = computed(() => {
     transform: none;
   }
 
-  40% {
-    transform: translateY(-0.5px) rotate(-1.6deg);
+  38% {
+    transform: translateY(-0.6px) rotate(-1.8deg);
   }
 
-  72% {
-    transform: rotate(0.9deg);
+  70% {
+    transform: rotate(1deg);
   }
 }
 
 @keyframes kit-bot-blink {
   0%,
-  91%,
+  90%,
   100% {
     transform: scaleY(1);
   }
 
-  94%,
-  96% {
-    transform: scaleY(0.08);
+  93%,
+  95% {
+    transform: scaleY(0.06);
+  }
+
+  97% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes kit-bot-slow-blink {
+  0%,
+  84%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  89%,
+  94% {
+    transform: scaleY(0.14);
   }
 
   98% {
@@ -390,71 +496,102 @@ const pivots = computed(() => {
 @keyframes kit-bot-think-head {
   0%,
   100% {
-    transform: translateY(-0.8px) rotate(-9deg);
+    transform: translateY(-0.9px) rotate(-10deg);
   }
 
   50% {
-    transform: translateY(0.2px) rotate(-3.5deg);
+    transform: translateY(0) rotate(-4.5deg);
   }
 }
 
 @keyframes kit-bot-think-sway {
   0%,
   100% {
-    transform: rotate(-1.2deg);
+    transform: rotate(-1.4deg);
   }
 
   50% {
-    transform: rotate(1.2deg);
+    transform: rotate(1.4deg);
+  }
+}
+
+@keyframes kit-bot-think-gaze {
+  0%,
+  100% {
+    transform: translate(0.3px, -0.5px);
+  }
+
+  50% {
+    transform: translate(-0.3px, -0.65px);
   }
 }
 
 @keyframes kit-bot-talk {
   0%,
+  22%,
+  46%,
+  72%,
   100% {
     transform: none;
   }
 
-  45% {
-    transform: translateY(1.1px) rotate(12deg);
+  10% {
+    transform: translateY(1.2px) rotate(13deg);
+  }
+
+  34% {
+    transform: translateY(0.7px) rotate(8deg);
+  }
+
+  58% {
+    transform: translateY(1.3px) rotate(14deg);
   }
 }
 
 @keyframes kit-bot-reply-head {
   0%,
+  80%,
   100% {
     transform: none;
   }
 
-  25% {
-    transform: translateY(-0.8px) rotate(-2.6deg);
+  12% {
+    transform: translateY(-0.9px) rotate(-3deg);
   }
 
-  62% {
-    transform: translateY(0.3px) rotate(1deg);
+  36% {
+    transform: translateY(0.2px) rotate(0.8deg);
+  }
+
+  60% {
+    transform: translateY(-0.7px) rotate(-2.2deg);
   }
 }
 
 @keyframes kit-bot-wing-flick {
   0%,
-  62%,
+  70%,
   100% {
     transform: none;
   }
 
-  78% {
-    transform: rotate(-9deg) translateY(-0.6px);
+  80% {
+    transform: rotate(-12deg) translateY(-0.7px);
+  }
+
+  90% {
+    transform: rotate(-3deg);
   }
 }
 
 @keyframes kit-bot-flap {
   0%,
   100% {
-    transform: none;
+    transform: rotate(0);
   }
 
   50% {
-    transform: rotate(-17deg) translateY(-0.9px);
+    transform: rotate(-18deg) translateY(-1px);
   }
 }
 
@@ -465,18 +602,223 @@ const pivots = computed(() => {
   }
 
   50% {
-    transform: translateY(-0.7px);
+    transform: translateY(-0.8px);
   }
 }
 
-/* Matches the two-class state rules above so it wins on equal specificity. */
+@keyframes kit-bot-greet-head {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  22% {
+    transform: translateY(-1.4px) rotate(-5deg);
+  }
+
+  46% {
+    transform: translateY(1px) rotate(4.5deg);
+  }
+
+  70% {
+    transform: translateY(-0.6px) rotate(-2deg);
+  }
+}
+
+@keyframes kit-bot-greet-wing {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  20% {
+    transform: rotate(-30deg);
+  }
+
+  40% {
+    transform: rotate(-14deg);
+  }
+
+  60% {
+    transform: rotate(-28deg);
+  }
+
+  80% {
+    transform: rotate(-8deg);
+  }
+}
+
+@keyframes kit-bot-greet-hop {
+  0%,
+  55%,
+  100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(-1.6px);
+  }
+}
+
+@keyframes kit-bot-listen-head {
+  0%,
+  100% {
+    transform: translateY(0.9px) rotate(5deg);
+  }
+
+  50% {
+    transform: translateY(0.5px) rotate(3deg);
+  }
+}
+
+@keyframes kit-bot-listen-lean {
+  0%,
+  100% {
+    transform: translateX(0.5px) rotate(1.4deg);
+  }
+
+  50% {
+    transform: translateX(0.2px) rotate(0.5deg);
+  }
+}
+
+@keyframes kit-bot-listen-gaze {
+  0%,
+  100% {
+    transform: translate(0.5px, 0.25px);
+  }
+
+  50% {
+    transform: translate(0.65px, 0.1px);
+  }
+}
+
+@keyframes kit-bot-celebrate-hop {
+  0%,
+  42%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  20% {
+    transform: translateY(-3px) scale(1.02, 0.98);
+  }
+
+  60% {
+    transform: translateY(-1.5px);
+  }
+}
+
+@keyframes kit-bot-celebrate-wing {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  25% {
+    transform: rotate(-34deg);
+  }
+
+  50% {
+    transform: rotate(-12deg);
+  }
+
+  75% {
+    transform: rotate(-28deg);
+  }
+}
+
+@keyframes kit-bot-celebrate-head {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  30% {
+    transform: translateY(-0.6px) rotate(-7deg);
+  }
+
+  65% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes kit-bot-error-head {
+  0%,
+  100% {
+    transform: translateY(0.4px) rotate(10deg);
+  }
+
+  50% {
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes kit-bot-error-sway {
+  0%,
+  100% {
+    transform: rotate(-0.8deg);
+  }
+
+  50% {
+    transform: rotate(0.8deg);
+  }
+}
+
+@keyframes kit-bot-sleep-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+
+  50% {
+    transform: scale(1.022, 0.978) translateY(0.7px);
+  }
+}
+
+@keyframes kit-bot-sleep-head {
+  0%,
+  100% {
+    transform: translateY(0.5px) rotate(3deg);
+  }
+
+  50% {
+    transform: translateY(1.1px) rotate(4.5deg);
+  }
+}
+
+/*
+ * Reduced motion: nothing moves, but a state that means something still
+ * looks like it — the thinker keeps its bill up, the sleeper stays shut.
+ * Two classes deep so these win over the state rules above.
+ */
 @media (prefers-reduced-motion: reduce) {
   .kit-bot-avatar .kit-bot-avatar__mark-motion,
   .kit-bot-avatar .kit-bot-avatar__head-motion,
   .kit-bot-avatar .kit-bot-avatar__jaw-motion,
   .kit-bot-avatar .kit-bot-avatar__wing-motion,
-  .kit-bot-avatar .kit-bot-avatar__eye-motion {
+  .kit-bot-avatar .kit-bot-avatar__eye-motion,
+  .kit-bot-avatar .kit-bot-avatar__gaze {
     animation: none;
+    transform: none;
+  }
+
+  .kit-bot-avatar--think .kit-bot-avatar__head-motion {
+    transform: translateY(-0.9px) rotate(-8deg);
+  }
+
+  .kit-bot-avatar--listen .kit-bot-avatar__head-motion,
+  .kit-bot-avatar--sleep .kit-bot-avatar__head-motion {
+    transform: translateY(0.9px) rotate(4.5deg);
+  }
+
+  .kit-bot-avatar--error .kit-bot-avatar__head-motion {
+    transform: translateY(0.4px) rotate(10deg);
+  }
+
+  .kit-bot-avatar--sleep .kit-bot-avatar__eye-motion {
+    transform: scaleY(0.16);
   }
 }
 </style>

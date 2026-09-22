@@ -49,10 +49,15 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   expect(settings).toContain('justify-content: center')
   expect(read('app/components/HostBotAvatar.vue')).toContain('KitBotAvatar')
   expect(read('app/components/HostBotAvatar.vue')).toContain('state: \'idle\'')
-  expect(read('app/pages/bots/[id].vue')).toContain('markState')
-  expect(read('app/pages/bots/[id].vue')).toContain('\'think\'')
-  expect(read('app/pages/bots/[id].vue')).toContain('\'reply\'')
+  const chatPage = read('app/pages/bots/[id].vue')
+  expect(chatPage).toContain('markState')
+  for (const state of ['think', 'reply', 'celebrate', 'greet', 'listen', 'error', 'sleep']) {
+    expect(chatPage).toContain(`'${state}'`)
+  }
+  expect(chatPage).toContain('@focus="listening = true"')
+  expect(chatPage).toContain('@blur="listening = false"')
   expect(settings).toContain('BOT_AVATAR_SHAPE_LABELS')
+  expect(settings).toContain('markState')
   expect(read('app/components/HostSidebar.vue')).toContain('avatarShape')
   expect(read('app/pages/bots/[id].vue')).toContain('avatarShape')
   expect(read('app/pages/bots/[id].vue')).toContain('BotSettingsSheet')

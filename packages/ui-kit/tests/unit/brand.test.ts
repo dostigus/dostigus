@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { BOT_AVATAR_SHAPES } from '@dostigus/shared'
+import { BOT_AVATAR_SHAPES, BOT_AVATAR_STATES } from '@dostigus/shared'
 import { expect, it } from 'vitest'
-import { BOT_MARKS, renderPiece } from '../../src/bot-marks'
+import { BOT_MARKS, MARK_VIEWBOX, renderPiece } from '../../src/bot-marks'
 import { GOOSE_STICKERS, gooseFavicon, gooseLogoSrc, gooseStickerSrc } from '../../src/brand'
 import { uiKitComponents } from '../../src/components'
 
@@ -91,18 +91,62 @@ it('renders mark pieces as plain SVG element props', () => {
 
 it('draws every flock part and every motion state in the Kit avatar', () => {
   const avatar = readFileSync(join(root, 'src/components/KitBotAvatar.vue'), 'utf8')
-  for (const part of ['tail', 'body', 'belly', 'wing', 'feet', 'crest', 'skull', 'beak', 'jaw', 'eye']) {
+  const parts = ['tail', 'body', 'belly', 'wing', 'feet', 'crest', 'skull', 'beak', 'jaw', 'eye', 'gaze']
+  for (const part of parts) {
     expect(avatar).toContain(`kit-bot-avatar__${part}`)
   }
   for (const motion of ['mark-motion', 'head-motion', 'jaw-motion', 'wing-motion', 'eye-motion']) {
     expect(avatar).toContain(`kit-bot-avatar__${motion}`)
   }
-  expect(avatar).toContain('kit-bot-breathe')
-  expect(avatar).toContain('kit-bot-blink')
-  expect(avatar).toContain('kit-bot-think-head')
-  expect(avatar).toContain('kit-bot-talk')
-  expect(avatar).toContain('kit-bot-flap')
+  for (const state of BOT_AVATAR_STATES) {
+    if (state === 'none') {
+      continue
+    }
+    expect(avatar).toContain(`kit-bot-avatar--${state}`)
+  }
+  for (const frames of [
+    'kit-bot-breathe',
+    'kit-bot-blink',
+    'kit-bot-think-head',
+    'kit-bot-talk',
+    'kit-bot-flap',
+    'kit-bot-greet-wing',
+    'kit-bot-listen-head',
+    'kit-bot-celebrate-hop',
+    'kit-bot-error-head',
+    'kit-bot-sleep-breathe',
+  ]) {
+    expect(avatar).toContain(`@keyframes ${frames}`)
+  }
+  // greet and celebrate play once, then the Host takes the mark back to idle.
+  expect(avatar).toMatch(/kit-bot-greet-head [\d.]+s ease-in-out 1 both/)
+  expect(avatar).toMatch(/kit-bot-celebrate-hop [\d.]+s cubic-bezier\([^)]+\) 1 both/)
   expect(avatar).toContain('prefers-reduced-motion')
+})
+
+it('keeps every mark part inside the 64 grid', () => {
+  // Rough guard against a part drifting out of the box, like the old parrot crest.
+  for (const shape of BOT_AVATAR_SHAPES) {
+    const mark = BOT_MARKS[shape]
+    const groups = [mark.tail, mark.body, mark.belly, mark.wing, mark.feet, mark.crest, mark.head, mark.beak, mark.jaw]
+    for (const piece of groups.flat()) {
+      const numbers = piece.tag === 'circle'
+        ? [piece.cx - piece.r, piece.cx + piece.r, piece.cy - piece.r, piece.cy + piece.r]
+        : piece.tag === 'ellipse'
+          ? [piece.cx - piece.rx, piece.cx + piece.rx, piece.cy - piece.ry, piece.cy + piece.ry]
+          : (piece.d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
+      for (const value of numbers) {
+        expect(value).toBeGreaterThanOrEqual(0)
+        expect(value).toBeLessThanOrEqual(MARK_VIEWBOX)
+      }
+    }
+    for (const [x, y] of [mark.headPivot, mark.jawPivot, mark.wingPivot]) {
+      expect(x).toBeGreaterThan(0)
+      expect(x).toBeLessThan(MARK_VIEWBOX)
+      expect(y).toBeGreaterThan(0)
+      expect(y).toBeLessThan(MARK_VIEWBOX)
+    }
+  }
 })
 
 it('builds the Sheet shell on Reka Dialog', () => {
