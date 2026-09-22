@@ -41,4 +41,5 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   expect(read('app/pages/bots/[id].vue')).toContain('botPending')
   expect(nuxt).toContain('gooseFavicon')
   expect(nuxt).toContain('brandDir')
+  expect(read('app/app.vue')).toContain('<NuxtLayout>')
 })
