@@ -70,6 +70,13 @@ CREATE UNIQUE INDEX \`members_username_unique\` ON \`members\` (\`username\`);
 ALTER TABLE \`messages\` ADD \`person_id\` text;
 `,
   },
+  {
+    id: '0004_bot_avatar',
+    sql: `
+ALTER TABLE \`bots\` ADD \`avatar_shape\` text DEFAULT 'circle' NOT NULL;
+ALTER TABLE \`bots\` ADD \`avatar_color\` text DEFAULT '#1F7AE5' NOT NULL;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

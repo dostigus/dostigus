@@ -47,6 +47,8 @@ it('creates a Bot with default name, strong Model tier, and greeting', () => {
   expect(bot.manifest).toEqual({
     name: DEFAULT_BOT_NAME,
     modelTier: DEFAULT_MODEL_TIER,
+    avatarShape: 'circle',
+    avatarColor: '#1F7AE5',
     skillIds: [],
     modulePackageIds: [],
   })
@@ -87,15 +89,22 @@ it('does not insert a second greeting on first open', () => {
   expect(listMessages(store, bot.id)).toHaveLength(1)
 })
 
-it('updates name and Model tier, and cascade-deletes messages', () => {
+it('updates name, Model tier, and avatar fields, and cascade-deletes messages', () => {
   const store = memoryStore()
   const { bot } = createBot(store, { name: 'Temp' })
   insertMessage(store, { botId: bot.id, role: 'user', content: 'hi' })
 
-  const updated = updateBot(store, bot.id, { name: 'Renamed', modelTier: 'code' })
+  const updated = updateBot(store, bot.id, {
+    name: 'Renamed',
+    modelTier: 'code',
+    avatarShape: 'hex',
+    avatarColor: '#0AAC7B',
+  })
   expect(updated.name).toBe('Renamed')
   expect(updated.manifest.modelTier).toBe('code')
   expect(updated.manifest.name).toBe('Renamed')
+  expect(updated.manifest.avatarShape).toBe('hex')
+  expect(updated.manifest.avatarColor).toBe('#0AAC7B')
 
   deleteBot(store, bot.id)
   expect(listBots(store)).toEqual([])
@@ -104,6 +113,12 @@ it('updates name and Model tier, and cascade-deletes messages', () => {
     'SELECT count(*) AS n FROM messages',
   ).get() as { n: number }
   expect(leftover.n).toBe(0)
+})
+
+it('rejects an unknown avatar shape or color', () => {
+  const store = memoryStore()
+  expect(() => createBot(store, { avatarShape: 'square' })).toThrow(/avatar shape/)
+  expect(() => createBot(store, { avatarColor: '#ffffff' })).toThrow(/avatar color/)
 })
 
 it('lists the latest Chat line as a one-line preview', () => {

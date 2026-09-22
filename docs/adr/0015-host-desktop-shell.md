@@ -16,7 +16,8 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
   (avatars, create, and the user button). A control on the edge expands
   it again. Below `52rem` the sidebar stays a drawer with a reopen
   control, as in ADR 0014. The rail is a wide-screen behavior.
-- Each Bot row shows an avatar (initials), the name, and a one-line
+- Each Bot row shows an avatar (Manifest shape and color; see
+  [ADR 0016](0016-bot-avatar-tokens.md)), the name, and a one-line
   preview of the latest Chat line. Unread stays out of this shell.
 - The top of the sidebar is a client-side search field and, for the
   Owner, a small `+` that creates a Bot. Search filters the list already
@@ -26,10 +27,10 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
   and Sign out. Those links leave the sidebar chrome. Settings stays a
   page. Members stays a page.
 - Chat has a narrow header. The Bot avatar and name open a right
-  `KitSheet` (`edge="end"`): rename, Model tier from the Manifest, and
-  delete. Delete and edits stay with the Owner. A Member can open the
-  Sheet and read the name and Model tier. Skills and Module packages
-  stay out of this Sheet.
+  `KitSheet` (`edge="end"`): appearance, rename, Model tier from the
+  Manifest, and delete. Delete and edits stay with the Owner. A Member
+  can open the Sheet and read those fields. Skills and Module packages
+  stay out of this Sheet. Appearance detail is in ADR 0016.
 - Chat bubbles stay unlabeled. The line still stores `personId` and the
   author's name ([ADR 0012](0012-household-members.md)). Optimistic send
   is unchanged: the user line shows at once, then **Replying…**, then

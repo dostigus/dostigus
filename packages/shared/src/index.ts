@@ -1,4 +1,18 @@
 export {
+  BOT_ACCENT_HEXES,
+  BOT_ACCENT_TOKENS,
+  BOT_AVATAR_SHAPES,
+  botAccentCssVar,
+  type BotAccentHex,
+  type BotAccentToken,
+  type BotAvatarShape,
+  DEFAULT_AVATAR_COLOR,
+  DEFAULT_AVATAR_SHAPE,
+  isBotAccentHex,
+  isBotAvatarShape,
+  normalizeBotAccentHex,
+} from './bot-avatar'
+export {
   ASSISTANT_REPLY_VIAS,
   type AssistantReplyVia,
   baseUrlForLlmGatewayPreset,

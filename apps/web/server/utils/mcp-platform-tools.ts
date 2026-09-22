@@ -3,7 +3,7 @@ import type { ZodRawShape } from 'zod'
 import type { PlatformMcpTool } from './mcp-surface'
 import type { OpenAiChatFunctionTool } from './openai-tools'
 import { StoreError } from '@dostigus/db'
-import { MESSAGE_ROLES, MODEL_TIERS } from '@dostigus/shared'
+import { BOT_ACCENT_HEXES, BOT_AVATAR_SHAPES, MESSAGE_ROLES, MODEL_TIERS } from '@dostigus/shared'
 import { z } from 'zod'
 import {
   appendClusterMessage,
@@ -37,7 +37,7 @@ export type ChatToolInvokeResult = {
 const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   dostigus_bots_list: {
     name: 'dostigus_bots_list',
-    description: 'List Bots in the Cluster Store, newest first. Each Bot includes id, name, createdAt, Manifest (modelTier, skillIds, modulePackageIds), and lastMessage (latest Chat line preview, or null).',
+    description: 'List Bots in the Cluster Store, newest first. Each Bot includes id, name, createdAt, Manifest (modelTier, avatarShape, avatarColor, skillIds, modulePackageIds), and lastMessage (latest Chat line preview, or null).',
     annotations: { readOnlyHint: true },
     chat: true,
     run: (_input, store) => listClusterBots(store),
@@ -54,29 +54,37 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_bots_create: {
     name: 'dostigus_bots_create',
-    description: 'Create a Bot in the Cluster Store. Optional name (default New Bot) and Model tier (default strong). Stores an assistant greeting that asks what the Bot is for.',
+    description: 'Create a Bot in the Cluster Store. Optional name (default New Bot), Model tier (default strong), avatarShape, and avatarColor (Bot accent palette hex). Stores an assistant greeting that asks what the Bot is for.',
     chat: true,
     inputSchema: {
       name: z.string().optional(),
       modelTier: z.enum(MODEL_TIERS).optional(),
+      avatarShape: z.enum(BOT_AVATAR_SHAPES).optional(),
+      avatarColor: z.enum(BOT_ACCENT_HEXES).optional(),
     },
     run: (input, store) => createClusterBot(store, {
       name: optionalString(input.name),
       modelTier: optionalString(input.modelTier),
+      avatarShape: optionalString(input.avatarShape),
+      avatarColor: optionalString(input.avatarColor),
     }),
   },
   dostigus_bots_update: {
     name: 'dostigus_bots_update',
-    description: 'Update a Bot name and/or Model tier in the Cluster Store.',
+    description: 'Update a Bot name, Model tier, avatarShape, and/or avatarColor in the Cluster Store.',
     chat: true,
     inputSchema: {
       id: z.string().min(1),
       name: z.string().optional(),
       modelTier: z.enum(MODEL_TIERS).optional(),
+      avatarShape: z.enum(BOT_AVATAR_SHAPES).optional(),
+      avatarColor: z.enum(BOT_ACCENT_HEXES).optional(),
     },
     run: (input, store) => updateClusterBot(store, String(input.id), {
       name: optionalString(input.name),
       modelTier: optionalString(input.modelTier),
+      avatarShape: optionalString(input.avatarShape),
+      avatarColor: optionalString(input.avatarColor),
     }),
   },
   dostigus_bots_delete: {

@@ -26,7 +26,9 @@ Settled now, even if this repo only scaffolds them:
 What the running Cluster does today:
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
-  `bots` (name, Manifest: `modelTier` default `strong`, empty skills/modules),
+  `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
+  default `circle`, `avatarColor` default `#1F7AE5` / `--bot-accent-01`,
+  empty skills/modules),
   `messages` (`botId`, role `user` \| `assistant` \| `system`, content),
   `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
   default Model tier, optional model overrides), `owners` (exactly one
@@ -61,15 +63,17 @@ What the running Cluster does today:
   an icon rail. Each row shows an avatar, the Bot name, and the latest
   Chat line. Search filters that list in the Host. The Owner's `+`
   creates a Bot. A user button opens Settings (`/settings`), Members
-  (`/members`), and Sign out. Chat has a narrow header: avatar and name
-  open a right Sheet (rename, Model tier, delete for the Owner),
-  unlabeled bubbles, and a composer. The composer has a disabled
-  attachments control and shows a send arrow when there is text. On a
-  narrow screen the sidebar is a drawer. Sending a line shows it at once,
-  then a pending Bot reply, then the stored reply. An empty Bot list
-  offers **Create a Bot** and opens that Chat. See
-  [ADR 0014](adr/0014-host-messenger-shell.md) and
-  [ADR 0015](adr/0015-host-desktop-shell.md).
+  (`/members`), and Sign out.   Chat has a narrow header: avatar and name
+  open a right Sheet (appearance shape + color, rename, Model tier,
+  delete for the Owner), unlabeled bubbles, and a composer. Sidebar Bot
+  rows and the Chat header show the Manifest avatar (`KitBotAvatar`), not
+  a generic mark. The composer has a disabled attachments control and
+  shows a send arrow when there is text. On a narrow screen the sidebar
+  is a drawer. Sending a line shows it at once, then a pending Bot reply,
+  then the stored reply. An empty Bot list offers **Create a Bot** and
+  opens that Chat. See [ADR 0014](adr/0014-host-messenger-shell.md),
+  [ADR 0015](adr/0015-host-desktop-shell.md), and
+  [ADR 0016](adr/0016-bot-avatar-tokens.md).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
   `/api/members` list/create and `/api/members/:id/disable`,
   `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured

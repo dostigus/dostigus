@@ -1,3 +1,5 @@
+@import './bot-accents.css';
+
 .kit-overlay {
   position: fixed;
   inset: 0;

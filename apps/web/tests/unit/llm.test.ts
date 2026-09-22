@@ -102,6 +102,8 @@ it('calls chat completions with greeting history and the Manifest system prompt'
     manifest: {
       name: 'Notes later',
       modelTier: 'strong',
+      avatarShape: 'circle',
+      avatarColor: '#1F7AE5',
       skillIds: [],
       modulePackageIds: [],
     },

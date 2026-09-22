@@ -91,6 +91,8 @@
               <HostBotAvatar
                 :name="bot.name"
                 :seed="bot.id"
+                :shape="bot.manifest.avatarShape"
+                :avatar-color="bot.manifest.avatarColor"
               />
             </NuxtLink>
             <NuxtLink
@@ -102,6 +104,8 @@
               <HostBotAvatar
                 :name="bot.name"
                 :seed="bot.id"
+                :shape="bot.manifest.avatarShape"
+                :avatar-color="bot.manifest.avatarColor"
               />
               <span class="bot-copy">
                 <span class="bot-name">{{ bot.name }}</span>

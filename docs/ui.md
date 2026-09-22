@@ -16,8 +16,41 @@ white and muted gray text, soft UI.
 Shape: large radii (`--radius`), pill primary buttons, circular icon buttons,
 generous padding. See `apps/web/app/assets/css/main.css`.
 
-The Kit reads these variables. It does not define a second palette. Nunito
-is inherited from the Host.
+The Kit reads these Host variables for chrome. Nunito is inherited from the
+Host.
+
+## Bot accent palette
+
+Sixteen accents for Bot avatars (and other UI accents that need this set).
+Named CSS tokens in the Kit and Host (`--bot-accent-01` …
+`--bot-accent-16`). Manifest `avatarColor` stores the hex. See
+[ADR 0016](adr/0016-bot-avatar-tokens.md).
+
+| Token | Hex |
+|-------|-----|
+| `--bot-accent-01` | `#1F7AE5` |
+| `--bot-accent-02` | `#B656D7` |
+| `--bot-accent-03` | `#8190AE` |
+| `--bot-accent-04` | `#529098` |
+| `--bot-accent-05` | `#A0A24F` |
+| `--bot-accent-06` | `#0AAC7B` |
+| `--bot-accent-07` | `#9B8F7E` |
+| `--bot-accent-08` | `#D5AC1B` |
+| `--bot-accent-09` | `#E47134` |
+| `--bot-accent-10` | `#DE3957` |
+| `--bot-accent-11` | `#73B125` |
+| `--bot-accent-12` | `#B2774F` |
+| `--bot-accent-13` | `#8354E6` |
+| `--bot-accent-14` | `#28A2D6` |
+| `--bot-accent-15` | `#DD547E` |
+| `--bot-accent-16` | `#DC4ACD` |
+
+## Bot avatar shapes
+
+Kit `KitBotAvatar` draws eight silhouettes with two simple eyes:
+`circle`, `bean`, `squircle`, `capsule`, `triangle`, `hex`, `cloud`,
+`teardrop`. Defaults are `circle` and `--bot-accent-01`. The Host Bot
+settings Sheet (right edge) edits shape and color for the Owner.
 
 ## Sheet shell
 
@@ -70,10 +103,12 @@ Its menu opens Settings, Members (Owner), and Sign out. Those links are
 not pinned in the sidebar.
 
 Chat has a narrow header. The Bot avatar and name open a right Sheet
-(`KitSheet` with `edge="end"`): name, Model tier, and delete for the
-Owner. Bubbles have no author label. The composer stays on screen. A `+`
-on the left is reserved for attachments and stays disabled. A send arrow
-in a circle appears when the draft has text.
+(`KitSheet` with `edge="end"`): appearance (**Bot** tab: shape grid and
+color swatches, plus **Reset**), name, Model tier, and delete for the
+Owner. Members see the chosen avatar and may read those fields. Bubbles
+have no author label. The composer stays on screen. A `+` on the left is
+reserved for attachments and stays disabled. A send arrow in a circle
+appears when the draft has text.
 
 Settings is the `/settings` page. Members is the `/members` page. Neither
 opens as a Sheet over Chat. Bot settings are the right Sheet above.
