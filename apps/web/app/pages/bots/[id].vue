@@ -118,7 +118,7 @@
           Try again
         </button>
       </p>
-      <div class="composer-plate">
+      <div class="composer-foot">
         <div
           ref="composerRowEl"
           class="composer-row"
@@ -776,13 +776,23 @@ async function onBotDeleted() {
   pointer-events: none;
 }
 
-/* Unrounded canvas behind the row. The pill and card radii leave
-   concave pockets; this plate fills them with --bg-chat so the
-   corners sit on the Chat canvas, not the thread. */
-.composer-plate {
+/* Footer band: only the bottom half of the row, plus a hair past its
+   edge. Used radius never passes the midline, so this seals the lower
+   pockets and the strip under the field without filling the top pockets. */
+.composer-foot {
+  position: relative;
+}
+
+.composer-foot::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  right: 0;
+  top: 50%;
+  bottom: -2px;
   background: var(--bg-chat);
-  /* Past the row's bottom edge, so a fractional pixel there cannot open onto the thread. */
-  padding-bottom: 2px;
+  pointer-events: none;
 }
 
 .composer-row,
@@ -791,6 +801,8 @@ async function onBotDeleted() {
 }
 
 .composer-row {
+  position: relative;
+  z-index: 1;
   display: flex;
   gap: 0.25rem;
   align-items: flex-end;
