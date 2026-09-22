@@ -18,10 +18,15 @@ These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
 | `--accent` | `#F25630` | Primary actions, `+` create, focus |
 | `--live` | `#3DDC84` | Green live dot on a busy Bot avatar |
 | `--line` | `#333333` | Quiet borders (slightly lighter than `--surface`) |
-| `--line-soft` | `color-mix(in srgb, var(--line) 55%, var(--bg))` | Sidebar \| Chat divider, Chat header edge, rule above the user button |
+| `--line-soft` | `color-mix(in srgb, var(--line) 55%, var(--bg))` (~`#242424`) | Sidebar \| Chat divider, Chat header edge, rule above the user button |
 | `--radius-card` | `1.75rem` (~28px) | Large card / Sheet corners |
 | `--radius-bubble` | `1.25rem` (~20px) | Soft Chat message bubbles |
 | `--radius` | `0.75rem` (~12px) | Buttons, inputs, inner chips |
+
+A border on `--surface` (`#262626`) has to be lighter than that fill or it
+vanishes. `--line-soft` (~`#242424`, 55% `--line` `#333333` with `--bg`
+`#121212`) is darker than `--surface`, so it disappears as an edge on a
+`--surface` strip. `--line` (`#333333`) stays visible there.
 
 Day-1 coral `#FF5C35` and cream text are retired; accent is `#F25630`. Canvas
 stays deep charcoal `#121212`. Sheet shells use `--sheet` (`#212121`), not
