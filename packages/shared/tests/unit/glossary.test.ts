@@ -1,9 +1,12 @@
 import { expect, it } from 'vitest'
 import {
+  BOT_ACCENT_HEXES,
   BOT_ACCENT_TOKENS,
   BOT_AVATAR_SHAPE_LABELS,
   BOT_AVATAR_SHAPES,
   BOT_AVATAR_STATES,
+  BOT_PURPOSE_OPTIONS,
+  BOT_PURPOSE_PROMPT,
   botAccentCssVar,
   botGreetingContent,
   botMarkPalette,
@@ -21,6 +24,7 @@ import {
   normalizeBotAccentHex,
   ONE_SHOT_AVATAR_STATES,
   PRODUCT_NAME,
+  randomBotAppearance,
 } from '../../src/index'
 
 it('exposes cheap, strong, code, and toy tiers', () => {
@@ -109,7 +113,25 @@ it('keeps the product name Dostigus', () => {
   expect(PRODUCT_NAME).toBe('Dostigus')
 })
 
-it('asks what a new Bot is for', () => {
+it('greets a new Bot and keeps purpose chips out of the Manifest', () => {
   expect(DEFAULT_BOT_NAME).toBe('New Bot')
-  expect(botGreetingContent('New Bot')).toContain('What should this Bot be for?')
+  expect(botGreetingContent('New Bot')).toBe('Hello — I\'m New Bot.')
+  expect(BOT_PURPOSE_PROMPT).toBe('What should this Bot be for?')
+  expect(BOT_PURPOSE_OPTIONS).toEqual(['Personal', 'Work', 'Learning', 'Other'])
+})
+
+it('assigns a random flock bird and Bot accent', () => {
+  const shapes = new Set(BOT_AVATAR_SHAPES.map((_, index) => {
+    return randomBotAppearance(() => index / BOT_AVATAR_SHAPES.length).avatarShape
+  }))
+  expect(shapes).toEqual(new Set(BOT_AVATAR_SHAPES))
+
+  const colors = new Set(BOT_ACCENT_HEXES.map((_, index) => {
+    let call = 0
+    return randomBotAppearance(() => {
+      call += 1
+      return call === 1 ? 0 : index / BOT_ACCENT_HEXES.length
+    }).avatarColor
+  }))
+  expect(colors).toEqual(new Set(BOT_ACCENT_HEXES))
 })

@@ -24,6 +24,15 @@ export function filterBots(bots: readonly BotListItem[], query: string): BotList
   })
 }
 
+/** Picker search matches the Bot name only. */
+export function filterBotsByName(bots: readonly BotListItem[], query: string): BotListItem[] {
+  const needle = query.trim().toLowerCase()
+  if (!needle) {
+    return [...bots]
+  }
+  return bots.filter((bot) => bot.name.toLowerCase().includes(needle))
+}
+
 export function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) {

@@ -3,6 +3,9 @@
 - Status: accepted
 - Date: 2026-09-22
 
+The sidebar `+` also opens a finder for a Member. Create stays with the
+Owner. See [ADR 0019](0019-bot-picker-and-chat-purpose.md).
+
 ## Decision
 
 A Cluster still has exactly one **Owner** ([ADR 0010](0010-owner-auth-session.md)).

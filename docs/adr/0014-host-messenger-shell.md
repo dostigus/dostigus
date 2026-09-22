@@ -4,8 +4,10 @@
 - Date: 2026-09-22
 
 Desktop list chrome, Chat labels, and the composer are refined in
-[ADR 0015](0015-host-desktop-shell.md). Optimistic send and the drawer
-below `52rem` still stand.
+[ADR 0015](0015-host-desktop-shell.md). The Create Bot modal is replaced
+by the picker and Chat purpose Card in
+[ADR 0019](0019-bot-picker-and-chat-purpose.md). Optimistic send and the
+drawer below `52rem` still stand.
 
 ## Decision
 

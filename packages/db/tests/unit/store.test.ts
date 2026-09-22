@@ -57,6 +57,21 @@ it('creates a Bot with default name, strong Model tier, and greeting', () => {
   expect(listMessages(store, bot.id)).toHaveLength(1)
 })
 
+it('allows more than one Bot named New Bot', () => {
+  const store = memoryStore()
+  const first = createBot(store)
+  const second = createBot(store, {
+    name: DEFAULT_BOT_NAME,
+    avatarShape: 'owl',
+    avatarColor: '#DE3957',
+  })
+  expect(first.bot.id).not.toBe(second.bot.id)
+  expect(second.bot.name).toBe(DEFAULT_BOT_NAME)
+  expect(second.bot.manifest.avatarShape).toBe('owl')
+  expect(second.bot.manifest.avatarColor).toBe('#DE3957')
+  expect(listBots(store)).toHaveLength(2)
+})
+
 it('persists Chat messages and lists Bots newest first', () => {
   const store = memoryStore()
   const older = createBot(store, { name: 'Alpha' }).bot

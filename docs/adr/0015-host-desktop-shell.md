@@ -3,6 +3,9 @@
 - Status: accepted
 - Date: 2026-09-22
 
+The sidebar `+` opens the Bot picker. See
+[ADR 0019](0019-bot-picker-and-chat-purpose.md).
+
 ## Decision
 
 The wide-screen Host keeps the messenger shell from

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { BOT_PURPOSE_OPTIONS, BOT_PURPOSE_PROMPT } from '@dostigus/shared'
 import { expect, it } from 'vitest'
 
 const appRoot = join(import.meta.dirname, '../../app')
@@ -54,11 +55,25 @@ it('keeps Bot list and Chat copy product-facing when no key is set', () => {
   expect(chat).toContain('Attachments soon')
   expect(chat).toContain('v-if="draft.trim()"')
   expect(chat).toContain('Start the Chat')
+  expect(chat).toContain('BotPurposeCard')
+  const purpose = read('components/BotPurposeCard.vue')
+  expect(purpose).toContain('BOT_PURPOSE_OPTIONS')
+  expect(purpose).toContain('BOT_PURPOSE_PROMPT')
+  expect(BOT_PURPOSE_PROMPT).toBe('What should this Bot be for?')
+  expect([...BOT_PURPOSE_OPTIONS]).toEqual(['Personal', 'Work', 'Learning', 'Other'])
+  expect(purpose).not.toMatch(leftover)
+  expect(purpose).not.toContain('Kinnu')
+  const picker = read('components/BotPicker.vue')
+  expect(picker).toContain('Create new Bot')
+  expect(picker).toContain('To')
+  expect(picker).not.toContain('Kinnu')
+  expect(picker).not.toMatch(leftover)
   expect(chat).toContain('Replying…')
   expect(chat).not.toContain('Sending…')
   expect(chat).not.toMatch(/stub|Used Cluster tools|LLM gateway/i)
   expect(bots).toContain('v-if="isOwner"')
-  expect(sidebar).toContain('v-if="isOwner"')
+  expect(sidebar).toContain('Find or create a Bot')
+  expect(sidebar).toContain('Find a Bot')
   expect(chat).toContain('v-if="isOwner"')
   expect(read('pages/index.vue')).not.toContain('Kinnu')
 })
@@ -76,5 +91,7 @@ it('keeps Members copy product-facing', () => {
   expect(read('components/HostSidebar.vue')).not.toContain('Kinnu')
   expect(read('components/HostUserMenu.vue')).not.toContain('Kinnu')
   expect(read('components/BotSettingsSheet.vue')).not.toContain('Kinnu')
+  expect(read('components/BotPicker.vue')).not.toContain('Kinnu')
+  expect(read('components/BotPurposeCard.vue')).not.toContain('Kinnu')
   expect(read('pages/bots/[id].vue')).not.toContain('Kinnu')
 })

@@ -54,7 +54,7 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_bots_create: {
     name: 'dostigus_bots_create',
-    description: 'Create a Bot in the Cluster Store. Optional name (default New Bot), Model tier (default strong), avatarShape, and avatarColor (Bot accent palette hex). Stores an assistant greeting that asks what the Bot is for.',
+    description: 'Create a Bot in the Cluster Store. Optional name (default New Bot), Model tier (default strong), avatarShape, and avatarColor (Bot accent palette hex). Stores an assistant greeting. Chat asks what the Bot is for.',
     chat: true,
     inputSchema: {
       name: z.string().optional(),

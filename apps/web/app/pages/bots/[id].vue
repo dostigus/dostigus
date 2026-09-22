@@ -58,6 +58,15 @@
         </p>
       </li>
       <li
+        v-if="showPurpose"
+        class="purpose"
+      >
+        <BotPurposeCard
+          :busy="sending"
+          @answer="onPurpose"
+        />
+      </li>
+      <li
         v-if="botPending"
         class="bubble assistant pending"
         aria-live="polite"
@@ -200,6 +209,7 @@ const settingsOpen = ref(false)
 const threadEl = ref<HTMLOListElement | null>(null)
 
 const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
+const showPurpose = computed(() => showsBotPurposeCard(timeline.value))
 /**
  * Header mark states, strongest first: a failed send beats a reply in
  * flight, which beats the reply landing, its cheer, the opening greet and
@@ -289,7 +299,7 @@ watch(botId, () => {
   settingsOpen.value = false
 })
 
-watch([timeline, botPending], () => {
+watch([timeline, botPending, showPurpose], () => {
   nextTick(() => {
     threadEl.value?.scrollTo({ top: threadEl.value.scrollHeight })
   })
@@ -307,6 +317,10 @@ function isMine(message: TimelineLine): boolean {
 
 function send() {
   void deliver(draft.value, null)
+}
+
+function onPurpose(content: string) {
+  void deliver(content, null)
 }
 
 function retry() {
@@ -527,6 +541,15 @@ async function onBotDeleted() {
 
 .dots span:nth-child(3) {
   animation-delay: 0.3s;
+}
+
+.purpose {
+  list-style: none;
+  max-width: min(34rem, 100%);
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .empty-chat {

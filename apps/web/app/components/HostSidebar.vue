@@ -7,10 +7,7 @@
     :inert="narrow && !open"
   >
     <div class="column">
-      <div
-        v-if="!rail || isOwner"
-        class="side-head"
-      >
+      <div class="side-head">
         <label
           v-if="!rail"
           class="search"
@@ -36,10 +33,9 @@
           >
         </label>
         <KitButton
-          v-if="isOwner"
           variant="icon"
           type="button"
-          aria-label="Create a Bot"
+          :aria-label="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
           @click="openCreate"
         >
           +

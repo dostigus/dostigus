@@ -126,8 +126,7 @@ Do not add poses.
 Where the Host uses them today:
 
 - Host mark: goose logo (sign-in)
-- Empty Bots: `wave` and **Create a Bot**
-- Create Bot: `KitDialog` and an `ok` sticker
+- Empty Bots: `wave` and **Create a Bot** (opens the picker)
 - Empty Members: `peek`
 - Add Member: `KitSheet` and an `ok` sticker
 
@@ -135,14 +134,28 @@ Where the Host uses them today:
 
 Wide screens keep a sidebar beside the open page. Drag the edge to resize
 it. Dragging below the minimum, or the edge control, collapses it to an
-icon rail (avatars, create, user button). The width and collapsed state
-stay in the browser.
+icon rail (avatars, the picker control, user button). The width and
+collapsed state stay in the browser.
 
-The top of the sidebar is search and, for the Owner, a small `+`. Search
-filters the loaded Bot list. Each row is an avatar, the Bot name, and a
-one-line preview of the latest Chat line. The bottom is a user button.
+The top of the sidebar is search and a small `+`. Search filters the
+loaded Bot list. The `+` opens a picker over the Chat pane (sheet chrome
+on the black pane): **To**, a name filter, **Create new Bot** for the
+Owner, and existing Bots (mark, name, latest Chat line). **Close**,
+Escape, or a click outside dismisses it. Search does not create a Bot
+from the query. A Member sees search and existing Bots only. Each sidebar
+row is an avatar, the Bot name, and a one-line preview of the latest Chat
+line. The bottom is a user button.
 Its menu opens Settings, Members (Owner), and Sign out. Those links are
 not pinned in the sidebar.
+
+Creating a Bot names it **New Bot**, assigns a random flock mark and Bot
+accent, and opens that Chat. The first line is a short hello. Until the
+first user message, Chat shows a purpose Card on `--sheet`: **What should
+this Bot be for?**, chips **Personal**, **Work**, **Learning**, and
+**Other**, plus a free-text field. The composer can send the same kind of
+line. The answer is a normal user message. The Bot replies on the usual
+path (a quiet line when no OpenRouter key is set). Purpose is not stored
+on the Manifest.
 
 Chat has a narrow header. The Bot avatar and name open a right Sheet
 (`KitSheet` with `edge="end"`): appearance (**Bot** tab: the flock grid
