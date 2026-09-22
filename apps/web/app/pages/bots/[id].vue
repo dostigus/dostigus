@@ -518,6 +518,8 @@ async function onBotDeleted() {
   flex-direction: column;
   background: var(--bg-chat);
   --avatar-ring: var(--bg-chat);
+  /* Thread and composer share this so the block lines up with bubbles. */
+  --thread-inset: 1.15rem;
 }
 
 .top {
@@ -591,7 +593,7 @@ async function onBotDeleted() {
   min-height: 0;
   list-style: none;
   margin: 0;
-  padding: 0.6rem 1.15rem 0;
+  padding: 0.6rem var(--thread-inset) 0;
   overflow: auto;
   display: flex;
   flex-direction: column;
@@ -667,14 +669,17 @@ async function onBotDeleted() {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  padding: 0;
+  /* Inset matches the thread. Transparent so the side margins stay Chat
+     canvas — no full-width --composer bar under the padding. */
+  padding: 0 var(--thread-inset) 0;
+  background: transparent;
 }
 
 .composer-row {
   display: flex;
   gap: 0.25rem;
   align-items: flex-end;
-  padding: 0.55rem 1.15rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.5rem 0.65rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
   /* A step lighter than the fill so the rim still reads on Chat black. */
   border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));
   border-radius: 9999px;

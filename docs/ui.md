@@ -33,10 +33,13 @@ Shape: large card radii (`--radius-card`), soft messenger bubbles
 reads these Host variables. Nunito is inherited from the Host.
 
 The composer is the field itself (`--composer` fill, not global
-`--surface`). It sits flush to the Chat pane: no black inset above or
-beside the block. A `1px` edge, `color-mix(in srgb, var(--text) 8%,
-var(--composer))`, stays a step lighter than that fill. One line keeps
-the full pill radius. Two or more lines use `--radius-card` (~28px).
+`--surface`). Its left and right edges share the thread inset
+(`1.15rem`), so the block lines up with Chat bubbles. The side margins
+are the Chat canvas (`--bg-chat`); only the row paints `--composer`,
+so the corners do not pick up a second fill. A `1px` edge,
+`color-mix(in srgb, var(--text) 8%, var(--composer))`, stays a step
+lighter than that fill. One line keeps the full pill radius. Two or
+more lines use `--radius-card` (~28px).
 The corner eases (~640ms, ease-in-out) from the visible pill into that
 radius, and the rim and fill share that timing. Reduced motion snaps. A
 transition that starts at `9999px` stays a pill until the last moment, so
