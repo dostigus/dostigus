@@ -3,6 +3,8 @@ declare module '#auth-utils' {
     id: string
     email: string | null
     username: string | null
+    displayName: string
+    role: 'owner' | 'member'
   }
 }
 

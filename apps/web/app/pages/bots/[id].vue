@@ -17,13 +17,21 @@
       </div>
       <div class="header-actions">
         <NuxtLink
+          v-if="isOwner"
+          to="/members"
+          class="settings"
+        >
+          Members
+        </NuxtLink>
+        <NuxtLink
+          v-if="isOwner"
           to="/settings"
           class="settings"
         >
           Settings
         </NuxtLink>
         <HostLogoutButton />
-        <template v-if="confirmDelete">
+        <template v-if="isOwner && confirmDelete">
           <button
             type="button"
             class="ghost"
@@ -42,7 +50,7 @@
           </button>
         </template>
         <button
-          v-else
+          v-else-if="isOwner"
           type="button"
           class="ghost"
           :disabled="!bot || deleting"
@@ -63,10 +71,15 @@
       v-else-if="gatewayUnset"
       class="quiet-banner"
     >
-      Replies stay quiet until you add an OpenRouter key.
-      <NuxtLink to="/settings">
-        Settings
-      </NuxtLink>
+      <template v-if="isOwner">
+        Replies stay quiet until you add an OpenRouter key.
+        <NuxtLink to="/settings">
+          Settings
+        </NuxtLink>
+      </template>
+      <template v-else>
+        Replies stay quiet until the Owner adds an OpenRouter key.
+      </template>
     </p>
 
     <ol
@@ -78,10 +91,13 @@
         v-for="message in messages"
         :key="message.id"
         class="bubble"
-        :class="message.role"
+        :class="[message.role, { mine: isMine(message) }]"
       >
-        <p class="who">
-          {{ labelFor(message.role) }}
+        <p
+          v-if="labelFor(message)"
+          class="who"
+        >
+          {{ labelFor(message) }}
         </p>
         <p class="text">
           {{ message.content }}
@@ -127,25 +143,26 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, LlmGatewayPublic, Message, MessageRole } from '@dostigus/shared'
+import type { Bot, Message } from '@dostigus/shared'
+
+type ChatMessage = Message & { authorName: string | null }
 
 const route = useRoute()
+const { user, isOwner } = useHostAccount()
 const botId = computed(() => String(route.params.id ?? ''))
 
 const { data: botData, error: botError, refresh: refreshBot } = await useFetch<{ bot: Bot }>(
   () => `/api/bots/${botId.value}`,
 )
-const { data: messageData, error: messageError, refresh } = await useFetch<{ messages: Message[] }>(
+const { data: messageData, error: messageError, refresh } = await useFetch<{ messages: ChatMessage[] }>(
   () => `/api/bots/${botId.value}/messages`,
 )
-const { data: gatewayData } = await useFetch<{ llmGateway: LlmGatewayPublic }>(
-  '/api/settings/llm-gateway',
-)
+const { data: readyData } = await useFetch<{ configured: boolean }>('/api/chat/ready')
 
 const bot = computed(() => botData.value?.bot)
 const messages = computed(() => messageData.value?.messages ?? [])
 const loadError = computed(() => Boolean(botError.value || messageError.value))
-const gatewayUnset = computed(() => gatewayData.value?.llmGateway.configured === false)
+const gatewayUnset = computed(() => readyData.value?.configured === false)
 
 useHead({
   title: computed(() => bot.value ? `Dostigus · ${bot.value.name}` : 'Dostigus · Chat'),
@@ -163,14 +180,24 @@ watch(messages, () => {
   })
 }, { immediate: true })
 
-function labelFor(role: MessageRole): string {
-  if (role === 'user') {
-    return 'You'
+function labelFor(message: ChatMessage): string {
+  if (message.role === 'user') {
+    return message.authorName ?? ''
   }
-  if (role === 'system') {
+  if (message.role === 'system') {
     return 'System'
   }
   return bot.value?.name ?? 'Bot'
+}
+
+function isMine(message: ChatMessage): boolean {
+  if (message.role !== 'user') {
+    return false
+  }
+  if (message.personId) {
+    return message.personId === user.value?.id
+  }
+  return isOwner.value
 }
 
 async function send() {
@@ -341,6 +368,10 @@ h1 {
 }
 
 .bubble.user {
+  align-self: flex-start;
+}
+
+.bubble.user.mine {
   align-self: flex-end;
   border-color: transparent;
   background: color-mix(in srgb, var(--accent) 18%, var(--surface));
@@ -348,9 +379,8 @@ h1 {
 
 .who {
   margin: 0 0 0.3rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--text-muted);
 }
 

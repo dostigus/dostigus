@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { authorizeMcpAgent, mcpToolsEnabled, readAuthorizationHeader } from '../../server/utils/mcp-auth'
-import { CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS } from '../../server/utils/mcp-surface'
+import { CHAT_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS } from '../../server/utils/mcp-surface'
 
 function event() {
   return { context: {} as { agentOk?: boolean } }
@@ -73,6 +73,19 @@ it('keeps delete off the Chat MCP tool list', () => {
     'dostigus_messages_create',
   ])
   expect(CHAT_MCP_TOOLS).not.toContain('dostigus_bots_delete')
+})
+
+it('limits Member Chat tools to messages', () => {
+  expect(MEMBER_CHAT_MCP_TOOLS).toEqual([
+    'dostigus_messages_list',
+    'dostigus_messages_create',
+  ])
+  for (const name of MEMBER_CHAT_MCP_TOOLS) {
+    expect(CHAT_MCP_TOOLS).toContain(name)
+  }
+  expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_bots_create')
+  expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_bots_update')
+  expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_bots_delete')
 })
 
 it('gates every file-based MCP tool with mcpToolsEnabled', () => {

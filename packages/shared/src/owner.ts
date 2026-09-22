@@ -54,6 +54,11 @@ export function parseOwnerIdentifier(value: string | undefined): OwnerIdentifier
   return { email: null, username }
 }
 
+/** Name shown on the Owner's Chat lines. Onboarding stores a login, not a separate display name. */
+export function ownerDisplayName(owner: { username: string | null, email: string | null }): string {
+  return owner.username ?? owner.email ?? 'Owner'
+}
+
 export function parseOwnerPassword(value: string | undefined): string {
   const password = value ?? ''
   if (password.length < OWNER_PASSWORD_MIN_LENGTH) {

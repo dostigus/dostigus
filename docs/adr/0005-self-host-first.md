@@ -27,7 +27,8 @@ surface.
   The Cluster Owner is a local Store row plus a Host cookie session
   ([ADR 0010](0010-owner-auth-session.md)), not a hosted identity.
 - SQLite is the day-1 store; keep the schema portable enough for Postgres later.
-- Household remains a glossary term only until a later ADR.
+- Household Members on one Host are [ADR 0012](0012-household-members.md).
+  Share links and guests stay later.
 
 ## Alternatives
 

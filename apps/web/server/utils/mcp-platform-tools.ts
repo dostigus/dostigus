@@ -16,7 +16,7 @@ import {
   withClusterStore,
 } from './cluster-bots'
 import { mcpJson } from './mcp'
-import { CHAT_MCP_TOOLS, isChatMcpTool, PLATFORM_MCP_TOOLS } from './mcp-surface'
+import { CHAT_MCP_TOOLS, isChatMcpTool, isMemberChatMcpTool, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS } from './mcp-surface'
 import { mcpToolsToOpenAiFunctions, parseToolCallArguments, toolResultError } from './openai-tools'
 
 export type PlatformToolSpec = {
@@ -112,6 +112,7 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
         botId: String(input.botId),
         role: (optionalString(input.role) as 'user' | 'assistant' | 'system' | undefined) ?? 'user',
         content: String(input.content),
+        personId: optionalString(input.personId) ?? null,
       }),
     }),
   },
@@ -129,8 +130,13 @@ export function listChatMcpToolSpecs(): PlatformToolSpec[] {
   return CHAT_MCP_TOOLS.map((name) => PLATFORM_TOOL_SPECS[name])
 }
 
-export function chatMcpToolsAsOpenAi(): OpenAiChatFunctionTool[] {
-  return mcpToolsToOpenAiFunctions(listChatMcpToolSpecs())
+export function chatMcpToolsAsOpenAi(
+  role: 'owner' | 'member' = 'owner',
+): OpenAiChatFunctionTool[] {
+  const specs = role === 'member'
+    ? MEMBER_CHAT_MCP_TOOLS.map((name) => PLATFORM_TOOL_SPECS[name])
+    : listChatMcpToolSpecs()
+  return mcpToolsToOpenAiFunctions(specs)
 }
 
 /** Options passed to `defineMcpTool` — same handlers the Chat loop invokes. */
@@ -152,19 +158,37 @@ export function invokeChatMcpTool(input: {
   name: string
   args: unknown
   store: OpenedStore
+  role?: 'owner' | 'member'
+  personId?: string
 }): ChatToolInvokeResult {
-  if (!isChatMcpTool(input.name)) {
-    logChatTool(input.name, 'skip')
+  const name = input.name
+  if (input.role === 'member') {
+    if (!isMemberChatMcpTool(name)) {
+      logChatTool(name, 'skip')
+      return {
+        ok: false,
+        name,
+        content: toolResultError('unknown or unavailable tool'),
+      }
+    }
+  } else if (!isChatMcpTool(name)) {
+    logChatTool(name, 'skip')
     return {
       ok: false,
-      name: input.name,
+      name,
       content: toolResultError('unknown or unavailable tool'),
     }
   }
 
-  const spec = PLATFORM_TOOL_SPECS[input.name]
+  const spec = PLATFORM_TOOL_SPECS[name]
   try {
     const parsed = parseChatToolInput(spec, parseToolCallArguments(input.args))
+    if (input.name === 'dostigus_messages_create' && input.personId) {
+      const role = optionalString(parsed.role) ?? 'user'
+      if (role === 'user') {
+        parsed.personId = input.personId
+      }
+    }
     const result = spec.run(parsed, input.store)
     logChatTool(spec.name, 'ok')
     return { ok: true, name: spec.name, content: mcpJson(result) }

@@ -20,7 +20,7 @@ export const llmGateway = sqliteTable('llm_gateway', {
   updatedAt: integer('updated_at').notNull(),
 })
 
-/** Single Cluster Owner. Day-1 allows exactly one row (`singleton`). */
+/** Single Cluster Owner. Exactly one row (`singleton`). */
 export const owners = sqliteTable('owners', {
   id: text('id').primaryKey(),
   email: text('email').unique(),
@@ -30,13 +30,25 @@ export const owners = sqliteTable('owners', {
   singleton: integer('singleton').notNull().default(1).unique(),
 })
 
-/** Chat line for a Bot. */
+/** Household Member under the Owner. Sign-in stays off while disabledAt is set. */
+export const members = sqliteTable('members', {
+  id: text('id').primaryKey(),
+  displayName: text('display_name').notNull(),
+  email: text('email').unique(),
+  username: text('username').unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: integer('created_at').notNull(),
+  disabledAt: integer('disabled_at'),
+})
+
+/** Chat line for a Bot. personId is the Owner or Member on user lines. */
 export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(),
   botId: text('bot_id').notNull().references(() => bots.id, { onDelete: 'cascade' }),
   role: text('role').notNull(),
   content: text('content').notNull(),
   createdAt: integer('created_at').notNull(),
+  personId: text('person_id'),
 }, (table) => [
   index('messages_bot_id_created_at_idx').on(table.botId, table.createdAt),
 ])
@@ -45,3 +57,4 @@ export type BotRow = typeof bots.$inferSelect
 export type MessageRow = typeof messages.$inferSelect
 export type LlmGatewayRow = typeof llmGateway.$inferSelect
 export type OwnerRow = typeof owners.$inferSelect
+export type MemberRow = typeof members.$inferSelect

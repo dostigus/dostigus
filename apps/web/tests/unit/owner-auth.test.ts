@@ -2,7 +2,8 @@ import { createOwner, openStore, StoreError } from '@dostigus/db'
 import { afterEach, expect, it } from 'vitest'
 import {
   assertOwnerSession,
-  loginClusterOwner,
+  isOwnerSessionUser,
+  loginHostAccount,
   OwnerAuthError,
   registerClusterOwner,
   toOwnerSession,
@@ -41,6 +42,8 @@ it('registers the first Owner and refuses a second register', async () => {
     id: owner.id,
     email: 'nick@example.test',
     username: null,
+    displayName: 'nick@example.test',
+    role: 'owner',
   })
 
   await expect(registerClusterOwner(store, {
@@ -59,18 +62,20 @@ it('logs in with email or username and rejects a bad password', async () => {
     password: 'secret-pass',
   }, hashPassword)
 
-  const signedIn = await loginClusterOwner(store, {
+  const signedIn = await loginHostAccount(store, {
     login: 'Owner.Nick',
     password: 'secret-pass',
   }, verifyPassword)
   expect(signedIn.username).toBe('owner.nick')
+  expect(signedIn.role).toBe('owner')
+  expect(signedIn.displayName).toBe('owner.nick')
 
-  await expect(loginClusterOwner(store, {
+  await expect(loginHostAccount(store, {
     login: 'owner.nick',
     password: 'wrong-pass',
   }, verifyPassword)).rejects.toBeInstanceOf(OwnerAuthError)
   try {
-    await loginClusterOwner(store, {
+    await loginHostAccount(store, {
       login: 'owner.nick',
       password: 'wrong-pass',
     }, verifyPassword)
@@ -78,6 +83,13 @@ it('logs in with email or username and rejects a bad password', async () => {
     expect(error).toBeInstanceOf(OwnerAuthError)
     expect((error as OwnerAuthError).statusCode).toBe(401)
   }
+})
+
+it('treats a Member session as not the Owner', () => {
+  expect(isOwnerSessionUser({ id: 'member-1', role: 'member' })).toBe(false)
+  expect(isOwnerSessionUser({ id: 'owner-1', role: 'owner' })).toBe(true)
+  expect(isOwnerSessionUser({ id: 'owner-1' })).toBe(true)
+  expect(isOwnerSessionUser(null)).toBe(false)
 })
 
 it('throws 401 when the Owner session is missing', () => {

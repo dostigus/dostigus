@@ -3,9 +3,9 @@ type LoginBody = OwnerAuthBody
 export default defineEventHandler(async (event) => {
   const body = await readBody<LoginBody>(event).catch(() => ({} as LoginBody))
   try {
-    const owner = await loginClusterOwner(useStore(), body, verifyPassword)
-    await startOwnerSession(event, toOwnerSession(owner))
-    return { owner }
+    const account = await loginHostAccount(useStore(), body, verifyPassword)
+    await startOwnerSession(event, account)
+    return { account }
   } catch (error) {
     throwOwnerAuthError(error)
   }

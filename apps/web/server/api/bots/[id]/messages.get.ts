@@ -1,3 +1,3 @@
 export default defineEventHandler(async (event) => {
-  return withOwnerStore(event, (store) => listClusterMessages(store, getRouterParam(event, 'id') ?? ''))
+  return withHostStore(event, (store) => presentChatMessages(store, getRouterParam(event, 'id') ?? ''))
 })

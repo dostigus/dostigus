@@ -29,6 +29,18 @@ export type Owner = {
   createdAt: string
 }
 
+export type MemberId = string
+
+/** Household account under the single Owner. Not a second Owner. */
+export type Member = {
+  id: MemberId
+  displayName: string
+  email: string | null
+  username: string | null
+  createdAt: string
+  disabledAt: string | null
+}
+
 /** Host shell is a synonym — prefer Host. */
 export type Host = {
   kind: 'web' | 'pwa'
@@ -104,6 +116,8 @@ export type Message = {
   role: MessageRole
   content: string
   createdAt: string
+  /** Owner id or Member id on Host user lines. Empty for assistant, system, and Bearer `/mcp` writes. */
+  personId: string | null
 }
 
 export type Orchestrator = Bot & {
@@ -154,7 +168,7 @@ export type LlmGateway = {
   modelOverrides?: LlmGatewayModelOverrides
 }
 
-/** Later scoped membership. Not day-1. */
+/** The Owner and Members on one Cluster. Membership rows are Members, not a separate Household table. */
 export type Household = {
   id: HouseholdId
   clusterId: ClusterId

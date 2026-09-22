@@ -4,6 +4,14 @@
       <HostMark sub="Bots" />
       <div class="header-actions">
         <NuxtLink
+          v-if="isOwner"
+          to="/members"
+          class="settings"
+        >
+          Members
+        </NuxtLink>
+        <NuxtLink
+          v-if="isOwner"
           to="/settings"
           class="settings"
         >
@@ -11,6 +19,7 @@
         </NuxtLink>
         <HostLogoutButton />
         <button
+          v-if="isOwner"
           type="button"
           class="plus"
           aria-label="Create Bot"
@@ -47,9 +56,15 @@
           </p>
           <h1>No Bots yet</h1>
           <p class="hint">
-            Create a Bot and start a Chat. You can tell it what it is for.
+            <template v-if="isOwner">
+              Create a Bot and start a Chat. You can tell it what it is for.
+            </template>
+            <template v-else>
+              Bots on this Host show up here. Open a Chat when one is here.
+            </template>
           </p>
           <button
+            v-if="isOwner"
             type="button"
             class="solid"
             @click="openCreate"
@@ -90,6 +105,7 @@ import type { Bot } from '@dostigus/shared'
 
 useHead({ title: 'Dostigus · Bots' })
 
+const { isOwner } = useHostAccount()
 const createOpen = ref(false)
 const { data, pending, error, refresh } = await useFetch<{ bots: Bot[] }>('/api/bots')
 

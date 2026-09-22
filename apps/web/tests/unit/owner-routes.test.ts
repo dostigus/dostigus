@@ -24,25 +24,40 @@ it('wraps requireUserSession for Host Owner routes', () => {
   expect(src).toContain('clearUserSession')
 })
 
-it('protects Bot and Settings APIs with requireUserSession', () => {
+it('lets Owner and Member sessions read Bots and Chat', () => {
   const files = [
     'bots/index.get.ts',
-    'bots/index.post.ts',
     'bots/[id].get.ts',
-    'bots/[id].patch.ts',
-    'bots/[id].delete.ts',
     'bots/[id]/messages.get.ts',
     'bots/[id]/messages.post.ts',
-    'settings/llm-gateway.get.ts',
-    'settings/llm-gateway.put.ts',
-    'settings/llm-gateway/ping.post.ts',
+    'chat/ready.get.ts',
   ]
   for (const file of files) {
     const src = readFileSync(join(apiRoot, file), 'utf8')
-    const gated = src.includes('requireUserSession')
-      || src.includes('requireOwnerSession')
-      || src.includes('withOwnerStore')
+    const gated = src.includes('requireHostSession') || src.includes('withHostStore')
     expect(gated, file).toBe(true)
+    expect(src, file).not.toContain('withOwnerStore')
+  }
+})
+
+it('keeps Bot writes, Settings, and Members with the Owner', () => {
+  const files = [
+    'bots/index.post.ts',
+    'bots/[id].patch.ts',
+    'bots/[id].delete.ts',
+    'settings/llm-gateway.get.ts',
+    'settings/llm-gateway.put.ts',
+    'settings/llm-gateway/ping.post.ts',
+    'members/index.get.ts',
+    'members/index.post.ts',
+    'members/[id]/disable.post.ts',
+  ]
+  for (const file of files) {
+    const src = readFileSync(join(apiRoot, file), 'utf8')
+    const gated = src.includes('requireOwnerSession') || src.includes('withOwnerStore')
+    expect(gated, file).toBe(true)
+    expect(src, file).not.toContain('withHostStore')
+    expect(src, file).not.toContain('requireHostSession')
   }
 })
 
@@ -57,15 +72,19 @@ it('keeps auth status, register, login, and health public', () => {
     const src = readFileSync(file, 'utf8')
     expect(src, file).not.toContain('requireUserSession')
     expect(src, file).not.toContain('requireOwnerSession')
+    expect(src, file).not.toContain('requireHostSession')
     expect(src, file).not.toContain('withOwnerStore')
+    expect(src, file).not.toContain('withHostStore')
   }
 })
 
 it('invokes Chat MCP tools in-process from the Host message route', () => {
   const src = readFileSync(join(apiRoot, 'bots/[id]/messages.post.ts'), 'utf8')
   expect(src).toContain('invokeChatMcpTool')
+  expect(src).toContain('chatMcpToolsAsOpenAi(role)')
+  expect(src).toContain('personId')
   expect(src).not.toMatch(/fetch\([^)]*\/mcp/)
-  expect(src).toContain('requireOwnerSession')
+  expect(src).toContain('requireHostSession')
 })
 
 it('does not gate the MCP surface on the Host Owner session', () => {
@@ -79,6 +98,8 @@ it('does not gate the MCP surface on the Host Owner session', () => {
     const src = readFileSync(file, 'utf8')
     expect(src, file).not.toContain('requireUserSession')
     expect(src, file).not.toContain('requireOwnerSession')
+    expect(src, file).not.toContain('requireHostSession')
     expect(src, file).not.toContain('withOwnerStore')
+    expect(src, file).not.toContain('withHostStore')
   }
 })

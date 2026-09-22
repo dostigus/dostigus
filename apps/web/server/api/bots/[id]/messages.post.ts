@@ -6,7 +6,9 @@ type PostBody = {
 }
 
 export default defineEventHandler(async (event) => {
-  await requireOwnerSession(event)
+  const session = await requireHostSession(event)
+  const role = session.user.role === 'member' ? 'member' : 'owner'
+  const personId = session.user.id
   const botId = getRouterParam(event, 'id') ?? ''
   const body = await readBody<PostBody>(event).catch(() => ({} as PostBody))
 
@@ -17,6 +19,7 @@ export default defineEventHandler(async (event) => {
       botId,
       role: 'user',
       content: body?.content ?? '',
+      personId,
     })
     const { messages: history } = listClusterMessages(store, botId)
     const reply = await completeAssistantReply({
@@ -26,7 +29,15 @@ export default defineEventHandler(async (event) => {
       history,
       manifest: bot.manifest,
       stored: getLlmGatewaySettings(store),
-      invokeTool: (name, args) => invokeChatMcpTool({ name, args, store }),
+      audience: role,
+      tools: chatMcpToolsAsOpenAi(role),
+      invokeTool: (name, args) => invokeChatMcpTool({
+        name,
+        args,
+        store,
+        role,
+        personId,
+      }),
     })
     const assistant = appendClusterMessage(store, {
       botId,

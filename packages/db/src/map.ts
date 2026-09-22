@@ -1,4 +1,4 @@
-import type { Bot, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
+import type { Bot, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
 import { DEFAULT_MODEL_TIER, isModelTier } from '@dostigus/shared'
 
 export type BotRecord = {
@@ -16,6 +16,17 @@ export type MessageRecord = {
   role: string
   content: string
   created_at: number
+  person_id: string | null
+}
+
+export type MemberRecord = {
+  id: string
+  display_name: string
+  email: string | null
+  username: string | null
+  password_hash: string
+  created_at: number
+  disabled_at: number | null
 }
 
 function parseStringList(raw: string): string[] {
@@ -65,6 +76,17 @@ export function toOwner(row: OwnerRecord): Owner {
   }
 }
 
+export function toMember(row: MemberRecord): Member {
+  return {
+    id: row.id,
+    displayName: row.display_name,
+    email: row.email,
+    username: row.username,
+    createdAt: new Date(row.created_at).toISOString(),
+    disabledAt: row.disabled_at == null ? null : new Date(row.disabled_at).toISOString(),
+  }
+}
+
 export function toMessage(row: MessageRecord): Message {
   return {
     id: row.id,
@@ -72,5 +94,6 @@ export function toMessage(row: MessageRecord): Message {
     role: row.role as MessageRole,
     content: row.content,
     createdAt: new Date(row.created_at).toISOString(),
+    personId: row.person_id ?? null,
   }
 }

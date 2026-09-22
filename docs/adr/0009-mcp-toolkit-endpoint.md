@@ -30,7 +30,8 @@ them from the UI), so a shared Store service is the one code path.
   OAuth). Tools use `enabled` after middleware sets `event.context.agentOk`.
 - The Host UI does not need the token. The Owner cookie session is a
   different gate ([ADR 0010](0010-owner-auth-session.md)): do not call
-  `requireUserSession` on `/mcp`. Household is still out of scope.
+  `requireUserSession` on `/mcp`. Host Household sessions do not gate `/mcp`
+  ([ADR 0012](0012-household-members.md)).
 - Cursor / IDE clients are not same-origin; `allowedOrigins` is `*`.
 - Chat LLM tool-calling invokes the same file-based handlers in-process
   (no HTTP `/mcp`, no Bearer). See [ADR 0011](0011-chat-mcp-tool-loop.md).

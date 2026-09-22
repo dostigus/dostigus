@@ -20,6 +20,7 @@ export type ClusterMessageInput = {
   botId: string
   role: MessageRole
   content: string
+  personId?: string | null
 }
 
 export function listClusterBots(store: OpenedStore) {

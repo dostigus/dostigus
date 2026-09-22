@@ -175,3 +175,20 @@ it('tells a configured Chat Bot it may use the MCP surface', () => {
   expect(prompt).toContain('This Cluster has one Owner')
   expect(prompt).toContain('You cannot delete Bots from Chat')
 })
+
+it('tells a Member Chat Bot to stay on messages', () => {
+  const prompt = chatSystemPrompt({
+    botName: 'Notes',
+    tools: true,
+    messagesOnly: true,
+    manifest: {
+      name: 'Notes',
+      modelTier: 'strong',
+      skillIds: [],
+      modulePackageIds: [],
+    },
+  })
+  expect(prompt).toContain('list and append Chat messages')
+  expect(prompt).toContain('Do not create, rename, or delete Bots')
+  expect(prompt).not.toContain('read and write Bots')
+})
