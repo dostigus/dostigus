@@ -2,11 +2,11 @@
   <HostAuthShell>
     <form @submit.prevent="submit">
       <p class="kicker">
-        Owner
+        Host
       </p>
       <h1>Welcome back</h1>
       <p class="hint">
-        Sign in as the Owner of this Host.
+        Sign in with your email or username.
       </p>
 
       <label class="field">

@@ -10,6 +10,10 @@ import {
 it('maps MCP Zod tools to OpenAI function schemas', () => {
   const tools = chatMcpToolsAsOpenAi()
   expect(tools.map((tool) => tool.function.name)).toEqual([...CHAT_MCP_TOOLS])
+  expect(chatMcpToolsAsOpenAi('member').map((tool) => tool.function.name)).toEqual([
+    'dostigus_messages_list',
+    'dostigus_messages_create',
+  ])
   expect(tools.every((tool) => tool.type === 'function')).toBe(true)
 
   const update = tools.find((tool) => tool.function.name === 'dostigus_bots_update')

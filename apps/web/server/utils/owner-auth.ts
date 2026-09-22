@@ -1,7 +1,7 @@
-import type { OpenedStore, OwnerSecret } from '@dostigus/db'
+import type { MemberSecret, OpenedStore, OwnerSecret } from '@dostigus/db'
 import type { Owner } from '@dostigus/shared'
-import { createOwner, findOwnerSecretByLogin, StoreError, ownerExists as storeOwnerExists } from '@dostigus/db'
-import { parseOwnerIdentifier, parseOwnerPassword, trimOrUndefined } from '@dostigus/shared'
+import { createOwner, findMemberSecretByLogin, findOwnerSecretByLogin, StoreError, ownerExists as storeOwnerExists } from '@dostigus/db'
+import { ownerDisplayName, parseOwnerIdentifier, parseOwnerPassword, trimOrUndefined } from '@dostigus/shared'
 
 export class OwnerAuthError extends Error {
   constructor(
@@ -20,18 +20,46 @@ export type OwnerAuthBody = {
   password?: string
 }
 
-export type OwnerSessionUser = {
+export type HostRole = 'owner' | 'member'
+
+export type HostSessionUser = {
   id: string
   email: string | null
   username: string | null
+  displayName: string
+  role: HostRole
 }
 
-export function toOwnerSession(owner: Owner): OwnerSessionUser {
+export function toOwnerSession(owner: Owner): HostSessionUser {
   return {
     id: owner.id,
     email: owner.email,
     username: owner.username,
+    displayName: ownerDisplayName(owner),
+    role: 'owner',
   }
+}
+
+export function toMemberSession(member: {
+  id: string
+  email: string | null
+  username: string | null
+  displayName: string
+}): HostSessionUser {
+  return {
+    id: member.id,
+    email: member.email,
+    username: member.username,
+    displayName: member.displayName,
+    role: 'member',
+  }
+}
+
+/** Missing role is an Owner cookie from before Members existed. */
+export function isOwnerSessionUser(
+  user: { id?: string, role?: string } | null | undefined,
+): boolean {
+  return Boolean(user?.id) && user?.role !== 'member'
 }
 
 export function assertOwnerSession(
@@ -87,11 +115,11 @@ export async function registerClusterOwner(
   })
 }
 
-export async function loginClusterOwner(
+export async function loginHostAccount(
   store: OpenedStore,
   body: OwnerAuthBody,
   verifyPassword: (hash: string, password: string) => Promise<boolean>,
-): Promise<Owner> {
+): Promise<HostSessionUser> {
   const login = trimOrUndefined(body.login)
     ?? trimOrUndefined(body.email)
     ?? trimOrUndefined(body.username)
@@ -100,21 +128,26 @@ export async function loginClusterOwner(
     throw new OwnerAuthError('Invalid email, username, or password', 401)
   }
 
-  let secret: OwnerSecret | undefined
+  let owner: OwnerSecret | undefined
+  let member: MemberSecret | undefined
   try {
-    secret = findOwnerSecretByLogin(store, login)
+    owner = findOwnerSecretByLogin(store, login)
+    if (!owner) {
+      member = findMemberSecretByLogin(store, login)
+    }
   } catch {
     throw new OwnerAuthError('Invalid email, username, or password', 401)
   }
-  if (!secret || !(await verifyPassword(secret.passwordHash, password))) {
+
+  const secret = owner ?? member
+  const passwordOk = Boolean(secret) && await verifyPassword(secret!.passwordHash, password)
+  if (!secret || !passwordOk || member?.disabledAt) {
     throw new OwnerAuthError('Invalid email, username, or password', 401)
   }
-  return {
-    id: secret.id,
-    email: secret.email,
-    username: secret.username,
-    createdAt: secret.createdAt,
+  if (member) {
+    return toMemberSession(member)
   }
+  return toOwnerSession(owner!)
 }
 
 export function throwOwnerAuthError(error: unknown): never {

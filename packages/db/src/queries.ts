@@ -92,38 +92,41 @@ export function requireBot(store: OpenedStore, id: string): Bot {
 
 function insertMessageRow(
   store: OpenedStore,
-  input: { botId: string, role: MessageRole, content: string },
+  input: { botId: string, role: MessageRole, content: string, personId?: string | null },
 ): Message {
+  const personId = input.personId ?? null
   const row: MessageRecord = {
     id: randomUUID(),
     bot_id: input.botId,
     role: input.role,
     content: input.content,
     created_at: nowMs(),
+    person_id: personId,
   }
   store.sqlite.prepare(`
-    INSERT INTO messages (id, bot_id, role, content, created_at)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(row.id, row.bot_id, row.role, row.content, row.created_at)
+    INSERT INTO messages (id, bot_id, role, content, created_at, person_id)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(row.id, row.bot_id, row.role, row.content, row.created_at, personId)
   return toMessage(row)
 }
 
 export function insertMessage(
   store: OpenedStore,
-  input: { botId: string, role: MessageRole, content: string },
+  input: { botId: string, role: MessageRole, content: string, personId?: string | null },
 ): Message {
   requireBot(store, input.botId)
   return insertMessageRow(store, {
     botId: input.botId,
     role: input.role,
     content: normalizeContent(input.content),
+    personId: input.personId ?? null,
   })
 }
 
 export function listMessages(store: OpenedStore, botId: string): Message[] {
   requireBot(store, botId)
   const rows = store.sqlite.prepare(`
-    SELECT id, bot_id, role, content, created_at
+    SELECT id, bot_id, role, content, created_at, person_id
     FROM messages
     WHERE bot_id = ?
     ORDER BY created_at ASC

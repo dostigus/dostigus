@@ -20,8 +20,14 @@ export const DEFAULT_TIER_MODELS: Record<ModelTier, string> = {
 export const STUB_ASSISTANT_REPLY
   = 'Got it. Add an OpenRouter key in Settings when you want live replies.'
 
+export const MEMBER_QUIET_ASSISTANT_REPLY
+  = 'Got it. Replies stay quiet until the Owner adds an OpenRouter key.'
+
 export const LLM_GATEWAY_ERROR_REPLY
   = 'Could not complete this reply. Check the key in Settings.'
+
+export const MEMBER_GATEWAY_ERROR_REPLY
+  = 'Could not complete this reply. The Owner can check the key in Settings.'
 
 export const LLM_GATEWAY_PRESETS = ['openrouter', 'custom'] as const
 
@@ -225,6 +231,8 @@ export function chatSystemPrompt(input: {
   }
   botId?: string
   tools?: boolean
+  /** Member Chat may list and append messages only. */
+  messagesOnly?: boolean
 }): string {
   const skills = input.manifest.skillIds.length > 0
     ? input.manifest.skillIds.join(', ')
@@ -241,7 +249,14 @@ export function chatSystemPrompt(input: {
   if (input.botId) {
     lines.push(`This Chat is with Bot id=${input.botId}.`)
   }
-  if (input.tools) {
+  if (input.tools && input.messagesOnly) {
+    lines.push(
+      'You may call tools to list and append Chat messages for this Bot.',
+      'Do not create, rename, or delete Bots.',
+      'Prefer tools over guessing Store state.',
+      'The Host already stores this Chat turn; do not append it again unless asked.',
+    )
+  } else if (input.tools) {
     lines.push(
       'You may call Cluster MCP surface tools to read and write Bots and Chat messages in this Owner Cluster.',
       'Stay on this Bot\'s purpose. This Cluster has one Owner.',

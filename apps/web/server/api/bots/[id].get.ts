@@ -1,3 +1,3 @@
 export default defineEventHandler(async (event) => {
-  return withOwnerStore(event, (store) => getClusterBot(store, getRouterParam(event, 'id') ?? ''))
+  return withHostStore(event, (store) => getClusterBot(store, getRouterParam(event, 'id') ?? ''))
 })

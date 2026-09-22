@@ -30,6 +30,22 @@ it('reads the LLM gateway from OpenAI-compatible env', () => {
   })).toBe(true)
 })
 
+it('returns a quiet reply for a Member when no key is set', async () => {
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: {},
+    audience: 'member',
+    fetchImpl: (async () => {
+      throw new Error('LLM gateway must not be called without a key')
+    }) as typeof fetch,
+  })
+  expect(result.via).toBe('stub')
+  expect(result.content).toContain('until the Owner adds an OpenRouter key')
+  expect(result.content.toLowerCase()).not.toContain('stub')
+})
+
 it('returns a stub reply when the LLM gateway has no key', async () => {
   const invoked: string[] = []
   const fetchImpl = (async () => {
@@ -72,6 +88,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
         role: 'assistant',
         content: 'Hello — I\'m Notes later. I don\'t have a purpose yet. What should this Bot be for?',
         createdAt: new Date().toISOString(),
+        personId: null,
       },
       {
         id: 'm1',
@@ -79,6 +96,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
         role: 'user',
         content: 'Remember things I type',
         createdAt: new Date().toISOString(),
+        personId: null,
       },
     ],
     manifest: {

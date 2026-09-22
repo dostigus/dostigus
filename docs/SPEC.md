@@ -29,25 +29,36 @@ What the running Cluster does today:
   `bots` (name, Manifest: `modelTier` default `strong`, empty skills/modules),
   `messages` (`botId`, role `user` \| `assistant` \| `system`, content),
   `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
-  default Model tier, optional model overrides), and `owners` (exactly one
-  Cluster Owner: unique email and/or username, password hash, createdAt).
-  Host opens and migrates the Store on start.
+  default Model tier, optional model overrides), `owners` (exactly one
+  Cluster Owner: unique email and/or username, password hash, createdAt),
+  and `members` (Household Members: display name, unique email and/or
+  username, password hash, createdAt, disabledAt). User Chat lines store
+  `personId` (the Owner id or Member id). Host opens and migrates the
+  Store on start.
 - Owner auth: `nuxt-auth-utils` sealed cookie session. Fresh Cluster →
   `/onboarding` (email or username + password). Later visits → `/login`.
-  Register is disabled once an Owner exists. Logout clears the session.
-  See [ADR 0010](adr/0010-owner-auth-session.md).
-- Host UI: Bot list (empty state + `+` create, default name **New Bot**),
-  Chat (timeline + composer), and Settings. Settings presents OpenRouter
-  as the default LLM path (API key + Model tier). A collapsed custom
+  Register is disabled once an Owner exists. Login accepts the Owner or a
+  Member. Logout clears the session. See
+  [ADR 0010](adr/0010-owner-auth-session.md) and
+  [ADR 0012](adr/0012-household-members.md).
+- Host UI: Bot list (empty state + Owner `+` create, default name **New Bot**),
+  Chat (timeline + composer, author name on user lines), Settings, and
+  Members. Settings presents OpenRouter as the default LLM path (API key +
+  Model tier) and stays with the Owner. A collapsed custom
   OpenAI-compatible URL remains for other gateways. Creating a Bot
   (or first open) stores an assistant greeting that asks what the Bot is
-  for. Logged-out visitors cannot open those surfaces. Host font is
+  for. The Owner adds a Member with a display name, email or username, and
+  password. A Member sees the same Bot list and Chat, without create,
+  delete, Members, or Settings. Turning off sign-in keeps their name on
+  Chat. Logged-out visitors cannot open those surfaces. Host font is
   Nunito; dark charcoal + coral-orange tokens
   ([`docs/ui.md`](ui.md)).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
-  `/api/settings/llm-gateway` get/put/ping. Persist in SQLite via the
-  same Store helpers as the MCP surface. These routes require an Owner
-  session (`requireUserSession`). See
+  `/api/members` list/create and `/api/members/:id/disable`,
+  `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured
+  flag only). Persist in SQLite via the same Store helpers as the MCP
+  surface. Bot list, Bot read, and Chat accept an Owner or Member session.
+  Bot create/update/delete, Members, and Settings require the Owner. See
   [ADR 0008](adr/0008-host-store-routes.md).
 - MCP surface: `@nuxtjs/mcp-toolkit` at `/mcp` (name `Dostigus`). File-based
   tools under `apps/web/server/mcp/tools/` wrap Bots and Chat messages.
@@ -61,14 +72,16 @@ What the running Cluster does today:
   sends greeting + history and a system prompt (new Bot, learn purpose,
   keep Manifest). When a key is set, Chat also sends Cluster MCP surface
   tools and runs an in-process tool loop (same handlers as `/mcp`, no
-  HTTP hop). Day-1 tools: Bots list/get/create/update and messages
-  list/create. Delete stays off Chat. No key → quiet reply + banner
-  (no tools). Configured call that fails → clear error, not a stub. The
+  HTTP hop). Owner Chat tools: Bots list/get/create/update and messages
+  list/create. Member Chat tools: messages list/create only. Delete stays
+  off Chat. No key → quiet reply + banner (no tools). Configured call that
+  fails → clear error, not a stub. The
   full key is never returned to the client or written to logs. Greeting
   is always stored. Keys are **not** required for compose. See
   [ADR 0011](adr/0011-chat-mcp-tool-loop.md).
 - `/health` stays `{ ok: true }`.
-- No seed/demo domain Bot. No Builder, Household, or Meal.
+- No seed/demo domain Bot. No Builder or Meal. Household on this Host is
+  the Owner plus Members ([ADR 0012](adr/0012-household-members.md)).
 
 `pnpm install` and `pnpm check` must stay green.
 
@@ -85,7 +98,9 @@ and [`docs/deploy.md`](deploy.md)).
 - Meal product port
 - Builder that writes Module packages (chat Bot ≠ Builder)
 - Marketplace
-- Household (multi-user), OAuth, passkeys, email verify, password reset
+- Share link, guests, invites by email, QR, person-to-person Chat
+- Roles beyond Owner and Member, hard-delete of a Member
+- OAuth, passkeys, email verify, password reset
 - Mobile native
 - Per-bot domains (the `meal.kosarev.space` pattern is temporary and to be replaced)
 - Arbitrary in-cluster sandbox code

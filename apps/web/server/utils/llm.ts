@@ -16,6 +16,8 @@ import {
   LLM_GATEWAY_ERROR_REPLY,
   LLM_GATEWAY_PING_TIMEOUT_MS,
   LLM_GATEWAY_TIMEOUT_MS,
+  MEMBER_GATEWAY_ERROR_REPLY,
+  MEMBER_QUIET_ASSISTANT_REPLY,
   readLlmGatewayEnv,
   redactSecrets,
   resolveLlmGateway,
@@ -39,12 +41,12 @@ export function isLlmGatewayConfigured(
   return envOrStoreConfigured(env, stored)
 }
 
-export function stubAssistantReply(): string {
-  return STUB_ASSISTANT_REPLY
+export function stubAssistantReply(audience: 'owner' | 'member' = 'owner'): string {
+  return audience === 'member' ? MEMBER_QUIET_ASSISTANT_REPLY : STUB_ASSISTANT_REPLY
 }
 
-export function gatewayErrorReply(): string {
-  return LLM_GATEWAY_ERROR_REPLY
+export function gatewayErrorReply(audience: 'owner' | 'member' = 'owner'): string {
+  return audience === 'member' ? MEMBER_GATEWAY_ERROR_REPLY : LLM_GATEWAY_ERROR_REPLY
 }
 
 export function resolveClusterLlmGateway(input: {
@@ -68,16 +70,18 @@ export async function completeAssistantReply(input: {
   fetchImpl?: typeof fetch
   invokeTool?: ChatToolInvoker
   tools?: OpenAiChatFunctionTool[]
+  audience?: 'owner' | 'member'
 }): Promise<{ content: string, via: AssistantReplyVia }> {
+  const audience = input.audience === 'member' ? 'member' : 'owner'
   const resolved = resolveClusterLlmGateway({
     env: input.env,
     stored: input.stored,
   })
   if (!resolved.configured) {
-    return { content: stubAssistantReply(), via: 'stub' }
+    return { content: stubAssistantReply(audience), via: 'stub' }
   }
 
-  const tools = input.tools ?? chatMcpToolsAsOpenAi()
+  const tools = input.tools ?? chatMcpToolsAsOpenAi(audience)
   const invokeTool = input.invokeTool ?? (async (name) => {
     logChatTool(name, 'skip')
     return {
@@ -98,10 +102,11 @@ export async function completeAssistantReply(input: {
       fetchImpl: input.fetchImpl ?? fetch,
       tools,
       invokeTool,
+      messagesOnly: audience === 'member',
     })
     const trimmed = result.content.trim()
     if (!trimmed) {
-      return { content: gatewayErrorReply(), via: 'error' }
+      return { content: gatewayErrorReply(audience), via: 'error' }
     }
     return {
       content: trimmed,
@@ -110,7 +115,7 @@ export async function completeAssistantReply(input: {
   } catch {
     // Do not log the key, headers, or provider body.
     console.error('LLM gateway request failed')
-    return { content: gatewayErrorReply(), via: 'error' }
+    return { content: gatewayErrorReply(audience), via: 'error' }
   }
 }
 
@@ -182,6 +187,7 @@ async function callOpenAiCompatible(input: {
   fetchImpl: typeof fetch
   tools: OpenAiChatFunctionTool[]
   invokeTool: ChatToolInvoker
+  messagesOnly?: boolean
 }): Promise<{ content: string, usedTools: boolean }> {
   const messages: OpenAiChatMessage[] = [
     {
@@ -190,6 +196,7 @@ async function callOpenAiCompatible(input: {
         botName: input.botName,
         botId: input.botId,
         tools: input.tools.length > 0,
+        messagesOnly: input.messagesOnly,
         manifest: input.manifest ?? {
           name: input.botName,
           modelTier: input.modelTier,

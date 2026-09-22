@@ -19,8 +19,10 @@ The MCP surface at `/mcp` stays Bearer-gated (`NUXT_AGENT_TOKEN` /
 ## Context
 
 [ADR 0005](0005-self-host-first.md) keeps the Cluster self-hosted. The Host
-was open on the LAN until an Owner existed. Household (multi-user) is still
-later. Cursor / IDE MCP clients are not the Host browser and already have a
+was open on the LAN until an Owner existed. Household Members on the same
+Host are specified in [ADR 0012](0012-household-members.md). This ADR still
+holds for the single Owner, onboarding, and Bearer-gated `/mcp`. Cursor /
+IDE MCP clients are not the Host browser and already have a
 token ([ADR 0009](0009-mcp-toolkit-endpoint.md)). Mixing those would either
 expose the cookie session to MCP clients or lock `/mcp` behind a cookie
 those clients do not send.

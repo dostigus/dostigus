@@ -11,8 +11,9 @@ Nitro server routes (`/api/bots`, `/api/bots/:id/messages`,
 (`@dostigus/db`, Drizzle schema + SQLite). Bot and Chat routes call the
 same Store helpers as the MCP surface ([ADR 0009](0009-mcp-toolkit-endpoint.md)).
 These routes are Host internals, not a public Bot API and not a second
-contract for Sheets. They require an Owner session
-([ADR 0010](0010-owner-auth-session.md)).
+contract for Sheets. Bot writes and Settings require an Owner session
+([ADR 0010](0010-owner-auth-session.md)). Bot reads and Chat also accept a
+Member session ([ADR 0012](0012-household-members.md)).
 
 ## Context
 
@@ -20,7 +21,8 @@ contract for Sheets. They require an Owner session
 Bot and the Host UI. The MCP surface now exists ([ADR 0009](0009-mcp-toolkit-endpoint.md)).
 Nick's day-1 path is: create a Bot, open Chat, persist messages. These
 routes remain so the Host UI and Chat LLM completion do not depend on
-the MCP token. They do depend on the Owner cookie session.
+the MCP token. They depend on a Host cookie session. Bot writes and
+Settings stay with the Owner.
 
 ## Consequences
 
@@ -35,8 +37,10 @@ the MCP token. They do depend on the Owner cookie session.
   ([ADR 0011](0011-chat-mcp-tool-loop.md)). Settings persist in the Store;
   env is override/bootstrap. The GET/PUT settings body never includes the
   full key. See [ADR 0004](0004-llm-gateway-tiers.md).
-- `/api/bots*` and `/api/settings/*` call `requireUserSession`. `/mcp`
-  stays token-gated. See [ADR 0010](0010-owner-auth-session.md).
+- Bot list, Bot read, and Chat accept an Owner or Member session. Bot
+  create, update, and delete, and `/api/settings/*`, stay with the Owner.
+  See [ADR 0010](0010-owner-auth-session.md) and
+  [ADR 0012](0012-household-members.md). `/mcp` stays token-gated.
 
 ## Alternatives
 

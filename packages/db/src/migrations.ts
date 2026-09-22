@@ -53,6 +53,23 @@ CREATE UNIQUE INDEX \`owners_username_unique\` ON \`owners\` (\`username\`);
 CREATE UNIQUE INDEX \`owners_singleton_unique\` ON \`owners\` (\`singleton\`);
 `,
   },
+  {
+    id: '0003_members',
+    sql: `
+CREATE TABLE \`members\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`display_name\` text NOT NULL,
+  \`email\` text,
+  \`username\` text,
+  \`password_hash\` text NOT NULL,
+  \`created_at\` integer NOT NULL,
+  \`disabled_at\` integer
+);
+CREATE UNIQUE INDEX \`members_email_unique\` ON \`members\` (\`email\`);
+CREATE UNIQUE INDEX \`members_username_unique\` ON \`members\` (\`username\`);
+ALTER TABLE \`messages\` ADD \`person_id\` text;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

@@ -18,6 +18,8 @@ export {
   type LlmGatewaySource,
   type LlmGatewayStored,
   maskApiKey,
+  MEMBER_GATEWAY_ERROR_REPLY,
+  MEMBER_QUIET_ASSISTANT_REPLY,
   normalizeGatewayBaseUrl,
   OPENROUTER_DEFAULT_BASE_URL,
   readLlmGatewayEnv,
@@ -30,6 +32,10 @@ export {
   trimOrUndefined,
 } from './llm-gateway'
 export {
+  MEMBER_DISPLAY_NAME_MAX_LENGTH,
+  parseMemberDisplayName,
+} from './member'
+export {
   looksLikeEmail,
   normalizeOwnerEmail,
   normalizeOwnerUsername,
@@ -38,6 +44,7 @@ export {
   OWNER_PASSWORD_MIN_LENGTH,
   OWNER_USERNAME_MAX_LENGTH,
   OWNER_USERNAME_MIN_LENGTH,
+  ownerDisplayName,
   type OwnerIdentifier,
   parseOwnerIdentifier,
   parseOwnerPassword,
@@ -68,6 +75,8 @@ export {
   type Manifest,
   type McpContract,
   type McpSurface,
+  type Member,
+  type MemberId,
   type Message,
   MESSAGE_ROLES,
   type MessageId,

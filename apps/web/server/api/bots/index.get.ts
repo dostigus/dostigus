@@ -1,3 +1,3 @@
 export default defineEventHandler(async (event) => {
-  return withOwnerStore(event, listClusterBots)
+  return withHostStore(event, listClusterBots)
 })

@@ -12,8 +12,10 @@ final assistant text is stored on the same Store path as the Host UI and
 `/mcp`.
 
 Chat invokes the **same tool handlers** registered for `@nuxtjs/mcp-toolkit`
-**in-process**. It does not HTTP-call localhost `/mcp`. The Owner session
-already gates the Host message route; the MCP Bearer token is not used.
+**in-process**. It does not HTTP-call localhost `/mcp`. A Host session
+gates the message route; the MCP Bearer token is not used. A Member
+session receives only the message tools
+([ADR 0012](0012-household-members.md)).
 
 `dostigus_bots_delete` stays on `/mcp` and the Host Delete control. It is
 not exposed to Chat.
@@ -43,6 +45,9 @@ data.
   the Store.
 - `/mcp` Bearer auth is unchanged ([ADR 0009](0009-mcp-toolkit-endpoint.md),
   [ADR 0010](0010-owner-auth-session.md)).
+- A Member Chat session may call only `dostigus_messages_list` and
+  `dostigus_messages_create`. The Owner keeps the Chat tool list above.
+  See [ADR 0012](0012-household-members.md).
 
 ## Alternatives
 

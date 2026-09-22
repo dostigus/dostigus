@@ -24,8 +24,13 @@ data. Not a git repo.
 _Avoid_: tenant, workspace, site, instance (unqualified).
 
 **Owner**:
-Primary account that controls the Cluster.
+Primary account that controls the Cluster. Exactly one Owner per Cluster.
 _Avoid_: admin, user (unqualified).
+
+**Member**:
+A Household account on this Cluster, under the single Owner. Signs in on the
+Host for Bot list and Chat.
+_Avoid_: user, guest, account (unqualified), invitee.
 
 **Host**:
 The single client app (web/PWA first): Chat + Cards + Sheets. **Host shell**
@@ -107,8 +112,8 @@ strong/mid.
 _Avoid_: fast, smart, opus (aliases).
 
 **Household**:
-Optional shared membership with scoped access (later).
-_Avoid_: team, org, family (until Household ships).
+The Owner and the Members on one Cluster.
+_Avoid_: team, org, family.
 
 **Share link**:
 Narrow public token to one object, not the whole Cluster.
@@ -117,12 +122,16 @@ _Avoid_: public share, invite (unqualified).
 ## Relationships
 
 - Platform ≠ Cluster. Git is only for the Platform. A Cluster is not a git repo.
-- A Cluster has an Owner, a Store, Bots, and Module packages.
+- A Cluster has one Owner, a Store, Bots, Module packages, and its Household.
+- A Member signs in on the same Host. Bot list and Chat are shared. Creating
+  or deleting a Bot, Members, and the LLM gateway stay with the Owner.
+- A Host user message stores the Owner id or Member id. Chat shows that
+  author's name. Turning off a Member's sign-in keeps the name.
 - A Bot has a Manifest and bound Module packages. A Bot is not a Module package.
 - Builder writes Module packages via Job → Apply. Distinct from any Platform
   git agent. The chat Bot does not write Module packages.
 - Host talks to Bots through the MCP surface and renders Cards and Sheets from
   the Kit.
 - LLM gateway maps Model tiers to providers for every Bot call.
-- Household is later scoped membership. A Share link is a narrow public token
-  to one object, not the Cluster.
+- A Share link is a narrow public token to one object, not the Cluster.
+  Share links and guests are later.

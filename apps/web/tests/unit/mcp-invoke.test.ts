@@ -101,3 +101,54 @@ it('refuses delete and unknown tools without writing the Store', () => {
     bots: [{ id, name: 'Keep me' }],
   })
 })
+
+it('attributes Member Chat messages and refuses Bot tools', () => {
+  const store = memoryStore()
+  const created = invokeChatMcpTool({
+    name: 'dostigus_bots_create',
+    args: { name: 'Notes' },
+    store,
+  })
+  const botId = (JSON.parse(created.content) as { bot: { id: string } }).bot.id
+
+  const blocked = invokeChatMcpTool({
+    name: 'dostigus_bots_create',
+    args: { name: 'Nope' },
+    store,
+    role: 'member',
+    personId: 'member-1',
+  })
+  expect(blocked.ok).toBe(false)
+  expect(JSON.parse(blocked.content)).toEqual({ error: 'unknown or unavailable tool' })
+
+  const listed = invokeChatMcpTool({
+    name: 'dostigus_bots_list',
+    args: {},
+    store,
+    role: 'member',
+  })
+  expect(listed.ok).toBe(false)
+
+  const message = invokeChatMcpTool({
+    name: 'dostigus_messages_create',
+    args: { botId, content: 'Hello from Ada' },
+    store,
+    role: 'member',
+    personId: 'member-1',
+  })
+  expect(message.ok).toBe(true)
+  expect(JSON.parse(message.content)).toMatchObject({
+    message: { personId: 'member-1', role: 'user', content: 'Hello from Ada' },
+  })
+
+  const assistant = invokeChatMcpTool({
+    name: 'dostigus_messages_create',
+    args: { botId, content: 'Noted', role: 'assistant' },
+    store,
+    role: 'member',
+    personId: 'member-1',
+  })
+  expect(JSON.parse(assistant.content)).toMatchObject({
+    message: { personId: null, role: 'assistant' },
+  })
+})
