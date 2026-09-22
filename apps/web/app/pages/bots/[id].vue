@@ -762,23 +762,16 @@ async function onBotDeleted() {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  /* Inset matches the thread. The form itself stays clear so the side
-     margins beside the row are Chat canvas with nothing painted there. */
+  /* Inset matches the thread. Side margins beside the row stay clear.
+     The strip under the row is a --bg-chat fill, so the thread cannot
+     show through the screen-edge gap. */
   padding: 0.35rem var(--thread-inset) var(--composer-gap);
-  background: transparent;
+  background: linear-gradient(
+    to top,
+    var(--bg-chat) var(--composer-gap),
+    transparent var(--composer-gap)
+  );
   pointer-events: none;
-}
-
-/* Screen-edge gap is chrome. It covers the thread so a line can pass
-   behind the field and still not paint into this strip. */
-.composer::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--composer-gap);
-  background: var(--bg-chat);
 }
 
 .composer-row,
@@ -790,6 +783,7 @@ async function onBotDeleted() {
   display: flex;
   gap: 0.25rem;
   align-items: flex-end;
+  overflow: hidden;
   padding: 0.3rem 0.4rem;
   /* A step lighter than the fill so the rim still reads on Chat black. */
   border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));

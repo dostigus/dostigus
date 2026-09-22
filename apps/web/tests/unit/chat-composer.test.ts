@@ -18,11 +18,11 @@ it('overlays a slim composer on one scrolling Chat pane', () => {
   const thread = block('.thread {', '.bubble {')
 
   expect(composer).toContain('position: absolute')
-  expect(composer).toContain('background: transparent')
   expect(composer).toContain('pointer-events: none')
   expect(composer).toContain('env(safe-area-inset-bottom')
-  expect(composer).toContain('background: var(--bg-chat)')
+  expect(composer).toContain('var(--bg-chat) var(--composer-gap)')
   expect(composer).toContain('--composer-gap')
+  expect(composer).not.toContain('background: transparent')
   expect(composer).not.toContain('background: var(--composer)')
   expect(row).toContain('background: var(--composer)')
   expect(row).toContain('padding: 0.3rem 0.4rem')
