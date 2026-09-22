@@ -69,6 +69,9 @@ it('answers HEAD /health with the GET content type and no session', () => {
   expect(src).toContain('setResponseStatus(event, 200)')
   expect(src).toContain('content-type')
   expect(src).toContain('application/json')
+  expect(src).toContain('healthBody')
+  expect(src).toContain('event.node.res.end()')
+  expect(src).not.toContain('return null')
   expect(src).not.toContain('requireUserSession')
   expect(src).not.toContain('useStore')
   const getSrc = readFileSync(
