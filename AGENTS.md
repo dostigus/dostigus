@@ -40,13 +40,41 @@ That is `lint` → typecheck → vitest → build. Land a clean tree before
 pnpm --filter @dostigus/web dev
 ```
 
-Nuxt 4 on **http://localhost:3000/**. The Host is a Bot list + Chat. Press
+Nuxt 4 on **http://localhost:3000/**. On a Cursor cloud agent VM, `nuxt dev`
+often listens on IPv6 only: open **http://localhost:3000/**.
+**http://127.0.0.1:3000** refuses the connection.
+
+The Host is a Bot list + Chat. Press
 **+** to create a Bot (default **New Bot**). **Settings** holds the Cluster
 LLM gateway (base URL + key). Not a landing page. Store is SQLite
 (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
 First visit creates the Cluster Owner; later visits sign in. The Owner opens
 **Members** to add a Member (display name, email or username, password). A
 Member signs in and uses Bot list and Chat. Settings stays with the Owner.
+
+### Preview seed
+
+Skip Owner sign-in and Create Bot when you only need Chat for a screenshot
+or a smoke check:
+
+```
+pnpm preview:host
+```
+
+That starts `nuxt dev` with `DOSTIGUS_PREVIEW_SEED=1`. Then open
+**http://localhost:3000/preview-seed** (use `localhost`, not `127.0.0.1`).
+The route creates the preview Owner when the Store is empty, signs that
+Owner in, ensures one Bot (**New Bot**, with its greeting), and redirects
+to that Chat. A later visit reuses the same Owner and the newest Bot.
+
+Preview Owner: username `preview`, password `preview-owner`. The route
+answers 404 unless this is `nuxt dev` and `DOSTIGUS_PREVIEW_SEED=1`. A
+production Host stays closed. If the Store already has a different Owner,
+the route returns 409 — point `DATABASE_URL` at a fresh file (for example
+`file:.data/preview.sqlite`) or sign in at `/login`. This is local preview
+tooling. It does not add a domain Bot to the Cluster
+([SPEC](docs/SPEC.md): no seed/demo domain Bot).
+
 MCP surface
 is `/mcp` — set `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`) to enable
 HTTP tools; empty token leaves them disabled. That token is not the Owner

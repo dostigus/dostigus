@@ -28,6 +28,12 @@ pnpm --filter @dostigus/web dev   # http://localhost:3000/
 pnpm check                        # lint → typecheck → test → build
 ```
 
+On a Cursor cloud agent VM, `nuxt dev` often listens on IPv6 only. Use
+`http://localhost:3000/`. `http://127.0.0.1:3000` refuses the connection.
+
+Host preview seed (Owner signed in, one Bot, Chat open): `pnpm preview:host`,
+then `http://localhost:3000/preview-seed`. See [`AGENTS.md`](AGENTS.md).
+
 A fresh Cluster opens **Create your Owner** (email or username + password).
 Later visits sign in. Then press **+**: the Chat pane becomes find or
 create (new Bots are named **New Bot**). The Bot greets, and a purpose Card
