@@ -259,7 +259,7 @@ onUnmounted(() => {
   display: flex;
   min-height: 0;
   background: var(--bg);
-  border-right: 1px solid var(--line);
+  border-right: 1px solid var(--line-soft);
   transition: width 160ms ease;
 }
 
@@ -440,7 +440,7 @@ onUnmounted(() => {
 
 .foot {
   padding: 0.45rem 0.55rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-soft);
 }
 
 .rail .side-head {

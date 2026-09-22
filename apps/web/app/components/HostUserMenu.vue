@@ -15,7 +15,7 @@
     >
       <HostBotAvatar
         :name="label"
-        color="var(--accent)"
+        color="var(--surface)"
         :size="collapsed ? 'sm' : 'md'"
       />
       <span
@@ -125,13 +125,20 @@ onUnmounted(() => {
   outline-offset: 2px;
 }
 
+.user:not(.rail) :deep(.avatar) {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.68rem;
+}
+
 .user-name {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-weight: 400;
+  font-size: 0.86rem;
+  color: var(--text-muted);
 }
 
 .rail .user-btn {

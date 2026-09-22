@@ -17,6 +17,7 @@ These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
 | `--accent` | `#F25630` | Primary actions, `+` create, focus |
 | `--live` | `#3DDC84` | Green live dot on a busy Bot avatar |
 | `--line` | `#333333` | Quiet borders (slightly lighter than `--surface`) |
+| `--line-soft` | `color-mix(in srgb, var(--line) 55%, var(--bg))` | Sidebar \| Chat divider, Chat header edge, rule above the user button |
 | `--radius-card` | `1.75rem` (~28px) | Large card / Sheet corners |
 | `--radius-bubble` | `1.25rem` (~20px) | Soft Chat message bubbles |
 | `--radius` | `0.75rem` (~12px) | Buttons, inputs, inner chips |
@@ -29,6 +30,12 @@ Shape: large card radii (`--radius-card`), soft messenger bubbles
 (`--radius-bubble`), tighter control radii (`--radius`), pill Chat composer
 (`border-radius: 9999px`), circular icon buttons, generous padding. The Kit
 reads these Host variables. Nunito is inherited from the Host.
+
+The composer is the field itself (`--surface` fill). A `1px` edge,
+`color-mix(in srgb, var(--line) 80%, var(--surface))`, sits between the
+fill and `--line`, so the field stays distinct from Chat bubbles without
+the old `--line` bar. One line keeps the full pill radius. Two or more
+lines use `--radius-card` (~28px).
 
 `--bot-accent-01`…`16` are a separate Bot avatar palette — not the Host
 `--accent`. See below.
@@ -133,7 +140,8 @@ Where the Host uses them today:
 
 ## Host layout
 
-Wide screens keep a sidebar beside the open page. Drag the edge to resize
+Wide screens keep a sidebar beside the open page. The seam between them
+is `--line-soft` (closer to `--bg` than `--line`). Drag the edge to resize
 it. Dragging below the minimum, or the edge control, collapses it to an
 icon rail (avatars, the picker control, user button). The width and
 collapsed state stay in the browser.
@@ -149,7 +157,9 @@ that was open before the picker. Choosing a Bot, creating a Bot, or a
 sidebar Bot row also leaves it. Search does not create a Bot from the
 query. A Member sees search and existing Bots only. Each sidebar row is
 an avatar, the Bot name, and a one-line preview of the latest Chat line.
-The bottom is a user button.
+The bottom is a user button, under a `--line-soft` rule. Its mark is a
+little smaller than a Bot row avatar and sits on a neutral `--surface`
+chip. The name is regular weight and muted.
 Its menu opens Settings, Members (Owner), and Sign out. Those links are
 not pinned in the sidebar.
 
@@ -162,7 +172,8 @@ line. The answer is a normal user message. The Bot replies on the usual
 path (a quiet line when no OpenRouter key is set). Purpose is not stored
 on the Manifest.
 
-Chat has a narrow header. The Bot avatar and name open a right Sheet
+Chat has a narrow header with a `--line-soft` edge under the Bot mark and
+name. The Bot avatar and name open a right Sheet
 (`KitSheet` with `edge="end"`): appearance (**Bot** tab: the flock grid
 and hue-ordered color swatches with a centered last row, plus **Reset**),
 name, Model tier, and delete for the
