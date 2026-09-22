@@ -3,6 +3,8 @@
   --bg: #121212;
   --bg-chat: #000000;
   --surface: #262626;
+  /* Composer only. A step lighter than bubble --surface. */
+  --composer: color-mix(in srgb, var(--text) 12%, var(--surface));
   --sheet: #212121;
   --card: #000000;
   --line: #333333;

@@ -9,7 +9,8 @@ These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
 |-------|-------|-----|
 | `--bg` | `#121212` | Sidebar / app chrome canvas |
 | `--bg-chat` | `#000000` | Chat pane background |
-| `--surface` | `#262626` | Elevated strips, inner wells, composer chrome |
+| `--surface` | `#262626` | Elevated strips, inner wells, Chat bubbles |
+| `--composer` | `color-mix(in srgb, var(--text) 12%, var(--surface))` | Composer fill only. A step lighter than `--surface` |
 | `--sheet` | `#212121` | Sliding Sheet chrome (`KitSheet` / `KitDialog`) |
 | `--card` | `#000000` | Content cards / page panels on `--bg` |
 | `--text` | `#FFFFFF` | Primary copy |
@@ -31,11 +32,11 @@ Shape: large card radii (`--radius-card`), soft messenger bubbles
 (`border-radius: 9999px`), circular icon buttons, generous padding. The Kit
 reads these Host variables. Nunito is inherited from the Host.
 
-The composer is the field itself (`--surface` fill). A `1px` edge,
-`color-mix(in srgb, var(--line) 80%, var(--surface))`, sits between the
-fill and `--line`, so the field stays distinct from Chat bubbles without
-the old `--line` bar. One line keeps the full pill radius. Two or more
-lines use `--radius-card` (~28px).
+The composer is the field itself (`--composer` fill, not global
+`--surface`). It sits flush to the Chat pane: no black inset above or
+beside the block. A `1px` edge, `color-mix(in srgb, var(--text) 8%,
+var(--composer))`, stays a step lighter than that fill. One line keeps
+the full pill radius. Two or more lines use `--radius-card` (~28px).
 
 `--bot-accent-01`…`16` are a separate Bot avatar palette — not the Host
 `--accent`. See below.

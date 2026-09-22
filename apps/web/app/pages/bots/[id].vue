@@ -553,7 +553,7 @@ async function onBotDeleted() {
   min-height: 0;
   list-style: none;
   margin: 0;
-  padding: 0.6rem 1.15rem 1.1rem;
+  padding: 0.6rem 1.15rem 0;
   overflow: auto;
   display: flex;
   flex-direction: column;
@@ -629,18 +629,18 @@ async function onBotDeleted() {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  padding: 0.35rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  padding: 0;
 }
 
 .composer-row {
   display: flex;
   gap: 0.25rem;
   align-items: flex-end;
-  padding: 0.3rem 0.35rem 0.3rem 0.3rem;
-  /* Between --surface and --line, so the rim reads without the old --line bar. */
-  border: 1px solid color-mix(in srgb, var(--line) 80%, var(--surface));
+  padding: 0.55rem 1.15rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  /* A step lighter than the fill so the rim still reads on Chat black. */
+  border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));
   border-radius: 9999px;
-  background: var(--surface);
+  background: var(--composer);
   transition: border-radius 160ms ease;
 }
 
