@@ -41,7 +41,16 @@ The composer is the field itself (`--composer` fill, not global
 `--surface`). Its left and right edges share the thread inset
 (`1.15rem`), so the block lines up with Chat bubbles. The side margins
 are the Chat canvas (`--bg-chat`); only the row paints `--composer`,
-so the corners do not pick up a second fill. A `1px` edge,
+so the corners do not pick up a second fill. The field overlays the
+Chat pane. Below the header, that pane is one scroll, so messages can
+pass behind the field instead of stopping in a box above it. The gap
+under the row, including the safe area, has a `--bg-chat` background
+fill, so the thread cannot show through that strip. A `--bg-chat` band
+the full width of that inset covers only the bottom half of the row
+(and a hair past its bottom edge), so the lower corners rest on the
+Chat canvas. The top of the row has no second fill. End padding
+on the thread matches the overlay, and Chat opens at the bottom so the
+latest line sits above the field. A `1px` edge,
 `color-mix(in srgb, var(--text) 8%, var(--composer))`, stays a step
 lighter than that fill. One line keeps the full pill radius. Two or
 more lines use `--radius-card` (~28px).
@@ -191,7 +200,9 @@ name. The Bot avatar and name open a right Sheet
 and hue-ordered color swatches with a centered last row, plus **Reset**),
 name, Model tier, and delete for the
 Owner. Members see the chosen avatar and may read those fields. Bubbles
-have no author label. The composer stays on screen. A `+` on the left is
+have no author label. The composer stays on screen, over that scroll.
+Its placeholder is «Сообщение для» plus the open Bot’s display name.
+A `+` on the left is
 reserved for attachments and stays disabled. A send arrow in a circle
 appears when the draft has text.
 
