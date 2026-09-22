@@ -469,9 +469,14 @@ const pivots = computed(() => {
   }
 }
 
+/* Matches the two-class state rules above so it wins on equal specificity. */
 @media (prefers-reduced-motion: reduce) {
-  .kit-bot-avatar [class$='-motion'] {
-    animation: none !important;
+  .kit-bot-avatar .kit-bot-avatar__mark-motion,
+  .kit-bot-avatar .kit-bot-avatar__head-motion,
+  .kit-bot-avatar .kit-bot-avatar__jaw-motion,
+  .kit-bot-avatar .kit-bot-avatar__wing-motion,
+  .kit-bot-avatar .kit-bot-avatar__eye-motion {
+    animation: none;
   }
 }
 </style>

@@ -214,13 +214,13 @@ function hslToHex({ h, s, l }: Hsl): string {
 }
 
 /**
- * Warm accents would swallow a coral beak, so a saturated warm body gets a
- * deep brick beak and everything else gets the bright brand coral.
+ * A coral bill drowns in a warm body, so warm accents get a pale peach bill
+ * and everything else gets the bright brand coral.
  */
 function beakHsl(body: Hsl): Hsl {
-  const warmHue = body.h <= 55 || body.h >= 330
-  if (warmHue && body.s > 0.3 && body.l > 0.42) {
-    return { h: 12, s: 0.72, l: clamp(body.l - 0.28, 0.24, 0.34) }
+  const warm = (body.h <= 70 || body.h >= 330) && body.s > 0.3
+  if (warm) {
+    return { h: 32, s: 0.75, l: 0.84 }
   }
   return { h: 20, s: 0.88, l: 0.62 }
 }
