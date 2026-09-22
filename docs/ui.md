@@ -37,6 +37,10 @@ The composer is the field itself (`--composer` fill, not global
 beside the block. A `1px` edge, `color-mix(in srgb, var(--text) 8%,
 var(--composer))`, stays a step lighter than that fill. One line keeps
 the full pill radius. Two or more lines use `--radius-card` (~28px).
+The corner eases (~640ms, ease-in-out) from the visible pill into that
+radius, and the rim and fill share that timing. Reduced motion snaps. A
+transition that starts at `9999px` stays a pill until the last moment, so
+it is not a softer ease.
 
 `--bot-accent-01`…`16` are a separate Bot avatar palette — not the Host
 `--accent`. See below.
