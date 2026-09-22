@@ -6,6 +6,8 @@
   --sheet: #212121;
   --card: #000000;
   --line: #333333;
+  /* Pane edges: closer to the canvas than --line, still a visible seam. */
+  --line-soft: color-mix(in srgb, var(--line) 55%, var(--bg));
   --text: #ffffff;
   --text-muted: #a4a4a4;
   --accent: #f25630;

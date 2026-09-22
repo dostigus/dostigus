@@ -447,6 +447,7 @@ async function onBotDeleted() {
   gap: 0.35rem;
   min-height: 3rem;
   padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .identity {
@@ -595,7 +596,7 @@ async function onBotDeleted() {
   gap: 0.25rem;
   align-items: flex-end;
   padding: 0.3rem 0.35rem 0.3rem 0.3rem;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: 9999px;
   background: var(--surface);
 }
