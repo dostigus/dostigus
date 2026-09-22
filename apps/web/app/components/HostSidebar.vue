@@ -83,7 +83,7 @@
               v-if="rail"
               class="rail-bot"
               :to="`/bots/${bot.id}`"
-              :aria-label="bot.name"
+              :aria-label="isLive(bot.id) ? `${bot.name}, online` : bot.name"
               :title="bot.name"
               @click="onRow(bot.id)"
             >
@@ -92,6 +92,7 @@
                 :seed="bot.id"
                 :shape="bot.manifest.avatarShape"
                 :avatar-color="bot.manifest.avatarColor"
+                :live="isLive(bot.id)"
               />
             </NuxtLink>
             <NuxtLink
@@ -105,6 +106,7 @@
                 :seed="bot.id"
                 :shape="bot.manifest.avatarShape"
                 :avatar-color="bot.manifest.avatarColor"
+                :live="isLive(bot.id)"
               />
               <span class="bot-copy">
                 <span class="bot-name">{{ bot.name }}</span>
@@ -168,6 +170,7 @@ const { open, narrow, close } = useHostNav()
 const { openCreate, closeCreate } = useHostCreate()
 const { bots, pending, error } = await useHostBots()
 const { width, collapsed, resizeTo, toggleCollapsed } = useHostSidebar()
+const { isLive } = useHostBotActivity()
 
 const query = ref('')
 const dragging = ref(false)

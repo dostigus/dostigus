@@ -51,7 +51,7 @@ pivots are set per part instead of relying on a default origin.
 |-------|-----------|----------------|
 | `none` | nothing | appearance editor, unpicked birds |
 | `idle` | slow breath, small head settle, rare blink | sidebar rows, Chat header at rest |
-| `think` | bill up, long sway, gaze searching | Chat header while a reply is in flight |
+| `think` | bill up, long sway, gaze searching | Chat header and the pending Chat mark while a reply is in flight |
 | `reply` | jaw talks three syllables a cycle, head rides them, one wing flick | Chat header as the reply lands |
 | `work` | steady flap | Kit only — no Host Job surface yet |
 | `greet` | one nod and a wing wave, then still | Chat open, and the picked bird in the editor |
@@ -63,6 +63,13 @@ pivots are set per part instead of relying on a default origin.
 `greet` and `celebrate` play once (`ONE_SHOT_AVATAR_STATES`); the Host drops
 back to `idle` when they finish. A pupil group (`gaze`) sits inside each eye
 so a state can move the look without moving the eye.
+
+The pending Chat mark is that same bird, at the Kit `lg` size, in `think`,
+in place of a text pill. Landing `reply` and `celebrate` stay on the Chat
+header mark, which then returns to `idle`. A green live dot on the Chat
+header avatar and the matching sidebar row tracks the busy window (in
+flight, landing, the short cheer, and the short error pose) and hides at
+rest.
 
 Under `prefers-reduced-motion: reduce` nothing animates, but a state that
 carries meaning keeps its pose: the thinker holds its bill up, the listener

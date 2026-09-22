@@ -15,6 +15,7 @@ These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
 | `--text` | `#FFFFFF` | Primary copy |
 | `--text-muted` | `#A4A4A4` | Secondary copy |
 | `--accent` | `#F25630` | Primary actions, `+` create, focus |
+| `--live` | `#3DDC84` | Green live dot on a busy Bot avatar |
 | `--line` | `#333333` | Quiet borders (slightly lighter than `--surface`) |
 | `--radius-card` | `1.75rem` (~28px) | Large card / Sheet corners |
 | `--radius-bubble` | `1.25rem` (~20px) | Soft Chat message bubbles |
@@ -83,9 +84,9 @@ caller returns to `idle` after them.
 | `idle` | sidebar rows, Chat header at rest |
 | `greet` | Chat open; the picked bird in the appearance editor |
 | `listen` | Chat composer focused |
-| `think` | reply in flight |
-| `reply` | reply landing |
-| `celebrate` | just after the reply finishes |
+| `think` | reply in flight — Chat header and the pending Chat mark |
+| `reply` | Chat header as the reply lands |
+| `celebrate` | Chat header just after the reply finishes |
 | `error` | failed send |
 | `sleep` | no OpenRouter key, so the Bot cannot answer |
 | `work` | Kit only for now |
@@ -176,6 +177,12 @@ opens as a Sheet over Chat. Bot settings are the right Sheet above.
 Narrow screens (under `52rem`) hide the sidebar behind a Bots control.
 The icon rail is a wide-screen behavior.
 
-A sent line appears in the timeline immediately. The Bot then shows
-**Replying…** until the stored reply replaces it. Chat does not cover the
-Host with a spinner.
+A sent line appears in the timeline immediately. While that reply is in
+flight, Chat shows the Bot’s own flock mark in `think` — there is no text
+pill. The Chat header mark thinks with it, then uses `reply` and a short
+`celebrate` when the stored reply lands, then returns to `idle`. A small
+green dot (`--live`) sits on the bottom-right of the Chat header avatar and
+the matching sidebar row while the Bot is busy: the reply in flight, the
+landing `reply` and `celebrate`, and the short `error` pose. It hides for
+`idle`, `sleep`, `listen`, and `greet`. `prefers-reduced-motion` still holds
+the pose without animation. Chat does not cover the Host with a spinner.

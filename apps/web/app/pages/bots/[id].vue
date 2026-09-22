@@ -6,7 +6,7 @@
         type="button"
         class="identity"
         :disabled="!bot"
-        :aria-label="bot ? `${bot.name}, Bot settings` : 'Bot settings'"
+        :aria-label="identityLabel"
         @click="settingsOpen = true"
       >
         <HostBotAvatar
@@ -15,6 +15,7 @@
           :shape="bot?.manifest.avatarShape"
           :avatar-color="bot?.manifest.avatarColor"
           :state="markState"
+          :live="botLive"
           size="sm"
         />
         <span class="name">{{ bot?.name ?? 'Bot' }}</span>
@@ -68,18 +69,18 @@
       </li>
       <li
         v-if="botPending"
-        class="bubble assistant pending"
+        class="pending-mark"
         aria-live="polite"
+        aria-label="Replying"
       >
-        <p class="text typing">
-          <span
-            class="dots"
-            aria-hidden="true"
-          >
-            <span /><span /><span />
-          </span>
-          Replying…
-        </p>
+        <HostBotAvatar
+          :name="bot?.name ?? 'Bot'"
+          :seed="bot?.id ?? ''"
+          :shape="bot?.manifest.avatarShape"
+          :avatar-color="bot?.manifest.avatarColor"
+          state="think"
+          size="lg"
+        />
       </li>
       <li
         v-if="timeline.length === 0 && !botPending && !loadError"
@@ -210,6 +211,21 @@ const threadEl = ref<HTMLOListElement | null>(null)
 
 const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
 const showPurpose = computed(() => showsBotPurposeCard(timeline.value))
+const { setLive } = useHostBotActivity()
+const botLive = computed(() => botIsLive({
+  pending: botPending.value,
+  replying: replying.value,
+  cheering: cheering.value,
+  failed: markFailed.value,
+}))
+const identityLabel = computed(() => {
+  if (!bot.value) {
+    return 'Bot settings'
+  }
+  return botLive.value
+    ? `${bot.value.name}, online, Bot settings`
+    : `${bot.value.name}, Bot settings`
+})
 /**
  * Header mark states, strongest first: a failed send beats a reply in
  * flight, which beats the reply landing, its cheer, the opening greet and
@@ -286,7 +302,12 @@ function showMarkError() {
 
 onMounted(greetOnOpen)
 
-onUnmounted(clearMarkTimers)
+onUnmounted(() => {
+  clearMarkTimers()
+  if (botId.value) {
+    setLive(botId.value, false)
+  }
+})
 
 watch(botId, () => {
   optimistic.value = null
@@ -298,6 +319,16 @@ watch(botId, () => {
   draft.value = ''
   settingsOpen.value = false
 })
+
+watch([botId, botLive], ([id, live], previous) => {
+  const previousId = previous?.[0]
+  if (previousId && previousId !== id) {
+    setLive(previousId, false)
+  }
+  if (id) {
+    setLive(id, live)
+  }
+}, { immediate: true })
 
 watch([timeline, botPending, showPurpose], () => {
   nextTick(() => {
@@ -407,6 +438,7 @@ async function onBotDeleted() {
   display: flex;
   flex-direction: column;
   background: var(--bg-chat);
+  --avatar-ring: var(--bg-chat);
 }
 
 .top {
@@ -515,32 +547,10 @@ async function onBotDeleted() {
   line-height: 1.45;
 }
 
-.typing {
+.pending-mark {
+  align-self: flex-start;
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--text-muted);
-}
-
-.dots {
-  display: inline-flex;
-  gap: 0.22rem;
-}
-
-.dots span {
-  width: 0.38rem;
-  height: 0.38rem;
-  border-radius: 999px;
-  background: var(--text-muted);
-  animation: blink 1.2s infinite;
-}
-
-.dots span:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.dots span:nth-child(3) {
-  animation-delay: 0.3s;
+  padding: 0.15rem 0.1rem 0.35rem;
 }
 
 .purpose {
@@ -695,24 +705,5 @@ textarea {
 
 textarea:focus {
   outline: none;
-}
-
-@keyframes blink {
-  0%,
-  80%,
-  100% {
-    opacity: 0.3;
-  }
-
-  40% {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dots span {
-    animation: none;
-    opacity: 0.8;
-  }
 }
 </style>

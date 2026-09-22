@@ -36,8 +36,10 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
   stay out of this Sheet. Appearance detail is in ADR 0016.
 - Chat bubbles stay unlabeled. The line still stores `personId` and the
   author's name ([ADR 0012](0012-household-members.md)). Optimistic send
-  is unchanged: the user line shows at once, then **Replying…**, then
-  the stored reply.
+  keeps the same timing: the user line shows at once, then the Bot’s flock
+  mark while the reply is in flight, then the stored reply. A green live
+  dot marks that Bot on the Chat header and the matching sidebar row for
+  the busy window.
 - The composer has a `+` for attachments that stays disabled in this
   change. When the draft has text, a send control appears: an arrow in
   a circle.
