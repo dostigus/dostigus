@@ -25,9 +25,10 @@ On a wide screen the Host is a messenger-shaped shell
 - Sign-in and onboarding stay outside this shell.
 
 Sending a Chat line is optimistic. The user line shows at once, the Bot
-shows a pending reply (“Replying…”), and the stored assistant line replaces
-that pending state when the request finishes. The rest of the Host stays
-usable. There is no page-level spinner. Token streaming is a later change.
+shows its flock mark while the reply is in flight, and the stored assistant
+line replaces that pending mark when the request finishes. The rest of the
+Host stays usable. There is no page-level spinner. Token streaming is a
+later change.
 
 An empty Bot list shows the wave sticker and **Create a Bot**. Creating a
 Bot opens that Bot’s Chat, composer included. No coach marks.

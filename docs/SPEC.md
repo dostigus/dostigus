@@ -79,8 +79,9 @@ What the running Cluster does today:
   send, and sleeps while no key is set. The composer has a disabled
   attachments control and
   shows a send arrow when there is text. On a narrow screen the sidebar
-  is a drawer. Sending a line shows it at once, then a pending Bot reply,
-  then the stored reply. With no Bots, the main pane offers **Create a Bot**
+  is a drawer. Sending a line shows it at once, then that Bot’s flock mark
+  while the reply is in flight, then the stored reply. A green live dot
+  marks the busy Bot on the Chat header and the matching sidebar row. With no Bots, the main pane offers **Create a Bot**
   and the sidebar stays a short centered line. The `+` and that button open
   the picker as the Chat pane. **×** returns to the pane that was open.
   Creating a Bot opens that Chat. See
