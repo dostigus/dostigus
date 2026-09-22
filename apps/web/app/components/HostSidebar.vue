@@ -2,90 +2,157 @@
   <aside
     id="host-sidebar"
     class="sidebar"
-    :class="{ open }"
+    :class="{ open, rail, dragging }"
+    :style="frameStyle"
     :inert="narrow && !open"
   >
-    <div class="side-head">
-      <NuxtLink
-        to="/"
-        class="brand"
-        @click="close"
+    <div class="column">
+      <div
+        v-if="!rail || isOwner"
+        class="side-head"
       >
-        <HostMark />
-      </NuxtLink>
-      <KitButton
-        v-if="isOwner"
-        variant="icon"
-        type="button"
-        aria-label="Create a Bot"
-        @click="openCreate"
+        <label
+          v-if="!rail"
+          class="search"
+        >
+          <svg
+            class="search-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle
+              cx="11"
+              cy="11"
+              r="6.5"
+            />
+            <path d="M16 16.5L20 20.5" />
+          </svg>
+          <span class="sr-only">Search</span>
+          <input
+            v-model="query"
+            type="search"
+            placeholder="Search"
+            autocomplete="off"
+          >
+        </label>
+        <KitButton
+          v-if="isOwner"
+          variant="icon"
+          type="button"
+          aria-label="Create a Bot"
+          @click="openCreate"
+        >
+          +
+        </KitButton>
+      </div>
+
+      <nav
+        class="list"
+        aria-label="Bots"
       >
-        +
-      </KitButton>
+        <p
+          v-if="pending && bots.length === 0"
+          class="status"
+        >
+          Loading Bots…
+        </p>
+        <p
+          v-else-if="error && bots.length === 0"
+          class="status error"
+        >
+          Could not load Bots.
+        </p>
+        <HostBotEmpty
+          v-else-if="bots.length === 0 && !rail"
+          compact
+        />
+        <p
+          v-else-if="visible.length === 0 && !rail"
+          class="status"
+        >
+          No matching Bots.
+        </p>
+        <ul
+          v-else
+          class="bots"
+        >
+          <li
+            v-for="bot in visible"
+            :key="bot.id"
+          >
+            <NuxtLink
+              v-if="rail"
+              class="rail-bot"
+              :to="`/bots/${bot.id}`"
+              :aria-label="bot.name"
+              :title="bot.name"
+              @click="close"
+            >
+              <HostBotAvatar
+                :name="bot.name"
+                :seed="bot.id"
+              />
+            </NuxtLink>
+            <NuxtLink
+              v-else
+              class="bot"
+              :to="`/bots/${bot.id}`"
+              @click="close"
+            >
+              <HostBotAvatar
+                :name="bot.name"
+                :seed="bot.id"
+              />
+              <span class="bot-copy">
+                <span class="bot-name">{{ bot.name }}</span>
+                <span
+                  v-if="bot.lastMessage?.content"
+                  class="bot-preview"
+                >{{ bot.lastMessage.content }}</span>
+              </span>
+            </NuxtLink>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="foot">
+        <HostUserMenu :collapsed="rail" />
+      </div>
     </div>
 
-    <nav
-      class="list"
-      aria-label="Bots"
+    <div
+      class="splitter"
+      :class="{ dragging }"
     >
-      <p
-        v-if="pending && bots.length === 0"
-        class="status"
+      <button
+        type="button"
+        class="fold"
+        :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+        @click="toggleCollapsed"
       >
-        Loading Bots…
-      </p>
-      <p
-        v-else-if="error && bots.length === 0"
-        class="status error"
-      >
-        Could not load Bots.
-      </p>
-      <HostBotEmpty
-        v-else-if="bots.length === 0"
-        compact
-      />
-      <ul
-        v-else
-        class="bots"
-      >
-        <li
-          v-for="bot in bots"
-          :key="bot.id"
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
         >
-          <NuxtLink
-            class="bot"
-            :to="`/bots/${bot.id}`"
-            @click="close"
-          >
-            <span class="bot-name">{{ bot.name }}</span>
-            <span class="bot-meta">{{ formatWhen(bot.createdAt) }}</span>
-          </NuxtLink>
-        </li>
-      </ul>
-    </nav>
-
-    <nav
-      class="foot"
-      aria-label="Host"
-    >
-      <NuxtLink
-        v-if="isOwner"
-        to="/members"
-        class="foot-link"
-        @click="close"
-      >
-        Members
-      </NuxtLink>
-      <NuxtLink
-        v-if="isOwner"
-        to="/settings"
-        class="foot-link"
-        @click="close"
-      >
-        Settings
-      </NuxtLink>
-      <HostLogoutButton />
-    </nav>
+          <path :d="collapsed ? 'M10 6l6 6-6 6' : 'M14 6l-6 6 6 6'" />
+        </svg>
+      </button>
+      <div
+        class="resize"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        tabindex="0"
+        :aria-valuenow="rail ? SIDEBAR_RAIL : width"
+        :aria-valuemin="SIDEBAR_RAIL"
+        :aria-valuemax="SIDEBAR_MAX"
+        @pointerdown="onPointerDown"
+        @pointermove="onPointerMove"
+        @pointerup="onPointerUp"
+        @pointercancel="onPointerUp"
+        @keydown="onResizeKey"
+      />
+    </div>
   </aside>
 </template>
 
@@ -96,50 +163,185 @@ const { isOwner } = useHostAccount()
 const { open, narrow, close } = useHostNav()
 const { openCreate } = useHostCreate()
 const { bots, pending, error } = await useHostBots()
+const { width, collapsed, resizeTo, toggleCollapsed } = useHostSidebar()
 
-function formatWhen(iso: string): string {
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) {
-    return ''
+const query = ref('')
+const dragging = ref(false)
+const rail = computed(() => collapsed.value && !narrow.value)
+const visible = computed(() => filterBots(bots.value, query.value))
+const frameStyle = computed(() => {
+  if (narrow.value) {
+    return undefined
   }
-  return date.toLocaleDateString()
+  const px = rail.value ? SIDEBAR_RAIL : width.value
+  return { '--sidebar-width': `${px}px` }
+})
+
+let drag: { pointerId: number, startX: number, origin: number } | null = null
+
+function onPointerDown(event: PointerEvent) {
+  if (event.button !== 0 || narrow.value) {
+    return
+  }
+  const handle = event.currentTarget
+  if (!(handle instanceof HTMLElement)) {
+    return
+  }
+  handle.setPointerCapture(event.pointerId)
+  drag = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    origin: rail.value ? SIDEBAR_RAIL : width.value,
+  }
+  dragging.value = true
+  document.body.style.userSelect = 'none'
 }
+
+function onPointerMove(event: PointerEvent) {
+  if (!drag || event.pointerId !== drag.pointerId) {
+    return
+  }
+  resizeTo(drag.origin + (event.clientX - drag.startX))
+}
+
+function onPointerUp(event: PointerEvent) {
+  if (!drag || event.pointerId !== drag.pointerId) {
+    return
+  }
+  drag = null
+  dragging.value = false
+  document.body.style.userSelect = ''
+}
+
+function onResizeKey(event: KeyboardEvent) {
+  const step = event.shiftKey ? 48 : 24
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault()
+    if (rail.value || width.value <= SIDEBAR_MIN) {
+      resizeTo(SIDEBAR_COLLAPSE_AT - 1)
+      return
+    }
+    resizeTo(width.value - step)
+    return
+  }
+  if (event.key === 'ArrowRight') {
+    event.preventDefault()
+    const base = rail.value ? SIDEBAR_COLLAPSE_AT : width.value
+    resizeTo(base + step)
+  }
+}
+
+onUnmounted(() => {
+  document.body.style.userSelect = ''
+})
 </script>
 
 <style scoped>
 .sidebar {
-  width: 17.5rem;
+  position: relative;
+  z-index: 2;
+  width: var(--sidebar-width, 17.5rem);
   flex: none;
   display: flex;
-  flex-direction: column;
   min-height: 0;
-  background: var(--surface);
+  background: var(--bg);
   border-right: 1px solid var(--line);
+  transition: width 160ms ease;
+}
+
+.sidebar.dragging {
+  transition: none;
+}
+
+.column {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .side-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.9rem 0.85rem 0.7rem;
+  gap: 0.45rem;
+  padding: 0.75rem 0.7rem 0.45rem;
 }
 
-.brand {
-  color: inherit;
-  text-decoration: none;
+.search {
+  flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.15rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.search:focus-within {
+  border-color: var(--accent-dim);
+}
+
+.search-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: none;
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.search input:focus {
+  outline: none;
+}
+
+.search input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.side-head :deep(.kit-button--icon) {
+  width: 2.15rem;
+  height: 2.15rem;
+  font-size: 1.25rem;
+  flex: none;
 }
 
 .list {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 0.35rem 0.7rem 0.9rem;
+  padding: 0.25rem 0.55rem 0.7rem;
 }
 
 .status {
-  margin: 0.6rem 0.35rem;
+  margin: 0.7rem 0.45rem;
   color: var(--text-muted);
   font-size: 0.9rem;
 }
@@ -154,74 +356,149 @@ function formatWhen(iso: string): string {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.1rem;
 }
 
-.bot {
+.bot,
+.rail-bot {
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.55rem 0.7rem;
-  border-radius: 0.85rem;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  padding: 0.42rem 0.5rem;
+  border-radius: 0.9rem;
   color: inherit;
   text-decoration: none;
 }
 
-.bot:hover {
+.rail-bot {
+  justify-content: center;
+  padding: 0.28rem;
+}
+
+.bot:hover,
+.rail-bot:hover {
   background: color-mix(in srgb, var(--text) 6%, transparent);
 }
 
-.bot.router-link-exact-active {
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+.bot.router-link-exact-active,
+.rail-bot.router-link-exact-active {
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+}
+
+.rail-bot.router-link-exact-active :deep(.avatar) {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--accent);
+}
+
+.bot-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
 }
 
 .bot-name {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.95rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.bot-meta {
+.bot-preview {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .foot {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.55rem 0.7rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.45rem 0.55rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--line);
 }
 
-.foot-link {
-  display: block;
-  padding: 0.4rem 0.7rem;
-  border-radius: 0.7rem;
+.rail .side-head {
+  justify-content: center;
+  padding-inline: 0.35rem;
+}
+
+.rail .list {
+  padding-inline: 0.3rem;
+}
+
+.rail .foot {
+  padding-inline: 0.3rem;
+}
+
+.splitter {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  bottom: 0;
+  width: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resize {
+  position: absolute;
+  inset: 0;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.resize:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.fold {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
   color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.92rem;
+  cursor: pointer;
 }
 
-.foot-link:hover,
-.foot-link.router-link-exact-active {
+.fold svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fold:hover {
   color: var(--text);
-  background: color-mix(in srgb, var(--text) 6%, transparent);
+  border-color: var(--accent);
 }
 
-.foot :deep(.logout) {
-  width: 100%;
-  text-align: left;
-  border: 0;
-  border-radius: 0.7rem;
-  padding: 0.4rem 0.7rem;
-  background: transparent;
+.fold:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-.foot :deep(.logout:hover:not(:disabled)) {
-  border: 0;
-  color: var(--text);
-  background: color-mix(in srgb, var(--text) 6%, transparent);
+@media (max-width: 52rem) {
+  .splitter {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
 }
 </style>

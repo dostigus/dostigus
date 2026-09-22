@@ -28,11 +28,12 @@ off Chat). Member Chat may call only `dostigus_messages_list` and
 tool for a Member session, so the model cannot create or change Bots.
 
 Every Host user message stores `personId`: the Owner id or the Member id.
-Assistant and system lines do not. Chat shows the author's display name.
-A Member's display name is the name the Owner entered. The Owner's shown
-name is their username, otherwise their email. Turning off a Member's
-sign-in keeps the row and the name. There is no hard-delete and no
-anonymizing in this slice.
+Assistant and system lines do not. The Host keeps the author's display
+name on the line. Chat bubbles stay unlabeled
+([ADR 0015](0015-host-desktop-shell.md)). A Member's display name is the
+name the Owner entered. The Owner's shown name is their username,
+otherwise their email. Turning off a Member's sign-in keeps the row and
+the name. There is no hard-delete and no anonymizing in this slice.
 
 ## Context
 

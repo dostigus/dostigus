@@ -32,6 +32,7 @@ it('lists, gets, updates, and deletes Bots through the shared Store helpers', ()
   expect(bot.name).toBe('Notes')
   expect(greeting.content).toBe(botGreetingContent('Notes'))
   expect(listClusterBots(store).bots.map((item) => item.name)).toEqual(['Notes'])
+  expect(listClusterBots(store).bots[0]?.lastMessage?.content).toBe(botGreetingContent('Notes'))
   expect(getClusterBot(store, bot.id).bot.id).toBe(bot.id)
 
   const updated = updateClusterBot(store, bot.id, { name: 'Renamed', modelTier: 'cheap' })

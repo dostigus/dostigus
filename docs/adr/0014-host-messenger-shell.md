@@ -3,6 +3,10 @@
 - Status: accepted
 - Date: 2026-09-22
 
+Desktop list chrome, Chat labels, and the composer are refined in
+[ADR 0015](0015-host-desktop-shell.md). Optimistic send and the drawer
+below `52rem` still stand.
+
 ## Decision
 
 On a wide screen the Host is a messenger-shaped shell

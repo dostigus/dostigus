@@ -140,8 +140,9 @@ _Avoid_: public share, invite (unqualified).
 - A Cluster has one Owner, a Store, Bots, Module packages, and its Household.
 - A Member signs in on the same Host. Bot list and Chat are shared. Creating
   or deleting a Bot, Members, and the LLM gateway stay with the Owner.
-- A Host user message stores the Owner id or Member id. Chat shows that
-  author's name. Turning off a Member's sign-in keeps the name.
+- A Host user message stores the Owner id or Member id, and the Host
+  keeps that author's name on the line. Chat bubbles stay unlabeled.
+  Turning off a Member's sign-in keeps the name.
 - A Bot has a Manifest and bound Module packages. A Bot is not a Module package.
 - Builder writes Module packages via Job → Apply. Distinct from any Platform
   git agent. The chat Bot does not write Module packages.

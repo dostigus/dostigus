@@ -2,41 +2,20 @@
   <div class="page">
     <header class="top">
       <HostMenuButton />
-      <div class="lead">
-        <h1>{{ bot?.name ?? 'Bot' }}</h1>
-        <p class="sub">
-          Chat
-        </p>
-      </div>
-      <div class="header-actions">
-        <template v-if="isOwner && confirmDelete">
-          <button
-            type="button"
-            class="ghost"
-            :disabled="deleting"
-            @click="confirmDelete = false"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="danger"
-            :disabled="!bot || deleting"
-            @click="remove"
-          >
-            {{ deleting ? 'Deleting…' : 'Confirm delete' }}
-          </button>
-        </template>
-        <button
-          v-else-if="isOwner"
-          type="button"
-          class="ghost"
-          :disabled="!bot || deleting"
-          @click="confirmDelete = true"
-        >
-          Delete
-        </button>
-      </div>
+      <button
+        type="button"
+        class="identity"
+        :disabled="!bot"
+        :aria-label="bot ? `${bot.name}, Bot settings` : 'Bot settings'"
+        @click="settingsOpen = true"
+      >
+        <HostBotAvatar
+          :name="bot?.name ?? 'Bot'"
+          :seed="bot?.id ?? ''"
+          size="sm"
+        />
+        <span class="name">{{ bot?.name ?? 'Bot' }}</span>
+      </button>
     </header>
 
     <p
@@ -71,12 +50,6 @@
         class="bubble"
         :class="[message.role, { mine: isMine(message), failed: message.failed }]"
       >
-        <p
-          v-if="labelFor(message)"
-          class="who"
-        >
-          {{ labelFor(message) }}
-        </p>
         <p class="text">
           {{ message.content }}
         </p>
@@ -86,9 +59,6 @@
         class="bubble assistant pending"
         aria-live="polite"
       >
-        <p class="who">
-          {{ bot?.name ?? 'Bot' }}
-        </p>
         <p class="text typing">
           <span
             class="dots"
@@ -132,11 +102,20 @@
         </button>
       </p>
       <div class="composer-row">
-        <label class="sr">
-          Message
+        <button
+          type="button"
+          class="attach"
+          disabled
+          aria-label="Attachments soon"
+          title="Soon"
+        >
+          <span aria-hidden="true">+</span>
+        </button>
+        <label class="draft">
+          <span class="sr-only">Message</span>
           <textarea
             v-model="draft"
-            rows="2"
+            rows="1"
             maxlength="16000"
             placeholder="Tell this Bot what it is for…"
             :disabled="!bot"
@@ -144,14 +123,28 @@
           />
         </label>
         <button
+          v-if="draft.trim()"
           type="submit"
-          class="solid"
-          :disabled="sending || !draft.trim() || !bot"
+          class="send"
+          :disabled="sending || !bot"
+          aria-label="Send"
         >
-          Send
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M12 19V6M7 11l5-5 5 5" />
+          </svg>
         </button>
       </div>
     </form>
+
+    <BotSettingsSheet
+      v-model:open="settingsOpen"
+      :bot="bot"
+      @saved="onBotSaved"
+      @deleted="onBotDeleted"
+    />
   </div>
 </template>
 
@@ -190,11 +183,10 @@ useHead({
 
 const draft = ref('')
 const sending = ref(false)
-const deleting = ref(false)
-const confirmDelete = ref(false)
 const botPending = ref(false)
 const sendError = ref('')
 const optimistic = ref<TimelineLine | null>(null)
+const settingsOpen = ref(false)
 const threadEl = ref<HTMLOListElement | null>(null)
 
 const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
@@ -205,7 +197,7 @@ watch(botId, () => {
   sending.value = false
   sendError.value = ''
   draft.value = ''
-  confirmDelete.value = false
+  settingsOpen.value = false
 })
 
 watch([timeline, botPending], () => {
@@ -213,16 +205,6 @@ watch([timeline, botPending], () => {
     threadEl.value?.scrollTo({ top: threadEl.value.scrollHeight })
   })
 }, { immediate: true })
-
-function labelFor(message: TimelineLine): string {
-  if (message.role === 'user') {
-    return message.authorName ?? ''
-  }
-  if (message.role === 'system') {
-    return 'System'
-  }
-  return bot.value?.name ?? 'Bot'
-}
 
 function isMine(message: TimelineLine): boolean {
   if (message.role !== 'user') {
@@ -278,7 +260,7 @@ async function deliver(raw: string, existing: TimelineLine | null) {
     if (botId.value !== targetId) {
       return
     }
-    await Promise.all([refresh(), refreshBot()])
+    await Promise.all([refresh(), refreshBot(), refreshBots()])
     optimistic.value = null
   } catch {
     if (botId.value !== targetId) {
@@ -299,19 +281,14 @@ async function deliver(raw: string, existing: TimelineLine | null) {
   }
 }
 
-async function remove() {
-  if (!bot.value || deleting.value) {
-    return
-  }
-  deleting.value = true
-  try {
-    await $fetch(`/api/bots/${bot.value.id}`, { method: 'DELETE' })
-    await refreshBots()
-    await navigateTo('/')
-  } finally {
-    deleting.value = false
-    confirmDelete.value = false
-  }
+async function onBotSaved() {
+  await Promise.all([refreshBot(), refreshBots()])
+}
+
+async function onBotDeleted() {
+  settingsOpen.value = false
+  await refreshBots()
+  await navigateTo('/')
 }
 </script>
 
@@ -321,79 +298,52 @@ async function remove() {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
 }
 
 .top {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1.15rem;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
+  gap: 0.35rem;
+  min-height: 3rem;
+  padding: 0.35rem 0.75rem;
 }
 
-.lead {
+.identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   min-width: 0;
-  flex: 1;
+  max-width: 100%;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  cursor: pointer;
+  font: inherit;
 }
 
-h1 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+.identity:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.identity:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.identity:disabled {
+  cursor: default;
+}
+
+.name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.sub {
-  margin: 0.1rem 0 0;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.ghost,
-.solid,
-.danger,
-.retry {
-  appearance: none;
-  border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  cursor: pointer;
-}
-
-.ghost,
-.retry {
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--text-muted);
-}
-
-.solid {
-  border: 0;
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.danger {
-  border: 1px solid var(--accent-dim);
-  background: transparent;
-  color: var(--accent);
-}
-
-.solid:disabled,
-.ghost:disabled,
-.danger:disabled,
-.retry:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  font-size: 0.98rem;
+  font-weight: 700;
 }
 
 .banner {
@@ -409,7 +359,6 @@ h1 {
   color: var(--text-muted);
   font-size: 0.88rem;
   border-bottom: 1px solid var(--line);
-  background: var(--surface);
 }
 
 .quiet-banner a {
@@ -422,41 +371,34 @@ h1 {
   min-height: 0;
   list-style: none;
   margin: 0;
-  padding: 1.35rem 1.4rem 1.6rem;
+  padding: 0.6rem 1.15rem 1.1rem;
   overflow: auto;
-  background: var(--bg);
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.55rem;
 }
 
 .bubble {
-  max-width: min(36rem, 100%);
-  padding: 0.85rem 1rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--line);
+  max-width: min(34rem, 86%);
+  padding: 0.7rem 0.95rem;
+  border-radius: 1.15rem;
+  border: 0;
   background: var(--surface);
-}
-
-.bubble.user {
-  align-self: flex-start;
 }
 
 .bubble.user.mine {
   align-self: flex-end;
-  border-color: transparent;
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  background: color-mix(in srgb, var(--text) 8%, var(--surface));
+}
+
+.bubble.assistant,
+.bubble.system,
+.bubble.user:not(.mine) {
+  align-self: flex-start;
 }
 
 .bubble.failed {
-  border-color: var(--accent-dim);
-}
-
-.who {
-  margin: 0 0 0.3rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  box-shadow: inset 0 0 0 1px var(--accent-dim);
 }
 
 .text {
@@ -500,6 +442,7 @@ h1 {
   border: 0;
   background: transparent;
   align-self: center;
+  max-width: none;
 }
 
 .empty-title {
@@ -516,16 +459,18 @@ h1 {
 .composer {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  padding: 0.85rem 1.15rem calc(1rem + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--line);
-  background: var(--surface);
+  gap: 0.45rem;
+  padding: 0.35rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
 }
 
 .composer-row {
   display: flex;
-  gap: 0.7rem;
+  gap: 0.25rem;
   align-items: flex-end;
+  padding: 0.3rem 0.35rem 0.3rem 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 1.6rem;
+  background: var(--surface);
 }
 
 .send-error {
@@ -537,29 +482,102 @@ h1 {
   gap: 0.6rem;
 }
 
-.sr {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  font-size: 0.75rem;
+.retry {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: transparent;
   color: var(--text-muted);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.retry:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.attach,
+.send {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.attach {
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.45rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.attach:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.send {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.send svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.draft {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 textarea {
   width: 100%;
   resize: none;
   appearance: none;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border: 0;
+  background: transparent;
   color: var(--text);
-  border-radius: var(--radius-sm);
-  padding: 0.7rem 0.85rem;
-  min-height: 3.1rem;
+  padding: 0.4rem 0.25rem;
+  min-height: 1.6rem;
+  max-height: 8rem;
+  field-sizing: content;
 }
 
 textarea:focus {
-  outline: 1px solid var(--accent-dim);
+  outline: none;
 }
 
 @keyframes blink {

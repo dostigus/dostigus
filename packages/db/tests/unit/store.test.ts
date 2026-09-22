@@ -67,8 +67,10 @@ it('persists Chat messages and lists Bots newest first', () => {
   })
   expect(user.role).toBe('user')
 
-  const names = listBots(store).map((bot) => bot.name)
-  expect(names).toEqual(['Beta', 'Alpha'])
+  const listed = listBots(store)
+  expect(listed.map((bot) => bot.name)).toEqual(['Beta', 'Alpha'])
+  expect(listed.find((bot) => bot.name === 'Beta')?.lastMessage?.content).toBe('Help me sort notes later')
+  expect(listed.find((bot) => bot.name === 'Alpha')?.lastMessage?.content).toBe(botGreetingContent('Alpha'))
   expect(listMessages(store, newer.id).map((message) => message.content)).toEqual([
     botGreetingContent('Beta'),
     'Help me sort notes later',
@@ -102,6 +104,21 @@ it('updates name and Model tier, and cascade-deletes messages', () => {
     'SELECT count(*) AS n FROM messages',
   ).get() as { n: number }
   expect(leftover.n).toBe(0)
+})
+
+it('lists the latest Chat line as a one-line preview', () => {
+  const store = memoryStore()
+  const { bot } = createBot(store, { name: 'Notes' })
+  insertMessage(store, {
+    botId: bot.id,
+    role: 'user',
+    content: `  Line one\n\n${'word '.repeat(40)}`,
+  })
+  const preview = listBots(store)[0]?.lastMessage?.content ?? ''
+  expect(preview.startsWith('Line one word')).toBe(true)
+  expect(preview.endsWith('…')).toBe(true)
+  expect(preview.length).toBe(140)
+  expect(preview).not.toContain('\n')
 })
 
 it('rejects an unknown Model tier', () => {

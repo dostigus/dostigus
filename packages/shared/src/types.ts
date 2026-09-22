@@ -106,6 +106,17 @@ export type Bot = {
   manifest: Manifest
 }
 
+/** One-line preview of the latest Chat line on a Bot. */
+export type BotLastMessage = {
+  content: string
+  createdAt: string
+}
+
+/** Bot as shown in the Host list, with that preview. */
+export type BotListItem = Bot & {
+  lastMessage: BotLastMessage | null
+}
+
 export type MessageRole = 'user' | 'assistant' | 'system'
 
 export const MESSAGE_ROLES = ['user', 'assistant', 'system'] as const
