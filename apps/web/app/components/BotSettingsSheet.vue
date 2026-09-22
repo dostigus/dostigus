@@ -381,17 +381,16 @@ async function remove() {
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.7rem 0.55rem;
-  width: calc(6 * 1.55rem + 5 * 0.55rem);
-  max-width: 100%;
-  margin-inline: auto;
+  width: 100%;
   padding: 0.15rem 0.25rem 0.35rem;
 }
 
 .swatch {
   appearance: none;
-  flex: 0 0 1.55rem;
-  width: 1.55rem;
-  height: 1.55rem;
+  flex: 0 0 calc((100% - 5 * 0.55rem) / 6);
+  width: calc((100% - 5 * 0.55rem) / 6);
+  aspect-ratio: 1;
+  height: auto;
   border-radius: 999px;
   border: 0;
   padding: 0;
