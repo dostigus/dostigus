@@ -118,48 +118,50 @@
           Try again
         </button>
       </p>
-      <div
-        ref="composerRowEl"
-        class="composer-row"
-        :class="{ multiline: composerMultiline }"
-      >
-        <button
-          type="button"
-          class="attach"
-          disabled
-          aria-label="Attachments soon"
-          title="Soon"
+      <div class="composer-plate">
+        <div
+          ref="composerRowEl"
+          class="composer-row"
+          :class="{ multiline: composerMultiline }"
         >
-          <span aria-hidden="true">+</span>
-        </button>
-        <label class="draft">
-          <span class="sr-only">Message</span>
-          <textarea
-            ref="draftEl"
-            v-model="draft"
-            rows="1"
-            maxlength="16000"
-            :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
-            :disabled="!bot"
-            @keydown.enter.exact.prevent="send"
-            @focus="listening = true"
-            @blur="listening = false"
-          />
-        </label>
-        <button
-          v-if="draft.trim()"
-          type="submit"
-          class="send"
-          :disabled="sending || !bot"
-          aria-label="Send"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
+          <button
+            type="button"
+            class="attach"
+            disabled
+            aria-label="Attachments soon"
+            title="Soon"
           >
-            <path d="M12 19V6M7 11l5-5 5 5" />
-          </svg>
-        </button>
+            <span aria-hidden="true">+</span>
+          </button>
+          <label class="draft">
+            <span class="sr-only">Message</span>
+            <textarea
+              ref="draftEl"
+              v-model="draft"
+              rows="1"
+              maxlength="16000"
+              :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
+              :disabled="!bot"
+              @keydown.enter.exact.prevent="send"
+              @focus="listening = true"
+              @blur="listening = false"
+            />
+          </label>
+          <button
+            v-if="draft.trim()"
+            type="submit"
+            class="send"
+            :disabled="sending || !bot"
+            aria-label="Send"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M12 19V6M7 11l5-5 5 5" />
+            </svg>
+          </button>
+        </div>
       </div>
     </form>
 
@@ -768,10 +770,19 @@ async function onBotDeleted() {
   padding: 0.35rem var(--thread-inset) var(--composer-gap);
   background: linear-gradient(
     to top,
-    var(--bg-chat) var(--composer-gap),
-    transparent var(--composer-gap)
+    var(--bg-chat) calc(var(--composer-gap) + 2px),
+    transparent calc(var(--composer-gap) + 2px)
   );
   pointer-events: none;
+}
+
+/* Unrounded canvas behind the row. The pill and card radii leave
+   concave pockets; this plate fills them with --bg-chat so the
+   corners sit on the Chat canvas, not the thread. */
+.composer-plate {
+  background: var(--bg-chat);
+  /* Past the row's bottom edge, so a fractional pixel there cannot open onto the thread. */
+  padding-bottom: 2px;
 }
 
 .composer-row,

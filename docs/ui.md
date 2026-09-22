@@ -45,7 +45,9 @@ so the corners do not pick up a second fill. The field overlays the
 Chat pane. Below the header, that pane is one scroll, so messages can
 pass behind the field instead of stopping in a box above it. The gap
 under the row, including the safe area, has a `--bg-chat` background
-fill, so the thread cannot show through that strip. End padding
+fill, so the thread cannot show through that strip. A rectangular
+`--bg-chat` plate, the full width of that inset and with no radius,
+sits behind the row so the rounded corners rest on the Chat canvas. End padding
 on the thread matches the overlay, and Chat opens at the bottom so the
 latest line sits above the field. A `1px` edge,
 `color-mix(in srgb, var(--text) 8%, var(--composer))`, stays a step
