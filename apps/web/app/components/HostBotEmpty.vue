@@ -1,29 +1,15 @@
 <template>
-  <div
-    class="empty"
-    :class="{ compact }"
-  >
+  <div class="empty">
     <GooseSticker
       class="sticker"
       name="wave"
-      :size="compact ? 'sm' : 'md'"
+      size="md"
       alt=""
     />
-    <p
-      v-if="!compact"
-      class="kicker"
-    >
+    <p class="kicker">
       Bots
     </p>
-    <h1 v-if="!compact">
-      No Bots yet
-    </h1>
-    <p
-      v-else
-      class="title"
-    >
-      No Bots yet
-    </p>
+    <h1>No Bots yet</h1>
     <p class="hint">
       <template v-if="isOwner">
         Create a Bot and start a Chat. You can tell it what it is for.
@@ -44,10 +30,6 @@
 
 <script setup lang="ts">
 import { GooseSticker, KitButton } from '@dostigus/ui-kit'
-
-defineProps<{
-  compact?: boolean
-}>()
 
 const { isOwner } = useHostAccount()
 const { openCreate } = useHostCreate()
@@ -70,25 +52,15 @@ const { openCreate } = useHostCreate()
   color: var(--accent);
 }
 
-h1,
-.title {
+h1 {
   margin: 0 0 0.6rem;
   font-size: 1.7rem;
   font-weight: 700;
-}
-
-.title {
-  font-size: 1.05rem;
 }
 
 .hint {
   margin: 0 0 1.2rem;
   color: var(--text-muted);
   line-height: 1.5;
-}
-
-.compact .hint {
-  font-size: 0.88rem;
-  margin-bottom: 0.9rem;
 }
 </style>

@@ -141,7 +141,11 @@ _Avoid_: public share, invite (unqualified).
 - Platform ≠ Cluster. Git is only for the Platform. A Cluster is not a git repo.
 - A Cluster has one Owner, a Store, Bots, Module packages, and its Household.
 - A Member signs in on the same Host. Bot list and Chat are shared. Creating
-  or deleting a Bot, Members, and the LLM gateway stay with the Owner.
+  or deleting a Bot, Members, and the LLM gateway stay with the Owner. A
+  Member may open the list over Chat to find a Bot.
+- The Owner creates a Bot from that list. The name starts as **New Bot**,
+  with a random flock mark. What the Bot is for is a Chat line, not a
+  Manifest field.
 - A Host user message stores the Owner id or Member id, and the Host
   keeps that author's name on the line. Chat bubbles stay unlabeled.
   Turning off a Member's sign-in keeps the name.

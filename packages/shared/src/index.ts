@@ -23,6 +23,7 @@ export {
   migrateBotAvatarShape,
   normalizeBotAccentHex,
   ONE_SHOT_AVATAR_STATES,
+  randomBotAppearance,
 } from './bot-avatar'
 export {
   ASSISTANT_REPLY_VIAS,
@@ -78,10 +79,14 @@ export {
 export {
   type Apply,
   type Bot,
+  BOT_PURPOSE_HINT,
+  BOT_PURPOSE_OPTIONS,
+  BOT_PURPOSE_PROMPT,
   botGreetingContent,
   type BotId,
   type BotLastMessage,
   type BotListItem,
+  type BotPurposeOption,
   type Builder,
   type Card,
   type CardKind,

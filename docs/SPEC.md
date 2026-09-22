@@ -43,13 +43,19 @@ What the running Cluster does today:
   Member. Logout clears the session. See
   [ADR 0010](adr/0010-owner-auth-session.md) and
   [ADR 0012](adr/0012-household-members.md).
-- Host UI: Bot list (empty state + Owner `+` create, default name **New Bot**),
-  Chat (timeline + composer, unlabeled bubbles), Settings, and
-  Members. Settings presents OpenRouter as the default LLM path (API key +
-  Model tier) and stays with the Owner. A collapsed custom
-  OpenAI-compatible URL remains for other gateways. Creating a Bot
-  (or first open) stores an assistant greeting that asks what the Bot is
-  for. The Owner adds a Member with a display name, email or username, and
+- Host UI: Bot list (empty state + `+` picker), Chat (timeline + composer,
+  unlabeled bubbles), Settings, and Members. Settings presents OpenRouter
+  as the default LLM path (API key + Model tier) and stays with the Owner.
+  A collapsed custom OpenAI-compatible URL remains for other gateways.
+  The `+` replaces the Chat pane with a picker
+  ([ADR 0019](adr/0019-bot-picker-and-chat-purpose.md)). Search there
+  filters Bots by name. The Owner row **Create new Bot** stores a Bot named
+  **New Bot** with a random flock mark and accent, then opens that Chat.
+  A Member's picker is search and existing Bots only. Creating a Bot (or
+  first open) stores an assistant greeting. Until the first user message,
+  Chat shows a purpose Card: Personal, Work, Learning, Other, or free text.
+  That answer is a normal Chat line. Purpose is not a Manifest field.
+  The Owner adds a Member with a display name, email or username, and
   password. A Member sees the same Bot list and Chat, without create,
   delete, Members, or Settings. Turning off sign-in keeps their name on
   the Chat line. Logged-out visitors cannot open those surfaces. Host font is
@@ -57,12 +63,13 @@ What the running Cluster does today:
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
   The Brand goose logo, stickers, and Bot marks live in the Kit. The Host
-  mark uses the goose logo. Empty Bots shows a sticker. Add Member opens a Sheet. See
+  mark uses the goose logo. With no Bots, the sidebar centers a short line
+  and the main pane shows the wave sticker and **Create a Bot**. Add Member opens a Sheet. See
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
   is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
   an icon rail. Each row shows an avatar, the Bot name, and the latest
-  Chat line. Search filters that list in the Host. The Owner's `+`
-  creates a Bot. A user button opens Settings (`/settings`), Members
+  Chat line. Search filters that list in the Host. The sidebar `+` opens
+  the Bot picker. A user button opens Settings (`/settings`), Members
   (`/members`), and Sign out.   Chat has a narrow header: avatar and name
   open a right Sheet (appearance Bot mark + color, rename, Model tier,
   delete for the Owner), unlabeled bubbles, and a composer. Sidebar Bot
@@ -73,11 +80,15 @@ What the running Cluster does today:
   attachments control and
   shows a send arrow when there is text. On a narrow screen the sidebar
   is a drawer. Sending a line shows it at once, then a pending Bot reply,
-  then the stored reply. An empty Bot list offers **Create a Bot** and
-  opens that Chat. See [ADR 0014](adr/0014-host-messenger-shell.md),
+  then the stored reply. With no Bots, the main pane offers **Create a Bot**
+  and the sidebar stays a short centered line. The `+` and that button open
+  the picker as the Chat pane. **×** returns to the pane that was open.
+  Creating a Bot opens that Chat. See
+  [ADR 0014](adr/0014-host-messenger-shell.md),
   [ADR 0015](adr/0015-host-desktop-shell.md),
-  [ADR 0016](adr/0016-bot-avatar-tokens.md), and
-  [ADR 0018](adr/0018-bot-mark-flock.md).
+  [ADR 0016](adr/0016-bot-avatar-tokens.md),
+  [ADR 0018](adr/0018-bot-mark-flock.md), and
+  [ADR 0019](adr/0019-bot-picker-and-chat-purpose.md).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
   `/api/members` list/create and `/api/members/:id/disable`,
   `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured

@@ -29,8 +29,9 @@ pnpm check                        # lint → typecheck → test → build
 ```
 
 A fresh Cluster opens **Create your Owner** (email or username + password).
-Later visits sign in. Then press **+**, create a Bot (default name **New Bot**), and Chat.
-The Bot greets and asks what it is for. Messages persist in the Store
+Later visits sign in. Then press **+**: the Chat pane becomes find or
+create (new Bots are named **New Bot**). The Bot greets, and a purpose Card
+offers Personal, Work, Learning, Other, or your own words. Messages persist in the Store
 (SQLite). An LLM key is optional (compose env or Host **Settings**) — see
 [`docs/deploy.md`](docs/deploy.md). With a key, Chat may call Cluster MCP
 surface tools in-process (same Store as the Host UI and `/mcp`).

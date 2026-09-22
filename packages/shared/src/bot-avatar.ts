@@ -165,6 +165,28 @@ export function botAccentCssVar(hex: string): string | undefined {
   return BOT_ACCENT_TOKENS.find((item) => item.hex === normalized)?.cssVar
 }
 
+function pickIndex(length: number, random: () => number): number {
+  const index = Math.floor(random() * length)
+  if (!Number.isFinite(index) || index < 0) {
+    return 0
+  }
+  return Math.min(length - 1, index)
+}
+
+/**
+ * Host create assigns a flock bird and a Bot accent.
+ * Callers that omit shape or color still get the Store defaults.
+ */
+export function randomBotAppearance(random: () => number = Math.random): {
+  avatarShape: BotAvatarShape
+  avatarColor: BotAccentHex
+} {
+  return {
+    avatarShape: BOT_AVATAR_SHAPES[pickIndex(BOT_AVATAR_SHAPES.length, random)]!,
+    avatarColor: BOT_ACCENT_HEXES[pickIndex(BOT_ACCENT_HEXES.length, random)]!,
+  }
+}
+
 /** Tones a Bot mark paints with. Every tone derives from the body accent. */
 export type BotMarkPalette = {
   /** Body, neck, head — the Manifest accent itself. */

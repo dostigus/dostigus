@@ -86,7 +86,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
         id: 'g1',
         botId: 'b1',
         role: 'assistant',
-        content: 'Hello — I\'m Notes later. I don\'t have a purpose yet. What should this Bot be for?',
+        content: 'Hello — I\'m Notes later.',
         createdAt: new Date().toISOString(),
         personId: null,
       },
@@ -127,7 +127,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
       },
       {
         role: 'assistant',
-        content: expect.stringContaining('What should this Bot be for?'),
+        content: 'Hello — I\'m Notes later.',
       },
       {
         role: 'user',

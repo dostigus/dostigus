@@ -7,10 +7,7 @@
     :inert="narrow && !open"
   >
     <div class="column">
-      <div
-        v-if="!rail || isOwner"
-        class="side-head"
-      >
+      <div class="side-head">
         <label
           v-if="!rail"
           class="search"
@@ -36,10 +33,9 @@
           >
         </label>
         <KitButton
-          v-if="isOwner"
           variant="icon"
           type="button"
-          aria-label="Create a Bot"
+          :aria-label="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
           @click="openCreate"
         >
           +
@@ -48,6 +44,7 @@
 
       <nav
         class="list"
+        :class="{ 'list-empty': bots.length === 0 && !pending && !error && !rail }"
         aria-label="Bots"
       >
         <p
@@ -62,10 +59,12 @@
         >
           Could not load Bots.
         </p>
-        <HostBotEmpty
+        <p
           v-else-if="bots.length === 0 && !rail"
-          compact
-        />
+          class="status"
+        >
+          No Bots yet
+        </p>
         <p
           v-else-if="visible.length === 0 && !rail"
           class="status"
@@ -86,7 +85,7 @@
               :to="`/bots/${bot.id}`"
               :aria-label="bot.name"
               :title="bot.name"
-              @click="close"
+              @click="onRow(bot.id)"
             >
               <HostBotAvatar
                 :name="bot.name"
@@ -99,7 +98,7 @@
               v-else
               class="bot"
               :to="`/bots/${bot.id}`"
-              @click="close"
+              @click="onRow(bot.id)"
             >
               <HostBotAvatar
                 :name="bot.name"
@@ -163,9 +162,10 @@
 <script setup lang="ts">
 import { KitButton } from '@dostigus/ui-kit'
 
+const route = useRoute()
 const { isOwner } = useHostAccount()
 const { open, narrow, close } = useHostNav()
-const { openCreate } = useHostCreate()
+const { openCreate, closeCreate } = useHostCreate()
 const { bots, pending, error } = await useHostBots()
 const { width, collapsed, resizeTo, toggleCollapsed } = useHostSidebar()
 
@@ -182,6 +182,13 @@ const frameStyle = computed(() => {
 })
 
 let drag: { pointerId: number, startX: number, origin: number } | null = null
+
+function onRow(id: string) {
+  close()
+  if (route.path === `/bots/${id}`) {
+    closeCreate()
+  }
+}
 
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0 || narrow.value) {
@@ -342,6 +349,17 @@ onUnmounted(() => {
   min-height: 0;
   overflow: auto;
   padding: 0.25rem 0.55rem 0.7rem;
+}
+
+.list-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.list-empty .status {
+  margin: 0;
+  text-align: center;
 }
 
 .status {

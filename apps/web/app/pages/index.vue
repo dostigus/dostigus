@@ -47,6 +47,7 @@ const { bots, pending, error } = await useHostBots()
   min-height: 0;
   display: flex;
   flex-direction: column;
+  background: var(--bg-chat);
 }
 
 .top {

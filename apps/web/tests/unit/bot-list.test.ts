@@ -1,6 +1,6 @@
 import type { BotListItem } from '@dostigus/shared'
 import { expect, it } from 'vitest'
-import { avatarColor, filterBots, initialsFromName } from '../../app/utils/bot-list'
+import { avatarColor, filterBots, filterBotsByName, initialsFromName } from '../../app/utils/bot-list'
 
 function bot(name: string, preview: string | null): BotListItem {
   return {
@@ -30,6 +30,16 @@ it('filters Bots by name and latest Chat line', () => {
   expect(filterBots(bots, ' meal ').map((item) => item.name)).toEqual(['Meal'])
   expect(filterBots(bots, 'pantry').map((item) => item.name)).toEqual(['Notes'])
   expect(filterBots(bots, 'missing')).toEqual([])
+})
+
+it('filters the picker by Bot name only', () => {
+  const bots = [
+    bot('Notes', 'Sort the pantry list'),
+    bot('Meal', 'What is for dinner'),
+  ]
+  expect(filterBotsByName(bots, 'note').map((item) => item.name)).toEqual(['Notes'])
+  expect(filterBotsByName(bots, 'pantry')).toEqual([])
+  expect(filterBotsByName(bots, '  ').map((item) => item.name)).toEqual(['Notes', 'Meal'])
 })
 
 it('builds initials and a stable avatar color', () => {

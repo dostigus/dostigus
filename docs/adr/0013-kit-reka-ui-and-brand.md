@@ -3,6 +3,9 @@
 - Status: accepted
 - Date: 2026-09-22
 
+Create Bot no longer uses `KitDialog`. See
+[ADR 0019](0019-bot-picker-and-chat-purpose.md).
+
 ## Decision
 
 The Kit (`@dostigus/ui-kit`) sits on [Reka UI](https://github.com/unovue/reka-ui)

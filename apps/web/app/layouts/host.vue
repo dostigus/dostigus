@@ -9,13 +9,15 @@
     />
     <HostSidebar />
     <div class="pane">
-      <slot />
+      <BotPicker
+        v-if="createOpen"
+        :bots="bots"
+        @close="dismissCreate"
+        @created="onCreated"
+        @open-bot="onOpenBot"
+      />
+      <slot v-else />
     </div>
-    <BotCreateDialog
-      :open="createOpen"
-      @close="closeCreate"
-      @created="onCreated"
-    />
   </div>
 </template>
 
@@ -24,11 +26,12 @@ import type { Bot } from '@dostigus/shared'
 
 const route = useRoute()
 const { open, narrow, close } = useHostNav()
-const { open: createOpen, closeCreate } = useHostCreate()
-const { refresh } = await useHostBots()
+const { open: createOpen, closeCreate, dismissCreate } = useHostCreate()
+const { bots, refresh } = await useHostBots()
 
 watch(() => route.fullPath, () => {
   close()
+  closeCreate()
 })
 
 async function onCreated(bot: Bot) {
@@ -37,8 +40,13 @@ async function onCreated(bot: Bot) {
   await navigateTo(`/bots/${bot.id}`)
 }
 
+async function onOpenBot(id: string) {
+  closeCreate()
+  await navigateTo(`/bots/${id}`)
+}
+
 function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && open.value) {
+  if (event.key === 'Escape' && open.value && !createOpen.value) {
     close()
   }
 }
@@ -77,6 +85,7 @@ onUnmounted(() => {
 }
 
 .pane {
+  position: relative;
   flex: 1;
   min-width: 0;
   min-height: 0;

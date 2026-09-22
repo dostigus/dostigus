@@ -198,5 +198,17 @@ export type ShareLink = {
 
 /** First Chat line when a Bot is created (or first opened with no messages). */
 export function botGreetingContent(name: string): string {
-  return `Hello — I'm ${name}. I don't have a purpose yet. What should this Bot be for?`
+  return `Hello — I'm ${name}.`
 }
+
+/**
+ * Purpose Card in Chat until the first user message.
+ * Not a Manifest field — see ADR 0019.
+ */
+export const BOT_PURPOSE_PROMPT = 'What should this Bot be for?'
+
+export const BOT_PURPOSE_HINT = 'One main thing — I\'ll tune from there.'
+
+export const BOT_PURPOSE_OPTIONS = ['Personal', 'Work', 'Learning', 'Other'] as const
+
+export type BotPurposeOption = (typeof BOT_PURPOSE_OPTIONS)[number]
