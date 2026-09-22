@@ -24,6 +24,8 @@ one kit, and one place to learn the UI.
   marketing landing page.
 - Host UI text is Nunito (headings and body). Dark charcoal canvas, coral
   accent, rounded Kit chrome. Tokens: [`docs/ui.md`](../ui.md).
+- Kit implementation (Reka UI, Sheet shell, Brand) is
+  [ADR 0013](0013-kit-reka-ui-and-brand.md).
 
 ## Alternatives
 

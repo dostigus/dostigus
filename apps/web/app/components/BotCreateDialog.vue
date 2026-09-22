@@ -1,21 +1,16 @@
 <template>
-  <div
-    v-if="open"
-    class="backdrop"
-    role="presentation"
-    @click="emit('close')"
-  />
-  <aside
-    v-if="open"
-    class="dialog"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Create Bot"
+  <KitDialog
+    v-model:open="dialogOpen"
+    title="Create Bot"
+    description="Give it a name. Chat will ask what it is for."
   >
-    <h2>Create Bot</h2>
-    <p class="hint">
-      Give it a name. Chat will ask what it is for.
-    </p>
+    <template #media>
+      <GooseSticker
+        name="ok"
+        size="sm"
+        alt=""
+      />
+    </template>
     <form @submit.prevent="create">
       <label class="field">
         <span>Name</span>
@@ -34,28 +29,28 @@
         {{ error }}
       </p>
       <div class="actions">
-        <button
+        <KitButton
+          variant="ghost"
           type="button"
-          class="ghost"
-          @click="emit('close')"
+          @click="dialogOpen = false"
         >
           Cancel
-        </button>
-        <button
+        </KitButton>
+        <KitButton
           type="submit"
-          class="solid"
           :disabled="busy"
         >
           {{ busy ? 'Creating…' : 'Create' }}
-        </button>
+        </KitButton>
       </div>
     </form>
-  </aside>
+  </KitDialog>
 </template>
 
 <script setup lang="ts">
 import type { Bot } from '@dostigus/shared'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
+import { GooseSticker, KitButton, KitDialog } from '@dostigus/ui-kit'
 
 const props = defineProps<{
   open: boolean
@@ -70,12 +65,20 @@ const defaultName = DEFAULT_BOT_NAME
 const name = ref('')
 const busy = ref(false)
 const error = ref('')
+const dialogOpen = ref(false)
 
-watch(() => props.open, (open) => {
-  if (open) {
+watch(() => props.open, (value) => {
+  dialogOpen.value = value
+  if (value) {
     name.value = ''
     error.value = ''
     busy.value = false
+  }
+}, { immediate: true })
+
+watch(dialogOpen, (value) => {
+  if (!value && props.open) {
+    emit('close')
   }
 })
 
@@ -97,38 +100,6 @@ async function create() {
 </script>
 
 <style scoped>
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 45%);
-  z-index: 20;
-}
-
-.dialog {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  z-index: 21;
-  transform: translate(-50%, -50%);
-  width: min(22rem, calc(100vw - 2rem));
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1.35rem 1.4rem 1.4rem;
-}
-
-h2 {
-  margin: 0 0 0.4rem;
-  font-size: 1.15rem;
-}
-
-.hint {
-  margin: 0 0 1rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
 .field {
   display: flex;
   flex-direction: column;
@@ -161,30 +132,5 @@ input:focus {
   justify-content: flex-end;
   gap: 0.6rem;
   margin-top: 1.1rem;
-}
-
-.ghost,
-.solid {
-  appearance: none;
-  border-radius: 999px;
-  padding: 0.45rem 0.95rem;
-  cursor: pointer;
-}
-
-.ghost {
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--text);
-}
-
-.solid {
-  border: 0;
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.solid:disabled {
-  opacity: 0.6;
-  cursor: wait;
 }
 </style>

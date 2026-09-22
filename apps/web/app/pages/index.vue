@@ -18,15 +18,15 @@
           Settings
         </NuxtLink>
         <HostLogoutButton />
-        <button
+        <KitButton
           v-if="isOwner"
+          variant="icon"
           type="button"
-          class="plus"
           aria-label="Create Bot"
           @click="openCreate"
         >
           +
-        </button>
+        </KitButton>
       </div>
     </header>
 
@@ -51,6 +51,11 @@
           v-else-if="bots.length === 0"
           class="empty"
         >
+          <GooseSticker
+            class="sticker"
+            name="wave"
+            alt=""
+          />
           <p class="kicker">
             Bots
           </p>
@@ -63,14 +68,13 @@
               Bots on this Host show up here. Open a Chat when one is here.
             </template>
           </p>
-          <button
+          <KitButton
             v-if="isOwner"
             type="button"
-            class="solid"
             @click="openCreate"
           >
             Create Bot
-          </button>
+          </KitButton>
         </div>
         <ul
           v-else
@@ -102,6 +106,7 @@
 
 <script setup lang="ts">
 import type { Bot } from '@dostigus/shared'
+import { GooseSticker, KitButton } from '@dostigus/ui-kit'
 
 useHead({ title: 'Dostigus · Bots' })
 
@@ -163,23 +168,6 @@ function formatWhen(iso: string): string {
   color: var(--text);
 }
 
-.plus {
-  appearance: none;
-  width: 2.6rem;
-  height: 2.6rem;
-  border-radius: 999px;
-  border: 0;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-size: 1.45rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.plus:hover {
-  filter: brightness(1.05);
-}
-
 .stage {
   flex: 1;
   display: flex;
@@ -193,8 +181,12 @@ function formatWhen(iso: string): string {
 
 .empty {
   max-width: 26rem;
-  margin: 3.25rem auto 0;
+  margin: 1.75rem auto 0;
   text-align: center;
+}
+
+.sticker {
+  margin-bottom: 0.35rem;
 }
 
 .kicker {
@@ -220,21 +212,6 @@ h1 {
 
 .status.error {
   color: var(--accent);
-}
-
-.solid {
-  appearance: none;
-  padding: 0.7rem 1.35rem;
-  border-radius: 999px;
-  cursor: pointer;
-  border: 0;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-weight: 600;
-}
-
-.solid:hover {
-  filter: brightness(1.05);
 }
 
 .bots {

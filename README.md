@@ -34,7 +34,8 @@ The Bot greets and asks what it is for. Messages persist in the Store
 (SQLite). An LLM key is optional (compose env or Host **Settings**) — see
 [`docs/deploy.md`](docs/deploy.md). With a key, Chat may call Cluster MCP
 surface tools in-process (same Store as the Host UI and `/mcp`).
-Host UI is dark by default: **Nunito**, charcoal canvas, coral-orange CTAs.
+Host UI is dark by default: **Nunito**, charcoal canvas, coral-orange CTAs,
+goose Brand from the Kit.
 See [`docs/ui.md`](docs/ui.md).
 
 The Cluster MCP surface is `/mcp` (`@nuxtjs/mcp-toolkit`). Set

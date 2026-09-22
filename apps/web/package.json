@@ -19,6 +19,7 @@
     "@nuxt/fonts": "catalog:",
     "@nuxtjs/mcp-toolkit": "catalog:",
     "nuxt-auth-utils": "catalog:",
+    "reka-ui": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

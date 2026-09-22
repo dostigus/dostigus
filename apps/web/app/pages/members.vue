@@ -1,21 +1,32 @@
 <template>
   <div class="shell">
     <header class="top">
-      <div>
-        <NuxtLink
-          to="/"
-          class="back"
-        >
-          Bots
-        </NuxtLink>
-        <p class="mark">
-          Members
-        </p>
-        <p class="sub">
-          People on this Host
-        </p>
+      <div class="lead">
+        <GooseLogo alt="" />
+        <div>
+          <NuxtLink
+            to="/"
+            class="back"
+          >
+            Bots
+          </NuxtLink>
+          <p class="mark">
+            Members
+          </p>
+          <p class="sub">
+            People on this Host
+          </p>
+        </div>
       </div>
-      <HostLogoutButton />
+      <div class="header-actions">
+        <KitButton
+          type="button"
+          @click="addOpen = true"
+        >
+          Add Member
+        </KitButton>
+        <HostLogoutButton />
+      </div>
     </header>
 
     <main class="stage">
@@ -30,6 +41,11 @@
         v-else-if="members.length === 0"
         class="empty"
       >
+        <GooseSticker
+          class="sticker"
+          name="peek"
+          alt=""
+        />
         <p class="kicker">
           Members
         </p>
@@ -37,6 +53,12 @@
         <p class="hint">
           Add someone so they can sign in on this Host and open Chat.
         </p>
+        <KitButton
+          type="button"
+          @click="addOpen = true"
+        >
+          Add Member
+        </KitButton>
       </section>
 
       <ul
@@ -94,86 +116,109 @@
         </li>
       </ul>
 
-      <form
-        class="card"
-        @submit.prevent="add"
+      <p
+        v-if="message && !addOpen"
+        class="flash"
+        :class="{ error: messageError }"
       >
-        <h2>Add a Member</h2>
-        <p class="hint">
-          They sign in with this email or username and can Chat with Bots.
-        </p>
+        {{ message }}
+      </p>
 
-        <label class="field">
-          <span>Display name</span>
-          <input
-            v-model="displayName"
-            type="text"
-            autocomplete="off"
-            required
+      <KitSheet
+        v-model:open="addOpen"
+        title="Add a Member"
+        description="They sign in with this email or username and can Chat with Bots."
+      >
+        <template #media>
+          <GooseSticker
+            name="ok"
+            size="sm"
+            alt=""
+          />
+        </template>
+        <form @submit.prevent="add">
+          <label class="field">
+            <span>Display name</span>
+            <input
+              v-model="displayName"
+              type="text"
+              autocomplete="off"
+              required
+            >
+          </label>
+
+          <label class="field">
+            <span>Email or username</span>
+            <input
+              v-model="login"
+              type="text"
+              autocomplete="off"
+              required
+            >
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <input
+              v-model="password"
+              type="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+            >
+            <span class="field-hint">At least 8 characters</span>
+          </label>
+
+          <label class="field">
+            <span>Confirm password</span>
+            <input
+              v-model="confirm"
+              type="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+            >
+          </label>
+
+          <p
+            v-if="message && addOpen"
+            class="flash"
+            :class="{ error: messageError }"
           >
-        </label>
+            {{ message }}
+          </p>
 
-        <label class="field">
-          <span>Email or username</span>
-          <input
-            v-model="login"
-            type="text"
-            autocomplete="off"
-            required
-          >
-        </label>
-
-        <label class="field">
-          <span>Password</span>
-          <input
-            v-model="password"
-            type="password"
-            autocomplete="new-password"
-            required
-            minlength="8"
-          >
-          <span class="field-hint">At least 8 characters</span>
-        </label>
-
-        <label class="field">
-          <span>Confirm password</span>
-          <input
-            v-model="confirm"
-            type="password"
-            autocomplete="new-password"
-            required
-            minlength="8"
-          >
-        </label>
-
-        <p
-          v-if="message"
-          class="flash"
-          :class="{ error: messageError }"
-        >
-          {{ message }}
-        </p>
-
-        <button
-          type="submit"
-          class="solid"
-          :disabled="adding"
-        >
-          {{ adding ? 'Adding…' : 'Add Member' }}
-        </button>
-      </form>
+          <div class="actions">
+            <KitButton
+              variant="ghost"
+              type="button"
+              @click="addOpen = false"
+            >
+              Cancel
+            </KitButton>
+            <KitButton
+              type="submit"
+              :disabled="adding"
+            >
+              {{ adding ? 'Adding…' : 'Add Member' }}
+            </KitButton>
+          </div>
+        </form>
+      </KitSheet>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Member } from '@dostigus/shared'
+import { GooseLogo, GooseSticker, KitButton, KitSheet } from '@dostigus/ui-kit'
 
 useHead({ title: 'Dostigus · Members' })
 
 const { data, error: loadError, refresh } = await useFetch<{ members: Member[] }>('/api/members')
 const members = computed(() => data.value?.members ?? [])
 
+const addOpen = ref(false)
 const displayName = ref('')
 const login = ref('')
 const password = ref('')
@@ -183,6 +228,13 @@ const busyId = ref('')
 const confirmId = ref('')
 const message = ref('')
 const messageError = ref(false)
+
+watch(addOpen, (isOpen) => {
+  if (isOpen) {
+    message.value = ''
+    messageError.value = false
+  }
+})
 
 async function add() {
   message.value = ''
@@ -207,6 +259,7 @@ async function add() {
     password.value = ''
     confirm.value = ''
     message.value = 'Added.'
+    addOpen.value = false
     await refresh()
   } catch (error) {
     const fetchError = error as { data?: { statusMessage?: string }, statusMessage?: string }
@@ -253,6 +306,19 @@ async function turnOff(id: string) {
   background: var(--surface);
 }
 
+.lead {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
 .back {
   color: var(--accent);
   text-decoration: none;
@@ -289,6 +355,10 @@ async function turnOff(id: string) {
   text-align: center;
 }
 
+.sticker {
+  margin-bottom: 0.35rem;
+}
+
 .kicker {
   margin: 0 0 0.5rem;
   text-transform: uppercase;
@@ -297,18 +367,10 @@ async function turnOff(id: string) {
   color: var(--accent);
 }
 
-h1,
-h2 {
-  margin: 0 0 0.55rem;
-  font-weight: 700;
-}
-
 h1 {
+  margin: 0 0 0.55rem;
   font-size: 1.7rem;
-}
-
-h2 {
-  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .hint,
@@ -316,6 +378,10 @@ h2 {
   margin: 0;
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+.empty .hint {
+  margin: 0 0 1.2rem;
 }
 
 .people {
@@ -359,20 +425,6 @@ h2 {
   gap: 0.45rem;
 }
 
-.card {
-  max-width: 32rem;
-  margin: 0 auto;
-  padding: 1.5rem 1.45rem 1.5rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.card .hint {
-  margin: 0 0 1.1rem;
-  font-size: 0.9rem;
-}
-
 .field {
   display: flex;
   flex-direction: column;
@@ -408,8 +460,14 @@ input:focus {
   color: var(--accent);
 }
 
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.35rem;
+}
+
 .ghost,
-.solid,
 .danger {
   appearance: none;
   border-radius: 999px;
@@ -429,15 +487,7 @@ input:focus {
   color: var(--accent);
 }
 
-.solid {
-  border: 0;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-weight: 600;
-}
-
 .ghost:disabled,
-.solid:disabled,
 .danger:disabled {
   opacity: 0.55;
   cursor: not-allowed;

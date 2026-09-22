@@ -15,3 +15,43 @@ white and muted gray text, soft UI.
 
 Shape: large radii (`--radius`), pill primary buttons, circular icon buttons,
 generous padding. See `apps/web/app/assets/css/main.css`.
+
+The Kit reads these variables. It does not define a second palette. Nunito
+is inherited from the Host.
+
+## Sheet shell
+
+Reka UI `Dialog` is the primitive. The Kit wrappers are:
+
+| Component | Sheet kind | Role |
+|-----------|------------|------|
+| `SheetShell` | `sheet` or `modal` | Frame: overlay, title, description, Close, body |
+| `KitSheet` | drawer | Bottom Sheet |
+| `KitDialog` | modal | Centered Sheet |
+| `KitButton` | — | `solid`, `ghost`, or `icon` |
+
+See [ADR 0013](adr/0013-kit-reka-ui-and-brand.md).
+
+## Brand
+
+Source of truth: `packages/ui-kit/assets/brand/`. The Host serves that
+directory at `/brand/`. `GooseLogo` and `GooseSticker` are the Kit API.
+
+| Use | File |
+|-----|------|
+| App logo | `goose/goose-logo.png` |
+| Banner | `goose/goose-logo-banner.png` |
+| Favicon source | `goose/goose-favicon-full.png` |
+| Favicon 32, `.ico`, apple-touch 180 | `favicon/` (resized from the favicon source) |
+| Stickers | `confused`, `heart`, `notes`, `ok`, `peek`, `point`, `sleep`, `think`, `wave`, `work`, `wow` |
+| Sticker variants | `head`, `logo-full` |
+
+Do not add poses.
+
+Where the Host uses them today:
+
+- Host mark: goose logo (Bots, sign-in, Members)
+- Empty Bots: `wave`
+- Create Bot: `KitDialog` and an `ok` sticker
+- Empty Members: `peek`
+- Add Member: `KitSheet` and an `ok` sticker
