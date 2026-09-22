@@ -322,12 +322,12 @@ async function remove() {
   font-weight: 600;
   font-size: 0.95rem;
   padding: 0.4rem 0.85rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   cursor: default;
 }
 
 .tab.active {
-  background: #2a2a2a;
+  background: var(--surface);
   color: var(--text);
 }
 
@@ -356,14 +356,14 @@ async function remove() {
   border: 0;
   background: transparent;
   padding: 0.45rem;
-  border-radius: 0.85rem;
+  border-radius: var(--radius);
   cursor: pointer;
   display: grid;
   place-items: center;
 }
 
 .shape.selected {
-  outline: 2px solid #3a3a3a;
+  outline: 2px solid var(--line);
   outline-offset: 1px;
 }
 
@@ -483,7 +483,7 @@ select:focus {
 .ghost,
 .danger-btn {
   appearance: none;
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.55rem 0.95rem;
   cursor: pointer;
   font: inherit;

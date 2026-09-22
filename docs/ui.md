@@ -1,23 +1,36 @@
 # Host UI tokens
 
 Dark theme default. Font is **Nunito** (headings and body) via `@nuxt/fonts`.
-These are Dostigus Host tokens: charcoal canvas, coral-orange accent, soft
-white and muted gray text, soft UI.
+These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
+`#212121`, black Chat pane and content cards, firm coral-orange accent
+(`#F25630`), white and muted gray text.
 
 | Token | Value | Use |
 |-------|-------|-----|
-| `--bg` | `#121212` | Host canvas |
-| `--surface` | `#1c1c1c` | Elevated cards, header, composer |
-| `--text` | `#f4f1ec` | Primary copy (soft white) |
-| `--text-muted` | `#9a958c` | Secondary copy |
-| `--accent` | `#ff5c35` | Primary buttons, `+` create |
-| `--line` | `#2a2a2a` | Quiet borders |
+| `--bg` | `#121212` | Sidebar / app chrome canvas |
+| `--bg-chat` | `#000000` | Chat pane background |
+| `--surface` | `#262626` | Elevated strips, inner wells, composer chrome |
+| `--sheet` | `#212121` | Sliding Sheet chrome (`KitSheet` / `KitDialog`) |
+| `--card` | `#000000` | Content cards / page panels on `--bg` |
+| `--text` | `#FFFFFF` | Primary copy |
+| `--text-muted` | `#A4A4A4` | Secondary copy |
+| `--accent` | `#F25630` | Primary actions, `+` create, focus |
+| `--line` | `#333333` | Quiet borders (slightly lighter than `--surface`) |
+| `--radius-card` | `1.75rem` (~28px) | Large card / Sheet corners |
+| `--radius-bubble` | `1.25rem` (~20px) | Soft Chat message bubbles |
+| `--radius` | `0.75rem` (~12px) | Buttons, inputs, inner chips |
 
-Shape: large radii (`--radius`), pill primary buttons, circular icon buttons,
-generous padding. See `apps/web/app/assets/css/main.css`.
+Day-1 coral `#FF5C35` and cream text are retired; accent is `#F25630`. Canvas
+stays deep charcoal `#121212`. Sheet shells use `--sheet` (`#212121`), not
+Chat black. See `apps/web/app/assets/css/main.css`.
 
-The Kit reads these Host variables for chrome. Nunito is inherited from the
-Host.
+Shape: large card radii (`--radius-card`), soft messenger bubbles
+(`--radius-bubble`), tighter control radii (`--radius`), pill Chat composer
+(`border-radius: 9999px`), circular icon buttons, generous padding. The Kit
+reads these Host variables. Nunito is inherited from the Host.
+
+`--bot-accent-01`…`16` are a separate Bot avatar palette — not the Host
+`--accent`. See below.
 
 ## Bot accent palette
 

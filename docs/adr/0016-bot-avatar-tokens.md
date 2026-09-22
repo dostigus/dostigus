@@ -16,10 +16,11 @@ name and Model tier.
 
 Sixteen Bot accent hexes are named design tokens
 (`--bot-accent-01` … `--bot-accent-16`). They live in the Kit and
-[`docs/ui.md`](../ui.md). Host chrome still uses the coral-orange Host
-tokens from [ADR 0013](0013-kit-reka-ui-and-brand.md). Bot avatars and UI
-accents that need this palette consume the tokens — not hardcoded swatches
-only in one component. `avatarColor` must be one of those hexes.
+[`docs/ui.md`](../ui.md). Host chrome still uses the Host tokens from
+[ADR 0013](0013-kit-reka-ui-and-brand.md) (see the palette note there). Bot
+avatars and UI accents that need this palette consume the tokens — not
+hardcoded swatches only in one component. `avatarColor` must be one of
+those hexes.
 
 ### Shapes
 

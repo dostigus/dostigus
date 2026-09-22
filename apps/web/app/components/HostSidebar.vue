@@ -280,7 +280,7 @@ onUnmounted(() => {
   gap: 0.4rem;
   height: 2.15rem;
   padding: 0 0.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--line);
 }
@@ -370,7 +370,7 @@ onUnmounted(() => {
   gap: 0.7rem;
   min-width: 0;
   padding: 0.42rem 0.5rem;
-  border-radius: 0.9rem;
+  border-radius: var(--radius);
   color: inherit;
   text-decoration: none;
 }

@@ -1,15 +1,20 @@
 :root {
   color-scheme: dark;
   --bg: #121212;
-  --surface: #1c1c1c;
-  --line: #2a2a2a;
-  --text: #f4f1ec;
-  --text-muted: #9a958c;
-  --accent: #ff5c35;
-  --accent-dim: #e04e2c;
+  --bg-chat: #000000;
+  --surface: #262626;
+  --sheet: #212121;
+  --card: #000000;
+  --line: #333333;
+  --text: #ffffff;
+  --text-muted: #a4a4a4;
+  --accent: #f25630;
+  --accent-dim: #d94a28;
   --accent-ink: #fff7f3;
-  --radius: 1.35rem;
-  --radius-sm: 1rem;
+  --radius-card: 1.75rem;
+  --radius-bubble: 1.25rem;
+  --radius: 0.75rem;
+  --radius-sm: var(--radius);
 
   /* Bot accent palette — hue order; see ADR 0017 */
   --bot-accent-01: #e47134;
@@ -31,7 +36,6 @@
 
   /* Aliases used by older Host chrome */
   --bg-raised: var(--surface);
-  --bg-chat: var(--bg);
   --ink: var(--text);
   --muted: var(--text-muted);
 }

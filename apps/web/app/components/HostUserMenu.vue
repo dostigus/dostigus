@@ -106,7 +106,7 @@ onUnmounted(() => {
   min-width: 0;
   appearance: none;
   border: 0;
-  border-radius: 0.85rem;
+  border-radius: var(--radius);
   padding: 0.35rem 0.45rem;
   background: transparent;
   color: inherit;
@@ -149,9 +149,9 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 0.1rem;
   padding: 0.35rem;
-  background: var(--surface);
+  background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 0.95rem;
+  border-radius: var(--radius);
   box-shadow: 0 14px 36px rgb(0 0 0 / 38%);
 }
 
@@ -167,7 +167,7 @@ onUnmounted(() => {
   width: 100%;
   text-align: left;
   border: 0;
-  border-radius: 0.65rem;
+  border-radius: var(--radius);
   padding: 0.48rem 0.7rem;
   background: transparent;
   color: var(--text);

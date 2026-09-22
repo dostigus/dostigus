@@ -16,7 +16,7 @@ Chat + Cards + Sheets from the Kit. Default path is self-host
 | [`CONTEXT.md`](CONTEXT.md) | Glossary — keep terms stable |
 | [`docs/SPEC.md`](docs/SPEC.md) | MVP in / out of scope |
 | [`docs/deploy.md`](docs/deploy.md) | Self-host compose, GHCR, Store volume, MCP token |
-| [`docs/ui.md`](docs/ui.md) | Host tokens (Nunito, dark charcoal + coral) |
+| [`docs/ui.md`](docs/ui.md) | Host tokens (Nunito, charcoal `#121212` + `#F25630`) |
 | [`docs/adr/`](docs/adr/) | Architecture decisions |
 | [`AGENTS.md`](AGENTS.md) | Agent rules + `pnpm check` |
 
@@ -34,8 +34,9 @@ The Bot greets and asks what it is for. Messages persist in the Store
 (SQLite). An LLM key is optional (compose env or Host **Settings**) — see
 [`docs/deploy.md`](docs/deploy.md). With a key, Chat may call Cluster MCP
 surface tools in-process (same Store as the Host UI and `/mcp`).
-Host UI is dark by default: **Nunito**, charcoal canvas, coral-orange CTAs,
-goose Brand from the Kit.
+Host UI is dark by default: **Nunito**, deep charcoal canvas (`#121212`), black
+Chat pane, Sheet chrome `#212121`, firm coral-orange CTAs (`#F25630`), goose
+Brand from the Kit.
 See [`docs/ui.md`](docs/ui.md).
 
 The Cluster MCP surface is `/mcp` (`@nuxtjs/mcp-toolkit`). Set

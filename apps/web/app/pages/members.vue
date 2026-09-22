@@ -393,8 +393,8 @@ h1 {
   gap: 1rem;
   padding: 1rem 1.15rem;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border-radius: var(--radius-card);
+  background: var(--card);
 }
 
 .who {
@@ -462,7 +462,7 @@ input:focus {
 .ghost,
 .danger {
   appearance: none;
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.55rem 1rem;
   cursor: pointer;
 }
