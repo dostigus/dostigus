@@ -383,7 +383,7 @@ async function onBotDeleted() {
 .bubble {
   max-width: min(34rem, 86%);
   padding: 0.7rem 0.95rem;
-  border-radius: var(--radius);
+  border-radius: var(--radius-bubble);
   border: 0;
   background: var(--surface);
 }
@@ -471,7 +471,7 @@ async function onBotDeleted() {
   align-items: flex-end;
   padding: 0.3rem 0.35rem 0.3rem 0.3rem;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 9999px;
   background: var(--surface);
 }
 

@@ -17,15 +17,17 @@ These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
 | `--accent` | `#F25630` | Primary actions, `+` create, focus |
 | `--line` | `#333333` | Quiet borders (slightly lighter than `--surface`) |
 | `--radius-card` | `1.75rem` (~28px) | Large card / Sheet corners |
+| `--radius-bubble` | `1.25rem` (~20px) | Soft Chat message bubbles |
 | `--radius` | `0.75rem` (~12px) | Buttons, inputs, inner chips |
 
 Day-1 coral `#FF5C35` and cream text are retired; accent is `#F25630`. Canvas
 stays deep charcoal `#121212`. Sheet shells use `--sheet` (`#212121`), not
 Chat black. See `apps/web/app/assets/css/main.css`.
 
-Shape: large card radii (`--radius-card`), tighter control radii (`--radius`),
-circular icon buttons, generous padding. The Kit reads these Host variables.
-Nunito is inherited from the Host.
+Shape: large card radii (`--radius-card`), soft messenger bubbles
+(`--radius-bubble`), tighter control radii (`--radius`), pill Chat composer
+(`border-radius: 9999px`), circular icon buttons, generous padding. The Kit
+reads these Host variables. Nunito is inherited from the Host.
 
 `--bot-accent-01`…`16` are a separate Bot avatar palette — not the Host
 `--accent`. See below.
