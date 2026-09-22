@@ -1,15 +1,17 @@
 # Host UI tokens
 
 Dark theme default. Font is **Nunito** (headings and body) via `@nuxt/fonts`.
-These are Dostigus Host tokens: charcoal canvas (`#212121`), black cards and
-Chat pane, firm coral-orange accent (`#F25630`), white and muted gray text.
+These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
+`#212121`, black Chat pane and content cards, firm coral-orange accent
+(`#F25630`), white and muted gray text.
 
 | Token | Value | Use |
 |-------|-------|-----|
-| `--bg` | `#212121` | Sidebar / app chrome canvas |
+| `--bg` | `#121212` | Sidebar / app chrome canvas |
 | `--bg-chat` | `#000000` | Chat pane background |
 | `--surface` | `#262626` | Elevated strips, inner wells, composer chrome |
-| `--card` | `#000000` | Cards / major panels on `--bg` |
+| `--sheet` | `#212121` | Sliding Sheet chrome (`KitSheet` / `KitDialog`) |
+| `--card` | `#000000` | Content cards / page panels on `--bg` |
 | `--text` | `#FFFFFF` | Primary copy |
 | `--text-muted` | `#A4A4A4` | Secondary copy |
 | `--accent` | `#F25630` | Primary actions, `+` create, focus |
@@ -17,8 +19,9 @@ Chat pane, firm coral-orange accent (`#F25630`), white and muted gray text.
 | `--radius-card` | `1.75rem` (~28px) | Large card / Sheet corners |
 | `--radius` | `0.75rem` (~12px) | Buttons, inputs, inner chips |
 
-Day-1 Host chrome used `#121212` / `#FF5C35` and cream text; those values are
-retired. See `apps/web/app/assets/css/main.css`.
+Day-1 coral `#FF5C35` and cream text are retired; accent is `#F25630`. Canvas
+stays deep charcoal `#121212`. Sheet shells use `--sheet` (`#212121`), not
+Chat black. See `apps/web/app/assets/css/main.css`.
 
 Shape: large card radii (`--radius-card`), tighter control radii (`--radius`),
 circular icon buttons, generous padding. The Kit reads these Host variables.

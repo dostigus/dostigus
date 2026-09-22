@@ -8,7 +8,7 @@
 The wide-screen Host keeps the messenger shell from
 [ADR 0014](0014-host-messenger-shell.md) and follows Nick’s Grok Bot
 layout grammar. Dostigus tokens stay the ones in
-[`docs/ui.md`](../ui.md): `#212121`, `#F25630`, Nunito, and the Kit on
+[`docs/ui.md`](../ui.md): `#121212`, `#F25630`, Nunito, and the Kit on
 Reka UI. This is that structure, with Dostigus copy and Brand.
 
 - The sidebar is resizable by dragging its edge. Width is remembered in

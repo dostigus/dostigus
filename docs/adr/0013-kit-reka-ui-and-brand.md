@@ -7,7 +7,7 @@
 
 The Kit (`@dostigus/ui-kit`) sits on [Reka UI](https://github.com/unovue/reka-ui)
 (`reka-ui` Vue primitives) and the Host tokens in [`docs/ui.md`](../ui.md):
-`#212121` / `#F25630` / Nunito / card radii. Reka stays headless. Color,
+`#121212` / `#F25630` / Nunito / card radii. Reka stays headless. Color,
 radius, and type come from those tokens. The Host font stays Nunito.
 
 A thin **Sheet shell** (`SheetShell`) wraps Reka `Dialog`. Two styled
@@ -77,8 +77,8 @@ same route, presented by the Sheet shell.
 
 ## Note (palette)
 
-Host chrome tokens moved off Day-1 charcoal `#121212` / coral `#FF5C35`
-(cream text). Current Host tokens live in [`docs/ui.md`](../ui.md):
-canvas `#212121`, Chat `#000000`, cards `#000000`, accent `#F25630`,
-white / `#A4A4A4` text, `--radius-card` ≈ 28px and `--radius` ≈ 12px.
-Bot accents (`--bot-accent-01`…`16`) stay separate from Host `--accent`.
+Host chrome left Day-1 coral `#FF5C35` (cream text). Current Host tokens live
+in [`docs/ui.md`](../ui.md): canvas `#121212`, Sheet chrome `#212121`, Chat
+`#000000`, content cards `#000000`, accent `#F25630`, white / `#A4A4A4` text,
+`--radius-card` ≈ 28px and `--radius` ≈ 12px. Bot accents
+(`--bot-accent-01`…`16`) stay separate from Host `--accent`.

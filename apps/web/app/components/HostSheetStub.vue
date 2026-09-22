@@ -59,7 +59,7 @@ const emit = defineEmits<{
   right: 0;
   bottom: 0;
   z-index: 21;
-  background: var(--card);
+  background: var(--sheet);
   border-top: 1px solid var(--line);
   border-radius: var(--radius-card) var(--radius-card) 0 0;
   min-height: 42dvh;

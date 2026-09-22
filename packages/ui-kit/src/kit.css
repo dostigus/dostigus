@@ -14,7 +14,7 @@
 .kit-dialog,
 .kit-sheet {
   z-index: 21;
-  background: var(--card, #000000);
+  background: var(--sheet, #212121);
   color: var(--text, #ffffff);
   border: 1px solid var(--line, #333333);
   font-family: inherit;
