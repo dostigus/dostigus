@@ -12,7 +12,7 @@
       <BotPicker
         v-if="createOpen"
         :bots="bots"
-        @close="closeCreate"
+        @close="dismissCreate"
         @created="onCreated"
         @open-bot="onOpenBot"
       />
@@ -26,7 +26,7 @@ import type { Bot } from '@dostigus/shared'
 
 const route = useRoute()
 const { open, narrow, close } = useHostNav()
-const { open: createOpen, closeCreate } = useHostCreate()
+const { open: createOpen, closeCreate, dismissCreate } = useHostCreate()
 const { bots, refresh } = await useHostBots()
 
 watch(() => route.fullPath, () => {

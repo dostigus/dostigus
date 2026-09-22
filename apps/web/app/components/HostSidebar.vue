@@ -44,6 +44,7 @@
 
       <nav
         class="list"
+        :class="{ 'list-empty': bots.length === 0 && !pending && !error && !rail }"
         aria-label="Bots"
       >
         <p
@@ -348,6 +349,17 @@ onUnmounted(() => {
   min-height: 0;
   overflow: auto;
   padding: 0.25rem 0.55rem 0.7rem;
+}
+
+.list-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.list-empty .status {
+  margin: 0;
+  text-align: center;
 }
 
 .status {

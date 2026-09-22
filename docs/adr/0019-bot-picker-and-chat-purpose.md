@@ -3,8 +3,10 @@
 - Status: accepted
 - Date: 2026-09-22
 
-Amended the same day: the picker is the whole Chat pane, not a floating
-card, and an empty Bot list is a short line.
+Amended the same day: the picker is the whole Chat pane. A **×** on the
+header returns to the pane that was open before it. The sidebar empty
+line is centered. The main pane, with no Bots, keeps the wave sticker
+and **Create a Bot**.
 
 ## Decision
 
@@ -14,21 +16,24 @@ sticker) is removed. A centered card over the pane is not this picker.
 
 ### Opening the picker
 
-The sidebar `+` replaces the Chat pane with the picker. It is not a route,
-not a right Sheet, and not a dialog. There is no **Close** control. Escape
-dismisses it, as does choosing a Bot in the picker, creating a Bot, or
-choosing a Bot row in the sidebar. There is no group-chat row and no
-keyboard shortcut in this change.
+The sidebar `+` and the main-pane **Create a Bot** replace the Chat pane
+with the picker. The Host remembers that route. **×** on the right of the
+**To:** row, and Escape, return there: the open Chat, or the empty main
+pane. It is not a route, not a right Sheet, and not a dialog. Choosing a
+Bot in the picker, creating a Bot, or choosing a Bot row in the sidebar
+also leaves the picker, without jumping backward. There is no group-chat
+row and no keyboard shortcut in this change.
 
-An empty Bot list is a short muted line in the sidebar and on the main
-pane. No sticker and no Create button there. Creation is the `+` and the
-**Create new Bot** row.
+With no Bots, the sidebar list region centers a short muted line. No
+sticker and no Create button there. The main pane shows the wave sticker,
+short copy, and **Create a Bot** for the Owner.
 
 ### Rows
 
 - A search field filters existing Bots by name. It does not create a Bot
   from the query.
-- **Create new Bot** is an Owner row. A Member does not see it.
+- **Create new Bot** is an Owner row, with a plain **+** in the text
+  color. A Member does not see it.
 - Each existing Bot is a row: flock mark, name, and the latest Chat line
   when there is one.
 

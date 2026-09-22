@@ -19,12 +19,7 @@
       >
         Could not load Bots.
       </p>
-      <p
-        v-else-if="bots.length === 0"
-        class="status"
-      >
-        No Bots yet
-      </p>
+      <HostBotEmpty v-else-if="bots.length === 0" />
       <div
         v-else
         class="pick"

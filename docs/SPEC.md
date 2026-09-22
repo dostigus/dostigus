@@ -63,7 +63,8 @@ What the running Cluster does today:
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
   The Brand goose logo, stickers, and Bot marks live in the Kit. The Host
-  mark uses the goose logo. An empty Bot list is a short line. Add Member opens a Sheet. See
+  mark uses the goose logo. With no Bots, the sidebar centers a short line
+  and the main pane shows the wave sticker and **Create a Bot**. Add Member opens a Sheet. See
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
   is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
   an icon rail. Each row shows an avatar, the Bot name, and the latest
@@ -79,8 +80,10 @@ What the running Cluster does today:
   attachments control and
   shows a send arrow when there is text. On a narrow screen the sidebar
   is a drawer. Sending a line shows it at once, then a pending Bot reply,
-  then the stored reply. An empty Bot list is a short line. The `+` opens
-  the picker as that pane. Creating a Bot opens that Chat. See
+  then the stored reply. With no Bots, the main pane offers **Create a Bot**
+  and the sidebar stays a short centered line. The `+` and that button open
+  the picker as the Chat pane. **×** returns to the pane that was open.
+  Creating a Bot opens that Chat. See
   [ADR 0014](adr/0014-host-messenger-shell.md),
   [ADR 0015](adr/0015-host-desktop-shell.md),
   [ADR 0016](adr/0016-bot-avatar-tokens.md),

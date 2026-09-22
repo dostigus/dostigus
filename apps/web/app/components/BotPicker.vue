@@ -22,6 +22,14 @@
           @keydown.enter.prevent
         >
       </label>
+      <button
+        type="button"
+        class="back"
+        aria-label="Back"
+        @click="dismiss"
+      >
+        ×
+      </button>
     </header>
 
     <div class="body">
@@ -284,17 +292,38 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-.plus {
-  display: grid;
-  place-items: center;
-  width: 2.4rem;
-  height: 2.4rem;
+.back {
+  appearance: none;
   flex: none;
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  border: 0;
   border-radius: 999px;
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+.back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.plus {
+  width: 2.4rem;
+  flex: none;
+  text-align: center;
+  color: var(--text-muted);
   font-size: 1.35rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
 }
 
