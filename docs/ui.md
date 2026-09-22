@@ -198,6 +198,7 @@ and hue-ordered color swatches with a centered last row, plus **Reset**),
 name, Model tier, and delete for the
 Owner. Members see the chosen avatar and may read those fields. Bubbles
 have no author label. The composer stays on screen, over that scroll.
+Its placeholder is «Сообщение для» plus the open Bot’s display name.
 A `+` on the left is
 reserved for attachments and stays disabled. A send arrow in a circle
 appears when the draft has text.

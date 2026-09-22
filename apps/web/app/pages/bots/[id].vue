@@ -139,7 +139,7 @@
             v-model="draft"
             rows="1"
             maxlength="16000"
-            placeholder="Tell this Bot what it is for…"
+            :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
             :disabled="!bot"
             @keydown.enter.exact.prevent="send"
             @focus="listening = true"
