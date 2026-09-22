@@ -1,18 +1,23 @@
 <template>
   <div class="brand">
-    <p class="mark">
-      Dostigus <span aria-hidden="true">🪿</span>
-    </p>
-    <p
-      v-if="sub"
-      class="sub"
-    >
-      {{ sub }}
-    </p>
+    <GooseLogo alt="" />
+    <div>
+      <p class="mark">
+        Dostigus
+      </p>
+      <p
+        v-if="sub"
+        class="sub"
+      >
+        {{ sub }}
+      </p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { GooseLogo } from '@dostigus/ui-kit'
+
 defineProps<{
   sub?: string
 }>()
@@ -20,6 +25,9 @@ defineProps<{
 
 <style scoped>
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
   min-width: 0;
 }
 
@@ -31,7 +39,7 @@ defineProps<{
 }
 
 .sub {
-  margin: 0.2rem 0 0;
+  margin: 0.15rem 0 0;
   color: var(--text-muted);
   font-size: 0.85rem;
 }

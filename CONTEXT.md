@@ -55,6 +55,21 @@ Shared design system / building blocks the Host renders. Bots do not ship
 custom CSS apps.
 _Avoid_: theme, CSS app, per-bot design system.
 
+**Brand**:
+Goose marks and stickers shipped with the Kit. The Host imports them from
+the Kit.
+_Avoid_: theme, mascot pack, logo set.
+
+**Sticker**:
+A goose illustration from the Brand, used in a Sheet, an empty state, or a
+tutorial.
+_Avoid_: emoji, icon (unqualified), meme.
+
+**Sheet shell**:
+The Kit frame that presents a Sheet (drawer or modal) on Reka UI and Host
+tokens. Modal is a Sheet kind.
+_Avoid_: dialog library, modal component.
+
 **Bot**:
 Long-lived persona in a Cluster (Skills, memory scope, MCP access). Talks to
 the user. A Bot is **not** a Module package.
@@ -131,7 +146,7 @@ _Avoid_: public share, invite (unqualified).
 - Builder writes Module packages via Job → Apply. Distinct from any Platform
   git agent. The chat Bot does not write Module packages.
 - Host talks to Bots through the MCP surface and renders Cards and Sheets from
-  the Kit.
+  the Kit. The Sheet shell and Brand stickers live in the Kit.
 - LLM gateway maps Model tiers to providers for every Bot call.
 - A Share link is a narrow public token to one object, not the Cluster.
   Share links and guests are later.

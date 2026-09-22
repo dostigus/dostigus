@@ -1,0 +1,90 @@
+<template>
+  <DialogRoot v-model:open="open">
+    <DialogPortal>
+      <DialogOverlay class="kit-overlay" />
+      <DialogContent
+        :class="kind === 'sheet' ? 'kit-sheet' : 'kit-dialog'"
+        v-bind="contentAttrs"
+        @open-auto-focus="focusField"
+      >
+        <div
+          v-if="kind === 'sheet'"
+          class="kit-handle"
+          aria-hidden="true"
+        />
+        <header class="kit-head">
+          <div>
+            <DialogTitle class="kit-title">
+              {{ title }}
+            </DialogTitle>
+            <DialogDescription
+              v-if="description"
+              class="kit-desc"
+            >
+              {{ description }}
+            </DialogDescription>
+          </div>
+          <DialogClose
+            class="kit-close"
+            aria-label="Close"
+          >
+            Close
+          </DialogClose>
+        </header>
+        <div
+          v-if="$slots.media"
+          class="kit-media"
+        >
+          <slot name="media" />
+        </div>
+        <div class="kit-body">
+          <slot />
+        </div>
+      </DialogContent>
+    </DialogPortal>
+  </DialogRoot>
+</template>
+
+<script setup lang="ts">
+import type { SheetKind } from '@dostigus/shared'
+import {
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+} from 'reka-ui'
+import { computed } from 'vue'
+
+const props = defineProps<{
+  kind: SheetKind
+  title: string
+  description?: string
+}>()
+
+const open = defineModel<boolean>('open', { required: true })
+
+const contentAttrs = computed(() => {
+  if (props.description) {
+    return {}
+  }
+  return { 'aria-describedby': undefined }
+})
+
+function focusField(event: Event) {
+  const target = event.target
+  if (!(target instanceof HTMLElement)) {
+    return
+  }
+  const field = target.querySelector('input, textarea, select')
+  if (!(field instanceof HTMLElement)) {
+    return
+  }
+  event.preventDefault()
+  field.focus()
+}
+</script>
+
+<style src="../kit.css"></style>

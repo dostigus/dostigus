@@ -5,8 +5,9 @@
 1. Read [`docs/SPEC.md`](docs/SPEC.md) and the ADRs in [`docs/adr/`](docs/adr/).
 2. Use glossary terms from [`CONTEXT.md`](CONTEXT.md) only.
    **Dostigus, Platform, Cluster, Owner, Member, Host, Chat, Card, Sheet, Kit,
-   Bot, Orchestrator, Builder, Skill, Manifest, Module package, Store, MCP
-   surface, Job, Apply, LLM gateway, Model tier, Household, Share link.**
+   Brand, Sticker, Sheet shell, Bot, Orchestrator, Builder, Skill, Manifest,
+   Module package, Store, MCP surface, Job, Apply, LLM gateway, Model tier,
+   Household, Share link.**
    Prefer **Host** (Host shell is a synonym). Prefer **MCP surface** (MCP
    contract is its interface definition). A Bot is not a Module package. Avoid
    bare “cloud agent” — use Builder. Do not invent synonyms. All repo docs are

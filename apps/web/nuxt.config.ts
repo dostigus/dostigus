@@ -1,4 +1,8 @@
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
+import { gooseFavicon } from '@dostigus/ui-kit/brand'
+
+const brandDir = fileURLToPath(new URL('../../packages/ui-kit/assets/brand', import.meta.url))
 
 export default defineNuxtConfig({
   telemetry: false,
@@ -7,6 +11,9 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
   css: ['~/assets/css/main.css'],
+  build: {
+    transpile: ['@dostigus/ui-kit'],
+  },
   modules: ['@nuxt/fonts', '@nuxtjs/mcp-toolkit', 'nuxt-auth-utils'],
   mcp: {
     name: 'Dostigus',
@@ -40,9 +47,21 @@ export default defineNuxtConfig({
           content: 'Dostigus Host — Bots and Chat.',
         },
       ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: gooseFavicon.ico },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: gooseFavicon.png32 },
+        { rel: 'icon', type: 'image/png', sizes: '620x620', href: gooseFavicon.source },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: gooseFavicon.appleTouch },
+      ],
     },
   },
   nitro: {
+    publicAssets: [
+      {
+        dir: brandDir,
+        baseURL: '/brand',
+      },
+    ],
     prerender: {
       crawlLinks: false,
     },

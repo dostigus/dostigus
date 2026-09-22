@@ -13,7 +13,7 @@ Settled now, even if this repo only scaffolds them:
 |------|--------|
 | Platform git | Git holds the Dostigus monorepo only. See [ADR 0001](adr/0001-platform-git-vs-in-cluster-bot-packages.md). |
 | In-cluster packages | Cluster Store holds Manifests, Module packages, data. Export/import between Clusters. |
-| Host | One app: Chat + Cards + Sheets from the Kit. See [ADR 0002](adr/0002-host-ui-kit-and-sheets.md). |
+| Host | One app: Chat + Cards + Sheets from the Kit. Sheet shell on Reka UI, plus Brand. See [ADR 0002](adr/0002-host-ui-kit-and-sheets.md) and [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). |
 | MCP surface | Store and UI go through the same tools. See [ADR 0003](adr/0003-mcp-as-bot-store-contract.md). |
 | LLM gateway | User keys; Model tiers `cheap` \| `strong` \| `code` (plus `toy`). See [ADR 0004](adr/0004-llm-gateway-tiers.md). |
 | Self-host first | `docker compose up` is the intended path. See [ADR 0005](adr/0005-self-host-first.md). |
@@ -52,7 +52,11 @@ What the running Cluster does today:
   delete, Members, or Settings. Turning off sign-in keeps their name on
   Chat. Logged-out visitors cannot open those surfaces. Host font is
   Nunito; dark charcoal + coral-orange tokens
-  ([`docs/ui.md`](ui.md)).
+  ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
+  `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
+  Brand goose marks and stickers live in the Kit. The Host mark uses the
+  goose logo. Empty Bots shows a sticker. Add Member opens a Sheet. See
+  [ADR 0013](adr/0013-kit-reka-ui-and-brand.md).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
   `/api/members` list/create and `/api/members/:id/disable`,
   `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured
