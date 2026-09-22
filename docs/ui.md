@@ -42,11 +42,12 @@ The composer is the field itself (`--composer` fill, not global
 (`1.15rem`), so the block lines up with Chat bubbles. The side margins
 are the Chat canvas (`--bg-chat`); only the row paints `--composer`,
 so the corners do not pick up a second fill. The field overlays the
-Chat pane. Below the header, that pane is one scroll, so messages pass
-behind the field instead of stopping in a box above it. The gap under
-the row, including the safe area, stays unpainted. End padding on the
-thread matches the overlay, and Chat opens at the bottom so the latest
-line is in view. A `1px` edge,
+Chat pane. Below the header, that pane is one scroll, so messages can
+pass behind the field instead of stopping in a box above it. The gap
+under the row, including the safe area, is Chat canvas (`--bg-chat`)
+and covers the thread, so lines do not show in that strip. End padding
+on the thread matches the overlay, and Chat opens at the bottom so the
+latest line sits above the field. A `1px` edge,
 `color-mix(in srgb, var(--text) 8%, var(--composer))`, stays a step
 lighter than that fill. One line keeps the full pill radius. Two or
 more lines use `--radius-card` (~28px).

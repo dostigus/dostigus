@@ -753,6 +753,7 @@ async function onBotDeleted() {
 }
 
 .composer {
+  --composer-gap: calc(0.85rem + env(safe-area-inset-bottom, 0px));
   position: absolute;
   z-index: 2;
   left: 0;
@@ -761,11 +762,23 @@ async function onBotDeleted() {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  /* Inset matches the thread. Transparent so the side margins and the
-     screen-edge gap stay Chat canvas — only the row is painted. */
-  padding: 0.35rem var(--thread-inset) calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  /* Inset matches the thread. The form itself stays clear so the side
+     margins beside the row are Chat canvas with nothing painted there. */
+  padding: 0.35rem var(--thread-inset) var(--composer-gap);
   background: transparent;
   pointer-events: none;
+}
+
+/* Screen-edge gap is chrome. It covers the thread so a line can pass
+   behind the field and still not paint into this strip. */
+.composer::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--composer-gap);
+  background: var(--bg-chat);
 }
 
 .composer-row,
