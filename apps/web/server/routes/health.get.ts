@@ -1,3 +1,3 @@
 export default defineEventHandler(() => {
-  return { ok: true }
+  return healthBody()
 })

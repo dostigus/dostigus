@@ -1,9 +1,10 @@
 import process from 'node:process'
 
 /**
- * Local Host preview entry. Signs in the preview Owner, ensures one Bot,
- * and opens that Chat. Not a domain Bot. Answers 404 unless `nuxt dev`
- * is running with `DOSTIGUS_PREVIEW_SEED=1`.
+ * Local Host preview entry. GET signs in the preview Owner, ensures the
+ * stable preview Bot, and opens that Chat. `?tall=1` fills a tall thread
+ * once. Not a domain Bot. Answers 404 unless `nuxt dev` is running with
+ * `DOSTIGUS_PREVIEW_SEED=1`.
  */
 export default defineEventHandler(async (event) => {
   if (!previewSeedAllowed({
@@ -14,14 +15,19 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const seeded = await ensurePreviewCluster(useStore(), hashPassword, verifyPassword)
+    const seeded = await ensurePreviewCluster(
+      useStore(),
+      hashPassword,
+      verifyPassword,
+      { tall: previewTallRequested(getQuery(event).tall) },
+    )
     await startOwnerSession(event, seeded.user)
     return sendRedirect(event, `/bots/${seeded.botId}`, 302)
   } catch (error) {
     if (error instanceof OwnerAuthError && error.statusCode === 401) {
       throw createError({
         statusCode: 409,
-        statusMessage: 'This Store already has an Owner. Preview seed signs in only as username preview. Use a fresh DATABASE_URL or sign in at /login.',
+        statusMessage: PREVIEW_SEED_OWNER_CONFLICT,
       })
     }
     throwOwnerAuthError(error)

@@ -63,17 +63,37 @@ pnpm preview:host
 
 That starts `nuxt dev` with `DOSTIGUS_PREVIEW_SEED=1`. Then open
 **http://localhost:3000/preview-seed** (use `localhost`, not `127.0.0.1`).
-The route creates the preview Owner when the Store is empty, signs that
-Owner in, ensures one Bot (**New Bot**, with its greeting), and redirects
-to that Chat. A later visit reuses the same Owner and the newest Bot.
+The route is **GET** and **HEAD**.
 
-Preview Owner: username `preview`, password `preview-owner`. The route
-answers 404 unless this is `nuxt dev` and `DOSTIGUS_PREVIEW_SEED=1`. A
+**GET** creates the preview Owner when the Store is empty, signs that
+Owner in, ensures the stable preview Bot (**New Bot**, the oldest Bot
+with that name, with its greeting), and redirects to that Chat. A later
+visit reuses the same Owner and that Bot. A newer Bot in the Store does
+not change the redirect.
+
+For scroll and overlay screenshots, open
+**http://localhost:3000/preview-seed?tall=1**. That GET adds a tall thread
+of preview Chat lines on the stable Bot once. Another visit with `?tall=1`
+does not append again.
+
+**HEAD** (`curl -I`) is answered on `/preview-seed` and on `/health`. It
+does not sign in, create the Owner, create a Bot, or insert Chat lines.
+
+- `/health`: **200**, `content-type: application/json`. The GET body is `{ ok: true }`.
+- `/preview-seed` when this is not `nuxt dev`, or `DOSTIGUS_PREVIEW_SEED` is not `1`: **404**.
+- `/preview-seed` when the Store Owner is not `preview`: **409**.
+- `/preview-seed` when the gate is open and the stable Bot does not exist yet: **204** (GET would create it).
+- `/preview-seed` when the gate is open and the stable Bot exists: **302** to `/bots/<id>`, with no session cookie.
+
+Preview Owner: username `preview`, password `preview-owner`. A
 production Host stays closed. If the Store already has a different Owner,
-the route returns 409 — point `DATABASE_URL` at a fresh file (for example
+GET and HEAD return 409 — point `DATABASE_URL` at a fresh file (for example
 `file:.data/preview.sqlite`) or sign in at `/login`. This is local preview
 tooling. It does not add a domain Bot to the Cluster
 ([SPEC](docs/SPEC.md): no seed/demo domain Bot).
+
+In `nuxt dev`, hide `nuxt-devtools-frame` before hit-testing the Chat
+bottom. That frame sits on the composer.
 
 MCP surface
 is `/mcp` — set `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`) to enable

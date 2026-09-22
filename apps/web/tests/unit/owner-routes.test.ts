@@ -61,12 +61,30 @@ it('keeps Bot writes, Settings, and Members with the Owner', () => {
   }
 })
 
+it('answers HEAD /health with the GET content type and no session', () => {
+  const src = readFileSync(
+    join(import.meta.dirname, '../../server/routes/health.head.ts'),
+    'utf8',
+  )
+  expect(src).toContain('setResponseStatus(event, 200)')
+  expect(src).toContain('content-type')
+  expect(src).toContain('application/json')
+  expect(src).not.toContain('requireUserSession')
+  expect(src).not.toContain('useStore')
+  const getSrc = readFileSync(
+    join(import.meta.dirname, '../../server/routes/health.get.ts'),
+    'utf8',
+  )
+  expect(getSrc).toContain('healthBody')
+})
+
 it('keeps auth status, register, login, and health public', () => {
   const publicFiles = [
     join(apiRoot, 'auth/status.get.ts'),
     join(apiRoot, 'auth/register.post.ts'),
     join(apiRoot, 'auth/login.post.ts'),
     join(import.meta.dirname, '../../server/routes/health.get.ts'),
+    join(import.meta.dirname, '../../server/routes/health.head.ts'),
   ]
   for (const file of publicFiles) {
     const src = readFileSync(file, 'utf8')
