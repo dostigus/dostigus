@@ -8,7 +8,10 @@ Owner. See [ADR 0019](0019-bot-picker-and-chat-purpose.md).
 
 Household **Invites** (a one-shot link the Owner copies) are
 [ADR 0023](0023-household-member-invites.md). Manual Add Member in this
-ADR stays.
+ADR stays. Bot visibility and Threads are
+[ADR 0024](0024-threads-and-bot-visibility.md). This slice still has one
+Chat timeline per Bot, and only the Owner creates or deletes a Bot. An
+Invite does not change Bot visibility.
 
 ## Decision
 
@@ -75,7 +78,9 @@ those writes may leave `personId` empty. The HTTP MCP surface is unchanged.
   banner. It does not return the key or the Settings payload.
 - Member sessions that are missing or turned off fail the next Host API
   call. The Host then sends them to sign in.
-- Out of this slice: person-to-person Chat, Share link, QR guests, SMTP
+- Out of this slice: person Threads and Bot visibility
+  ([ADR 0024](0024-threads-and-bot-visibility.md); the model is accepted,
+  this slice does not build them), Share link, QR guests, SMTP
   delivery of an Invite ([ADR 0023](0023-household-member-invites.md)),
   OAuth, passkeys, email verify, password reset, federation, Telegram,
   and any role besides Owner and Member.
