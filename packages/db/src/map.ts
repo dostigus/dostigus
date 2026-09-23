@@ -1,8 +1,9 @@
-import type { Bot, BotAccentHex, BotAvatarShape, Invite, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, BotVisibility, Invite, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
 import {
   chatPartsForRole,
   DEFAULT_AVATAR_COLOR,
   DEFAULT_MODEL_TIER,
+  isBotVisibility,
   isModelTier,
   migrateBotAvatarShape,
   normalizeBotAccentHex,
@@ -19,6 +20,8 @@ export type BotRecord = {
   skills_json: string
   modules_json: string
   created_at: number
+  visibility: string
+  created_by: string | null
 }
 
 export type MessageRecord = {
@@ -29,6 +32,7 @@ export type MessageRecord = {
   created_at: number
   person_id: string | null
   parts_json: string
+  thread_id: string | null
 }
 
 export type MemberRecord = {
@@ -65,11 +69,17 @@ export function avatarColorFromRow(value: string): BotAccentHex {
   return normalizeBotAccentHex(value) ?? DEFAULT_AVATAR_COLOR
 }
 
+export function visibilityFromRow(value: string | null | undefined): BotVisibility {
+  return value && isBotVisibility(value) ? value : 'shared'
+}
+
 export function toBot(row: BotRecord): Bot {
   return {
     id: row.id,
     name: row.name,
     createdAt: new Date(row.created_at).toISOString(),
+    visibility: visibilityFromRow(row.visibility),
+    createdBy: row.created_by ?? null,
     manifest: {
       name: row.name,
       modelTier: modelTierFromRow(row.model_tier),

@@ -1,15 +1,18 @@
-import type { Bot, BotAccentHex, BotAvatarShape, BotLastMessage, BotListItem, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, BotLastMessage, BotListItem, BotViewer, BotVisibility, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
 import type { BotRecord, MessageRecord } from './map'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
 import {
   botGreetingContent,
+  botThreadPersonId,
+  canSeeBot,
   DEFAULT_AVATAR_COLOR,
   DEFAULT_AVATAR_SHAPE,
   DEFAULT_BOT_NAME,
   DEFAULT_MODEL_TIER,
   emptyLlmGatewayStored,
   isBotAvatarShape,
+  isBotVisibility,
   isModelTier,
   MODEL_TIERS,
   normalizeBotAccentHex,
@@ -136,9 +139,11 @@ function normalizeContent(content: string | undefined): string {
   return trimmed
 }
 
+const BOT_SELECT = `id, name, model_tier, avatar_shape, avatar_color, label, description, skills_json, modules_json, created_at, visibility, created_by`
+
 function selectBot(store: OpenedStore, id: string): BotRecord | undefined {
   return store.sqlite.prepare(`
-    SELECT id, name, model_tier, avatar_shape, avatar_color, label, description, skills_json, modules_json, created_at
+    SELECT ${BOT_SELECT}
     FROM bots
     WHERE id = ?
   `).get(id) as BotRecord | undefined
@@ -159,19 +164,13 @@ function lastMessageFromRow(row: BotListRecord): BotLastMessage | null {
   }
 }
 
-export function listBots(store: OpenedStore): BotListItem[] {
+export function listBots(store: OpenedStore, viewer?: BotViewer): BotListItem[] {
+  if (viewer) {
+    return listBotsForViewer(store, viewer)
+  }
   const rows = store.sqlite.prepare(`
     SELECT
-      id,
-      name,
-      model_tier,
-      avatar_shape,
-      avatar_color,
-      label,
-      description,
-      skills_json,
-      modules_json,
-      created_at,
+      ${BOT_SELECT},
       (
         SELECT content
         FROM messages
@@ -195,6 +194,43 @@ export function listBots(store: OpenedStore): BotListItem[] {
   }))
 }
 
+/** Sidebar preview is the bot-thread this person would open, not another person's lines. */
+function listBotsForViewer(store: OpenedStore, viewer: BotViewer): BotListItem[] {
+  const rows = store.sqlite.prepare(`
+    SELECT ${BOT_SELECT}
+    FROM bots
+    WHERE ? = 'owner'
+      OR visibility = 'shared'
+      OR created_by = ?
+    ORDER BY created_at DESC, rowid DESC
+  `).all(viewer.role, viewer.id) as BotRecord[]
+  return rows.map((row) => {
+    const bot = toBot(row)
+    const thread = findBotThread(store, bot.id, botThreadPersonId(bot, viewer))
+    return {
+      ...bot,
+      lastMessage: thread ? lastMessageOnThread(store, thread.id) : null,
+    }
+  })
+}
+
+function lastMessageOnThread(store: OpenedStore, threadId: string): BotLastMessage | null {
+  const row = store.sqlite.prepare(`
+    SELECT content, created_at
+    FROM messages
+    WHERE thread_id = ?
+    ORDER BY created_at DESC, rowid DESC
+    LIMIT 1
+  `).get(threadId) as { content: string, created_at: number } | undefined
+  if (!row) {
+    return null
+  }
+  return {
+    content: chatPreview(row.content),
+    createdAt: new Date(row.created_at).toISOString(),
+  }
+}
+
 export function getBot(store: OpenedStore, id: string): Bot | undefined {
   const row = selectBot(store, id)
   return row ? toBot(row) : undefined
@@ -208,6 +244,120 @@ export function requireBot(store: OpenedStore, id: string): Bot {
   return bot
 }
 
+function clusterOwnerId(store: OpenedStore): string | null {
+  const row = store.sqlite.prepare(`
+    SELECT id FROM owners ORDER BY created_at ASC, id ASC LIMIT 1
+  `).get() as { id: string } | undefined
+  return row?.id ?? null
+}
+
+type BotThreadRef = { id: string }
+
+function findBotThread(store: OpenedStore, botId: string, personId: string): BotThreadRef | undefined {
+  return store.sqlite.prepare(`
+    SELECT t.id AS id
+    FROM threads t
+    INNER JOIN thread_participants person
+      ON person.thread_id = t.id AND person.kind = 'person' AND person.ref_id = ?
+    INNER JOIN thread_participants bot
+      ON bot.thread_id = t.id AND bot.kind = 'bot' AND bot.ref_id = ?
+    WHERE t.kind = 'bot'
+    LIMIT 1
+  `).get(personId, botId) as BotThreadRef | undefined
+}
+
+/**
+ * One bot-thread per person and Bot. The id matches the milestone 2 cutover.
+ * A private Bot has only the creator's bot-thread, whoever opens it.
+ */
+function ensureBotThread(store: OpenedStore, botId: string, personId: string): BotThreadRef {
+  const bot = requireBot(store, botId)
+  const person = bot.visibility === 'private' && bot.createdBy ? bot.createdBy : personId
+  const existing = findBotThread(store, botId, person)
+  if (existing) {
+    return existing
+  }
+  const id = `bt:${botId}:${person}`
+  try {
+    store.sqlite.prepare(`
+      INSERT INTO threads (id, kind, bot_id, created_at) VALUES (?, 'bot', ?, ?)
+    `).run(id, botId, nowMs())
+  } catch (error) {
+    const again = findBotThread(store, botId, person)
+    if (again) {
+      return again
+    }
+    const byId = store.sqlite.prepare('SELECT id FROM threads WHERE id = ?').get(id) as BotThreadRef | undefined
+    if (!byId) {
+      throw error
+    }
+  }
+  store.sqlite.prepare(`
+    INSERT OR IGNORE INTO thread_participants (thread_id, kind, ref_id) VALUES (?, 'person', ?)
+  `).run(id, person)
+  store.sqlite.prepare(`
+    INSERT OR IGNORE INTO thread_participants (thread_id, kind, ref_id) VALUES (?, 'bot', ?)
+  `).run(id, botId)
+  return { id }
+}
+
+/** Greeting thread when the Store has no Owner and no creator yet. */
+function soleBotThreadId(store: OpenedStore, botId: string): string {
+  const rows = store.sqlite.prepare(`
+    SELECT id FROM threads
+    WHERE kind = 'bot' AND bot_id = ?
+    ORDER BY created_at ASC, id ASC
+  `).all(botId) as BotThreadRef[]
+  const first = rows[0]
+  if (first) {
+    return first.id
+  }
+  const id = `bt:${botId}:_`
+  store.sqlite.prepare(`
+    INSERT INTO threads (id, kind, bot_id, created_at) VALUES (?, 'bot', ?, ?)
+  `).run(id, botId, nowMs())
+  store.sqlite.prepare(`
+    INSERT OR IGNORE INTO thread_participants (thread_id, kind, ref_id) VALUES (?, 'bot', ?)
+  `).run(id, botId)
+  return id
+}
+
+function resolveMessageThreadId(
+  store: OpenedStore,
+  bot: Bot,
+  input: {
+    role: MessageRole
+    personId: string | null
+    viewer?: BotViewer
+    threadId?: string
+  },
+): string {
+  if (input.threadId) {
+    const row = store.sqlite.prepare(`
+      SELECT id FROM threads
+      WHERE id = ? AND kind = 'bot' AND bot_id = ?
+    `).get(input.threadId, bot.id) as BotThreadRef | undefined
+    if (!row) {
+      throw new StoreError('Thread not found', 404)
+    }
+    return row.id
+  }
+  if (input.viewer) {
+    return ensureBotThread(store, bot.id, botThreadPersonId(bot, input.viewer)).id
+  }
+  if (bot.visibility === 'private' && bot.createdBy) {
+    return ensureBotThread(store, bot.id, bot.createdBy).id
+  }
+  if (input.role === 'user' && input.personId) {
+    return ensureBotThread(store, bot.id, input.personId).id
+  }
+  const ownerId = clusterOwnerId(store)
+  if (ownerId) {
+    return ensureBotThread(store, bot.id, ownerId).id
+  }
+  return soleBotThreadId(store, bot.id)
+}
+
 function insertMessageRow(
   store: OpenedStore,
   input: {
@@ -217,6 +367,7 @@ function insertMessageRow(
     personId?: string | null
     /** Assistant Kit parts. User and system lines store `[]`. See ADR 0025. */
     parts?: unknown
+    threadId: string
   },
 ): Message {
   const personId = input.personId ?? null
@@ -229,11 +380,12 @@ function insertMessageRow(
     created_at: nowMs(),
     person_id: personId,
     parts_json: partsJson,
+    thread_id: input.threadId,
   }
   store.sqlite.prepare(`
-    INSERT INTO messages (id, bot_id, role, content, created_at, person_id, parts_json)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(row.id, row.bot_id, row.role, row.content, row.created_at, personId, partsJson)
+    INSERT INTO messages (id, bot_id, role, content, created_at, person_id, parts_json, thread_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(row.id, row.bot_id, row.role, row.content, row.created_at, personId, partsJson, input.threadId)
   return toMessage(row)
 }
 
@@ -246,26 +398,70 @@ export function insertMessage(
     personId?: string | null
     /** Assistant Kit parts. Ignored for user and system. See ADR 0025. */
     parts?: unknown
+    /** Places the line on this person's open bot-thread. */
+    viewer?: BotViewer
+    threadId?: string
   },
 ): Message {
-  requireBot(store, input.botId)
+  const bot = requireBot(store, input.botId)
+  if (input.viewer && !canSeeBot(bot, input.viewer)) {
+    throw new StoreError('Bot not found', 404)
+  }
+  const threadId = resolveMessageThreadId(store, bot, {
+    role: input.role,
+    personId: input.personId ?? null,
+    viewer: input.viewer,
+    threadId: input.threadId,
+  })
   return insertMessageRow(store, {
     botId: input.botId,
     role: input.role,
     content: normalizeContent(input.content),
     personId: input.personId ?? null,
     parts: input.parts,
+    threadId,
   })
 }
+
+const MESSAGE_SELECT = `id, bot_id, role, content, created_at, person_id, parts_json, thread_id`
 
 export function listMessages(store: OpenedStore, botId: string): Message[] {
   requireBot(store, botId)
   const rows = store.sqlite.prepare(`
-    SELECT id, bot_id, role, content, created_at, person_id, parts_json
+    SELECT ${MESSAGE_SELECT}
     FROM messages
     WHERE bot_id = ?
-    ORDER BY created_at ASC
+    ORDER BY created_at ASC, rowid ASC
   `).all(botId) as MessageRecord[]
+  return rows.map(toMessage)
+}
+
+/**
+ * Lines on one bot-thread. Ensures the greeting on that thread first.
+ * Omit `personId` for the Owner thread, or the only thread when no Owner exists.
+ */
+export function listBotThreadMessages(
+  store: OpenedStore,
+  botId: string,
+  personId?: string | null,
+): Message[] {
+  const greeting = ensureGreeting(store, botId, personId)
+  const row = store.sqlite.prepare(`
+    SELECT thread_id FROM messages WHERE id = ?
+  `).get(greeting.id) as { thread_id: string | null } | undefined
+  if (!row?.thread_id) {
+    return []
+  }
+  return listThreadMessages(store, row.thread_id)
+}
+
+export function listThreadMessages(store: OpenedStore, threadId: string): Message[] {
+  const rows = store.sqlite.prepare(`
+    SELECT ${MESSAGE_SELECT}
+    FROM messages
+    WHERE thread_id = ?
+    ORDER BY created_at ASC, rowid ASC
+  `).all(threadId) as MessageRecord[]
   return rows.map(toMessage)
 }
 
@@ -289,13 +485,22 @@ type MessageSearchRow = {
 }
 
 /** Chat lines whose text contains the query. `%` and `_` stay literal. */
-export function searchMessages(store: OpenedStore, query: string, limit = SEARCH_LIMIT): MessageSearchHit[] {
+export function searchMessages(
+  store: OpenedStore,
+  query: string,
+  limit = SEARCH_LIMIT,
+  viewer?: BotViewer,
+): MessageSearchHit[] {
   const needle = query.trim().slice(0, SEARCH_QUERY_MAX)
   if (!needle) {
     return []
   }
   const escaped = needle.replace(/[\\%_]/g, (ch) => `\\${ch}`)
   const cap = Math.min(SEARCH_LIMIT, Math.max(1, limit))
+  const threadClause = viewer ? viewerThreadClause(store, viewer) : null
+  if (viewer && !threadClause) {
+    return []
+  }
   const rows = store.sqlite.prepare(`
     SELECT
       messages.id AS id,
@@ -306,9 +511,10 @@ export function searchMessages(store: OpenedStore, query: string, limit = SEARCH
     FROM messages
     JOIN bots ON bots.id = messages.bot_id
     WHERE messages.content LIKE ? ESCAPE '\\'
+      ${threadClause ? `AND messages.thread_id IN (${threadClause.placeholders})` : ''}
     ORDER BY messages.created_at DESC, messages.rowid DESC
     LIMIT ?
-  `).all(`%${escaped}%`, cap) as MessageSearchRow[]
+  `).all(`%${escaped}%`, ...(threadClause?.ids ?? []), cap) as MessageSearchRow[]
   return rows.map((row) => ({
     id: row.id,
     botId: row.bot_id,
@@ -318,9 +524,48 @@ export function searchMessages(store: OpenedStore, query: string, limit = SEARCH
   }))
 }
 
-/** Insert the first assistant greeting when the Chat has no messages. */
-export function ensureGreeting(store: OpenedStore, botId: string): Message {
+/** Thread ids this person would open. Empty when none of those bot-threads exist yet. */
+function viewerThreadClause(
+  store: OpenedStore,
+  viewer: BotViewer,
+): { placeholders: string, ids: string[] } | null {
+  const ids: string[] = []
+  for (const bot of listBots(store, viewer)) {
+    const thread = findBotThread(store, bot.id, botThreadPersonId(bot, viewer))
+    if (thread) {
+      ids.push(thread.id)
+    }
+  }
+  if (ids.length === 0) {
+    return null
+  }
+  return {
+    placeholders: ids.map(() => '?').join(', '),
+    ids,
+  }
+}
+
+/**
+ * Insert the assistant greeting when that bot-thread has no lines.
+ * `personId` is the person on the bot-thread. Omit it for the Owner, or
+ * the only thread when the Store has no Owner yet.
+ */
+export function ensureGreeting(store: OpenedStore, botId: string, personId?: string | null): Message {
   const bot = requireBot(store, botId)
+  const person = personId || clusterOwnerId(store)
+  if (person) {
+    const thread = ensureBotThread(store, botId, person)
+    const existing = listThreadMessages(store, thread.id)
+    if (existing.length > 0) {
+      return existing[0]!
+    }
+    return insertMessageRow(store, {
+      botId,
+      role: 'assistant',
+      content: botGreetingContent(bot.name),
+      threadId: thread.id,
+    })
+  }
   const existing = listMessages(store, botId)
   if (existing.length > 0) {
     return existing[0]!
@@ -329,7 +574,26 @@ export function ensureGreeting(store: OpenedStore, botId: string): Message {
     botId,
     role: 'assistant',
     content: botGreetingContent(bot.name),
+    threadId: soleBotThreadId(store, botId),
   })
+}
+
+function normalizeVisibility(value: string | undefined): BotVisibility {
+  if (value == null || value === '') {
+    return 'shared'
+  }
+  if (!isBotVisibility(value)) {
+    throw new StoreError('Unknown Bot visibility', 400)
+  }
+  return value
+}
+
+function resolveCreatedBy(store: OpenedStore, explicit: string | undefined): string | null {
+  const trimmed = explicit?.trim()
+  if (trimmed) {
+    return trimmed
+  }
+  return clusterOwnerId(store)
 }
 
 export function createBot(
@@ -343,6 +607,10 @@ export function createBot(
     avatarColor?: string
     label?: string
     description?: string
+    /** Owner-created Bots default to shared. */
+    visibility?: string
+    /** Owner or Member id. Defaults to the Cluster Owner when one exists. */
+    createdBy?: string
   } = {},
 ): { bot: Bot, greeting: Message } {
   const name = normalizeName(input.name)
@@ -351,6 +619,8 @@ export function createBot(
   const avatarColor = normalizeAvatarColor(input.avatarColor)
   const label = normalizeCapped(input.label, BOT_LABEL_MAX, 'Label')
   const description = normalizeCapped(input.description, BOT_DESCRIPTION_MAX, 'Description')
+  const visibility = normalizeVisibility(input.visibility)
+  const createdBy = resolveCreatedBy(store, input.createdBy)
   const createdAt = nowMs()
   const id = resolveBotId(input.id)
   if (input.id !== undefined && selectBot(store, id)) {
@@ -358,17 +628,38 @@ export function createBot(
   }
 
   store.sqlite.prepare(`
-    INSERT INTO bots (id, name, model_tier, avatar_shape, avatar_color, label, description, skills_json, modules_json, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, '[]', '[]', ?)
-  `).run(id, name, modelTier, avatarShape, avatarColor, label, description, createdAt)
+    INSERT INTO bots (
+      id, name, model_tier, avatar_shape, avatar_color, label, description,
+      skills_json, modules_json, created_at, visibility, created_by
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, '[]', '[]', ?, ?, ?)
+  `).run(id, name, modelTier, avatarShape, avatarColor, label, description, createdAt, visibility, createdBy)
 
+  const threadId = createdBy
+    ? ensureBotThread(store, id, createdBy).id
+    : soleBotThreadId(store, id)
   const greeting = insertMessageRow(store, {
     botId: id,
     role: 'assistant',
     content: botGreetingContent(name),
+    threadId,
   })
 
   return { bot: requireBot(store, id), greeting }
+}
+
+/** Flip visibility. Does not change created_by. */
+export function setBotVisibility(store: OpenedStore, id: string, visibility: string): Bot {
+  if (!isBotVisibility(visibility)) {
+    throw new StoreError('Unknown Bot visibility', 400)
+  }
+  requireBot(store, id)
+  store.sqlite.prepare(`
+    UPDATE bots
+    SET visibility = ?
+    WHERE id = ?
+  `).run(visibility, id)
+  return requireBot(store, id)
 }
 
 export function updateBot(

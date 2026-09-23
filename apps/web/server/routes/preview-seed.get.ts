@@ -9,7 +9,11 @@ import { previewChatLocation } from '../../app/utils/preview-hold'
  * assistant line with a Kitchen button once and fills empty Kitchen tables.
  * `?hold=1` stays on the Chat URL so the next quiet reply waits for a
  * screenshot. `?members=1`
- * opens Members instead of Chat. HEAD ignores those queries. Not a domain Bot.
+ * opens Members instead of Chat. `?threads=1` seeds a preview Member,
+ * their private Bot, and separate Owner and Member bot-threads on the
+ * shared preview Bot, then opens the Bot list as the Owner.
+ * `?threads=1&as=member` signs in that Member and opens the shared Bot.
+ * HEAD ignores those queries. Not a domain Bot.
  * Answers 404 unless `nuxt dev` is running with `DOSTIGUS_PREVIEW_SEED=1`.
  */
 export default defineEventHandler(async (event) => {
@@ -30,12 +34,16 @@ export default defineEventHandler(async (event) => {
         tall: previewTallRequested(query.tall),
         parts: previewPartsRequested(query.parts),
         kitchen: previewKitchenRequested(query.kitchen),
+        threads: previewThreadsRequested(query.threads),
       },
     )
-    await startOwnerSession(event, seeded.user)
+    const asMember = previewThreadsRequested(query.threads) && previewThreadAsMember(query.as)
+    await startOwnerSession(event, asMember && seeded.member ? seeded.member : seeded.user)
     const location = previewMembersRequested(query.members)
       ? '/members'
-      : previewChatLocation(seeded.botId, query.hold)
+      : previewThreadsRequested(query.threads)
+        ? (asMember ? `/bots/${seeded.botId}` : '/')
+        : previewChatLocation(seeded.botId, query.hold)
     return sendRedirect(event, location, 302)
   } catch (error) {
     if (error instanceof OwnerAuthError && error.statusCode === 401) {

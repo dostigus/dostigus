@@ -17,14 +17,14 @@
         :state="heroState"
       />
       <button
-        v-if="isOwner"
+        v-if="canEdit"
         type="button"
         class="hero"
         aria-label="Изменить аватар"
         @click="openAppearance"
       />
       <button
-        v-if="isOwner"
+        v-if="canEdit"
         type="button"
         class="pencil"
         aria-label="Изменить аватар"
@@ -53,7 +53,7 @@
           maxlength="120"
           autocomplete="off"
           required
-          :disabled="!isOwner || saving"
+          :disabled="!canEdit || saving"
           @blur="persistFields"
         >
       </label>
@@ -65,7 +65,7 @@
           maxlength="160"
           autocomplete="off"
           placeholder="Например, учёба или работа"
-          :disabled="!isOwner || saving"
+          :disabled="!canEdit || saving"
           @blur="persistFields"
         >
       </label>
@@ -76,9 +76,23 @@
           maxlength="2000"
           rows="5"
           placeholder="Для чего нужен этот Bot"
-          :disabled="!isOwner || saving"
+          :disabled="!canEdit || saving"
           @blur="persistFields"
         />
+      </label>
+      <label
+        v-if="isOwner"
+        class="field"
+      >
+        <span>Видимость</span>
+        <select
+          v-model="visibility"
+          :disabled="visibilitySaving"
+          @change="persistVisibility"
+        >
+          <option value="shared">Shared</option>
+          <option value="private">Private</option>
+        </select>
       </label>
       <p
         v-if="error"
@@ -172,11 +186,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, BotAccentHex, BotAvatarShape, BotAvatarState } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, BotAvatarState, BotVisibility } from '@dostigus/shared'
 import {
   BOT_ACCENT_TOKENS,
   BOT_AVATAR_SHAPE_LABELS,
   BOT_AVATAR_SHAPES,
+  canEditBot,
   DEFAULT_AVATAR_COLOR,
   DEFAULT_AVATAR_SHAPE,
 } from '@dostigus/shared'
@@ -192,13 +207,24 @@ const emit = defineEmits<{
 
 const open = defineModel<boolean>('open', { required: true })
 
-const { isOwner } = useHostAccount()
+const { user, isOwner } = useHostAccount()
+const canEdit = computed(() => {
+  if (!props.bot || !user.value?.id) {
+    return false
+  }
+  return canEditBot(props.bot, {
+    id: user.value.id,
+    role: isOwner.value ? 'owner' : 'member',
+  })
+})
 const shapes = BOT_AVATAR_SHAPES
 const accents = BOT_ACCENT_TOKENS
 const name = ref('')
 const label = ref('')
 const description = ref('')
+const visibility = ref<BotVisibility>('shared')
 const saving = ref(false)
+const visibilitySaving = ref(false)
 const error = ref('')
 const appearanceOpen = ref(false)
 const draftShape = ref<BotAvatarShape>(DEFAULT_AVATAR_SHAPE)
@@ -239,6 +265,7 @@ function syncFromBot() {
   name.value = props.bot.name
   label.value = props.bot.manifest.label
   description.value = props.bot.manifest.description
+  visibility.value = props.bot.visibility
   error.value = ''
 }
 
@@ -282,7 +309,7 @@ function playGreet() {
 }
 
 function openAppearance() {
-  if (!isOwner.value || !props.bot) {
+  if (!canEdit.value || !props.bot) {
     return
   }
   draftShape.value = props.bot.manifest.avatarShape
@@ -308,7 +335,7 @@ function resetAppearance() {
 }
 
 async function persistFields() {
-  if (!props.bot || !isOwner.value || saving.value) {
+  if (!props.bot || !canEdit.value || saving.value) {
     return
   }
   let nextName = name.value.trim()
@@ -349,8 +376,31 @@ async function persistFields() {
   }
 }
 
+async function persistVisibility() {
+  if (!props.bot || !isOwner.value || visibilitySaving.value) {
+    return
+  }
+  if (visibility.value === props.bot.visibility) {
+    return
+  }
+  visibilitySaving.value = true
+  error.value = ''
+  try {
+    await $fetch(`/api/bots/${props.bot.id}/visibility`, {
+      method: 'PATCH',
+      body: { visibility: visibility.value },
+    })
+    emit('saved')
+  } catch {
+    visibility.value = props.bot.visibility
+    error.value = 'Не получилось сохранить'
+  } finally {
+    visibilitySaving.value = false
+  }
+}
+
 async function saveAppearance() {
-  if (!props.bot || !isOwner.value || appearanceSaving.value) {
+  if (!props.bot || !canEdit.value || appearanceSaving.value) {
     return
   }
   if (
@@ -468,7 +518,8 @@ onUnmounted(() => {
 }
 
 input,
-textarea {
+textarea,
+select {
   appearance: none;
   width: 100%;
   border: 1px solid var(--line);
@@ -495,12 +546,14 @@ textarea::placeholder {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   outline: 1px solid var(--accent);
 }
 
 input:disabled,
-textarea:disabled {
+textarea:disabled,
+select:disabled {
   opacity: 1;
   cursor: default;
 }

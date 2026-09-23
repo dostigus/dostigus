@@ -32,6 +32,7 @@ export {
   toMember,
   toMessage,
   toOwner,
+  visibilityFromRow,
 } from './map'
 export {
   authorNameForPerson,
@@ -60,13 +61,16 @@ export {
   getLlmGatewaySettings,
   insertMessage,
   listBots,
+  listBotThreadMessages,
   listMessages,
+  listThreadMessages,
   type MessageSearchHit,
   requireBot,
   searchMessages,
+  setBotVisibility,
   StoreError,
   updateBot,
   upsertLlmGatewaySettings,
 } from './queries'
-export { type BotRow, bots, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners } from './schema'
+export { type BotRow, bots, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads } from './schema'
 export { type OpenedStore, openStore } from './store'

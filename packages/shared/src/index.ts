@@ -26,6 +26,18 @@ export {
   randomBotAppearance,
 } from './bot-avatar'
 export {
+  BOT_VISIBILITIES,
+  type BotAccess,
+  botThreadPersonId,
+  type BotViewer,
+  type BotVisibility,
+  canDeleteBot,
+  canEditBot,
+  canFlipBotVisibility,
+  canSeeBot,
+  isBotVisibility,
+} from './bot-visibility'
+export {
   CHAT_PART_LABEL_MAX,
   CHAT_PART_STATUS_TONES,
   CHAT_PARTS_MAX,

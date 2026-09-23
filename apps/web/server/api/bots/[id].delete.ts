@@ -1,3 +1,10 @@
+import { deleteClusterBot, viewerFromUser } from '../../utils/cluster-bots'
+
 export default defineEventHandler(async (event) => {
-  return withOwnerStore(event, (store) => deleteClusterBot(store, getRouterParam(event, 'id') ?? ''))
+  const session = await requireHostSession(event)
+  return withClusterStore((store) => deleteClusterBot(
+    store,
+    getRouterParam(event, 'id') ?? '',
+    viewerFromUser(session.user),
+  ))
 })

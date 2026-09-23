@@ -189,9 +189,10 @@ _Avoid_: public share, invite (unqualified).
   Creating or deleting a `shared` Bot, Members, and the LLM gateway stay
   with the Owner. A Member may create a `private` Bot, edit its Manifest,
   and delete it. Only the Owner flips that Bot to `shared`. The Owner
-  sees every `private` Bot. Finding a Bot stays the picker. The running
-  Host still follows
-  [ADR 0012](docs/adr/0012-household-members.md) until those milestones.
+  sees every `private` Bot. Finding a Bot stays the picker. The Host
+  stores Bot visibility and one bot-thread per person
+  ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md)).
+  `dm`, `group`, and `room` are not in the Host yet.
 - The Owner adds a Member by hand, or creates an Invite for an email and
   copies the link. Accepting an Invite creates a Member and signs them in.
   Sending that link by SMTP is later. An Invite is not a Share link and
@@ -221,8 +222,8 @@ _Avoid_: public share, invite (unqualified).
   ([ADR 0022](docs/adr/0022-chat-assistant-markdown.md)) and may carry Kit
   parts: a button that opens a Sheet, and a status
   ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). User and system lines
-  have no parts. Threads runtime stays
-  [ADR 0024](docs/adr/0024-threads-and-bot-visibility.md).
+  have no parts. Bot-threads are in the Host. `dm`, `group`, and `room`
+  stay [ADR 0024](docs/adr/0024-threads-and-bot-visibility.md) milestone 3.
 - LLM gateway maps Model tiers to providers for every Bot call.
 - A Share link is a narrow public token to one object, not the Cluster.
   Share links and guests are later.

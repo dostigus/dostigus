@@ -1,4 +1,5 @@
 import type { OpenedStore } from '@dostigus/db'
+import type { BotViewer } from '@dostigus/shared'
 import type { ZodRawShape } from 'zod'
 import type { PlatformMcpTool } from './mcp-surface'
 import type { OpenAiChatFunctionTool } from './openai-tools'
@@ -31,7 +32,7 @@ export type PlatformToolSpec = {
   annotations?: { readOnlyHint?: boolean, destructiveHint?: boolean }
   chat: boolean
   inputSchema?: ZodRawShape
-  run: (input: Record<string, unknown>, store: OpenedStore) => unknown
+  run: (input: Record<string, unknown>, store: OpenedStore, viewer?: BotViewer) => unknown
 }
 
 export type ChatToolInvokeResult = {
@@ -113,28 +114,29 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_messages_list: {
     name: 'dostigus_messages_list',
-    description: 'List Chat messages for a Bot in the Cluster Store, oldest first. Writes the assistant greeting if the Chat is empty.',
+    description: 'List Chat messages on the caller\'s bot-thread with a Bot, oldest first. Writes the assistant greeting if that bot-thread is empty. A shared Bot is not one Household-wide timeline.',
     chat: true,
     inputSchema: {
       botId: z.string().min(1),
     },
-    run: (input, store) => listClusterMessages(store, String(input.botId)),
+    run: (input, store, viewer) => listClusterMessages(store, String(input.botId), viewer),
   },
   dostigus_messages_create: {
     name: 'dostigus_messages_create',
-    description: 'Append a Chat message to a Bot in the Cluster Store. Role is user, assistant, or system (default user). Does not call the LLM gateway.',
+    description: 'Append a Chat message on the caller\'s bot-thread with a Bot. Role is user, assistant, or system (default user). Does not call the LLM gateway.',
     chat: true,
     inputSchema: {
       botId: z.string().min(1),
       content: z.string().min(1),
       role: z.enum(MESSAGE_ROLES).optional(),
     },
-    run: (input, store) => ({
+    run: (input, store, viewer) => ({
       message: appendClusterMessage(store, {
         botId: String(input.botId),
         role: (optionalString(input.role) as 'user' | 'assistant' | 'system' | undefined) ?? 'user',
         content: String(input.content),
         personId: optionalString(input.personId) ?? null,
+        viewer,
       }),
     }),
   },
@@ -270,7 +272,13 @@ export function invokeChatMcpTool(input: {
         parsed.personId = input.personId
       }
     }
-    const result = spec.run(parsed, input.store)
+    const viewer = input.personId
+      ? {
+          id: input.personId,
+          role: input.role === 'member' ? 'member' as const : 'owner' as const,
+        }
+      : undefined
+    const result = spec.run(parsed, input.store, viewer)
     logChatTool(spec.name, 'ok')
     return { ok: true, name: spec.name, content: mcpJson(result) }
   } catch (error) {

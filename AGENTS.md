@@ -199,6 +199,19 @@ open that page). `?hold=1` is ignored when `members=1` is set. **HEAD**
 ignores `?members=1` and still answers **204** or **302** to
 `/bots/preview` with no session cookie.
 
+For Bot visibility and bot-threads, open
+**http://localhost:3000/preview-seed?threads=1**. That GET signs in the
+preview Owner, ensures a preview Member (username `preview-member`,
+password `preview-member`), a private Bot id `preview-private` named
+**Private notes**, and one user line on the Owner's bot-thread and one
+on the Member's bot-thread with shared Bot `preview`. It redirects to
+`/` so the sidebar lists the shared Bot and the Member's private Bot.
+**http://localhost:3000/preview-seed?threads=1&as=member** signs in that
+Member and opens `/bots/preview` (the Member's bot-thread, not the
+Owner's). The Owner opens `/bots/preview-private` on the Member's
+bot-thread. A second visit does not append those lines. **HEAD** ignores
+`?threads=1`. `?members=1` still wins when both are set.
+
 On `nuxt dev`, the Chat thread can force the activity row without a live
 reply: `/bots/preview?activity=typing`, `?activity=command`, or
 `?activity=connect&target=Expi`. A production Host ignores `activity`.
@@ -237,11 +250,16 @@ the name **New Bot**), that renaming the Bot does not create another
 Bot, that `?tall=1` adds the tall thread once, that GET
 `?members=1` lands on `/members` while HEAD ignores that query, and that
 `?parts=1` adds one assistant line with a button once while HEAD ignores
-that query, and that `?kitchen=1` adds one Kitchen button once while
-HEAD ignores that query. Optional
+that query, that `?kitchen=1` adds one Kitchen button once while
+HEAD ignores that query, and that `?threads=1` lists the shared Bot and
+the private Bot for the Owner while `?threads=1&as=member` opens a
+different bot-thread on the same shared Bot. HEAD ignores `?threads=1`.
+Optional
 `PREVIEW_SMOKE_URL` (default `http://localhost:3000`).
 
-Preview Owner: username `preview`, password `preview-owner`. A
+Preview Owner: username `preview`, password `preview-owner`. Preview
+Member (only after `?threads=1`): username `preview-member`, password
+`preview-member`. A
 production Host stays closed. If the Store already has a different Owner,
 GET and HEAD return 409 — point `DATABASE_URL` at a fresh file (for example
 `file:.data/preview.sqlite`) or sign in at `/login`. This is local preview

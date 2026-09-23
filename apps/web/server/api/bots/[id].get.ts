@@ -1,3 +1,10 @@
+import { getClusterBot, viewerFromUser } from '../../utils/cluster-bots'
+
 export default defineEventHandler(async (event) => {
-  return withHostStore(event, (store) => getClusterBot(store, getRouterParam(event, 'id') ?? ''))
+  const session = await requireHostSession(event)
+  return withClusterStore((store) => getClusterBot(
+    store,
+    getRouterParam(event, 'id') ?? '',
+    viewerFromUser(session.user),
+  ))
 })

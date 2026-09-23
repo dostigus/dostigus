@@ -20,7 +20,7 @@ Settled now, even if this repo only scaffolds them:
 | Declarative modules | SQL + templated MCP before arbitrary sandbox. See [ADR 0006](adr/0006-day-1-declarative-modules.md). |
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
 | Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). |
-| Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. Bot visibility `shared` \| `private`. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). Not current Host code. |
+| Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. Bot visibility `shared` \| `private`. Bot-threads are in this Host. `dm`, `group`, and `room` are not. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -30,8 +30,11 @@ What the running Cluster does today:
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
   default `goose` (Bot mark), `avatarColor` default `#1F7AE5` /
   `--bot-accent-10`, optional `label` and `description` default empty,
-  empty skills/modules),
-  `messages` (`botId`, role `user` \| `assistant` \| `system`, content,
+  empty skills/modules, `visibility` `shared` \| `private` default
+  `shared`, `created_by` the Owner or Member who created it),
+  `threads` (kind `bot` for a bot-thread) and `thread_participants`
+  (a person or a Bot),
+  `messages` (`botId`, `thread_id`, role `user` \| `assistant` \| `system`, content,
   and `parts_json` for assistant Kit parts — a button and a status;
   user and system stay `[]`),
   `kitchen_pantry` (name, optional qty), `kitchen_cooked` (label, XP,
@@ -58,10 +61,13 @@ What the running Cluster does today:
   A collapsed custom OpenAI-compatible URL remains for other gateways.
   The `+` replaces the Chat pane with a picker
   ([ADR 0019](adr/0019-bot-picker-and-chat-purpose.md)). Search there
-  filters Bots by name. The Owner row **Create new Bot** stores a Bot named
+  filters Bots by name. The Owner row **Create new Bot** stores a shared Bot named
   **New Bot** with a random flock mark and accent, then opens that Chat.
-  A Member's picker is search and existing Bots only. Creating a Bot (or
-  first open) stores an assistant greeting. Until the first user message,
+  A Member row **Create private Bot** stores only a private Bot. The Owner
+  sees every Bot, including a Member's private Bot, and the list marks
+  those rows **Private**. A Member sees shared Bots and their own private
+  Bot. Creating a Bot (or
+  first open of that person's bot-thread) stores an assistant greeting. Until the first user message,
   Chat shows a purpose Card: Personal, Work, Learning, Other, or free text.
   That answer is a normal Chat line. Purpose is not a Manifest field.
   The Owner adds a Member with a display name, email or username, and
@@ -70,9 +76,10 @@ What the running Cluster does today:
   Invite URL once so the Owner can copy it. The person opens
   `/invite/…` while logged out, sees that email, chooses a display name
   and password, and becomes a Member. The Host signs them in. A Member
-  sees the same Bot list and Chat, without create,
-  delete, Members, or Settings. Turning off sign-in keeps their name on
-  the Chat line. Logged-out visitors cannot open those surfaces, except
+  uses Bot list and Chat. They may create, edit, and delete their own
+  private Bot. They do not open Members or Settings, and they do not
+  flip visibility. Turning off sign-in keeps their name on
+  the Chat line and leaves their private Bots for the Owner to see. Logged-out visitors cannot open those surfaces, except
   an Invite link. Host font is
   Nunito; charcoal canvas + firm coral-orange tokens
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
@@ -82,8 +89,9 @@ What the running Cluster does today:
   and the main pane shows the wave sticker and **Create a Bot**. Add Member opens a Sheet. See
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
   is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
-  an icon rail. Each expanded row shows an avatar, the Bot name, and the
-  latest Chat line. On the icon rail each Bot’s hit target is a square.
+  an icon rail.   Each expanded row shows an avatar, the Bot name, **Private** when
+  that Bot is private, and the
+  latest line on the bot-thread that person would open. On the icon rail each Bot’s hit target is a square.
   A loupe and a `+` sit at the top of the expanded sidebar, both quiet
   icon buttons with no accent fill. On the icon rail they stack at the
   bottom, above the user mark: loupe, then `+`, then the user.
@@ -109,7 +117,10 @@ What the running Cluster does today:
   including the selected frame. Accent swatches are smaller, and the
   palette is the same width as that flock grid.
   Model tier stays on Host
-  Settings. Delete is not on this Sheet. Members may read the fields.
+  Settings. Delete is not on this Sheet. The Owner edits a shared Bot
+  and a Bot they created, and flips visibility (**Shared** / **Private**)
+  on this Sheet. A flip keeps the creator. A Member edits the Manifest
+  of their own private Bot and reads the rest.
   Bubbles stay unlabeled. Assistant bubbles render a safe Markdown subset
   (bold, italic, code, lists, and http(s) links) through `KitMarkdown`.
   An assistant line may also carry Kit parts under that body: a button
@@ -162,8 +173,11 @@ What the running Cluster does today:
   `/api/kitchen/cooked`, `/api/kitchen/recipe` (Owner or Member). Persist
   in SQLite via the same Store helpers as the MCP
   surface. Bot list, Bot read, Chat, and Kitchen accept an Owner or Member session.
-  Bot create/update/delete, Members (including Invite create, list, revoke,
-  and rotate), and Settings require the Owner. Accepting an Invite is
+  Bot create, Manifest update, and delete accept an Owner or Member session
+  and enforce visibility: a Member creates only a private Bot and edits or
+  deletes only that Bot. `PATCH /api/bots/:id/visibility` is Owner-only.
+  Members (including Invite create, list, revoke,
+  and rotate) and Settings require the Owner. Accepting an Invite is
   public while logged out. See
   [ADR 0008](adr/0008-host-store-routes.md).
 - MCP surface: `@nuxtjs/mcp-toolkit` at `/mcp` (name `Dostigus`). File-based
@@ -177,7 +191,7 @@ What the running Cluster does today:
 - LLM gateway: OpenAI-compatible client, Model tiers mapped to
   OpenRouter-friendly default model ids. The Owner sets base URL + key in
   Host Settings (Store) or via compose env (env overrides Store). Chat
-  sends greeting + history and a system prompt (new Bot, learn purpose,
+  sends that person's bot-thread (greeting + history) and a system prompt (new Bot, learn purpose,
   keep Manifest). When a key is set, Chat also sends Cluster MCP surface
   tools and runs an in-process tool loop (same handlers as `/mcp`, no
   HTTP hop). Owner Chat tools: Bots list/get/create/update and messages
@@ -193,14 +207,18 @@ What the running Cluster does today:
   the Owner plus Members ([ADR 0012](adr/0012-household-members.md)),
   including Invites the Owner copies by hand
   ([ADR 0023](adr/0023-household-member-invites.md)).
-- Person Threads (`dm`, `group`, `room`) and Bot visibility (`shared` |
-  `private`) are decided in
-  [ADR 0024](adr/0024-threads-and-bot-visibility.md). They stay out of
-  this Host until that ADR's later milestones. Bubble parts are in
-  this Host ([ADR 0025](adr/0025-chat-bubble-parts.md)). Today the Host
-  still has one Chat timeline per Bot and no visibility field. The Owner
-  still creates and deletes every Bot. An Invite still does not change
-  visibility.
+- Bot visibility (`shared` | `private`) and per-person bot-threads are in
+  this Host ([ADR 0024](adr/0024-threads-and-bot-visibility.md)). A shared
+  Bot is not one Household-wide timeline. Chat reads and writes the
+  viewer's bot-thread. The Owner opening a Member's private Bot reads
+  that Member's bot-thread. A private Bot cannot join a room; this Host
+  has no room join API. `dm`, `group`, and `room` stay out.
+  Bubble parts are in
+  this Host ([ADR 0025](adr/0025-chat-bubble-parts.md)).
+  An Invite does not change visibility. Existing `messages` rows are
+  placed on bot-threads at migration: a user row with `personId` keys
+  that person's bot-thread; every other row follows the nearest preceding
+  keyed user row on that Bot, or the Owner's bot-thread when none precedes it.
 
 `pnpm install` and `pnpm check` must stay green.
 
@@ -218,12 +236,13 @@ and [`docs/deploy.md`](deploy.md)).
 - Builder that writes Module packages (chat Bot ≠ Builder)
 - Marketplace
 - Share link, guests, QR
-- Person Threads (`dm`, `group`, `room`) and Bot visibility. Decided in
+- Person Threads (`dm`, `group`, `room`). Bot visibility and per-person
+  bot-threads are in this Host. Decided in
   [ADR 0024](adr/0024-threads-and-bot-visibility.md). Bubble parts shipped
   in [ADR 0025](adr/0025-chat-bubble-parts.md). The Kitchen Module
   day-1 seed is in this Host
-  ([ADR 0026](adr/0026-kitchen-module-day-1.md)). Still later: visibility
-  and per-person bot-threads, then `dm` / `group` / `room`
+  ([ADR 0026](adr/0026-kitchen-module-day-1.md)). Still later: `dm`,
+  `group`, and `room`
 - Sending an Invite by SMTP (the Owner copies the link)
 - Roles beyond Owner and Member, hard-delete of a Member
 - OAuth, passkeys, email verify, password reset

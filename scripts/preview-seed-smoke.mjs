@@ -12,6 +12,9 @@
  * HEAD ignores `?parts=1`.
  * GET `?kitchen=1` adds one Kitchen button once and fills empty Kitchen tables.
  * HEAD ignores `?kitchen=1`.
+ * GET `?threads=1` lists the shared Bot and a Member private Bot for the Owner.
+ * GET `?threads=1&as=member` opens the Member bot-thread on that shared Bot.
+ * HEAD ignores `?threads=1`.
  *
  *   pnpm preview:host
  *   pnpm smoke:preview
@@ -28,6 +31,9 @@ const TALL_PREFIX = 'Preview layout line '
 const TALL_COUNT = 32
 const PARTS_PREFIX = 'Preview Kit parts.'
 const KITCHEN_PREFIX = 'Kitchen is open.'
+const PRIVATE_BOT_ID = 'preview-private'
+const OWNER_THREAD_PREFIX = 'Owner thread on the shared Bot.'
+const MEMBER_THREAD_PREFIX = 'Member thread on the shared Bot.'
 const WAIT_MS = Number(process.env.PREVIEW_SMOKE_WAIT_MS ?? 120_000)
 const REQUEST_MS = 60_000
 
@@ -518,6 +524,60 @@ async function main() {
     fail(`second ?kitchen=1 changed Chat length (${withKitchenMessages.length} → ${keptKitchen?.messages?.length ?? 'none'})`)
   }
   note('?kitchen=1 has one Kitchen button; pantry and XP are in the Store')
+
+  const threadsHead = assertPreviewHead(await request('/preview-seed?threads=1', { method: 'HEAD' }))
+  if (threadsHead.status !== 302 || threadsHead.location !== `/bots/${botId}`) {
+    fail(`HEAD /preview-seed?threads=1 expected 302 /bots/${botId}, got ${threadsHead.status} ${threadsHead.location ?? ''}`)
+  }
+  const threads = await request('/preview-seed?threads=1')
+  const threadsPath = locationPath(threads.response.headers.get('location'))
+  if (threads.response.status !== 302 || threadsPath !== '/') {
+    fail(`GET /preview-seed?threads=1 expected 302 /, got ${threads.response.status} ${threadsPath ?? ''}`)
+  }
+  const ownerSession = cookieHeader(threads.response)
+  if (!ownerSession) {
+    fail('GET /preview-seed?threads=1 did not set a session cookie')
+  }
+  const ownerBots = await readJson('/api/bots', ownerSession)
+  const ownerBotIds = Array.isArray(ownerBots?.bots) ? ownerBots.bots.map((bot) => bot.id) : []
+  if (!ownerBotIds.includes(PREVIEW_BOT_ID) || !ownerBotIds.includes(PRIVATE_BOT_ID)) {
+    fail(`Owner list expected ${PREVIEW_BOT_ID} and ${PRIVATE_BOT_ID}, got ${ownerBotIds.join(', ') || '(none)'}`)
+  }
+  const privateBot = ownerBots.bots.find((bot) => bot.id === PRIVATE_BOT_ID)
+  if (privateBot?.visibility !== 'private') {
+    fail(`private Bot visibility was ${privateBot?.visibility ?? '(missing)'}`)
+  }
+  const ownerChat = await readJson(`/api/bots/${PREVIEW_BOT_ID}/messages`, ownerSession)
+  const ownerContents = Array.isArray(ownerChat?.messages) ? ownerChat.messages.map((message) => message.content) : []
+  if (!ownerContents.some((content) => content.startsWith(OWNER_THREAD_PREFIX))) {
+    fail('Owner bot-thread is missing its preview line')
+  }
+  if (ownerContents.some((content) => content.startsWith(MEMBER_THREAD_PREFIX))) {
+    fail('Owner bot-thread includes the Member line')
+  }
+  const memberSeed = await request('/preview-seed?threads=1&as=member')
+  const memberPath = locationPath(memberSeed.response.headers.get('location'))
+  if (memberSeed.response.status !== 302 || memberPath !== `/bots/${PREVIEW_BOT_ID}`) {
+    fail(`GET /preview-seed?threads=1&as=member expected 302 /bots/${PREVIEW_BOT_ID}, got ${memberSeed.response.status} ${memberPath ?? ''}`)
+  }
+  const memberSession = cookieHeader(memberSeed.response)
+  if (!memberSession) {
+    fail('GET /preview-seed?threads=1&as=member did not set a session cookie')
+  }
+  const memberChat = await readJson(`/api/bots/${PREVIEW_BOT_ID}/messages`, memberSession)
+  const memberContents = Array.isArray(memberChat?.messages) ? memberChat.messages.map((message) => message.content) : []
+  if (!memberContents.some((content) => content.startsWith(MEMBER_THREAD_PREFIX))) {
+    fail('Member bot-thread is missing its preview line')
+  }
+  if (memberContents.some((content) => content.startsWith(OWNER_THREAD_PREFIX))) {
+    fail('Member bot-thread includes the Owner line')
+  }
+  const memberBots = await readJson('/api/bots', memberSession)
+  const memberIds = Array.isArray(memberBots?.bots) ? memberBots.bots.map((bot) => bot.id) : []
+  if (!memberIds.includes(PRIVATE_BOT_ID) || !memberIds.includes(PREVIEW_BOT_ID)) {
+    fail(`Member list expected both Bots, got ${memberIds.join(', ') || '(none)'}`)
+  }
+  note('?threads=1 separates Owner and Member bot-threads; Owner sees the private Bot')
 
   note('ok')
 }

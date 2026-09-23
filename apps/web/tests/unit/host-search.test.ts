@@ -73,5 +73,6 @@ it('keeps the search Sheet on the Kit dialog and the messages route', () => {
   expect(shell).toContain('kit-sr-only')
   expect(sheet).toContain('requestOpen')
   expect(route).toContain('searchMessages')
-  expect(route).toContain('withHostStore')
+  expect(route).toContain('requireHostSession')
+  expect(route).toContain('viewerFromUser')
 })
