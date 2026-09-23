@@ -34,7 +34,8 @@ On a Cursor cloud agent VM, `nuxt dev` often listens on IPv6 only. Use
 Host preview seed (Owner signed in, stable Bot **New Bot**, Chat open):
 `pnpm preview:host`, then GET `http://localhost:3000/preview-seed`
 (`?tall=1` for a tall thread). HEAD is answered on that route and on
-`/health`. See [`AGENTS.md`](AGENTS.md).
+`/health`. `pnpm smoke:preview` checks that HEAD, the stable Bot, and the
+tall thread. See [`AGENTS.md`](AGENTS.md).
 
 A fresh Cluster opens **Create your Owner** (email or username + password).
 Later visits sign in. Then press **+**: the Chat pane becomes find or
