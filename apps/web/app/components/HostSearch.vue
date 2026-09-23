@@ -4,9 +4,13 @@
       v-model:open="open"
       title="Поиск"
       wide
+      chrome="bare"
     >
-      <template #title>
-        <span class="search-title">
+      <div
+        class="finder"
+        @keydown="onKeydown"
+      >
+        <label class="query">
           <svg
             class="loupe"
             viewBox="0 0 24 24"
@@ -19,19 +23,11 @@
             />
             <path d="M16 16.5L20 20.5" />
           </svg>
-          Поиск
-        </span>
-      </template>
-      <div
-        class="finder"
-        @keydown="onKeydown"
-      >
-        <label class="query">
           <span class="sr-only">Search</span>
           <input
             v-model="query"
             type="search"
-            placeholder="Bots, messages, Settings"
+            placeholder="Поиск"
             autocomplete="off"
           >
         </label>
@@ -303,12 +299,6 @@ function onKeydown(event: KeyboardEvent) {
   overflow: visible;
 }
 
-.search-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
 .loupe {
   width: 1.05rem;
   height: 1.05rem;
@@ -329,23 +319,35 @@ function onKeydown(event: KeyboardEvent) {
 
 .query {
   display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+  padding: 0.55rem 0.75rem;
+  color: var(--text-muted);
+}
+
+.query:focus-within {
+  border-color: color-mix(in srgb, var(--text) 28%, var(--line));
+  color: var(--text);
 }
 
 .query input {
   width: 100%;
+  min-width: 0;
   appearance: none;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--text) 4%, transparent);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--text);
   font: inherit;
   font-size: 0.95rem;
-  padding: 0.55rem 0.75rem;
+  padding: 0;
 }
 
 .query input:focus {
   outline: none;
-  border-color: color-mix(in srgb, var(--text) 28%, var(--line));
 }
 
 .query input::placeholder {

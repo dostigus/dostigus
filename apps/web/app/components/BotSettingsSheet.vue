@@ -19,6 +19,13 @@
       <button
         v-if="isOwner"
         type="button"
+        class="hero"
+        aria-label="Изменить аватар"
+        @click="openAppearance"
+      />
+      <button
+        v-if="isOwner"
+        type="button"
         class="pencil"
         aria-label="Изменить аватар"
         @click="openAppearance"
@@ -391,8 +398,25 @@ onUnmounted(() => {
   height: 7.25rem;
 }
 
+.hero {
+  position: absolute;
+  inset: 0;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  border-radius: 1.4rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.hero:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .pencil {
   position: absolute;
+  z-index: 1;
   right: -0.15rem;
   bottom: -0.1rem;
   appearance: none;

@@ -269,6 +269,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  flex: none;
   padding: 0.75rem 0.7rem 0.45rem;
 }
 
@@ -355,8 +356,12 @@ onUnmounted(() => {
 }
 
 .rail-bot {
+  box-sizing: border-box;
   justify-content: center;
-  padding: 0.28rem;
+  width: 2.95rem;
+  height: 2.95rem;
+  aspect-ratio: 1;
+  padding: 0;
 }
 
 .bot:hover,
@@ -401,18 +406,29 @@ onUnmounted(() => {
   border-top: 1px solid var(--line-soft);
 }
 
-.rail .side-head {
-  flex-direction: column;
+.rail .bots {
   align-items: center;
-  justify-content: center;
-  padding-inline: 0.35rem;
+  gap: 0.35rem;
 }
 
 .rail .list {
+  order: 1;
   padding-inline: 0.3rem;
 }
 
+.rail .side-head {
+  order: 2;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.35rem 0.35rem;
+  border-top: 1px solid var(--line-soft);
+}
+
 .rail .foot {
+  order: 3;
+  border-top: 0;
+  padding-top: 0.1rem;
   padding-inline: 0.3rem;
 }
 

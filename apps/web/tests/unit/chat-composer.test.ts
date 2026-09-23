@@ -70,7 +70,7 @@ it('overlays a Chat pill and pads the thread above it', () => {
   expect(pill).toContain('position: absolute')
   expect(pill).toContain('translateX(-50%)')
   expect(pill).toContain('backdrop-filter')
-  expect(pill).toContain('padding: 0.18rem 0.42rem')
+  expect(pill).toContain('padding: 0.18rem 0.7rem')
   expect(pill).not.toContain('--pill-slot')
   expect(pill).not.toContain('width: 100%')
   expect(chat).not.toContain('class="cue-balance"')
