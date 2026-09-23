@@ -79,11 +79,23 @@ does not append again.
 **HEAD** (`curl -I`) is answered on `/preview-seed` and on `/health`. It
 does not sign in, create the Owner, create a Bot, or insert Chat lines.
 
-- `/health`: **200**, `content-type: application/json`. The GET body is `{ ok: true }`.
+- `/health` GET and HEAD: **200**, `content-type: application/json`. The GET body is `{ ok: true }`. HEAD sends that body's `content-length` and an empty body.
 - `/preview-seed` when this is not `nuxt dev`, or `DOSTIGUS_PREVIEW_SEED` is not `1`: **404**.
 - `/preview-seed` when the Store Owner is not `preview`: **409**.
 - `/preview-seed` when the gate is open and the stable Bot does not exist yet: **204** (GET would create it).
 - `/preview-seed` when the gate is open and the stable Bot exists: **302** to `/bots/<id>`, with no session cookie.
+
+h3 turns `return null` after `setResponseStatus(event, 200)` into **204**
+(`sendNoContent`). That 204 is easy to read as a closed route. HEAD
+`/health` stays **200** because `apps/web/server/routes/health.head.ts`
+sets `content-length` to the GET JSON byte length (pretty in `nuxt dev`,
+compact in production) and ends the response with `event.node.res.end()`
+instead of `return null`.
+
+With `pnpm preview:host` already up, `pnpm smoke:preview` checks those
+HEAD responses, that GET lands on the stable **New Bot**, and that
+`?tall=1` adds the tall thread once. Optional `PREVIEW_SMOKE_URL`
+(default `http://localhost:3000`).
 
 Preview Owner: username `preview`, password `preview-owner`. A
 production Host stays closed. If the Store already has a different Owner,
