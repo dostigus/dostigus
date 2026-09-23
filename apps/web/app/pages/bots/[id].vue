@@ -165,6 +165,21 @@
       </div>
     </form>
 
+    <button
+      v-if="showLatestJump"
+      type="button"
+      class="to-latest"
+      aria-label="Scroll to latest"
+      @click="jumpToLatest"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path d="M12 5v13M7 13l5 5 5-5" />
+      </svg>
+    </button>
+
     <BotSettingsSheet
       v-model:open="settingsOpen"
       :bot="bot"
@@ -226,6 +241,9 @@ const listening = ref(false)
 const markFailed = ref(false)
 const settingsOpen = ref(false)
 const threadEl = ref<HTMLOListElement | null>(null)
+/** Shown while the thread is scrolled above the latest line. */
+const showLatestJump = ref(false)
+let threadScrollEl: HTMLElement | null = null
 
 const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
 const showPurpose = computed(() => showsBotPurposeCard(timeline.value))
@@ -390,6 +408,28 @@ function pinThreadToEnd() {
     return
   }
   el.scrollTop = el.scrollHeight
+  syncLatestJump()
+}
+
+function syncLatestJump() {
+  showLatestJump.value = !threadNearEnd()
+}
+
+function onThreadScroll() {
+  syncLatestJump()
+}
+
+/** Smooth return to the latest line. Reduced motion jumps. */
+function jumpToLatest() {
+  const el = threadEl.value
+  if (!el?.isConnected) {
+    return
+  }
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  el.scrollTo({
+    top: el.scrollHeight,
+    behavior: reduce ? 'auto' : 'smooth',
+  })
 }
 
 /** Pin after the overlay padding is in the scroll height, not only on the next tick. */
@@ -422,6 +462,8 @@ function syncComposerClearance() {
   page.style.setProperty('--composer-clearance', next)
   if (follow) {
     pinThreadToEnd()
+  } else {
+    syncLatestJump()
   }
 }
 
@@ -444,6 +486,8 @@ onMounted(() => {
   }
   syncComposerClearance()
   pinAfterLayout()
+  threadScrollEl = threadEl.value
+  threadScrollEl?.addEventListener('scroll', onThreadScroll, { passive: true })
   void document.fonts?.ready.then(() => {
     pinAfterLayout()
   })
@@ -451,6 +495,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearMarkTimers()
+  threadScrollEl?.removeEventListener('scroll', onThreadScroll)
+  threadScrollEl = null
   composerObserver?.disconnect()
   composerFrameObserver?.disconnect()
   if (botId.value) {
@@ -597,6 +643,8 @@ async function onBotDeleted() {
   --thread-inset: 1.15rem;
   /* Fallback until the overlay is measured. One line plus the screen-edge gap. */
   --composer-clearance: 4.5rem;
+  /* Empty canvas under the latest line when the thread is fully at the bottom. */
+  --thread-end-gap: 5rem;
 }
 
 .top {
@@ -679,9 +727,10 @@ async function onBotDeleted() {
   min-height: 0;
   list-style: none;
   margin: 0;
-  /* End padding is the overlay, so the latest line can rest above the field
-     while earlier lines scroll behind it. */
-  padding: 0.6rem var(--thread-inset) var(--composer-clearance);
+  /* Clearance matches the overlay. The end gap is empty canvas under the
+     latest line when the thread is at the bottom, so that bubble is not
+     flush with the field. Earlier lines still scroll behind the field. */
+  padding: 0.6rem var(--thread-inset) calc(var(--composer-clearance) + var(--thread-end-gap));
   overflow: auto;
   overflow-anchor: none;
   display: flex;
@@ -752,6 +801,35 @@ async function onBotDeleted() {
 .empty-hint {
   margin: 0;
   color: var(--text-muted);
+}
+
+.to-latest {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: calc(var(--composer-clearance) + 0.65rem);
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));
+  border-radius: 999px;
+  background: var(--composer);
+  color: var(--text);
+  box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 45%);
+  cursor: pointer;
+}
+
+.to-latest svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .composer {

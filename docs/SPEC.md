@@ -78,7 +78,10 @@ What the running Cluster does today:
   reply is in flight, speaks and cheers it when it lands, tilts on a failed
   send, and sleeps while no key is set. The composer has a disabled
   attachments control and
-  shows a send arrow when there is text. On a narrow screen the sidebar
+  shows a send arrow when there is text. The thread keeps about 5rem
+  (~80px) of clear space under the latest line when it is scrolled to
+  the bottom. A circular control, centered above the composer, scrolls
+  there when the thread is above the bottom. On a narrow screen the sidebar
   is a drawer. Sending a line shows it at once, then that Bot’s flock mark
   while the reply is in flight, then the stored reply. A green live dot
   marks the busy Bot on the Chat header and the matching sidebar row. With no Bots, the main pane offers **Create a Bot**
