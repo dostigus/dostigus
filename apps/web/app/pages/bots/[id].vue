@@ -678,6 +678,10 @@ async function deliver(raw: string, existing: TimelineLine | null) {
   try {
     await $fetch(`/api/bots/${targetId}/messages`, {
       method: 'POST',
+      // Preview seed only. Production builds drop this (`import.meta.dev`).
+      query: import.meta.dev && previewHoldRequested(route.query.hold)
+        ? { hold: '1' }
+        : undefined,
       body: { content },
     })
     if (botId.value !== targetId) {

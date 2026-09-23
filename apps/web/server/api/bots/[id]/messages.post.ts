@@ -1,4 +1,6 @@
+import process from 'node:process'
 import { getLlmGatewaySettings } from '@dostigus/db'
+import { previewQuietHoldMs, waitPreviewQuietHold } from '../../../../app/utils/preview-hold'
 import { invokeChatMcpTool } from '../../../utils/mcp-platform-tools'
 
 type PostBody = {
@@ -39,6 +41,14 @@ export default defineEventHandler(async (event) => {
         personId,
       }),
     })
+    await waitPreviewQuietHold(previewQuietHoldMs({
+      allowed: previewSeedAllowed({
+        dev: import.meta.dev,
+        flag: process.env.DOSTIGUS_PREVIEW_SEED,
+      }),
+      hold: getQuery(event).hold,
+      via: reply.via,
+    }))
     const assistant = appendClusterMessage(store, {
       botId,
       role: 'assistant',
