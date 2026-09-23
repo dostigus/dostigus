@@ -10,6 +10,8 @@
  * HEAD ignores `?members=1` and still points at `/bots/<id>`.
  * GET `?parts=1` adds one assistant line with a button and a status once.
  * HEAD ignores `?parts=1`.
+ * GET `?kitchen=1` adds one Kitchen button once and fills empty Kitchen tables.
+ * HEAD ignores `?kitchen=1`.
  *
  *   pnpm preview:host
  *   pnpm smoke:preview
@@ -25,6 +27,7 @@ const GREETING = 'Hello — I\'m New Bot.'
 const TALL_PREFIX = 'Preview layout line '
 const TALL_COUNT = 32
 const PARTS_PREFIX = 'Preview Kit parts.'
+const KITCHEN_PREFIX = 'Kitchen is open.'
 const WAIT_MS = Number(process.env.PREVIEW_SMOKE_WAIT_MS ?? 120_000)
 const REQUEST_MS = 60_000
 
@@ -463,6 +466,58 @@ async function main() {
     fail(`second ?parts=1 changed Chat length (${withPartsMessages.length} → ${keptParts?.messages?.length ?? 'none'})`)
   }
   note(`?parts=1 has one assistant line with a button; second GET did not append`)
+
+  const kitchenHead = assertPreviewHead(await request('/preview-seed?kitchen=1', { method: 'HEAD' }))
+  if (kitchenHead.status !== 302 || kitchenHead.location !== `/bots/${botId}`) {
+    fail(`HEAD /preview-seed?kitchen=1 expected 302 /bots/${botId}, got ${kitchenHead.status} ${kitchenHead.location ?? ''}`)
+  }
+  const beforeKitchen = await readJson(`/api/bots/${botId}/messages`, session)
+  const beforeKitchenMessages = beforeKitchen?.messages
+  if (!Array.isArray(beforeKitchenMessages) || beforeKitchenMessages.length !== withPartsMessages.length) {
+    fail('HEAD /preview-seed?kitchen=1 inserted Chat lines')
+  }
+  const hadKitchen = beforeKitchenMessages.some((message) => message.content.startsWith(KITCHEN_PREFIX))
+  const kitchen = await request('/preview-seed?kitchen=1', { cookie: session })
+  const kitchenPath = locationPath(kitchen.response.headers.get('location'))
+  if (kitchen.response.status !== 302 || kitchenPath !== `/bots/${botId}`) {
+    fail(`GET /preview-seed?kitchen=1 expected 302 /bots/${botId}, got ${kitchen.response.status} ${kitchenPath ?? ''}`)
+  }
+  const withKitchen = await readJson(`/api/bots/${botId}/messages`, session)
+  const withKitchenMessages = withKitchen?.messages
+  if (!Array.isArray(withKitchenMessages)) {
+    fail('Chat messages missing after ?kitchen=1')
+  }
+  const kitchenLines = withKitchenMessages.filter((message) => message.content.startsWith(KITCHEN_PREFIX))
+  if (kitchenLines.length !== 1 || kitchenLines[0].role !== 'assistant') {
+    fail(`expected 1 Kitchen Chat line, found ${kitchenLines.length}`)
+  }
+  const kitchenButton = kitchenLines[0].parts?.find((part) => part.kind === 'button')
+  if (kitchenButton?.label !== 'Open Kitchen' || kitchenButton.action?.sheetId !== 'kitchen') {
+    fail(`Kitchen button was ${JSON.stringify(kitchenButton)}`)
+  }
+  if (hadKitchen && withKitchenMessages.length !== beforeKitchenMessages.length) {
+    fail(`?kitchen=1 appended again (${beforeKitchenMessages.length} → ${withKitchenMessages.length})`)
+  }
+  if (!hadKitchen && withKitchenMessages.length !== beforeKitchenMessages.length + 1) {
+    fail(`?kitchen=1 expected 1 new line (${beforeKitchenMessages.length} → ${withKitchenMessages.length})`)
+  }
+  const kitchenApi = await readJson('/api/kitchen', session)
+  const pantry = kitchenApi?.kitchen?.pantry
+  if (!Array.isArray(pantry) || pantry.length < 1) {
+    fail('Kitchen pantry was empty after ?kitchen=1')
+  }
+  if (typeof kitchenApi?.kitchen?.xp !== 'number' || kitchenApi.kitchen.xp < 1) {
+    fail(`Kitchen XP expected a cooked mark, got ${kitchenApi?.kitchen?.xp}`)
+  }
+  const kitchenAgain = await request('/preview-seed?kitchen=1', { cookie: session })
+  if (kitchenAgain.response.status !== 302 || locationPath(kitchenAgain.response.headers.get('location')) !== `/bots/${botId}`) {
+    fail('second GET /preview-seed?kitchen=1 did not return to the same Chat')
+  }
+  const keptKitchen = await readJson(`/api/bots/${botId}/messages`, session)
+  if (!Array.isArray(keptKitchen?.messages) || keptKitchen.messages.length !== withKitchenMessages.length) {
+    fail(`second ?kitchen=1 changed Chat length (${withKitchenMessages.length} → ${keptKitchen?.messages?.length ?? 'none'})`)
+  }
+  note('?kitchen=1 has one Kitchen button; pantry and XP are in the Store')
 
   note('ok')
 }

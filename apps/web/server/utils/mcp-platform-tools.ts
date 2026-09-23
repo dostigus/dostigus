@@ -15,6 +15,12 @@ import {
   updateClusterBot,
   withClusterStore,
 } from './cluster-bots'
+import {
+  addClusterPantry,
+  markClusterCooked,
+  readClusterKitchen,
+  saveClusterRecipe,
+} from './kitchen'
 import { mcpJson } from './mcp'
 import { CHAT_MCP_TOOLS, isChatMcpTool, isMemberChatMcpTool, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS } from './mcp-surface'
 import { mcpToolsToOpenAiFunctions, parseToolCallArguments, toolResultError } from './openai-tools'
@@ -130,6 +136,65 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
         content: String(input.content),
         personId: optionalString(input.personId) ?? null,
       }),
+    }),
+  },
+  dostigus_kitchen_pantry_list: {
+    name: 'dostigus_kitchen_pantry_list',
+    description: 'List Kitchen pantry items in the Cluster Store, oldest first. Each item has id, name, optional qty, and createdAt.',
+    annotations: { readOnlyHint: true },
+    chat: false,
+    run: (_input, store) => {
+      const { kitchen } = readClusterKitchen(store)
+      return { pantry: kitchen.pantry }
+    },
+  },
+  dostigus_kitchen_pantry_add: {
+    name: 'dostigus_kitchen_pantry_add',
+    description: 'Add a Kitchen pantry item. name is required. qty is optional text.',
+    chat: false,
+    inputSchema: {
+      name: z.string(),
+      qty: z.union([z.string(), z.number()]).optional(),
+    },
+    run: (input, store) => addClusterPantry(store, {
+      name: input.name,
+      qty: input.qty,
+    }),
+  },
+  dostigus_kitchen_cooked_mark: {
+    name: 'dostigus_kitchen_cooked_mark',
+    description: 'Mark something cooked in the Kitchen. Adds a cooked log row and 10 XP. label is optional (default Cooked). personId is optional.',
+    chat: false,
+    inputSchema: {
+      label: z.string().optional(),
+      personId: z.string().optional(),
+    },
+    run: (input, store) => markClusterCooked(store, {
+      label: input.label,
+      personId: optionalString(input.personId) ?? null,
+    }),
+  },
+  dostigus_kitchen_recipe_get: {
+    name: 'dostigus_kitchen_recipe_get',
+    description: 'Get the one Kitchen recipe (name and ingredients) and the XP counter. recipe is null until one is saved.',
+    annotations: { readOnlyHint: true },
+    chat: false,
+    run: (_input, store) => {
+      const { kitchen } = readClusterKitchen(store)
+      return { recipe: kitchen.recipe, xp: kitchen.xp }
+    },
+  },
+  dostigus_kitchen_recipe_save: {
+    name: 'dostigus_kitchen_recipe_save',
+    description: 'Save the one Kitchen recipe. Replaces the previous name and ingredients text.',
+    chat: false,
+    inputSchema: {
+      name: z.string(),
+      ingredients: z.string().optional(),
+    },
+    run: (input, store) => saveClusterRecipe(store, {
+      name: input.name,
+      ingredients: input.ingredients,
     }),
   },
 }

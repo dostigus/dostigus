@@ -9,6 +9,16 @@ export {
   rotateInvite,
 } from './invites'
 export {
+  addKitchenPantry,
+  getKitchenRecipe,
+  kitchenXp,
+  listKitchenCooked,
+  listKitchenPantry,
+  markKitchenCooked,
+  readKitchen,
+  saveKitchenRecipe,
+} from './kitchen'
+export {
   avatarColorFromRow,
   avatarShapeFromRow,
   type BotRecord,
@@ -58,5 +68,5 @@ export {
   updateBot,
   upsertLlmGatewaySettings,
 } from './queries'
-export { type BotRow, bots, type InviteRow, invites, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners } from './schema'
+export { type BotRow, bots, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners } from './schema'
 export { type OpenedStore, openStore } from './store'

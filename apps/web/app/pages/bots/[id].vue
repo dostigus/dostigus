@@ -233,8 +233,13 @@
     <KitSheet
       v-model:open="sheetOpen"
       :title="openSheetTitle"
+      :description="openSheet?.kind === 'kitchen' ? 'Pantry, one recipe, and a cooked log.' : undefined"
     >
-      <p class="sheet-copy">
+      <KitchenSheet v-if="openSheet?.kind === 'kitchen'" />
+      <p
+        v-else
+        class="sheet-copy"
+      >
         {{ openSheetBody }}
       </p>
     </KitSheet>

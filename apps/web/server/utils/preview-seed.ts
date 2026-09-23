@@ -1,9 +1,10 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { ChatPart } from '@dostigus/shared'
 import type { HostSessionUser } from './owner-auth'
-import { createBot, findOwnerSecretByLogin, insertMessage, listBots, listMessages, ownerExists } from '@dostigus/db'
+import { addKitchenPantry, createBot, findOwnerSecretByLogin, getKitchenRecipe, insertMessage, listBots, listKitchenCooked, listKitchenPantry, listMessages, markKitchenCooked, ownerExists, saveKitchenRecipe } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
-import { HOST_DEMO_SHEET_ID } from '../../app/utils/host-sheets'
+import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID } from '../../app/utils/host-sheets'
+import { appendClusterMessage } from './cluster-bots'
 import {
   loginHostAccount,
   OwnerAuthError,
@@ -37,6 +38,12 @@ export const PREVIEW_TALL_LINE_COUNT = 32
 export const PREVIEW_PARTS_PREFIX = 'Preview Kit parts.'
 
 /**
+ * Assistant line inserted by `?kitchen=1`. The prefix marks a bubble already filled.
+ * The button opens the Kitchen Sheet. Domain rows are filled only while empty.
+ */
+export const PREVIEW_KITCHEN_PREFIX = 'Kitchen is open.'
+
+/**
  * On only for `nuxt dev` with `DOSTIGUS_PREVIEW_SEED=1`.
  * A production Host stays closed (404).
  */
@@ -62,6 +69,14 @@ export function previewMembersRequested(value: unknown): boolean {
  * HEAD ignores this query.
  */
 export function previewPartsRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
+/**
+ * `?kitchen=1` on GET. Inserts one assistant line with a Kitchen button and a status.
+ * HEAD ignores this query.
+ */
+export function previewKitchenRequested(value: unknown): boolean {
   return previewQueryOn(value)
 }
 
@@ -109,13 +124,15 @@ export function readPreviewSeedHead(store: OpenedStore): PreviewSeedHeadResult {
  * `tall` appends preview layout lines once.
  * `parts` appends one assistant line with Kit parts once, after the tall thread
  * so that line stays at the bottom of the Chat.
+ * `kitchen` fills empty Kitchen tables and appends one Kitchen button line once,
+ * after the parts line.
  * Throws OwnerAuthError 401 when the Store Owner is not this login.
  */
 export async function ensurePreviewCluster(
   store: OpenedStore,
   hashPassword: (password: string) => Promise<string>,
   verifyPassword: (hash: string, password: string) => Promise<boolean>,
-  options: { tall?: boolean, parts?: boolean } = {},
+  options: { tall?: boolean, parts?: boolean, kitchen?: boolean } = {},
 ): Promise<{ user: HostSessionUser, botId: string }> {
   const user = await ensurePreviewOwner(store, hashPassword, verifyPassword)
   const botId = stablePreviewBotId(listBots(store))
@@ -125,6 +142,9 @@ export async function ensurePreviewCluster(
   }
   if (options.parts) {
     ensurePreviewPartsLine(store, botId)
+  }
+  if (options.kitchen) {
+    ensurePreviewKitchen(store, botId, user.id)
   }
   return { user, botId }
 }
@@ -165,6 +185,56 @@ export function ensurePreviewPartsLine(store: OpenedStore, botId: string): void 
     role: 'assistant',
     content: previewPartsContent(),
     parts: previewParts(),
+  })
+  store.sqlite.prepare('UPDATE messages SET created_at = ? WHERE id = ?').run(at + 1, message.id)
+}
+
+export function previewKitchenContent(): string {
+  return `${PREVIEW_KITCHEN_PREFIX}\n\nA **button** in this bubble opens the Kitchen Sheet.`
+}
+
+export function previewKitchenParts(): ChatPart[] {
+  return [
+    { kind: 'status', label: 'Kitchen', tone: 'ok' },
+    {
+      kind: 'button',
+      label: 'Open Kitchen',
+      action: { type: 'openSheet', sheetId: HOST_KITCHEN_SHEET_ID },
+    },
+  ]
+}
+
+/**
+ * Fill empty Kitchen tables, then append the Kitchen button once.
+ * A second visit does not add another Chat line or duplicate those rows.
+ */
+export function ensurePreviewKitchen(store: OpenedStore, botId: string, personId: string): void {
+  if (listKitchenPantry(store).length === 0) {
+    addKitchenPantry(store, { name: 'Eggs', qty: '6' })
+    addKitchenPantry(store, { name: 'Milk' })
+  }
+  if (!getKitchenRecipe(store)) {
+    saveKitchenRecipe(store, { name: 'Omelette', ingredients: 'eggs\nmilk' })
+  }
+  if (listKitchenCooked(store).length === 0) {
+    markKitchenCooked(store, { label: 'Omelette', personId })
+  }
+  const existing = listMessages(store, botId)
+  if (existing.some((message) => message.content.startsWith(PREVIEW_KITCHEN_PREFIX))) {
+    return
+  }
+  let at = 0
+  for (const message of existing) {
+    const ms = Date.parse(message.createdAt)
+    if (ms > at) {
+      at = ms
+    }
+  }
+  const message = appendClusterMessage(store, {
+    botId,
+    role: 'assistant',
+    content: previewKitchenContent(),
+    parts: previewKitchenParts(),
   })
   store.sqlite.prepare('UPDATE messages SET created_at = ? WHERE id = ?').run(at + 1, message.id)
 }

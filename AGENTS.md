@@ -184,6 +184,14 @@ The button opens the **Demo sheet** (`KitSheet`). Another visit with
 `?parts=1` does not append again. **HEAD** ignores `?parts=1`. See
 [ADR 0025](docs/adr/0025-chat-bubble-parts.md).
 
+For the Kitchen Sheet, open
+**http://localhost:3000/preview-seed?kitchen=1**. That GET fills empty
+Kitchen tables (pantry, one recipe, one cooked row) and adds one
+assistant line once: a status **Kitchen** and **Open Kitchen**. The
+button opens the Kitchen Sheet. Another visit does not append that line
+again. **HEAD** ignores `?kitchen=1`. See
+[ADR 0026](docs/adr/0026-kitchen-module-day-1.md).
+
 For Members and Invite screenshots, open
 **http://localhost:3000/preview-seed?members=1**. That GET signs in the
 same preview Owner and redirects to `/members` (a Member session cannot
@@ -229,7 +237,8 @@ the name **New Bot**), that renaming the Bot does not create another
 Bot, that `?tall=1` adds the tall thread once, that GET
 `?members=1` lands on `/members` while HEAD ignores that query, and that
 `?parts=1` adds one assistant line with a button once while HEAD ignores
-that query. Optional
+that query, and that `?kitchen=1` adds one Kitchen button once while
+HEAD ignores that query. Optional
 `PREVIEW_SMOKE_URL` (default `http://localhost:3000`).
 
 Preview Owner: username `preview`, password `preview-owner`. A

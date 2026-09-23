@@ -27,8 +27,8 @@ export type ClusterMessageInput = {
   personId?: string | null
   /**
    * Assistant Kit parts. The Chat reply path and `dostigus_messages_create`
-   * leave this empty. A later tool calls `appendClusterMessage` with parts.
-   * See ADR 0025.
+   * leave this empty. Preview `?kitchen=1` calls this with the Kitchen
+   * button. See ADR 0025 and ADR 0026.
    */
   parts?: unknown
 }

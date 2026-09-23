@@ -30,8 +30,9 @@ Day-1 part kinds:
 A button action is `openSheet` with a Sheet id. The Host keeps a small
 registry of Sheets that id may open. A button whose id is not in the
 registry is not rendered. Day-1 registers `demo`: title **Demo sheet**,
-a short body, presented with `KitSheet`. That drawer is the place a
-later Kitchen Module hangs. This milestone does not add a second app
+a short body, presented with `KitSheet`. That drawer is the place the
+Kitchen Module hangs. [ADR 0026](0026-kitchen-module-day-1.md) registers
+`kitchen` beside `demo`. This milestone does not add a second app
 or a raw control in the bubble.
 
 The list is capped. Labels are short plain text. The bubble template
@@ -68,8 +69,10 @@ on the assistant message. It does not introduce a Card catalog.
   line has parts the Host can show.
 - Clicking the button opens the registered Sheet in `KitSheet`.
 - Sidebar preview and Host search still use `content` only.
-- A Kitchen Module later registers its Sheet id and writes parts
-  through `appendClusterMessage`. It does not get a new CSS app.
+- The Kitchen Module registers Sheet id `kitchen` and writes parts
+  through `appendClusterMessage`
+  ([ADR 0026](0026-kitchen-module-day-1.md)). It does not get a new
+  CSS app.
 - Out of this ADR: Kitchen domain data, Bot visibility, per-person
   threads, `dm` / `group` / `room`, forms inside a bubble, and a
   status-driven tool loop beyond the chip.

@@ -113,8 +113,8 @@ Current Host behavior remains ADR 0012 and ADR 0023.
 Later implementation, in order:
 
 1. Interactive bubble parts ([ADR 0025](0025-chat-bubble-parts.md))
-   and a Kitchen Module demo. Bubble parts are in the Host. Kitchen
-   is still later.
+   and a Kitchen Module demo ([ADR 0026](0026-kitchen-module-day-1.md)).
+   Bubble parts and the Kitchen Module day-1 seed are in the Host.
 2. Bot visibility and per-person bot-threads.
 3. `dm`, `group`, and `room`.
 

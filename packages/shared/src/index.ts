@@ -43,6 +43,23 @@ export {
   parseInviteEmail,
 } from './invite'
 export {
+  KITCHEN_COOK_XP,
+  KITCHEN_COOKED_LABEL,
+  KITCHEN_INGREDIENTS_MAX,
+  KITCHEN_NAME_MAX,
+  KITCHEN_QTY_MAX,
+  type KitchenCookedEntry,
+  KitchenInputError,
+  type KitchenPantryItem,
+  type KitchenRecipe,
+  type KitchenSnapshot,
+  parseKitchenCookedLabel,
+  parseKitchenIngredients,
+  parseKitchenPantryName,
+  parseKitchenQty,
+  parseKitchenRecipeName,
+} from './kitchen'
+export {
   ASSISTANT_REPLY_VIAS,
   type AssistantReplyVia,
   baseUrlForLlmGatewayPreset,
