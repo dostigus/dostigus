@@ -1,5 +1,5 @@
 /**
- * The Bot is live while a reply is in flight, while the header mark is
+ * The Bot is live while a reply is in flight, while the pill mark is
  * speaking or cheering that landing, and during the short failed-send pose.
  * Idle, sleep, greet, and listen stay quiet.
  */

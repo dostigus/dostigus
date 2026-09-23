@@ -3,6 +3,13 @@
 - Status: accepted
 - Date: 2026-09-22
 
+Amended 2026-09-23: the sidebar search field is a loupe that opens a
+centered search Sheet (Bots, Chat lines, and Host settings). The `+` stays
+a quiet icon button beside it and still opens the Bot picker. Chat no
+longer keeps a full-width header bar. A translucent pill (avatar and name)
+overlays the thread; hover shows an arrow; the pill opens the same right
+Bot Sheet. A top inset keeps the first line clear of the pill.
+
 The sidebar `+` opens the Bot picker. See
 [ADR 0019](0019-bot-picker-and-chat-purpose.md).
 
@@ -22,14 +29,21 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
 - Each Bot row shows an avatar (Manifest shape and color; see
   [ADR 0016](0016-bot-avatar-tokens.md)), the name, and a one-line
   preview of the latest Chat line. Unread stays out of this shell.
-- The top of the sidebar is a client-side search field and, for the
-  Owner, a small `+` that creates a Bot. Search filters the list already
-  loaded. It does not add a route.
+- The top of the sidebar is a loupe and a `+`, both quiet icon buttons
+  with no accent fill. The loupe opens a centered search Sheet (`KitDialog`)
+  over the loaded Bot list, Chat lines in the Store, and Host settings that
+  person can open (Settings and Members for the Owner, and the open Bot’s
+  Sheet). Choosing a row navigates or opens that Sheet. It does not create
+  a Bot and it does not add a route. The `+` opens the Bot picker.
 - The bottom of the sidebar is a user button (initials and name). Its
   menu opens Settings (`/settings`), Members (`/members`, Owner only),
   and Sign out. Those links leave the sidebar chrome. Settings stays a
   page. Members stays a page.
-- Chat has a narrow header. The Bot avatar and name open a right
+- Chat has no full-width header bar. A centered pill overlays the thread:
+  the Bot avatar and name. The thread scrolls under the translucent pill.
+  A top inset, about the pill height, keeps the first line clear when the
+  thread is at the top. Hover shows an arrow beside the name. The pill
+  opens a right
   `KitSheet` (`edge="end"`): appearance, rename, Model tier from the
   Manifest, and delete. Delete and edits stay with the Owner. A Member
   can open the Sheet and read those fields. Skills and Module packages
@@ -38,7 +52,7 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
   author's name ([ADR 0012](0012-household-members.md)). Optimistic send
   keeps the same timing: the user line shows at once, then the Bot’s flock
   mark while the reply is in flight, then the stored reply. A green live
-  dot marks that Bot on the Chat header and the matching sidebar row for
+  dot marks that Bot on the Chat pill and the matching sidebar row for
   the busy window.
 - The composer has a `+` for attachments that stays disabled in this
   change. When the draft has text, a send control appears: an arrow in

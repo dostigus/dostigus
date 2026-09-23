@@ -15,7 +15,9 @@
         <header class="kit-head">
           <div>
             <DialogTitle class="kit-title">
-              {{ title }}
+              <slot name="title">
+                {{ title }}
+              </slot>
             </DialogTitle>
             <DialogDescription
               v-if="description"
@@ -63,15 +65,18 @@ const props = withDefaults(defineProps<{
   title: string
   description?: string
   edge?: 'bottom' | 'end'
+  /** Wider centered Sheet. Drawers ignore this. */
+  wide?: boolean
 }>(), {
   edge: 'bottom',
+  wide: false,
 })
 
 const open = defineModel<boolean>('open', { required: true })
 
 const contentClass = computed(() => {
   if (props.kind !== 'sheet') {
-    return 'kit-dialog'
+    return props.wide ? 'kit-dialog kit-dialog--wide' : 'kit-dialog'
   }
   return props.edge === 'end' ? 'kit-sheet kit-sheet--end' : 'kit-sheet'
 })

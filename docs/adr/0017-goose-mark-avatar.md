@@ -27,7 +27,7 @@ palette pick. Eyes stay simple and readable at sidebar size.
 `KitBotAvatar` accepts `state`: `none` | `idle` | `think` | `reply` |
 `work`. This change ships a light **idle breathe** only. `think`,
 `reply`, and `work` are API hooks (no full choreography yet). The Host
-passes `idle` on sidebar rows and the Chat header.
+passes `idle` on sidebar rows and the Chat pill.
 
 ### Palette order
 

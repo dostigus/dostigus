@@ -3,28 +3,6 @@
     ref="pageEl"
     class="page"
   >
-    <header class="top">
-      <HostMenuButton />
-      <button
-        type="button"
-        class="identity"
-        :disabled="!bot"
-        :aria-label="identityLabel"
-        @click="settingsOpen = true"
-      >
-        <HostBotAvatar
-          :name="bot?.name ?? 'Bot'"
-          :seed="bot?.id ?? ''"
-          :shape="bot?.manifest.avatarShape"
-          :avatar-color="bot?.manifest.avatarColor"
-          :state="markState"
-          :live="botLive"
-          size="sm"
-        />
-        <span class="name">{{ bot?.name ?? 'Bot' }}</span>
-      </button>
-    </header>
-
     <p
       v-if="loadError"
       class="banner"
@@ -46,139 +24,174 @@
       </template>
     </p>
 
-    <ol
-      ref="threadEl"
-      class="thread"
-      aria-label="Chat"
+    <div
+      ref="stageEl"
+      class="stage"
     >
-      <li
-        v-for="message in timeline"
-        :key="message.id"
-        class="bubble"
-        :class="[message.role, { mine: isMine(message), failed: message.failed }]"
-      >
-        <p class="text">
-          {{ message.content }}
-        </p>
-      </li>
-      <li
-        v-if="showPurpose"
-        class="purpose"
-      >
-        <BotPurposeCard
-          :busy="sending"
-          @answer="onPurpose"
-        />
-      </li>
-      <li
-        v-if="botPending"
-        class="pending-mark"
-        aria-live="polite"
-        aria-label="Replying"
+      <div class="bots-toggle">
+        <HostMenuButton />
+      </div>
+      <button
+        ref="pillEl"
+        type="button"
+        class="identity"
+        :disabled="!bot"
+        :aria-label="identityLabel"
+        @click="settingsOpen = true"
       >
         <HostBotAvatar
           :name="bot?.name ?? 'Bot'"
           :seed="bot?.id ?? ''"
           :shape="bot?.manifest.avatarShape"
           :avatar-color="bot?.manifest.avatarColor"
-          state="think"
-          size="lg"
+          :state="markState"
+          :live="botLive"
+          size="sm"
         />
-      </li>
-      <li
-        v-if="timeline.length === 0 && !botPending && !loadError"
-        class="empty-chat"
-      >
-        <p class="empty-title">
-          Start the Chat
-        </p>
-        <p class="empty-hint">
-          Say what this Bot is for.
-        </p>
-      </li>
-    </ol>
+        <span class="name">{{ bot?.name ?? 'Bot' }}</span>
+        <svg
+          class="cue"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </button>
 
-    <form
-      ref="composerEl"
-      class="composer"
-      @submit.prevent="send"
-    >
-      <p
-        v-if="sendError"
-        class="send-error"
+      <ol
+        ref="threadEl"
+        class="thread"
+        aria-label="Chat"
       >
-        {{ sendError }}
-        <button
-          v-if="optimistic?.failed"
-          type="button"
-          class="retry"
-          :disabled="sending"
-          @click="retry"
+        <li
+          v-for="message in timeline"
+          :key="message.id"
+          class="bubble"
+          :class="[message.role, { mine: isMine(message), failed: message.failed }]"
         >
-          Try again
-        </button>
-      </p>
-      <div class="composer-foot">
-        <div
-          ref="composerRowEl"
-          class="composer-row"
-          :class="{ multiline: composerMultiline }"
+          <p class="text">
+            {{ message.content }}
+          </p>
+        </li>
+        <li
+          v-if="showPurpose"
+          class="purpose"
         >
+          <BotPurposeCard
+            :busy="sending"
+            @answer="onPurpose"
+          />
+        </li>
+        <li
+          v-if="botPending"
+          class="pending-mark"
+          aria-live="polite"
+          aria-label="Replying"
+        >
+          <HostBotAvatar
+            :name="bot?.name ?? 'Bot'"
+            :seed="bot?.id ?? ''"
+            :shape="bot?.manifest.avatarShape"
+            :avatar-color="bot?.manifest.avatarColor"
+            state="think"
+            size="lg"
+          />
+        </li>
+        <li
+          v-if="timeline.length === 0 && !botPending && !loadError"
+          class="empty-chat"
+        >
+          <p class="empty-title">
+            Start the Chat
+          </p>
+          <p class="empty-hint">
+            Say what this Bot is for.
+          </p>
+        </li>
+      </ol>
+
+      <form
+        ref="composerEl"
+        class="composer"
+        @submit.prevent="send"
+      >
+        <p
+          v-if="sendError"
+          class="send-error"
+        >
+          {{ sendError }}
           <button
+            v-if="optimistic?.failed"
             type="button"
-            class="attach"
-            disabled
-            aria-label="Attachments soon"
-            title="Soon"
+            class="retry"
+            :disabled="sending"
+            @click="retry"
           >
-            <span aria-hidden="true">+</span>
+            Try again
           </button>
-          <label class="draft">
-            <span class="sr-only">Message</span>
-            <textarea
-              ref="draftEl"
-              v-model="draft"
-              rows="1"
-              maxlength="16000"
-              :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
-              :disabled="!bot"
-              @keydown.enter.exact.prevent="send"
-              @focus="listening = true"
-              @blur="listening = false"
-            />
-          </label>
-          <button
-            v-if="draft.trim()"
-            type="submit"
-            class="send"
-            :disabled="sending || !bot"
-            aria-label="Send"
+        </p>
+        <div class="composer-foot">
+          <div
+            ref="composerRowEl"
+            class="composer-row"
+            :class="{ multiline: composerMultiline }"
           >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+            <button
+              type="button"
+              class="attach"
+              disabled
+              aria-label="Attachments soon"
+              title="Soon"
             >
-              <path d="M12 19V6M7 11l5-5 5 5" />
-            </svg>
-          </button>
+              <span aria-hidden="true">+</span>
+            </button>
+            <label class="draft">
+              <span class="sr-only">Message</span>
+              <textarea
+                ref="draftEl"
+                v-model="draft"
+                rows="1"
+                maxlength="16000"
+                :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
+                :disabled="!bot"
+                @keydown.enter.exact.prevent="send"
+                @focus="listening = true"
+                @blur="listening = false"
+              />
+            </label>
+            <button
+              v-if="draft.trim()"
+              type="submit"
+              class="send"
+              :disabled="sending || !bot"
+              aria-label="Send"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M12 19V6M7 11l5-5 5 5" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
 
-    <button
-      v-if="showLatestJump"
-      type="button"
-      class="to-latest"
-      aria-label="Scroll to latest"
-      @click="jumpToLatest"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden="true"
+      <button
+        v-if="showLatestJump"
+        type="button"
+        class="to-latest"
+        aria-label="Scroll to latest"
+        @click="jumpToLatest"
       >
-        <path d="M12 5v13M7 13l5 5 5-5" />
-      </svg>
-    </button>
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path d="M12 5v13M7 13l5 5 5-5" />
+        </svg>
+      </button>
+    </div>
 
     <BotSettingsSheet
       v-model:open="settingsOpen"
@@ -241,9 +254,12 @@ const listening = ref(false)
 const markFailed = ref(false)
 const settingsOpen = ref(false)
 const threadEl = ref<HTMLOListElement | null>(null)
+const stageEl = ref<HTMLElement | null>(null)
+const pillEl = ref<HTMLButtonElement | null>(null)
 /** Shown while the thread is scrolled above the latest line. */
 const showLatestJump = ref(false)
 let threadScrollEl: HTMLElement | null = null
+const { pendingId: pendingSheetId } = useHostBotSheet()
 
 const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
 const showPurpose = computed(() => showsBotPurposeCard(timeline.value))
@@ -263,7 +279,7 @@ const identityLabel = computed(() => {
     : `${bot.value.name}, Bot settings`
 })
 /**
- * Header mark states, strongest first: a failed send beats a reply in
+ * Pill mark states, strongest first: a failed send beats a reply in
  * flight, which beats the reply landing, its cheer, the opening greet and
  * the composer lean. With no key the Bot cannot answer, so it sleeps.
  */
@@ -390,6 +406,7 @@ function setComposerMultiline(next: boolean) {
 
 let composerObserver: ResizeObserver | null = null
 let composerFrameObserver: ResizeObserver | null = null
+let pillObserver: ResizeObserver | null = null
 
 /** Close enough to the end that a layout change should keep the latest line in view. */
 const NEAR_END_PX = 64
@@ -467,6 +484,31 @@ function syncComposerClearance() {
   }
 }
 
+/**
+ * Top padding tracks the overlay pill so the first line sits clear of it
+ * when the thread is at the top. Later lines still scroll under the pill.
+ * Follow the end only when the pane was already there.
+ */
+function syncPillClearance() {
+  const page = pageEl.value
+  const stage = stageEl.value
+  const pill = pillEl.value
+  if (!page || !stage || !pill) {
+    return
+  }
+  const stageTop = stage.getBoundingClientRect().top
+  const pillBottom = pill.getBoundingClientRect().bottom
+  const next = `${Math.ceil(pillBottom - stageTop + 12)}px`
+  if (page.style.getPropertyValue('--thread-top-gap') === next) {
+    return
+  }
+  const follow = threadNearEnd()
+  page.style.setProperty('--thread-top-gap', next)
+  if (follow) {
+    pinThreadToEnd()
+  }
+}
+
 onMounted(() => {
   greetOnOpen()
   measureComposer()
@@ -485,6 +527,14 @@ onMounted(() => {
     composerFrameObserver.observe(form)
   }
   syncComposerClearance()
+  const pill = pillEl.value
+  if (pill && typeof ResizeObserver !== 'undefined') {
+    pillObserver = new ResizeObserver(() => {
+      syncPillClearance()
+    })
+    pillObserver.observe(pill)
+  }
+  syncPillClearance()
   pinAfterLayout()
   threadScrollEl = threadEl.value
   threadScrollEl?.addEventListener('scroll', onThreadScroll, { passive: true })
@@ -499,6 +549,7 @@ onUnmounted(() => {
   threadScrollEl = null
   composerObserver?.disconnect()
   composerFrameObserver?.disconnect()
+  pillObserver?.disconnect()
   if (botId.value) {
     setLive(botId.value, false)
   }
@@ -519,6 +570,14 @@ watch(botId, () => {
   settingsOpen.value = false
   pinAfterLayout()
 })
+
+watch([pendingSheetId, botId], () => {
+  const id = pendingSheetId.value
+  if (id && id === botId.value) {
+    settingsOpen.value = true
+    pendingSheetId.value = null
+  }
+}, { immediate: true })
 
 watch([botId, botLive], ([id, live], previous) => {
   const previousId = previous?.[0]
@@ -645,38 +704,51 @@ async function onBotDeleted() {
   --composer-clearance: 4.5rem;
   /* Empty canvas under the latest line when the thread is fully at the bottom. */
   --thread-end-gap: 5rem;
+  /* Fallback until the overlay pill is measured. About the pill’s height. */
+  --thread-top-gap: 3.5rem;
 }
 
-.top {
+.stage {
   position: relative;
-  z-index: 3;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 3rem;
-  padding: 0.35rem 0.75rem;
-  border-bottom: 1px solid var(--line-soft);
-  background: var(--bg-chat);
+  flex-direction: column;
+}
+
+.bots-toggle {
+  position: absolute;
+  z-index: 4;
+  top: 0.55rem;
+  left: 0.65rem;
 }
 
 .identity {
+  position: absolute;
+  z-index: 4;
+  top: 0.55rem;
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.45rem;
   min-width: 0;
-  max-width: 100%;
+  max-width: min(16rem, calc(100% - 6.5rem));
   appearance: none;
-  border: 0;
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  background: color-mix(in srgb, var(--sheet) 62%, transparent);
+  backdrop-filter: blur(14px);
   color: inherit;
   border-radius: 999px;
-  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  padding: 0.2rem 0.7rem 0.2rem 0.2rem;
   cursor: pointer;
   font: inherit;
+  box-shadow: 0 0.35rem 1.1rem rgb(0 0 0 / 28%);
 }
 
 .identity:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 6%, transparent);
+  background: color-mix(in srgb, var(--sheet) 78%, transparent);
 }
 
 .identity:focus-visible {
@@ -694,6 +766,29 @@ async function onBotDeleted() {
   white-space: nowrap;
   font-size: 0.98rem;
   font-weight: 700;
+}
+
+.cue {
+  width: 0;
+  height: 0.95rem;
+  flex: none;
+  opacity: 0;
+  overflow: hidden;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--text-muted);
+  transition: width 140ms ease, opacity 140ms ease, margin-inline-start 140ms ease;
+}
+
+.identity:hover:not(:disabled) .cue,
+.identity:focus-visible .cue {
+  width: 0.95rem;
+  margin-inline-start: 0.05rem;
+  opacity: 1;
+  color: var(--text);
 }
 
 .banner {
@@ -727,10 +822,10 @@ async function onBotDeleted() {
   min-height: 0;
   list-style: none;
   margin: 0;
-  /* Clearance matches the overlay. The end gap is empty canvas under the
-     latest line when the thread is at the bottom, so that bubble is not
-     flush with the field. Earlier lines still scroll behind the field. */
-  padding: 0.6rem var(--thread-inset) calc(var(--composer-clearance) + var(--thread-end-gap));
+  /* Top gap clears the overlay pill at scroll top. End clearance matches
+     the composer, plus an empty canvas under the latest line so that
+     bubble is not flush with the field. Lines still scroll under both. */
+  padding: var(--thread-top-gap) var(--thread-inset) calc(var(--composer-clearance) + var(--thread-end-gap));
   overflow: auto;
   overflow-anchor: none;
   display: flex;
@@ -1008,7 +1103,8 @@ textarea:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .composer-row {
+  .composer-row,
+  .cue {
     transition: none;
   }
 }

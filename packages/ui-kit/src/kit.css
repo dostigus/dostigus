@@ -37,6 +37,24 @@
   animation: kit-pop 180ms ease;
 }
 
+.kit-dialog.kit-dialog--wide {
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: min(80dvh, 36rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0.95rem 0.85rem 0.7rem;
+}
+
+.kit-dialog.kit-dialog--wide .kit-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.7rem;
+}
+
 .kit-sheet {
   position: fixed;
   left: 0;

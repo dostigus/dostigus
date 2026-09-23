@@ -8,12 +8,13 @@
   >
     <div class="column">
       <div class="side-head">
-        <label
-          v-if="!rail"
-          class="search"
+        <button
+          type="button"
+          class="chrome"
+          aria-label="Search"
+          @click="openSearch"
         >
           <svg
-            class="search-icon"
             viewBox="0 0 24 24"
             aria-hidden="true"
           >
@@ -24,22 +25,20 @@
             />
             <path d="M16 16.5L20 20.5" />
           </svg>
-          <span class="sr-only">Search</span>
-          <input
-            v-model="query"
-            type="search"
-            placeholder="Search"
-            autocomplete="off"
-          >
-        </label>
-        <KitButton
-          variant="icon"
+        </button>
+        <button
           type="button"
+          class="chrome"
           :aria-label="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
           @click="openCreate"
         >
-          +
-        </KitButton>
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M12 5.5v13M5.5 12h13" />
+          </svg>
+        </button>
       </div>
 
       <nav
@@ -65,18 +64,12 @@
         >
           No Bots yet
         </p>
-        <p
-          v-else-if="visible.length === 0 && !rail"
-          class="status"
-        >
-          No matching Bots.
-        </p>
         <ul
           v-else
           class="bots"
         >
           <li
-            v-for="bot in visible"
+            v-for="bot in bots"
             :key="bot.id"
           >
             <NuxtLink
@@ -162,20 +155,17 @@
 </template>
 
 <script setup lang="ts">
-import { KitButton } from '@dostigus/ui-kit'
-
 const route = useRoute()
 const { isOwner } = useHostAccount()
 const { open, narrow, close } = useHostNav()
 const { openCreate, closeCreate } = useHostCreate()
+const { openSearch } = useHostSearch()
 const { bots, pending, error } = await useHostBots()
 const { width, collapsed, resizeTo, toggleCollapsed } = useHostSidebar()
 const { isLive } = useHostBotActivity()
 
-const query = ref('')
 const dragging = ref(false)
 const rail = computed(() => collapsed.value && !narrow.value)
-const visible = computed(() => filterBots(bots.value, query.value))
 const frameStyle = computed(() => {
   if (narrow.value) {
     return undefined
@@ -282,69 +272,37 @@ onUnmounted(() => {
   padding: 0.75rem 0.7rem 0.45rem;
 }
 
-.search {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  height: 2.15rem;
-  padding: 0 0.75rem;
-  border-radius: var(--radius);
-  background: var(--surface);
-  border: 1px solid var(--line);
-}
-
-.search:focus-within {
-  border-color: var(--accent-dim);
-}
-
-.search-icon {
-  width: 0.95rem;
-  height: 0.95rem;
+.chrome {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
   flex: none;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.chrome svg {
+  width: 1.05rem;
+  height: 1.05rem;
   fill: none;
-  stroke: var(--text-muted);
+  stroke: currentcolor;
   stroke-width: 1.8;
   stroke-linecap: round;
 }
 
-.search input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 0.92rem;
+.chrome:hover {
+  border-color: color-mix(in srgb, var(--text) 28%, var(--line));
 }
 
-.search input:focus {
-  outline: none;
-}
-
-.search input::-webkit-search-cancel-button {
-  cursor: pointer;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.side-head :deep(.kit-button--icon) {
-  width: 2.15rem;
-  height: 2.15rem;
-  font-size: 1.25rem;
-  flex: none;
+.chrome:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .list {
@@ -444,6 +402,8 @@ onUnmounted(() => {
 }
 
 .rail .side-head {
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   padding-inline: 0.35rem;
 }
