@@ -75,7 +75,14 @@
           class="bubble"
           :class="[message.role, { mine: isMine(message), failed: message.failed }]"
         >
-          <p class="text">
+          <KitMarkdown
+            v-if="assistantBubbleUsesMarkdown(message.role)"
+            :source="message.content"
+          />
+          <p
+            v-else
+            class="text"
+          >
             {{ message.content }}
           </p>
         </li>
@@ -223,6 +230,7 @@
 
 <script setup lang="ts">
 import type { Bot, BotAvatarState, Message } from '@dostigus/shared'
+import { assistantBubbleUsesMarkdown, KitMarkdown } from '@dostigus/ui-kit'
 
 definePageMeta({ layout: 'host' })
 

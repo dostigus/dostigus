@@ -9,6 +9,7 @@ empty state are replaced by the full-pane picker in
 [ADR 0019](0019-bot-picker-and-chat-purpose.md). Optimistic send and the
 drawer below `52rem` still stand. The in-thread busy mark for a configured
 reply is the activity row in [ADR 0021](0021-chat-activity-status.md).
+Assistant bubble Markdown is [ADR 0022](0022-chat-assistant-markdown.md).
 
 ## Decision
 

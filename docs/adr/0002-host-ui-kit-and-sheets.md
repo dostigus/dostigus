@@ -19,6 +19,9 @@ one kit, and one place to learn the UI.
 
 - `apps/web` is the only user-facing app in this monorepo.
 - `packages/ui-kit` is the Kit barrel for Sheets and Cards.
+- Assistant Chat bodies render through `KitMarkdown`
+  ([ADR 0022](0022-chat-assistant-markdown.md)). User and system lines stay
+  plain text.
 - New Bot UI is a Kit binding + MCP surface, not a new Nuxt app.
 - Host empty states (Chat, Sheet) are first-class; do not replace them with a
   marketing landing page.

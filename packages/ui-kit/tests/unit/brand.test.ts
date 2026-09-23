@@ -47,6 +47,7 @@ it('registers the Sheet shell, Dialog, Button, and Bot avatar', () => {
     gooseSticker: 'GooseSticker',
     gooseLogo: 'GooseLogo',
     botAvatar: 'KitBotAvatar',
+    markdown: 'KitMarkdown',
   })
 })
 

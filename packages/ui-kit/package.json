@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@dostigus/shared": "workspace:*",
+    "markdown-it": "catalog:",
     "reka-ui": "catalog:"
   },
   "devDependencies": {
