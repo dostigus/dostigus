@@ -21,5 +21,10 @@ export { default as GooseSticker } from './components/GooseSticker.vue'
 export { default as KitBotAvatar } from './components/KitBotAvatar.vue'
 export { default as KitButton } from './components/KitButton.vue'
 export { default as KitDialog } from './components/KitDialog.vue'
+export { default as KitMarkdown } from './components/KitMarkdown.vue'
 export { default as KitSheet } from './components/KitSheet.vue'
 export { default as SheetShell } from './components/SheetShell.vue'
+export {
+  assistantBubbleUsesMarkdown,
+  renderChatMarkdown,
+} from './markdown'

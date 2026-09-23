@@ -231,7 +231,14 @@ as the flock grid, with a centered last row, **Reset** («Сбросить»), a
 label («Метка»), and a description («Описание»). Model tier stays on
 Host Settings. Delete is not on this Sheet. Members see the mark and
 may read the fields. Bubbles
-have no author label. The composer stays on screen, over that scroll.
+have no author label. An assistant bubble renders Markdown through
+`KitMarkdown`: bold, italic, inline code, fenced code (monospace, no
+highlighting), lists, and links. A link is only `http:` or `https:`, and
+it opens in a new tab with `rel="noopener noreferrer"`. A single newline
+outside a fence soft-joins; a blank line is a paragraph; a fence keeps
+its line breaks. Raw HTML, tables, images, and headings stay text. User
+and system bubbles stay plain text with `white-space: pre-wrap`. See
+[ADR 0022](adr/0022-chat-assistant-markdown.md). The composer stays on screen, over that scroll.
 Its placeholder is «Сообщение для» plus the open Bot’s display name.
 A `+` on the left is
 reserved for attachments and stays disabled. A send arrow in a circle

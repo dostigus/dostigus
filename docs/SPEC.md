@@ -96,7 +96,10 @@ What the running Cluster does today:
   palette is the same width as that flock grid.
   Model tier stays on Host
   Settings. Delete is not on this Sheet. Members may read the fields.
-  Bubbles stay unlabeled. The composer stays on screen. Sidebar Bot
+  Bubbles stay unlabeled. Assistant bubbles render a safe Markdown subset
+  (bold, italic, code, lists, and http(s) links) through `KitMarkdown`.
+  User and system bubbles stay plain pre-wrap text. See
+  [ADR 0022](adr/0022-chat-assistant-markdown.md). The composer stays on screen. Sidebar Bot
   rows and the Chat pill show the Manifest Bot mark (`KitBotAvatar`
   idle); the pill greets on open, listens at the composer, thinks while a
   reply is in flight, speaks and cheers it when it lands, tilts on a failed
@@ -180,6 +183,9 @@ and [`docs/deploy.md`](deploy.md)).
 - Mobile native
 - Per-bot domains (the `meal.kosarev.space` pattern is temporary and to be replaced)
 - Arbitrary in-cluster sandbox code
+- Chat message `parts[]`, inline buttons, and status chips inside a bubble.
+  Assistant Markdown is [ADR 0022](adr/0022-chat-assistant-markdown.md);
+  richer parts are later
 - Managed/cloud hosting (optional later; not the default)
 
 ## Success for later MVPs (not this PR)
