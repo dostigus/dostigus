@@ -121,7 +121,7 @@ caller returns to `idle` after them.
 | `idle` | sidebar rows, Chat pill at rest |
 | `greet` | Chat open; the picked bird in the appearance editor |
 | `listen` | Chat composer focused |
-| `think` | reply in flight — Chat pill and the pending Chat mark |
+| `think` | reply in flight — Chat pill; pending Chat mark only when no key is set |
 | `reply` | Chat pill as the reply lands |
 | `celebrate` | Chat pill just after the reply finishes |
 | `error` | failed send |
@@ -243,12 +243,22 @@ opens as a Sheet over Chat. Bot settings are the right Sheet above.
 Narrow screens (under `52rem`) hide the sidebar behind a Bots control.
 The icon rail is a wide-screen behavior.
 
-A sent line appears in the timeline immediately. While that reply is in
-flight, Chat shows the Bot’s own flock mark in `think` — there is no text
-pill. The Chat pill mark thinks with it, then uses `reply` and a short
-`celebrate` when the stored reply lands, then returns to `idle`. A small
+A sent line appears in the timeline immediately. While a configured reply
+is in flight, the thread shows one activity row under the latest line: a
+green three-dot wave and «Печатает…», muted Nunito on `--text-muted`. The
+row hides when the assistant line lands. With no key, that wait keeps the
+Bot’s flock mark in `think` and does not say «Печатает…». The same row can
+show an orange cluster and «Ожидает завершения команды», or a small Bot
+mark and «Подключается…» («Подключается к {name}» when a short target is
+known). The message route does not report tool-loop phases, so those two
+rows are forced only in local `nuxt dev` (`?activity=command`,
+`?activity=connect`, optional `&target=`). Composer focus does not add a
+thread row. The Chat pill mark thinks while the reply is in flight, then
+uses `reply` and a short `celebrate` when the stored reply lands, then
+returns to `idle`. A small
 green dot (`--live`) sits on the bottom-right of the Chat pill avatar and
 the matching sidebar row while the Bot is busy: the reply in flight, the
 landing `reply` and `celebrate`, and the short `error` pose. It hides for
 `idle`, `sleep`, `listen`, and `greet`. `prefers-reduced-motion` still holds
 the pose without animation. Chat does not cover the Host with a spinner.
+See [ADR 0021](adr/0021-chat-activity-status.md).

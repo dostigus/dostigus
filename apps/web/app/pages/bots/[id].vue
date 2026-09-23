@@ -89,7 +89,21 @@
           />
         </li>
         <li
-          v-if="botPending"
+          v-if="threadActivity"
+          class="activity"
+          aria-live="polite"
+        >
+          <ChatActivityRow
+            :kind="threadActivity.kind"
+            :label="threadActivity.label"
+            :name="bot?.name ?? 'Bot'"
+            :seed="bot?.id ?? ''"
+            :shape="bot?.manifest.avatarShape"
+            :avatar-color="bot?.manifest.avatarColor"
+          />
+        </li>
+        <li
+          v-else-if="botPending"
           class="pending-mark"
           aria-live="polite"
           aria-label="Replying"
@@ -104,7 +118,7 @@
           />
         </li>
         <li
-          v-if="timeline.length === 0 && !botPending && !loadError"
+          v-if="timeline.length === 0 && !botPending && !threadActivity && !loadError"
           class="empty-chat"
         >
           <p class="empty-title">
@@ -274,6 +288,18 @@ const botLive = computed(() => botIsLive({
   replying: replying.value,
   cheering: cheering.value,
   failed: markFailed.value,
+}))
+/**
+ * In-thread status. A configured reply in flight is typing. No key keeps
+ * the think mark below. `?activity=` is a local nuxt dev preview force.
+ */
+const threadActivity = computed(() => chatActivityStatus({
+  pending: botPending.value,
+  gatewayConfigured: readyData.value?.configured === true,
+  forced: import.meta.dev ? parseChatActivityKind(route.query.activity) : null,
+  connectTarget: import.meta.dev && typeof route.query.target === 'string'
+    ? route.query.target
+    : null,
 }))
 const identityLabel = computed(() => {
   if (!bot.value) {
@@ -594,7 +620,7 @@ watch([botId, botLive], ([id, live], previous) => {
   }
 }, { immediate: true })
 
-watch([timeline, botPending, showPurpose], () => {
+watch([timeline, botPending, showPurpose, threadActivity], () => {
   pinAfterLayout()
 }, { flush: 'post', immediate: true })
 
@@ -887,7 +913,8 @@ async function onBotSaved() {
   line-height: 1.45;
 }
 
-.pending-mark {
+.pending-mark,
+.activity {
   align-self: flex-start;
   display: flex;
   padding: 0.15rem 0.1rem 0.35rem;

@@ -106,8 +106,18 @@ What the running Cluster does today:
   (~80px) of clear space under the latest line when it is scrolled to
   the bottom. A circular control, centered above the composer, scrolls
   there when the thread is above the bottom. On a narrow screen the sidebar
-  is a drawer. Sending a line shows it at once, then that Bot’s flock mark
-  while the reply is in flight, then the stored reply. A green live dot
+  is a drawer. Sending a line shows it at once. While the LLM gateway is
+  configured and the reply is in flight, the thread shows one activity row
+  under the latest line: a green three-dot wave and «Печатает…». The row
+  hides when the assistant line lands. With no key, that wait keeps the
+  flock mark in `think` and does not say «Печатает…». The same row can show
+  an orange cluster and «Ожидает завершения команды», or a small Bot mark
+  and «Подключается…» («Подключается к {name}» when a short target is
+  known). The message route does not report tool-loop phases, so those two
+  rows are forced only in local `nuxt dev` (`?activity=command`,
+  `?activity=connect`, optional `&target=`). Composer focus stays on the
+  pill and does not add a thread row. The Chat pill still thinks, speaks,
+  and cheers. A green live dot
   marks the busy Bot on the Chat pill and the matching sidebar row. With no Bots, the main pane offers **Create a Bot**
   and the sidebar stays a short centered line. The `+` and that button open
   the picker as the Chat pane. **×** returns to the pane that was open.
@@ -115,8 +125,9 @@ What the running Cluster does today:
   [ADR 0014](adr/0014-host-messenger-shell.md),
   [ADR 0015](adr/0015-host-desktop-shell.md),
   [ADR 0016](adr/0016-bot-avatar-tokens.md),
-  [ADR 0018](adr/0018-bot-mark-flock.md), and
-  [ADR 0019](adr/0019-bot-picker-and-chat-purpose.md).
+  [ADR 0018](adr/0018-bot-mark-flock.md),
+  [ADR 0019](adr/0019-bot-picker-and-chat-purpose.md), and
+  [ADR 0021](adr/0021-chat-activity-status.md).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
   `/api/search/messages` (Chat line search),
   `/api/members` list/create and `/api/members/:id/disable`,
