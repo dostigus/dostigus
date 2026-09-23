@@ -37,8 +37,9 @@ those clients do not send.
   `/api/bots*` and `/api/settings/*` call `requireUserSession` (401 without
   a session). `/health` stays public. `/mcp` stays token-gated and soft
   (no 401).
-- Do not implement OAuth, passkeys, email verify, password reset, or
-  Household invites in this ADR.
+- Do not implement OAuth, passkeys, email verify, or password reset in
+  this ADR. Household Invites are
+  [ADR 0023](0023-household-member-invites.md).
 
 ## Alternatives
 

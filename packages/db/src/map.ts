@@ -1,4 +1,4 @@
-import type { Bot, BotAccentHex, BotAvatarShape, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, Invite, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
 import {
   DEFAULT_AVATAR_COLOR,
   DEFAULT_MODEL_TIER,
@@ -95,6 +95,28 @@ export function toOwner(row: OwnerRecord): Owner {
     email: row.email,
     username: row.username,
     createdAt: new Date(row.created_at).toISOString(),
+  }
+}
+
+export type InviteRecord = {
+  id: string
+  token_hash: string
+  email: string
+  expires_at: number
+  created_by: string
+  created_at: number
+  used_at: number | null
+  revoked_at: number | null
+}
+
+export function toInvite(row: InviteRecord): Invite {
+  return {
+    id: row.id,
+    email: row.email,
+    expiresAt: new Date(row.expires_at).toISOString(),
+    createdAt: new Date(row.created_at).toISOString(),
+    usedAt: row.used_at == null ? null : new Date(row.used_at).toISOString(),
+    revokedAt: row.revoked_at == null ? null : new Date(row.revoked_at).toISOString(),
   }
 }
 

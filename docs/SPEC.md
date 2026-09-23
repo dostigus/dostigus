@@ -35,7 +35,9 @@ What the running Cluster does today:
   default Model tier, optional model overrides), `owners` (exactly one
   Cluster Owner: unique email and/or username, password hash, createdAt),
   and `members` (Household Members: display name, unique email and/or
-  username, password hash, createdAt, disabledAt). User Chat lines store
+  username, password hash, createdAt, disabledAt), and `invites`
+  (Household Invite: token hash only, reserved email, expiry, the Owner
+  who created it, used and revoked timestamps). User Chat lines store
   `personId` (the Owner id or Member id). Host opens and migrates the
   Store on start.
 - Owner auth: `nuxt-auth-utils` sealed cookie session. Fresh Cluster →
@@ -57,9 +59,15 @@ What the running Cluster does today:
   Chat shows a purpose Card: Personal, Work, Learning, Other, or free text.
   That answer is a normal Chat line. Purpose is not a Manifest field.
   The Owner adds a Member with a display name, email or username, and
-  password. A Member sees the same Bot list and Chat, without create,
+  password. The Owner can also create an Invite for an email
+  ([ADR 0023](adr/0023-household-member-invites.md)). The Host shows the
+  Invite URL once so the Owner can copy it. The person opens
+  `/invite/…` while logged out, sees that email, chooses a display name
+  and password, and becomes a Member. The Host signs them in. A Member
+  sees the same Bot list and Chat, without create,
   delete, Members, or Settings. Turning off sign-in keeps their name on
-  the Chat line. Logged-out visitors cannot open those surfaces. Host font is
+  the Chat line. Logged-out visitors cannot open those surfaces, except
+  an Invite link. Host font is
   Nunito; charcoal canvas + firm coral-orange tokens
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
@@ -134,10 +142,15 @@ What the running Cluster does today:
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
   `/api/search/messages` (Chat line search),
   `/api/members` list/create and `/api/members/:id/disable`,
+  `/api/members/invites` list/create and
+  `/api/members/invites/:id/revoke` and `…/rotate` (Owner),
+  public `/api/invites/:token` read/accept,
   `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured
   flag only). Persist in SQLite via the same Store helpers as the MCP
   surface. Bot list, Bot read, and Chat accept an Owner or Member session.
-  Bot create/update/delete, Members, and Settings require the Owner. See
+  Bot create/update/delete, Members (including Invite create, list, revoke,
+  and rotate), and Settings require the Owner. Accepting an Invite is
+  public while logged out. See
   [ADR 0008](adr/0008-host-store-routes.md).
 - MCP surface: `@nuxtjs/mcp-toolkit` at `/mcp` (name `Dostigus`). File-based
   tools under `apps/web/server/mcp/tools/` wrap Bots and Chat messages.
@@ -160,7 +173,9 @@ What the running Cluster does today:
   [ADR 0011](adr/0011-chat-mcp-tool-loop.md).
 - `/health` stays `{ ok: true }`.
 - No seed/demo domain Bot. No Builder or Meal. Household on this Host is
-  the Owner plus Members ([ADR 0012](adr/0012-household-members.md)).
+  the Owner plus Members ([ADR 0012](adr/0012-household-members.md)),
+  including Invites the Owner copies by hand
+  ([ADR 0023](adr/0023-household-member-invites.md)).
 
 `pnpm install` and `pnpm check` must stay green.
 
@@ -177,7 +192,8 @@ and [`docs/deploy.md`](deploy.md)).
 - Meal product port
 - Builder that writes Module packages (chat Bot ≠ Builder)
 - Marketplace
-- Share link, guests, invites by email, QR, person-to-person Chat
+- Share link, guests, QR, person-to-person Chat
+- Sending an Invite by SMTP (the Owner copies the link)
 - Roles beyond Owner and Member, hard-delete of a Member
 - OAuth, passkeys, email verify, password reset
 - Mobile native

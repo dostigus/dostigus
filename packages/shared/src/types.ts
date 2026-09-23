@@ -195,6 +195,21 @@ export type Household = {
   clusterId: ClusterId
 }
 
+export type InviteId = string
+
+/**
+ * Household Invite before it becomes a Member.
+ * The raw token is not part of this type — the Store keeps a hash.
+ */
+export type Invite = {
+  id: InviteId
+  email: string
+  expiresAt: string
+  createdAt: string
+  usedAt: string | null
+  revokedAt: string | null
+}
+
 export type ShareLink = {
   token: string
   objectId: string

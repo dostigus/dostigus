@@ -110,6 +110,24 @@ ALTER TABLE \`bots\` ADD \`label\` text DEFAULT '' NOT NULL;
 ALTER TABLE \`bots\` ADD \`description\` text DEFAULT '' NOT NULL;
 `,
   },
+  {
+    id: '0008_member_invites',
+    sql: `
+CREATE TABLE \`invites\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`token_hash\` text NOT NULL,
+  \`email\` text NOT NULL,
+  \`expires_at\` integer NOT NULL,
+  \`created_by\` text NOT NULL,
+  \`created_at\` integer NOT NULL,
+  \`used_at\` integer,
+  \`revoked_at\` integer,
+  FOREIGN KEY (\`created_by\`) REFERENCES \`owners\`(\`id\`) ON UPDATE no action ON DELETE no action
+);
+CREATE UNIQUE INDEX \`invites_token_hash_unique\` ON \`invites\` (\`token_hash\`);
+CREATE INDEX \`invites_email_idx\` ON \`invites\` (\`email\`);
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

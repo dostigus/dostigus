@@ -51,6 +51,10 @@ it('keeps Bot writes, Settings, and Members with the Owner', () => {
     'members/index.get.ts',
     'members/index.post.ts',
     'members/[id]/disable.post.ts',
+    'members/invites/index.get.ts',
+    'members/invites/index.post.ts',
+    'members/invites/[id]/revoke.post.ts',
+    'members/invites/[id]/rotate.post.ts',
   ]
   for (const file of files) {
     const src = readFileSync(join(apiRoot, file), 'utf8')
@@ -86,6 +90,8 @@ it('keeps auth status, register, login, and health public', () => {
     join(apiRoot, 'auth/status.get.ts'),
     join(apiRoot, 'auth/register.post.ts'),
     join(apiRoot, 'auth/login.post.ts'),
+    join(apiRoot, 'invites/[token].get.ts'),
+    join(apiRoot, 'invites/[token].post.ts'),
     join(import.meta.dirname, '../../server/routes/health.get.ts'),
     join(import.meta.dirname, '../../server/routes/health.head.ts'),
   ]
@@ -106,6 +112,16 @@ it('invokes Chat MCP tools in-process from the Host message route', () => {
   expect(src).toContain('personId')
   expect(src).not.toMatch(/fetch\([^)]*\/mcp/)
   expect(src).toContain('requireHostSession')
+})
+
+it('keeps Invite links reachable while logged out', () => {
+  const src = readFileSync(
+    join(import.meta.dirname, '../../app/middleware/owner.global.ts'),
+    'utf8',
+  )
+  expect(src).toContain('function isInvitePath')
+  expect(src).toContain('path.startsWith(\'/invite/\')')
+  expect(src).toContain('if (isInvitePath(to.path))')
 })
 
 it('does not gate the MCP surface on the Host Owner session', () => {
