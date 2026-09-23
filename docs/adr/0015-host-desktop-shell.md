@@ -42,12 +42,15 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
 - Chat has no full-width header bar. A centered pill overlays the thread:
   the Bot avatar and name. The thread scrolls under the translucent pill.
   A top inset, about the pill height, keeps the first line clear when the
-  thread is at the top. Hover shows an arrow beside the name. The pill
-  opens a right
-  `KitSheet` (`edge="end"`): appearance, rename, Model tier from the
-  Manifest, and delete. Delete and edits stay with the Owner. A Member
-  can open the Sheet and read those fields. Skills and Module packages
-  stay out of this Sheet. Appearance detail is in ADR 0016.
+  thread is at the top. An arrow beside the name is reserved on both
+  sides of the pill and hidden at rest, so the mark and name share the
+  same inset. Hover fades the arrow in. The pill opens a right
+  `KitSheet` (`edge="end"`). What that Sheet holds now is
+  [ADR 0020](0020-bot-closet.md): name, optional label, description, and
+  a modal for the Bot mark. Model tier stays on Host Settings. Delete is
+  not on this Sheet. Edits stay with the Owner. A Member can open the
+  Sheet and read those fields. Skills and Module packages stay out.
+  Appearance detail is in ADR 0016 and ADR 0020.
 - Chat bubbles stay unlabeled. The line still stores `personId` and the
   author's name ([ADR 0012](0012-household-members.md)). Optimistic send
   keeps the same timing: the user line shows at once, then the Bot’s flock
@@ -85,8 +88,9 @@ arrow.
 - Unread badges in this change — rejected. There is no unread model yet.
 - Server search — rejected. The loaded Bot list is enough to filter in
   the Host.
-- A full Manifest editor in the right Sheet — rejected. Name, Model
-  tier, and delete are the Bot settings for this shell.
+- A full Manifest editor in the right Sheet — rejected. This shell kept
+  name, Model tier, and delete. [ADR 0020](0020-bot-closet.md) later
+  drops Model tier and delete from that Sheet.
 - Author labels on bubbles — rejected for this shell. The name stays
   stored on the line.
 - A second overlay library for the right panel — rejected. `KitSheet`

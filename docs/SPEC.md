@@ -28,7 +28,8 @@ What the running Cluster does today:
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
   default `goose` (Bot mark), `avatarColor` default `#1F7AE5` /
-  `--bot-accent-10`, empty skills/modules),
+  `--bot-accent-10`, optional `label` and `description` default empty,
+  empty skills/modules),
   `messages` (`botId`, role `user` \| `assistant` \| `system`, content),
   `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
   default Model tier, optional model overrides), `owners` (exactly one
@@ -76,9 +77,14 @@ What the running Cluster does today:
   (`/members`), and Sign out. Chat overlays a centered pill on the thread:
   avatar and name, translucent, so lines scroll under it. A top inset about
   the pill’s height keeps the first line clear of the pill when the thread
-  is at the top. There is no full-width header bar. Hover shows an arrow
-  beside the name. The pill opens a right Sheet (appearance Bot mark + color, rename, Model tier,
-  delete for the Owner), unlabeled bubbles, and a composer. Sidebar Bot
+  is at the top. There is no full-width header bar. The arrow beside the
+  name sits in a slot reserved on both sides, so at rest the mark and name
+  have the same inset. Hover or focus fades that arrow in without shifting
+  the name. The pill opens a right Sheet titled Параметры (name, optional
+  label, description, and a large Bot mark). Appearance (flock and accent)
+  opens in a modal from that mark, with Save. Model tier stays on Host
+  Settings. Delete is not on this Sheet. Members may read the fields.
+  Bubbles stay unlabeled. The composer stays on screen. Sidebar Bot
   rows and the Chat pill show the Manifest Bot mark (`KitBotAvatar`
   idle); the pill greets on open, listens at the composer, thinks while a
   reply is in flight, speaks and cheers it when it lands, tilts on a failed

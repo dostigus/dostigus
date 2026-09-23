@@ -54,7 +54,9 @@ it('maps MCP Zod tools to OpenAI function schemas', () => {
           'owl',
         ],
       },
+      description: { type: 'string' },
       id: { type: 'string', minLength: 1 },
+      label: { type: 'string' },
       name: { type: 'string' },
       modelTier: {
         type: 'string',

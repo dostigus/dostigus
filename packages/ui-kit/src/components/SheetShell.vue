@@ -1,7 +1,10 @@
 <template>
   <DialogRoot v-model:open="open">
     <DialogPortal>
-      <DialogOverlay class="kit-overlay" />
+      <DialogOverlay
+        class="kit-overlay"
+        :class="{ 'kit-overlay--modal': kind === 'modal' }"
+      />
       <DialogContent
         :class="contentClass"
         v-bind="contentAttrs"
@@ -12,8 +15,11 @@
           class="kit-handle"
           aria-hidden="true"
         />
-        <header class="kit-head">
-          <div>
+        <header
+          class="kit-head"
+          :class="{ 'kit-head--center': titleAlign === 'center' }"
+        >
+          <div class="kit-head-copy">
             <DialogTitle class="kit-title">
               <slot name="title">
                 {{ title }}
@@ -28,9 +34,10 @@
           </div>
           <DialogClose
             class="kit-close"
+            :class="{ 'kit-close--icon': close === 'icon' }"
             aria-label="Close"
           >
-            Close
+            {{ close === 'icon' ? '×' : 'Close' }}
           </DialogClose>
         </header>
         <div
@@ -67,9 +74,15 @@ const props = withDefaults(defineProps<{
   edge?: 'bottom' | 'end'
   /** Wider centered Sheet. Drawers ignore this. */
   wide?: boolean
+  /** Center the title. The close control stays in the top-right. */
+  titleAlign?: 'start' | 'center'
+  /** `text` says Close. `icon` is the Host ×. */
+  close?: 'text' | 'icon'
 }>(), {
   edge: 'bottom',
   wide: false,
+  titleAlign: 'start',
+  close: 'text',
 })
 
 const open = defineModel<boolean>('open', { required: true })

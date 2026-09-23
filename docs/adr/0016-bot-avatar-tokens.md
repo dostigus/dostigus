@@ -31,6 +31,10 @@ simple eyes. Defaults are `circle` and `--bot-accent-01` (`#1F7AE5`).
 
 ### Editor
 
+> Amended by [ADR 0020](0020-bot-closet.md). The flock and palette still
+> edit here, but in a modal opened from the closet, not inline on the
+> Sheet. Model tier and delete left this Sheet.
+
 The right Bot Sheet keeps name, Model tier, and delete for the Owner. It
 adds a **Bot** tab with the shape grid and color swatches (structure from
 Nick’s reference; English copy; Dostigus tokens). **Generate** and
@@ -63,6 +67,6 @@ image upload, or custom hex outside the palette.
 - Initials-only avatars — rejected. Nick wants silhouettes plus palette.
 - Storing a freeform image URL — rejected for this change. Upload is out
   of scope.
-- A separate appearance Sheet — rejected. The right Bot Sheet already
-  owns Bot settings.
+- A separate appearance Sheet — rejected for this ADR. [ADR 0020](0020-bot-closet.md)
+  later opens appearance in a modal from the same closet.
 - Allowing any CSS color — rejected. Color must be a palette token hex.

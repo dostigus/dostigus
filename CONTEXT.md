@@ -92,7 +92,8 @@ _Avoid_: prompt (unqualified), tool, Module package.
 
 **Manifest**:
 Bot definition: persona, Skills, bound Module packages, Model tier,
-avatar shape, and avatar color (Bot accent palette).
+avatar shape, avatar color (Bot accent palette), an optional label,
+and an optional description.
 _Avoid_: config, profile (unqualified).
 
 **Module package**:

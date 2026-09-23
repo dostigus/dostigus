@@ -39,16 +39,22 @@
         :aria-label="identityLabel"
         @click="settingsOpen = true"
       >
-        <HostBotAvatar
-          :name="bot?.name ?? 'Bot'"
-          :seed="bot?.id ?? ''"
-          :shape="bot?.manifest.avatarShape"
-          :avatar-color="bot?.manifest.avatarColor"
-          :state="markState"
-          :live="botLive"
-          size="sm"
+        <span
+          class="cue-balance"
+          aria-hidden="true"
         />
-        <span class="name">{{ bot?.name ?? 'Bot' }}</span>
+        <span class="identity-copy">
+          <HostBotAvatar
+            :name="bot?.name ?? 'Bot'"
+            :seed="bot?.id ?? ''"
+            :shape="bot?.manifest.avatarShape"
+            :avatar-color="bot?.manifest.avatarColor"
+            :state="markState"
+            :live="botLive"
+            size="sm"
+          />
+          <span class="name">{{ bot?.name ?? 'Bot' }}</span>
+        </span>
         <svg
           class="cue"
           viewBox="0 0 24 24"
@@ -197,7 +203,6 @@
       v-model:open="settingsOpen"
       :bot="bot"
       @saved="onBotSaved"
-      @deleted="onBotDeleted"
     />
   </div>
 </template>
@@ -680,12 +685,6 @@ async function deliver(raw: string, existing: TimelineLine | null) {
 async function onBotSaved() {
   await Promise.all([refreshBot(), refreshBots()])
 }
-
-async function onBotDeleted() {
-  settingsOpen.value = false
-  await refreshBots()
-  await navigateTo('/')
-}
 </script>
 
 <style scoped>
@@ -732,16 +731,17 @@ async function onBotDeleted() {
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.15rem;
   min-width: 0;
-  max-width: min(16rem, calc(100% - 6.5rem));
+  max-width: min(18rem, calc(100% - 6.5rem));
   appearance: none;
   border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
   background: color-mix(in srgb, var(--sheet) 62%, transparent);
   backdrop-filter: blur(14px);
   color: inherit;
   border-radius: 999px;
-  padding: 0.2rem 0.7rem 0.2rem 0.2rem;
+  /* Equal inset. The arrow slot is mirrored on the left so rest stays centered. */
+  padding: 0.2rem 0.22rem;
   cursor: pointer;
   font: inherit;
   box-shadow: 0 0.35rem 1.1rem rgb(0 0 0 / 28%);
@@ -760,6 +760,13 @@ async function onBotDeleted() {
   cursor: default;
 }
 
+.identity-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
 .name {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -768,25 +775,26 @@ async function onBotDeleted() {
   font-weight: 700;
 }
 
-.cue {
-  width: 0;
+.cue,
+.cue-balance {
+  width: 0.95rem;
   height: 0.95rem;
   flex: none;
+}
+
+.cue {
   opacity: 0;
-  overflow: hidden;
   fill: none;
   stroke: currentcolor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   color: var(--text-muted);
-  transition: width 140ms ease, opacity 140ms ease, margin-inline-start 140ms ease;
+  transition: opacity 140ms ease;
 }
 
 .identity:hover:not(:disabled) .cue,
 .identity:focus-visible .cue {
-  width: 0.95rem;
-  margin-inline-start: 0.05rem;
   opacity: 1;
   color: var(--text);
 }
