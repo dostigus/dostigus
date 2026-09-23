@@ -20,6 +20,7 @@ Settled now, even if this repo only scaffolds them:
 | Declarative modules | SQL + templated MCP before arbitrary sandbox. See [ADR 0006](adr/0006-day-1-declarative-modules.md). |
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
 | Pilot shape | Meal-like loop later: Chat → Card → Sheet via MCP. Not a Meal port. Day-1 is create Bot + Chat only. |
+| Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. Bot visibility `shared` \| `private`. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). Not current Host code. |
 
 ## This Host (create Bot + Chat)
 
@@ -176,6 +177,12 @@ What the running Cluster does today:
   the Owner plus Members ([ADR 0012](adr/0012-household-members.md)),
   including Invites the Owner copies by hand
   ([ADR 0023](adr/0023-household-member-invites.md)).
+- Person Threads (`dm`, `group`, `room`) and Bot visibility (`shared` |
+  `private`) are decided in
+  [ADR 0024](adr/0024-threads-and-bot-visibility.md). They stay out of
+  this Host until that ADR's milestones. Today the Host still has one
+  Chat timeline per Bot and no visibility field. The Owner still creates
+  and deletes every Bot. An Invite still does not change visibility.
 
 `pnpm install` and `pnpm check` must stay green.
 
@@ -192,7 +199,11 @@ and [`docs/deploy.md`](deploy.md)).
 - Meal product port
 - Builder that writes Module packages (chat Bot ≠ Builder)
 - Marketplace
-- Share link, guests, QR, person-to-person Chat
+- Share link, guests, QR
+- Person Threads (`dm`, `group`, `room`) and Bot visibility. Decided in
+  [ADR 0024](adr/0024-threads-and-bot-visibility.md). Current Host code
+  waits for that ADR's order: bubble parts, then visibility and
+  per-person bot-threads, then `dm` / `group` / `room`
 - Sending an Invite by SMTP (the Owner copies the link)
 - Roles beyond Owner and Member, hard-delete of a Member
 - OAuth, passkeys, email verify, password reset
@@ -201,7 +212,8 @@ and [`docs/deploy.md`](deploy.md)).
 - Arbitrary in-cluster sandbox code
 - Chat message `parts[]`, inline buttons, and status chips inside a bubble.
   Assistant Markdown is [ADR 0022](adr/0022-chat-assistant-markdown.md);
-  richer parts are later
+  richer parts are the first milestone in
+  [ADR 0024](adr/0024-threads-and-bot-visibility.md)
 - Managed/cloud hosting (optional later; not the default)
 
 ## Success for later MVPs (not this PR)
