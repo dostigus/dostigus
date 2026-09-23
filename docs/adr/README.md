@@ -58,4 +58,3 @@ English.
 | [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility |
 | [0025](0025-chat-bubble-parts.md) | Chat bubble parts |
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
-| [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility |
