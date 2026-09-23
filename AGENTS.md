@@ -100,6 +100,39 @@ when the helper needs one. Password doubles in these tests are
 [`apps/web/tests/unit/household-invites.test.ts`](apps/web/tests/unit/household-invites.test.ts)
 (Invites).
 
+## Adding a Store column
+
+A new Store column is six edits. `openStore` applies `STORE_MIGRATIONS` in
+[`packages/db/src/migrations.ts`](packages/db/src/migrations.ts). The SQL
+file under [`packages/db/migrations/`](packages/db/migrations/) and
+[`packages/db/migrations/meta/_journal.json`](packages/db/migrations/meta/_journal.json)
+are the other two copies. Keep all three the same so a fresh Store and an
+existing Store boot with the same columns.
+
+Example: [`0009_message_parts.sql`](packages/db/migrations/0009_message_parts.sql)
+([#59](https://github.com/dostigus/dostigus/pull/59)) added `messages.parts_json`.
+Write the next column the same way, by hand. The same list applies to any
+other table; names below are the `messages` case.
+
+1. **Schema.** Add the column on the table in
+   [`packages/db/src/schema.ts`](packages/db/src/schema.ts).
+2. **MessageRecord.** Add the snake_case field on `MessageRecord` in
+   [`packages/db/src/map.ts`](packages/db/src/map.ts). Map it in `toMessage`
+   when Chat reads the field. On another table, use that table's record
+   type in the same file.
+3. **Every SELECT.** Add the column to every statement that lists that
+   table's columns. On `messages`, that is the `SELECT` in `listMessages`
+   and the `INSERT` in `insertMessageRow` in
+   [`packages/db/src/queries.ts`](packages/db/src/queries.ts).
+4. **SQL file.** Add `packages/db/migrations/NNNN_name.sql`. `NNNN` is the
+   next index after the last journal `tag`.
+5. **Embedded SQL.** Append that same statement to `STORE_MIGRATIONS`.
+   The `id` is the filename without `.sql` (`0009_message_parts`).
+6. **Journal.** Append one object to `_journal.json`: next `idx`,
+   `version` `"6"`, `when` equal to the previous `when` plus `86400000`,
+   `tag` equal to that `id`, `breakpoints` `true`. That journal file is
+   the only file under `migrations/meta/`.
+
 ## Local preview (Host)
 
 ```
