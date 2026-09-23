@@ -6,6 +6,12 @@ const brandDir = fileURLToPath(new URL('../../packages/ui-kit/assets/brand', imp
 
 export default defineNuxtConfig({
   telemetry: false,
+  // `pnpm preview:host` sets DOSTIGUS_PREVIEW_SEED=1. Nuxt otherwise mounts
+  // `nuxt-devtools-frame`, which covers the Invite URL field and the Chat
+  // composer. A normal `nuxt dev` leaves devtools on.
+  devtools: process.env.DOSTIGUS_PREVIEW_SEED === '1'
+    ? { enabled: false }
+    : undefined,
   compatibilityDate: '2026-09-21',
   future: {
     compatibilityVersion: 4,
