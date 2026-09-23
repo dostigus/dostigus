@@ -181,6 +181,13 @@ Prefer honest process pain over a clean story. Do not skip the section because
 Conventional commits (`feat:`, `docs:`, `fix:`, `chore:`). Do not force-push
 `main`.
 
+Before editing `AGENTS.md` or `.cursor/rules` from `main`, or before basing
+a docs or rules change on the tip of `main`, run `git fetch origin main`
+(or otherwise refresh remote-tracking refs or the snapshot). A Cursor
+cloud agent VM can start with a stale remote-tracking `main` while
+`git status` says the branch is up to date. Fetch so that tip matches
+GitHub, then branch.
+
 Create a feature branch from current `main` with no upstream.
 `git checkout -b feat/… origin/main` sets the upstream to `origin/main`, so a
 later bare `git push` updates **main**. Create the branch locally, then push
