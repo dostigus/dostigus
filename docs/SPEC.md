@@ -77,13 +77,15 @@ What the running Cluster does today:
   (`/members`), and Sign out. Chat overlays a centered pill on the thread:
   avatar and name, translucent, so lines scroll under it. A top inset about
   the pill’s height keeps the first line clear of the pill when the thread
-  is at the top. There is no full-width header bar. The arrow beside the
-  name sits in a small slot reserved on both sides, so at rest the mark
-  and name have the same tight inset. Hover or focus fades that arrow in
-  without shifting
-  the name. The pill opens a right Sheet titled Параметры (name, optional
-  label, description, and a large Bot mark). Appearance (flock and accent)
-  opens in a modal from that mark, with Save. Model tier stays on Host
+  is at the top. There is no full-width header bar. At rest the pill is
+  only the mark and the name, with the same tight inset on both sides.
+  Hover or focus fades an arrow in on the trailing side and the pill grows
+  to fit it, with padding still sitting past that arrow. The pill opens a
+  right Sheet titled Параметры (name, optional label, description, and a
+  large Bot mark). A small pencil beside that mark stays visible for the
+  Owner and opens appearance (flock and accent) in a modal, with Save.
+  Flock tiles in that modal are square, including the selected frame.
+  Model tier stays on Host
   Settings. Delete is not on this Sheet. Members may read the fields.
   Bubbles stay unlabeled. The composer stays on screen. Sidebar Bot
   rows and the Chat pill show the Manifest Bot mark (`KitBotAvatar`

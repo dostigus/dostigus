@@ -10,29 +10,26 @@
       v-if="bot"
       class="mark"
     >
+      <KitBotAvatar
+        :shape="bot.manifest.avatarShape"
+        :color="bot.manifest.avatarColor"
+        size="lg"
+        :state="heroState"
+      />
       <button
+        v-if="isOwner"
         type="button"
-        class="mark-hit"
-        :disabled="!isOwner"
+        class="pencil"
         aria-label="Изменить аватар"
         @click="openAppearance"
       >
-        <KitBotAvatar
-          :shape="bot.manifest.avatarShape"
-          :color="bot.manifest.avatarColor"
-          size="lg"
-          :state="heroState"
-        />
-        <span
-          v-if="isOwner"
-          class="pencil"
+        <svg
+          viewBox="0 0 24 24"
           aria-hidden="true"
         >
-          <svg viewBox="0 0 24 24">
-            <path d="M4 20l4.1-.8L19.2 8.1a1.6 1.6 0 0 0 0-2.3l-.9-.9a1.6 1.6 0 0 0-2.3 0L4.8 15.9 4 20z" />
-            <path d="M13.6 6.4l4 4" />
-          </svg>
-        </span>
+          <path d="M4 20l4.1-.8L19.2 8.1a1.6 1.6 0 0 0 0-2.3l-.9-.9a1.6 1.6 0 0 0-2.3 0L4.8 15.9 4 20z" />
+          <path d="M13.6 6.4l4 4" />
+        </svg>
       </button>
     </div>
 
@@ -383,53 +380,33 @@ onUnmounted(() => {
 
 <style scoped>
 .mark {
+  position: relative;
   display: flex;
   justify-content: center;
   margin: 0.15rem 0 1.35rem;
 }
 
-.mark-hit {
-  position: relative;
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 0.2rem;
-  border-radius: 999px;
-  cursor: pointer;
-  line-height: 0;
-}
-
-.mark-hit:disabled {
-  opacity: 1;
-  cursor: default;
-}
-
-.mark-hit:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-.mark-hit :deep(.kit-bot-avatar--lg) {
+.mark :deep(.kit-bot-avatar--lg) {
   width: 7.25rem;
   height: 7.25rem;
 }
 
 .pencil {
   position: absolute;
-  left: 50%;
   top: 50%;
-  width: 2.4rem;
-  height: 2.4rem;
-  transform: translate(-50%, -50%);
+  left: calc(50% + 4.05rem);
+  transform: translateY(-50%);
+  appearance: none;
+  width: 2.15rem;
+  height: 2.15rem;
   display: grid;
   place-items: center;
   border-radius: 0.7rem;
-  border: 1px solid color-mix(in srgb, var(--text) 32%, transparent);
-  background: rgb(0 0 0 / 48%);
-  color: #fff;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 120ms ease;
+  border: 1px solid color-mix(in srgb, var(--text) 28%, transparent);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
 }
 
 .pencil svg {
@@ -442,9 +419,15 @@ onUnmounted(() => {
   stroke-linejoin: round;
 }
 
-.mark-hit:hover .pencil,
-.mark-hit:focus-visible .pencil {
-  opacity: 1;
+.pencil:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--text) 48%, transparent);
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.pencil:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .form {
@@ -519,10 +502,14 @@ textarea:disabled {
 
 .shape {
   appearance: none;
+  box-sizing: border-box;
+  width: 4.35rem;
+  height: 4.35rem;
+  aspect-ratio: 1;
   border: 0;
   background: transparent;
-  padding: 0.35rem 0.2rem;
-  border-radius: var(--radius);
+  padding: 0.3rem;
+  border-radius: 0.7rem;
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -534,8 +521,7 @@ textarea:disabled {
 
 .shape.selected {
   background: color-mix(in srgb, var(--text) 9%, transparent);
-  outline: 2px solid var(--accent-dim);
-  outline-offset: -1px;
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 .shape:disabled {
@@ -616,11 +602,5 @@ textarea:disabled {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pencil {
-    transition: none;
-  }
 }
 </style>

@@ -42,9 +42,9 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
 - Chat has no full-width header bar. A centered pill overlays the thread:
   the Bot avatar and name. The thread scrolls under the translucent pill.
   A top inset, about the pill height, keeps the first line clear when the
-  thread is at the top. An arrow beside the name is reserved on both
-  sides of the pill and hidden at rest, so the mark and name share the
-  same inset. Hover fades the arrow in. The pill opens a right
+  thread is at the top. At rest the pill is the mark and the name, with
+  the same inset on both sides. Hover fades an arrow in and the pill
+  grows wider to fit it. The pill opens a right
   `KitSheet` (`edge="end"`). What that Sheet holds now is
   [ADR 0020](0020-bot-closet.md): name, optional label, description, and
   a modal for the Bot mark. Model tier stays on Host Settings. Delete is

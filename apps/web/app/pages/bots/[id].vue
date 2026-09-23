@@ -39,10 +39,6 @@
         :aria-label="identityLabel"
         @click="settingsOpen = true"
       >
-        <span
-          class="cue-balance"
-          aria-hidden="true"
-        />
         <span class="identity-copy">
           <HostBotAvatar
             :name="bot?.name ?? 'Bot'"
@@ -55,13 +51,17 @@
           />
           <span class="name">{{ bot?.name ?? 'Bot' }}</span>
         </span>
-        <svg
-          class="cue"
-          viewBox="0 0 24 24"
+        <span
+          class="cue-slot"
           aria-hidden="true"
         >
-          <path d="M5 12h14M13 6l6 6-6 6" />
-        </svg>
+          <svg
+            class="cue"
+            viewBox="0 0 24 24"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </span>
       </button>
 
       <ol
@@ -731,8 +731,7 @@ async function onBotSaved() {
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  --pill-slot: 0.62rem;
-  gap: 0.08rem;
+  gap: 0;
   min-width: 0;
   max-width: min(18rem, calc(100% - 6.5rem));
   appearance: none;
@@ -741,8 +740,8 @@ async function onBotSaved() {
   backdrop-filter: blur(14px);
   color: inherit;
   border-radius: 999px;
-  /* Tight equal inset. The arrow slot is mirrored so rest stays centered. */
-  padding: 0.14rem 0.1rem;
+  /* Equal inset around the mark and name. The arrow is not reserved. */
+  padding: 0.18rem 0.42rem;
   cursor: pointer;
   font: inherit;
   box-shadow: 0 0.35rem 1.1rem rgb(0 0 0 / 28%);
@@ -776,27 +775,44 @@ async function onBotSaved() {
   font-weight: 700;
 }
 
-.cue,
-.cue-balance {
-  width: var(--pill-slot);
-  height: var(--pill-slot);
+.cue-slot {
+  display: flex;
   flex: none;
+  align-items: center;
+  width: 0;
+  margin-inline-start: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    width 180ms ease,
+    margin-inline-start 180ms ease,
+    opacity 160ms ease;
+}
+
+.identity:hover:not(:disabled) .cue-slot,
+.identity:focus-visible .cue-slot {
+  width: 1.05rem;
+  margin-inline-start: 0.32rem;
+  opacity: 1;
 }
 
 .cue {
-  opacity: 0;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
   fill: none;
   stroke: currentcolor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   color: var(--text-muted);
-  transition: opacity 140ms ease;
+  transform: translateX(-0.2rem);
+  transition: transform 180ms ease, color 160ms ease;
 }
 
 .identity:hover:not(:disabled) .cue,
 .identity:focus-visible .cue {
-  opacity: 1;
+  transform: none;
   color: var(--text);
 }
 
@@ -1113,6 +1129,7 @@ textarea:focus {
 
 @media (prefers-reduced-motion: reduce) {
   .composer-row,
+  .cue-slot,
   .cue {
     transition: none;
   }
