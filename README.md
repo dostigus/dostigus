@@ -18,14 +18,14 @@ Chat + Cards + Sheets from the Kit. Default path is self-host
 | [`docs/deploy.md`](docs/deploy.md) | Self-host compose, GHCR, Store volume, MCP token |
 | [`docs/ui.md`](docs/ui.md) | Host tokens (Nunito, charcoal `#121212` + `#F25630`) |
 | [`docs/adr/`](docs/adr/) | Architecture decisions |
-| [`AGENTS.md`](AGENTS.md) | Agent rules + `pnpm check` |
+| [`AGENTS.md`](AGENTS.md) | Agent rules + `CI=1 pnpm check` |
 
 ## Develop
 
 ```bash
 pnpm install
 pnpm --filter @dostigus/web dev   # http://localhost:3000/
-pnpm check                        # lint → typecheck → test → build
+CI=1 pnpm check                   # lint → typecheck → test → build
 ```
 
 On a Cursor cloud agent VM, `nuxt dev` often listens on IPv6 only. Use
