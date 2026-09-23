@@ -70,6 +70,7 @@ export const members = sqliteTable('members', {
  */
 export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(),
+  /** Person-thread Chat lines need nullable messages.bot_id. */
   botId: text('bot_id').references(() => bots.id, { onDelete: 'cascade' }),
   role: text('role').notNull(),
   content: text('content').notNull(),
