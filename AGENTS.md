@@ -2,7 +2,7 @@
 
 ## Before you write code
 
-1. Read [`docs/SPEC.md`](docs/SPEC.md) and the ADRs in [`docs/adr/`](docs/adr/).
+1. Read [`docs/SPEC.md`](docs/SPEC.md) and the ADR index in [`docs/adr/README.md`](docs/adr/README.md).
 2. Use glossary terms from [`CONTEXT.md`](CONTEXT.md) only.
    **Dostigus, Platform, Cluster, Owner, Member, Host, Chat, Card, Sheet, Kit,
    Brand, Sticker, Sheet shell, Bot, Orchestrator, Builder, Skill, Manifest,
@@ -22,11 +22,14 @@
 
 ## Before every commit
 
-From the repo root, **always** run and wait for a green:
+From the repo root, run and wait for a green:
 
 ```
 CI=1 pnpm check
 ```
+
+Pure-markdown commits (`docs/adr/`, CONTEXT, SPEC-only) do not need
+`CI=1 pnpm check` when the working tree has no app/code changes.
 
 That is `lint` → typecheck → vitest → build. `CI=1` is the run that matches
 GitHub Actions (Actions sets `CI` around `pnpm check` in
