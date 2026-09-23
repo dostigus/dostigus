@@ -46,6 +46,14 @@ package manifest as `"catalog:"`. A direct version range (for example
 `"^15.0.2"`) fails `CI=1 pnpm check`: the ESLint rule
 `pnpm/json-enforce-catalog` rejects it.
 
+To discard a probe dependency, revert `package.json` (and `pnpm-lock.yaml`
+if it is dirty), then run `pnpm install`. Do not run
+`pnpm remove --lockfile-only` (including
+`pnpm remove -w <pkg> --lockfile-only`). That command rewrites the
+`catalogs:` block in `pnpm-lock.yaml` and drops catalog entries that
+[`pnpm-workspace.yaml`](pnpm-workspace.yaml) still declares and that
+`apps/web` still uses. The lockfile diff is large and wrong.
+
 ## Local preview (Host)
 
 ```
