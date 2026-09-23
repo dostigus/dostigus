@@ -16,6 +16,7 @@
           aria-hidden="true"
         />
         <header
+          v-if="chrome !== 'bare'"
           class="kit-head"
           :class="{ 'kit-head--center': titleAlign === 'center' }"
         >
@@ -40,6 +41,12 @@
             {{ close === 'icon' ? '×' : 'Close' }}
           </DialogClose>
         </header>
+        <DialogTitle
+          v-else
+          class="kit-sr-only"
+        >
+          {{ title }}
+        </DialogTitle>
         <div
           v-if="$slots.media"
           class="kit-media"
@@ -78,18 +85,28 @@ const props = withDefaults(defineProps<{
   titleAlign?: 'start' | 'center'
   /** `text` says Close. `icon` is the Host ×. */
   close?: 'text' | 'icon'
+  /** `bare` keeps an accessible name and drops the title and close control. */
+  chrome?: 'default' | 'bare'
 }>(), {
   edge: 'bottom',
   wide: false,
   titleAlign: 'start',
   close: 'text',
+  chrome: 'default',
 })
 
 const open = defineModel<boolean>('open', { required: true })
 
 const contentClass = computed(() => {
   if (props.kind !== 'sheet') {
-    return props.wide ? 'kit-dialog kit-dialog--wide' : 'kit-dialog'
+    const classes = ['kit-dialog']
+    if (props.wide) {
+      classes.push('kit-dialog--wide')
+    }
+    if (props.chrome === 'bare') {
+      classes.push('kit-dialog--bare')
+    }
+    return classes.join(' ')
   }
   return props.edge === 'end' ? 'kit-sheet kit-sheet--end' : 'kit-sheet'
 })

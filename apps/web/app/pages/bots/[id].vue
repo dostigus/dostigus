@@ -741,7 +741,7 @@ async function onBotSaved() {
   color: inherit;
   border-radius: 999px;
   /* Equal inset around the mark and name. The arrow is not reserved. */
-  padding: 0.18rem 0.42rem;
+  padding: 0.18rem 0.7rem;
   cursor: pointer;
   font: inherit;
   box-shadow: 0 0.35rem 1.1rem rgb(0 0 0 / 28%);

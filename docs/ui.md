@@ -173,17 +173,21 @@ Where the Host uses them today:
 Wide screens keep a sidebar beside the open page. The seam between them
 is `--line-soft` (closer to `--bg` than `--line`). Drag the edge to resize
 it. Dragging below the minimum, or the edge control, collapses it to an
-icon rail (avatars, the picker control, user button). The width and
+icon rail (avatars, the loupe, the picker control, and the user button). The width and
 collapsed state stay in the browser.
 
-The top of the sidebar is a loupe and a `+`, side by side, both outlined
-icon buttons with no accent fill. The `+` opens the Bot picker. The loupe
-opens a centered search Sheet titled Поиск: a field, then rows with an
+The bottom of the sidebar is a loupe and a `+`, side by side, both outlined
+icon buttons with no accent fill, next to the user button. On the icon
+rail they stack above that button: loupe, then `+`, then the user mark,
+and each Bot hit target is a square. The `+` opens the Bot picker. The
+loupe opens a centered search Sheet with no title and no close control:
+a field with a loupe and the placeholder Поиск, then rows with an
 avatar, a name, an optional section tag, one subtitle line, and ⌘1–⌘9 on
-the first Bots when the field is empty. Search covers Bot names, Chat
-lines, and basic Host settings (Settings, Members, and the open Bot’s
-Sheet). With no Bots, that list region centers a short muted
-line. The main pane then shows the wave sticker and **Create a Bot**.
+the first Bots when the field is empty. Escape, the overlay, and choosing
+a row dismiss it. Search covers Bot names, Chat lines, and basic Host
+settings (Settings, Members, and the open Bot’s Sheet). With no Bots,
+that list region centers a short muted line. The main pane then shows
+the wave sticker and **Create a Bot**.
 The `+` and that button replace the Chat pane with the picker: a **To:**
 field across the pane, a **×** on the right of that row, then **Create
 new Bot** (plain **+**, Owner only), then existing Bots (mark, name,
@@ -192,7 +196,7 @@ that was open before the picker. Choosing a Bot, creating a Bot, or a
 sidebar Bot row also leaves it. The picker search does not create a Bot from the
 query. A Member sees search and existing Bots only. Each sidebar row is
 an avatar, the Bot name, and a one-line preview of the latest Chat line.
-The bottom is a user button, under a `--line-soft` rule. Its mark is a
+The user button sits in that bottom row, under a `--line-soft` rule. Its mark is a
 little smaller than a Bot row avatar and sits on a neutral `--surface`
 chip. The name is regular weight and muted.
 Its menu opens Settings, Members (Owner), and Sign out. Those links are
@@ -212,13 +216,15 @@ the Bot mark and name on a translucent `--sheet` fill, so the thread can
 scroll under it. `--thread-top-gap` pads the thread by about the pill’s
 height, so the first line is not flush under the pill when the thread is
 at the top. At rest the pill holds only the mark and the name, with the
-same horizontal inset on both sides. Hover or keyboard focus fades an
-arrow in after the name and the pill grows wider to fit it. Padding on
+same horizontal inset on both sides, a little wider than a tight crop.
+Hover or keyboard focus fades an arrow in after the name and the pill
+grows wider to fit it. Padding on
 the trailing side sits past the arrow. The pill opens a right Sheet
 (`KitSheet` with `edge="end"`, title Параметры, × in the top-right).
-A large Bot mark sits under the title. A small pencil badge on the
-bottom-right corner of that mark stays visible for the Owner and opens
-a modal: square flock tiles (the selected frame is the same rounded
+A large Bot mark sits under the title. The Owner opens appearance by
+clicking that mark. A small pencil badge on the
+bottom-right corner of that mark stays visible and opens the same
+modal: square flock tiles (the selected frame is the same rounded
 square), smaller hue-ordered color swatches in a block the same width
 as the flock grid, with a centered last row, **Reset** («Сбросить»), and
 **Save** («Сохранить»). The Sheet fields are name («Имя»), an optional

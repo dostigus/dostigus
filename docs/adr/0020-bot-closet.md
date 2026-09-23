@@ -11,9 +11,10 @@ on that Sheet is Russian and casual. Docs stay English.
 - Title is **Параметры**, centered. The close control is a **×** in the
   top-right, the same mark the Host picker uses for Back. It is not a
   chevron pair.
-- A large Bot mark sits under the title. For the Owner, a small pencil
-  badge sits on the bottom-right corner of the mark and stays visible.
-  That control opens a modal (`KitDialog`) with the eight flock birds on
+- A large Bot mark sits under the title. For the Owner, clicking that
+  mark opens appearance. A small pencil badge sits on the bottom-right
+  corner of the mark, stays visible, and opens the same modal
+  (`KitDialog`) with the eight flock birds on
   square tiles (the selected frame is the same rounded square) and
   smaller hue-ordered accent swatches. The palette is the same width as
   the flock grid (last row centered). **Save**
@@ -33,8 +34,9 @@ on that Sheet is Russian and casual. Docs stay English.
 
 The Chat pill still opens this Sheet, including from Host search. At
 rest the pill is the mark and the name only, with the same inset on both
-sides. Hover or focus fades an arrow in after the name and the pill grows
-wider so the trailing inset sits past the arrow.
+sides, a little wider than a tight crop. Hover or focus fades an arrow
+in after the name and the pill grows wider so the trailing inset sits
+past the arrow.
 
 ## Context
 

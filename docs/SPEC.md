@@ -68,23 +68,30 @@ What the running Cluster does today:
   and the main pane shows the wave sticker and **Create a Bot**. Add Member opens a Sheet. See
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
   is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
-  an icon rail. Each row shows an avatar, the Bot name, and the latest
-  Chat line. A loupe and a `+` sit at the top of the sidebar, both quiet
-  icon buttons with no accent fill. The loupe opens a centered search
-  Sheet (Bot names, Chat lines, and Host settings that person can open).
+  an icon rail. Each expanded row shows an avatar, the Bot name, and the
+  latest Chat line. On the icon rail each Bot’s hit target is a square.
+  A loupe and a `+` sit at the bottom of the sidebar, both quiet icon
+  buttons with no accent fill, next to the user button. On the icon rail
+  they stack above that button: loupe, then `+`, then the user mark.
+  The loupe opens a centered search Sheet with no title and no close
+  control: a field with a loupe and the placeholder Поиск, then rows for
+  Bot names, Chat lines, and Host settings that person can open. Escape,
+  the overlay, and choosing a row dismiss it.
   The `+` opens
   the Bot picker. A user button opens Settings (`/settings`), Members
   (`/members`), and Sign out. Chat overlays a centered pill on the thread:
   avatar and name, translucent, so lines scroll under it. A top inset about
   the pill’s height keeps the first line clear of the pill when the thread
   is at the top. There is no full-width header bar. At rest the pill is
-  only the mark and the name, with the same tight inset on both sides.
+  only the mark and the name, with the same inset on both sides, a little
+  roomier than a tight crop.
   Hover or focus fades an arrow in on the trailing side and the pill grows
   to fit it, with padding still sitting past that arrow. The pill opens a
   right Sheet titled Параметры (name, optional label, description, and a
-  large Bot mark). A small pencil badge on the bottom-right corner of
-  that mark stays visible for the Owner and opens appearance (flock and
-  accent) in a modal, with Save. Flock tiles in that modal are square,
+  large Bot mark). The Owner opens appearance by clicking that mark or
+  the small pencil badge on its bottom-right corner. The badge stays
+  visible. Appearance (flock and accent) opens in a modal, with Save.
+  Flock tiles in that modal are square,
   including the selected frame. Accent swatches are smaller, and the
   palette is the same width as that flock grid.
   Model tier stays on Host
