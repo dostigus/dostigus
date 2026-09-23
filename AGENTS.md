@@ -25,11 +25,15 @@
 From the repo root, **always** run and wait for a green:
 
 ```
-pnpm check
+CI=1 pnpm check
 ```
 
-That is `lint` → typecheck → vitest → build. Land a clean tree before
-`git commit`. Prefer `pnpm check:full` (`lint:fix` first) if style nits fire.
+That is `lint` → typecheck → vitest → build. `CI=1` is the run that matches
+GitHub Actions (Actions sets `CI` around `pnpm check` in
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml)). A bare
+`pnpm exec eslint` in an editor or agent session can detect the editor and
+skip rules. Do not treat that run as the check. Land a clean tree before
+`git commit`. Prefer `CI=1 pnpm check:full` (`lint:fix` first) if style nits fire.
 
 - Never `--no-verify` unless the user explicitly asks.
 - Docs-only commits still need a clean working tree if app code changed.
@@ -154,9 +158,24 @@ Required bullets (write “none” when a bullet is empty):
 4. What would make the same task about 2× faster next time.
 
 Prefer honest process pain over a clean story. Do not skip the section because
-`pnpm check` is green.
+`CI=1 pnpm check` is green.
 
 ## Commits
 
 Conventional commits (`feat:`, `docs:`, `fix:`, `chore:`). Do not force-push
 `main`.
+
+Create a feature branch from current `main` with no upstream.
+`git checkout -b feat/… origin/main` sets the upstream to `origin/main`, so a
+later bare `git push` updates **main**. Create the branch locally, then push
+an explicit feature ref:
+
+```
+git checkout -b feat/short-name
+git push -u origin HEAD
+```
+
+To start from the remote tip without an upstream, use
+`git checkout -b feat/short-name --no-track origin/main`, then the same push.
+`git push -u origin <feature-branch>` is the same as `HEAD`. Leave the branch
+untracked until that push.
