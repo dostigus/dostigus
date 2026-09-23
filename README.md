@@ -31,10 +31,11 @@ pnpm check                        # lint → typecheck → test → build
 On a Cursor cloud agent VM, `nuxt dev` often listens on IPv6 only. Use
 `http://localhost:3000/`. `http://127.0.0.1:3000` refuses the connection.
 
-Host preview seed (Owner signed in, stable Bot **New Bot**, Chat open):
+Host preview seed (Owner signed in, fixture Bot id `preview`, Chat open):
 `pnpm preview:host`, then GET `http://localhost:3000/preview-seed`
-(`?tall=1` for a tall thread). HEAD is answered on that route and on
-`/health`. `pnpm smoke:preview` checks that HEAD, the stable Bot, and the
+(redirects to `/bots/preview`; `?tall=1` for a tall thread). Renaming
+that Bot does not change the id. HEAD is answered on that route and on
+`/health`. `pnpm smoke:preview` checks that HEAD, the fixture Bot, and the
 tall thread. See [`AGENTS.md`](AGENTS.md).
 
 A fresh Cluster opens **Create your Owner** (email or username + password).

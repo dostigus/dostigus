@@ -60,6 +60,17 @@ it('creates a Bot with default name, strong Model tier, and greeting', () => {
   expect(listMessages(store, bot.id)).toHaveLength(1)
 })
 
+it('stores a caller-supplied Bot id and rejects a duplicate or an invalid id', () => {
+  const store = memoryStore()
+  const fixture = createBot(store, { id: 'preview', name: DEFAULT_BOT_NAME })
+  expect(fixture.bot.id).toBe('preview')
+  expect(fixture.greeting.content).toBe(botGreetingContent(DEFAULT_BOT_NAME))
+  expect(() => createBot(store, { id: 'preview' })).toThrow(/Bot id already exists/)
+  expect(() => createBot(store, { id: 'not a bot' })).toThrow(/Bot id/)
+  expect(() => createBot(store, { id: '' })).toThrow(/Bot id/)
+  expect(createBot(store).bot.id).not.toBe('preview')
+})
+
 it('allows more than one Bot named New Bot', () => {
   const store = memoryStore()
   const first = createBot(store)

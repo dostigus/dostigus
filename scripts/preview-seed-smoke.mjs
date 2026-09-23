@@ -4,7 +4,8 @@
  * HEAD /health must stay 200. h3 turns `return null` after
  * setResponseStatus(200) into 204, so that handler sets content-length
  * to the GET JSON byte length and ends with an empty body.
- * HEAD /preview-seed is 204 until the stable New Bot exists, then 302.
+ * HEAD /preview-seed is 204 until fixture Bot id `preview` exists, then 302.
+ * GET must land on that id. Renaming the Bot must not create another Bot.
  *
  *   pnpm preview:host
  *   pnpm smoke:preview
@@ -14,7 +15,8 @@
  */
 import process from 'node:process'
 
-const DEFAULT_BOT_NAME = 'New Bot'
+const PREVIEW_BOT_ID = 'preview'
+const RENAMED_BOT_NAME = 'Шеф'
 const GREETING = 'Hello — I\'m New Bot.'
 const TALL_PREFIX = 'Preview layout line '
 const TALL_COUNT = 32
@@ -87,10 +89,15 @@ function cookieHeader(response) {
   return cookies.map((cookie) => cookie.split(';')[0]).filter(Boolean).join('; ')
 }
 
-async function request(path, { method = 'GET', cookie } = {}) {
+async function request(path, { method = 'GET', cookie, json } = {}) {
   const headers = {}
   if (cookie) {
     headers.cookie = cookie
+  }
+  let body
+  if (json !== undefined) {
+    headers['content-type'] = 'application/json'
+    body = JSON.stringify(json)
   }
   const ipv6 = ipv6Base(base)
   let response
@@ -98,6 +105,7 @@ async function request(path, { method = 'GET', cookie } = {}) {
     response = await fetch(`${base}${path}`, {
       method,
       headers,
+      body,
       redirect: 'manual',
       signal: AbortSignal.timeout(REQUEST_MS),
     })
@@ -108,6 +116,7 @@ async function request(path, { method = 'GET', cookie } = {}) {
     response = await fetch(`${ipv6}${path}`, {
       method,
       headers,
+      body,
       redirect: 'manual',
       signal: AbortSignal.timeout(REQUEST_MS),
     })
@@ -199,20 +208,6 @@ function assertPreviewHead(head, expected) {
   fail(`HEAD /preview-seed expected 204 or 302, got ${status}`)
 }
 
-function stableNewBotId(bots) {
-  let match = null
-  for (let index = bots.length - 1; index >= 0; index--) {
-    const bot = bots[index]
-    if (bot?.name !== DEFAULT_BOT_NAME) {
-      continue
-    }
-    if (!match || bot.createdAt < match.createdAt) {
-      match = bot
-    }
-  }
-  return match?.id ?? null
-}
-
 function assertTall(messages) {
   const tall = messages.filter((message) => message.content.startsWith(TALL_PREFIX))
   if (tall.length !== TALL_COUNT) {
@@ -292,20 +287,19 @@ async function main() {
     fail(`GET /preview-seed went to ${seededPath}, HEAD had ${firstHead.location}`)
   }
 
+  if (botId !== PREVIEW_BOT_ID) {
+    fail(`GET /preview-seed landed on ${botId}, fixture Bot id is ${PREVIEW_BOT_ID}`)
+  }
   const listed = await readJson('/api/bots', session)
   const bots = listed?.bots
   if (!Array.isArray(bots)) {
     fail('GET /api/bots did not return bots')
   }
-  const stableId = stableNewBotId(bots)
-  if (stableId !== botId) {
-    fail(`GET /preview-seed landed on ${botId}, stable New Bot is ${stableId ?? '(none)'}`)
+  const bot = bots.find((item) => item.id === PREVIEW_BOT_ID)
+  if (!bot) {
+    fail(`GET /api/bots has no fixture Bot ${PREVIEW_BOT_ID}`)
   }
-  const bot = bots.find((item) => item.id === botId)
-  if (bot?.name !== DEFAULT_BOT_NAME) {
-    fail(`Chat Bot name expected ${DEFAULT_BOT_NAME}, got ${bot?.name ?? '(missing)'}`)
-  }
-  note(`GET /preview-seed 302 /bots/${botId} (${DEFAULT_BOT_NAME})`)
+  note(`GET /preview-seed 302 /bots/${PREVIEW_BOT_ID}`)
 
   const before = await readJson(`/api/bots/${botId}/messages`, session)
   const beforeMessages = before?.messages
@@ -345,6 +339,33 @@ async function main() {
     fail(`second ?tall=1 changed Chat length (${afterMessages.length} → ${kept?.messages?.length ?? 'none'})`)
   }
   note(`?tall=1 has ${TALL_COUNT} preview lines (${afterMessages.length} Chat lines); second GET did not append`)
+
+  const patch = await request(`/api/bots/${PREVIEW_BOT_ID}`, {
+    method: 'PATCH',
+    cookie: session,
+    json: { name: RENAMED_BOT_NAME },
+  })
+  if (patch.response.status !== 200) {
+    fail(`PATCH name expected 200, got ${patch.response.status} ${patch.text.slice(0, 200)}`)
+  }
+  const reseed = await request('/preview-seed', { cookie: session })
+  const reseedPath = locationPath(reseed.response.headers.get('location'))
+  if (reseed.response.status !== 302 || reseedPath !== `/bots/${PREVIEW_BOT_ID}`) {
+    fail(`GET after rename expected 302 /bots/${PREVIEW_BOT_ID}, got ${reseed.response.status} ${reseedPath ?? ''}`)
+  }
+  const relisted = await readJson('/api/bots', session)
+  if (!Array.isArray(relisted?.bots) || relisted.bots.length !== bots.length) {
+    fail(`seed after rename changed Bot count (${bots.length} → ${relisted?.bots?.length ?? 'none'})`)
+  }
+  const renamed = relisted.bots.find((item) => item.id === PREVIEW_BOT_ID)
+  if (renamed?.name !== RENAMED_BOT_NAME) {
+    fail(`fixture Bot name expected ${RENAMED_BOT_NAME}, got ${renamed?.name ?? '(missing)'}`)
+  }
+  const renamedMessages = await readJson(`/api/bots/${PREVIEW_BOT_ID}/messages`, session)
+  if (!Array.isArray(renamedMessages?.messages) || renamedMessages.messages.length !== afterMessages.length) {
+    fail(`seed after rename changed Chat length (${afterMessages.length} → ${renamedMessages?.messages?.length ?? 'none'})`)
+  }
+  note(`rename to ${RENAMED_BOT_NAME} kept /bots/${PREVIEW_BOT_ID}; Bot count stayed ${bots.length}`)
 
   const afterHead = assertPreviewHead(await request('/preview-seed', { method: 'HEAD' }))
   if (afterHead.status !== 302 || afterHead.location !== `/bots/${botId}`) {

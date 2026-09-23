@@ -2,9 +2,9 @@ import process from 'node:process'
 
 /**
  * Local Host preview entry. GET signs in the preview Owner, ensures the
- * stable preview Bot, and opens that Chat. `?tall=1` fills a tall thread
- * once. Not a domain Bot. Answers 404 unless `nuxt dev` is running with
- * `DOSTIGUS_PREVIEW_SEED=1`.
+ * fixture preview Bot (`preview`), and opens that Chat. The display name
+ * may change. `?tall=1` fills a tall thread once. Not a domain Bot.
+ * Answers 404 unless `nuxt dev` is running with `DOSTIGUS_PREVIEW_SEED=1`.
  */
 export default defineEventHandler(async (event) => {
   if (!previewSeedAllowed({
