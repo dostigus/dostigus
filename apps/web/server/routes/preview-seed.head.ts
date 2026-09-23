@@ -3,8 +3,8 @@ import process from 'node:process'
 /**
  * HEAD /preview-seed. Same gate and status as GET, without creating the
  * Owner, signing in, creating a Bot, or inserting Chat lines.
- * 204 when the gate is open and the stable Bot does not exist yet
- * (GET would create it). 302 when that Bot already exists.
+ * 204 when the gate is open and fixture Bot `preview` does not exist yet
+ * (GET would create it). 302 to `/bots/preview` when that Bot exists.
  */
 export default defineEventHandler((event) => {
   if (!previewSeedAllowed({

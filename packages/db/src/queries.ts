@@ -64,6 +64,18 @@ function nowMs(): number {
   return Date.now()
 }
 
+/** Omit for a random id. Set for a local fixture row. */
+function resolveBotId(id: string | undefined): string {
+  if (id === undefined) {
+    return randomUUID()
+  }
+  const trimmed = id.trim()
+  if (!/^[\w-]{1,64}$/.test(trimmed)) {
+    throw new StoreError('Bot id must be 1–64 letters, digits, _ or -', 400)
+  }
+  return trimmed
+}
+
 function normalizeName(name: string | undefined): string {
   const trimmed = name?.trim() ?? ''
   const value = trimmed.length > 0 ? trimmed : DEFAULT_BOT_NAME
@@ -305,6 +317,8 @@ export function ensureGreeting(store: OpenedStore, botId: string): Message {
 export function createBot(
   store: OpenedStore,
   input: {
+    /** Omit for a random id. Set for a local fixture row. */
+    id?: string
     name?: string
     modelTier?: string
     avatarShape?: string
@@ -320,7 +334,10 @@ export function createBot(
   const label = normalizeCapped(input.label, BOT_LABEL_MAX, 'Label')
   const description = normalizeCapped(input.description, BOT_DESCRIPTION_MAX, 'Description')
   const createdAt = nowMs()
-  const id = randomUUID()
+  const id = resolveBotId(input.id)
+  if (input.id !== undefined && selectBot(store, id)) {
+    throw new StoreError('Bot id already exists', 409)
+  }
 
   store.sqlite.prepare(`
     INSERT INTO bots (id, name, model_tier, avatar_shape, avatar_color, label, description, skills_json, modules_json, created_at)

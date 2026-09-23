@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { createBot, listBots, listMessages, openStore } from '@dostigus/db'
+import { createBot, listBots, listMessages, openStore, updateBot } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import { OwnerAuthError, registerClusterOwner } from '../../server/utils/owner-auth'
 import {
   ensurePreviewCluster,
+  PREVIEW_BOT_ID,
   PREVIEW_OWNER_LOGIN,
   PREVIEW_OWNER_PASSWORD,
   PREVIEW_TALL_LINE_COUNT,
@@ -51,6 +52,7 @@ it('creates the preview Owner, one Bot, and a greeting, then reuses them', async
   const first = await ensurePreviewCluster(store, hashPassword, verifyPassword)
   expect(first.user.role).toBe('owner')
   expect(first.user.username).toBe(PREVIEW_OWNER_LOGIN)
+  expect(first.botId).toBe(PREVIEW_BOT_ID)
   const second = await ensurePreviewCluster(store, hashPassword, verifyPassword)
   expect(second.user.id).toBe(first.user.id)
   expect(second.botId).toBe(first.botId)
@@ -116,42 +118,70 @@ it('treats tall=1 as the layout-thread query', () => {
   expect(previewTallRequested('0')).toBe(false)
 })
 
-it('picks the oldest New Bot when a newer Bot exists', () => {
-  expect(stablePreviewBotId([
-    { id: 'pantry', name: 'Pantry', createdAt: '2020-01-03T00:00:00.000Z' },
-    { id: 'newer', name: DEFAULT_BOT_NAME, createdAt: '2020-01-02T00:00:00.000Z' },
-    { id: 'older', name: DEFAULT_BOT_NAME, createdAt: '2020-01-01T00:00:00.000Z' },
-  ])).toBe('older')
-  expect(stablePreviewBotId([
-    { id: 'newer-row', name: DEFAULT_BOT_NAME, createdAt: '2020-01-01T00:00:00.000Z' },
-    { id: 'older-row', name: DEFAULT_BOT_NAME, createdAt: '2020-01-01T00:00:00.000Z' },
-  ])).toBe('older-row')
-  expect(stablePreviewBotId([
-    { id: 'pantry', name: 'Pantry', createdAt: '2020-01-01T00:00:00.000Z' },
-  ])).toBeNull()
+it('does not look up the preview Bot by display name', () => {
+  const src = readFileSync(
+    join(import.meta.dirname, '../../server/utils/preview-seed.ts'),
+    'utf8',
+  )
+  expect(src).toContain('export const PREVIEW_BOT_ID = \'preview\'')
+  expect(src).toContain('id: PREVIEW_BOT_ID')
+  expect(src).not.toMatch(/\.name\s*[!=]==?\s*DEFAULT_BOT_NAME/)
 })
 
-it('keeps the stable New Bot when a newer Bot is added', async () => {
+it('selects the fixture Bot id and ignores display name', () => {
+  expect(PREVIEW_BOT_ID).toBe('preview')
+  expect(stablePreviewBotId([
+    { id: 'newer', name: DEFAULT_BOT_NAME },
+    { id: PREVIEW_BOT_ID, name: 'Шеф' },
+    { id: 'older', name: DEFAULT_BOT_NAME },
+  ] as Array<{ id: string }>)).toBe(PREVIEW_BOT_ID)
+  expect(stablePreviewBotId([
+    { id: 'older', name: DEFAULT_BOT_NAME },
+    { id: 'newer', name: DEFAULT_BOT_NAME },
+  ] as Array<{ id: string }>)).toBeNull()
+})
+
+it('keeps the fixture Bot when a newer Bot is added', async () => {
   const store = memoryStore()
   const first = await ensurePreviewCluster(store, hashPassword, verifyPassword)
   const pantry = createBot(store, { name: 'Pantry' })
   const again = await ensurePreviewCluster(store, hashPassword, verifyPassword)
+  expect(again.botId).toBe(PREVIEW_BOT_ID)
   expect(again.botId).toBe(first.botId)
   expect(again.botId).not.toBe(pantry.bot.id)
-  expect(listBots(store).find((bot) => bot.id === again.botId)?.name).toBe(DEFAULT_BOT_NAME)
+  expect(listBots(store)).toHaveLength(2)
 })
 
-it('creates New Bot when the Store only has another Bot', async () => {
+it('keeps the fixture Bot after its name changes', async () => {
+  const store = memoryStore()
+  const first = await ensurePreviewCluster(store, hashPassword, verifyPassword)
+  updateBot(store, first.botId, { name: 'Шеф' })
+  const decoy = createBot(store, { name: DEFAULT_BOT_NAME })
+  const again = await ensurePreviewCluster(store, hashPassword, verifyPassword)
+  expect(again.botId).toBe(PREVIEW_BOT_ID)
+  expect(again.botId).not.toBe(decoy.bot.id)
+  expect(listBots(store)).toHaveLength(2)
+  expect(listBots(store).find((bot) => bot.id === PREVIEW_BOT_ID)?.name).toBe('Шеф')
+  expect(readPreviewSeedHead(store)).toEqual({
+    statusCode: 302,
+    location: `/bots/${PREVIEW_BOT_ID}`,
+  })
+})
+
+it('creates the fixture Bot when the Store only has another New Bot', async () => {
   const store = memoryStore()
   await registerClusterOwner(store, {
     login: PREVIEW_OWNER_LOGIN,
     password: PREVIEW_OWNER_PASSWORD,
   }, hashPassword)
-  const pantry = createBot(store, { name: 'Pantry' })
+  const named = createBot(store, { name: DEFAULT_BOT_NAME })
+  expect(readPreviewSeedHead(store)).toEqual({ statusCode: 204 })
   const seeded = await ensurePreviewCluster(store, hashPassword, verifyPassword)
-  expect(seeded.botId).not.toBe(pantry.bot.id)
+  expect(seeded.botId).toBe(PREVIEW_BOT_ID)
+  expect(seeded.botId).not.toBe(named.bot.id)
   expect(listBots(store).find((bot) => bot.id === seeded.botId)?.name).toBe(DEFAULT_BOT_NAME)
-  expect(listMessages(store, pantry.bot.id)).toHaveLength(1)
+  expect(listMessages(store, named.bot.id)).toHaveLength(1)
+  expect(listBots(store)).toHaveLength(2)
 })
 
 it('fills a tall thread once on the stable Bot', async () => {

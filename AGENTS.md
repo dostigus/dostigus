@@ -66,14 +66,16 @@ That starts `nuxt dev` with `DOSTIGUS_PREVIEW_SEED=1`. Then open
 The route is **GET** and **HEAD**.
 
 **GET** creates the preview Owner when the Store is empty, signs that
-Owner in, ensures the stable preview Bot (**New Bot**, the oldest Bot
-with that name, with its greeting), and redirects to that Chat. A later
-visit reuses the same Owner and that Bot. A newer Bot in the Store does
-not change the redirect.
+Owner in, ensures the fixture preview Bot (id `preview`, display name
+**New Bot** until it is renamed, with its greeting), and redirects to
+`/bots/preview`. A later visit reuses the same Owner and that Bot id.
+Renaming the Bot does not create another Bot. A newer Bot in the Store
+does not change the redirect. Navigate by id `preview`, not by the
+display name.
 
 For scroll and overlay screenshots, open
 **http://localhost:3000/preview-seed?tall=1**. That GET adds a tall thread
-of preview Chat lines on the stable Bot once. Another visit with `?tall=1`
+of preview Chat lines on Bot `preview` once. Another visit with `?tall=1`
 does not append again.
 
 **HEAD** (`curl -I`) is answered on `/preview-seed` and on `/health`. It
@@ -82,8 +84,8 @@ does not sign in, create the Owner, create a Bot, or insert Chat lines.
 - `/health` GET and HEAD: **200**, `content-type: application/json`. The GET body is `{ ok: true }`. HEAD sends that body's `content-length` and an empty body.
 - `/preview-seed` when this is not `nuxt dev`, or `DOSTIGUS_PREVIEW_SEED` is not `1`: **404**.
 - `/preview-seed` when the Store Owner is not `preview`: **409**.
-- `/preview-seed` when the gate is open and the stable Bot does not exist yet: **204** (GET would create it).
-- `/preview-seed` when the gate is open and the stable Bot exists: **302** to `/bots/<id>`, with no session cookie.
+- `/preview-seed` when the gate is open and fixture Bot `preview` does not exist yet: **204** (GET would create it).
+- `/preview-seed` when the gate is open and that Bot exists: **302** to `/bots/preview`, with no session cookie. The display name is not part of the lookup.
 
 h3 turns `return null` after `setResponseStatus(event, 200)` into **204**
 (`sendNoContent`). That 204 is easy to read as a closed route. HEAD
@@ -93,9 +95,10 @@ compact in production) and ends the response with `event.node.res.end()`
 instead of `return null`.
 
 With `pnpm preview:host` already up, `pnpm smoke:preview` checks those
-HEAD responses, that GET lands on the stable **New Bot**, and that
-`?tall=1` adds the tall thread once. Optional `PREVIEW_SMOKE_URL`
-(default `http://localhost:3000`).
+HEAD responses, that GET lands on `/bots/preview` (not a Bot chosen by
+the name **New Bot**), that renaming the Bot does not create another
+Bot, and that `?tall=1` adds the tall thread once. Optional
+`PREVIEW_SMOKE_URL` (default `http://localhost:3000`).
 
 Preview Owner: username `preview`, password `preview-owner`. A
 production Host stays closed. If the Store already has a different Owner,

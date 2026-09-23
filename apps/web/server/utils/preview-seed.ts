@@ -13,6 +13,12 @@ import {
 export const PREVIEW_OWNER_LOGIN = 'preview'
 export const PREVIEW_OWNER_PASSWORD = 'preview-owner'
 
+/**
+ * Fixture Bot id for local preview.
+ * Display name starts as **New Bot** and may change. The id does not.
+ */
+export const PREVIEW_BOT_ID = 'preview'
+
 /** Shared by GET and HEAD when the Store Owner is not the preview login. */
 export const PREVIEW_SEED_OWNER_CONFLICT = 'This Store already has an Owner. Preview seed signs in only as username preview. Use a fresh DATABASE_URL or sign in at /login.'
 
@@ -39,24 +45,13 @@ export function previewTallRequested(value: unknown): boolean {
 }
 
 /**
- * Oldest Bot named **New Bot**.
- * `bots` must be `listBots()` order (newest first) so a timestamp tie
- * keeps the earlier row.
+ * Fixture Bot id when that row is in `bots`.
+ * Display name is ignored, including a rename away from **New Bot**.
  */
 export function stablePreviewBotId(
-  bots: Array<{ id: string, name: string, createdAt: string }>,
+  bots: Array<{ id: string }>,
 ): string | null {
-  let match: { id: string, createdAt: string } | null = null
-  for (let index = bots.length - 1; index >= 0; index--) {
-    const bot = bots[index]!
-    if (bot.name !== DEFAULT_BOT_NAME) {
-      continue
-    }
-    if (!match || bot.createdAt < match.createdAt) {
-      match = bot
-    }
-  }
-  return match?.id ?? null
+  return bots.some((bot) => bot.id === PREVIEW_BOT_ID) ? PREVIEW_BOT_ID : null
 }
 
 export type PreviewSeedHeadResult = {
@@ -80,8 +75,8 @@ export function readPreviewSeedHead(store: OpenedStore): PreviewSeedHeadResult {
 }
 
 /**
- * Ensure the preview Owner and the stable preview Bot (**New Bot**, oldest).
- * A newer Bot in the Store does not replace that Chat.
+ * Ensure the preview Owner and the fixture preview Bot (`preview`).
+ * A rename or a newer Bot does not replace that Chat.
  * `tall` appends preview layout lines once.
  * Throws OwnerAuthError 401 when the Store Owner is not this login.
  */
@@ -92,7 +87,8 @@ export async function ensurePreviewCluster(
   options: { tall?: boolean } = {},
 ): Promise<{ user: HostSessionUser, botId: string }> {
   const user = await ensurePreviewOwner(store, hashPassword, verifyPassword)
-  const botId = stablePreviewBotId(listBots(store)) ?? createBot(store, { name: DEFAULT_BOT_NAME }).bot.id
+  const botId = stablePreviewBotId(listBots(store))
+    ?? createBot(store, { id: PREVIEW_BOT_ID, name: DEFAULT_BOT_NAME }).bot.id
   if (options.tall) {
     ensurePreviewTallThread(store, botId, user.id)
   }
