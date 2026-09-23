@@ -38,6 +38,14 @@ skip rules. Do not treat that run as the check. Land a clean tree before
 - Never `--no-verify` unless the user explicitly asks.
 - Docs-only commits still need a clean working tree if app code changed.
 
+## Workspace dependencies
+
+Put a new dependency in the `catalog` map in
+[`pnpm-workspace.yaml`](pnpm-workspace.yaml) first. Reference it from the
+package manifest as `"catalog:"`. A direct version range (for example
+`"^15.0.2"`) fails `CI=1 pnpm check`: the ESLint rule
+`pnpm/json-enforce-catalog` rejects it.
+
 ## Local preview (Host)
 
 ```
