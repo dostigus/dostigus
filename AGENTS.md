@@ -83,6 +83,17 @@ reply: `/bots/preview?activity=typing`, `?activity=command`, or
 `?activity=connect&target=Expi`. A production Host ignores `activity`.
 See [ADR 0021](docs/adr/0021-chat-activity-status.md).
 
+To screenshot the real in-flight mark, open the Chat with `?hold=1` and
+send a line. `GET /preview-seed?hold=1` signs in and redirects to
+`/bots/preview?hold=1` (HEAD does not). On `pnpm preview:host` with no
+key, that POST waits 12 seconds (`PREVIEW_QUIET_HOLD_MS`) before the quiet
+reply is stored. The thread keeps the flock mark in `think`
+(`aria-label="Replying"`) and the pill stays in `think` for that wait.
+A production Host ignores `hold`. A configured gateway is not delayed.
+`?activity=` still paints glyphs without this wait. Together,
+`?hold=1&activity=typing` keeps the typing row up during the same quiet
+POST. Do not edit `messages.post.ts` to add a delay.
+
 **HEAD** (`curl -I`) is answered on `/preview-seed` and on `/health`. It
 does not sign in, create the Owner, create a Bot, or insert Chat lines.
 

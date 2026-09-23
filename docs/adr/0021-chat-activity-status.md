@@ -32,6 +32,15 @@ production Host ignores that query.
 
 `prefers-reduced-motion` holds the glyph still.
 
+The same local preview can hold that in-flight state for a screenshot.
+Chat opened with `?hold=1` (including `GET /preview-seed?hold=1`, which
+redirects onto the Chat URL) sends the flag on the message POST. When the
+preview seed gate is open and the reply is the no-key stub, the route
+waits 12 seconds before storing the assistant line. `botPending` stays
+true, so the flock mark in `think` stays in the thread. A configured
+gateway is not delayed. A production Host ignores `hold`. `?activity=`
+still only forces glyphs; it does not hold this pending path.
+
 ## Context
 
 The in-thread busy indicator was only the Bot’s flock mark in `think`
@@ -45,7 +54,8 @@ animation: typing, waiting on a command, and connecting.
 
 - `chatActivityStatus` chooses the row. `ChatActivityRow` draws it.
 - The quiet path keeps the pending flock mark and does not claim generation.
-- No new activity protocol, streaming, or message-route change.
+- No new activity protocol or streaming. The route still returns one
+  finished line. Preview `?hold=1` only delays the quiet stub.
 - Pill flock states and the live dot stay.
 
 ## Alternatives
