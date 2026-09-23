@@ -49,8 +49,12 @@ fill, so the thread cannot show through that strip. A `--bg-chat` band
 the full width of that inset covers only the bottom half of the row
 (and a hair past its bottom edge), so the lower corners rest on the
 Chat canvas. The top of the row has no second fill. End padding
-on the thread matches the overlay, and Chat opens at the bottom so the
-latest line sits above the field. A `1px` edge,
+on the thread matches the overlay, plus `--thread-end-gap` (`5rem`,
+~80px), and Chat opens at the bottom so the latest line sits above the
+field with that clear space under it. When the thread is scrolled above
+the bottom, a circular control centered on the pane, just above the
+field, scrolls to the latest line. Reduced motion jumps without the
+smooth scroll. A `1px` edge,
 `color-mix(in srgb, var(--text) 8%, var(--composer))`, stays a step
 lighter than that fill. One line keeps the full pill radius. Two or
 more lines use `--radius-card` (~28px).
