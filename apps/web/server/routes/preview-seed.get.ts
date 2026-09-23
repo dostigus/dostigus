@@ -13,7 +13,10 @@ import { previewChatLocation } from '../../app/utils/preview-hold'
  * their private Bot, and separate Owner and Member bot-threads on the
  * shared preview Bot, then opens the Bot list as the Owner.
  * `?threads=1&as=member` signs in that Member and opens the shared Bot.
- * HEAD ignores those queries. Not a domain Bot.
+ * `?rooms=1` also seeds a direct message and a room with the shared Bot.
+ * The room line mentions that Bot and stores one reply, then opens the room.
+ * `?rooms=1&as=member` signs in the Member on that same room.
+ * `?members=1` still opens Members. HEAD ignores those queries. Not a domain Bot.
  * Answers 404 unless `nuxt dev` is running with `DOSTIGUS_PREVIEW_SEED=1`.
  */
 export default defineEventHandler(async (event) => {
@@ -35,15 +38,20 @@ export default defineEventHandler(async (event) => {
         parts: previewPartsRequested(query.parts),
         kitchen: previewKitchenRequested(query.kitchen),
         threads: previewThreadsRequested(query.threads),
+        rooms: previewRoomsRequested(query.rooms),
       },
     )
-    const asMember = previewThreadsRequested(query.threads) && previewThreadAsMember(query.as)
+    const asMember = (
+      previewThreadsRequested(query.threads) || previewRoomsRequested(query.rooms)
+    ) && previewThreadAsMember(query.as)
     await startOwnerSession(event, asMember && seeded.member ? seeded.member : seeded.user)
     const location = previewMembersRequested(query.members)
       ? '/members'
-      : previewThreadsRequested(query.threads)
-        ? (asMember ? `/bots/${seeded.botId}` : '/')
-        : previewChatLocation(seeded.botId, query.hold)
+      : previewRoomsRequested(query.rooms) && seeded.roomId
+        ? `/threads/${seeded.roomId}`
+        : previewThreadsRequested(query.threads)
+          ? (asMember ? `/bots/${seeded.botId}` : '/')
+          : previewChatLocation(seeded.botId, query.hold)
     return sendRedirect(event, location, 302)
   } catch (error) {
     if (error instanceof OwnerAuthError && error.statusCode === 401) {

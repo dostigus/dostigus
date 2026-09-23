@@ -8,9 +8,10 @@ export type HostSearchBot = {
 
 export type HostSearchMessage = {
   id: string
-  botId: string
+  botId: string | null
   botName: string
   content: string
+  href?: string | null
 }
 
 export type HostSearchSettingsEntry = {
@@ -118,7 +119,7 @@ export function hostSearchHits(input: {
       tag: 'Chat',
       shortcut: null,
       botId: message.botId,
-      href: null,
+      href: message.href ?? (message.botId ? `/bots/${message.botId}` : null),
     }))
   const settingHits: HostSearchHit[] = input.settings
     .filter((entry) => `${entry.title} ${entry.keywords.join(' ')}`.toLowerCase().includes(needle))

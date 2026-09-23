@@ -123,6 +123,20 @@ export {
   parseOwnerPassword,
 } from './owner'
 export {
+  type HouseholdPerson,
+  isMessengerThreadKind,
+  isThreadKind,
+  mentionedRoomBot,
+  MESSENGER_THREAD_KINDS,
+  type MessengerThreadKind,
+  THREAD_KINDS,
+  THREAD_TITLE_MAX,
+  type ThreadKind,
+  type ThreadListItem,
+  type ThreadMark,
+  type ThreadParticipantView,
+} from './threads'
+export {
   type Apply,
   type Bot,
   BOT_PURPOSE_HINT,

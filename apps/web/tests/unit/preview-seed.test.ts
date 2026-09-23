@@ -1,12 +1,15 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { createBot, listBots, listBotThreadMessages, listKitchenPantry, listMessages, openStore, readKitchen, updateBot } from '@dostigus/db'
-import { DEFAULT_BOT_NAME } from '@dostigus/shared'
+import { createBot, listBots, listBotThreadMessages, listKitchenPantry, listMessages, listThreadMessages, openStore, readKitchen, updateBot } from '@dostigus/db'
+import { DEFAULT_BOT_NAME, mentionedRoomBot } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import { OwnerAuthError, registerClusterOwner } from '../../server/utils/owner-auth'
 import {
   ensurePreviewCluster,
   PREVIEW_BOT_ID,
+  PREVIEW_DM_PREFIX,
+  PREVIEW_DM_REPLY_PREFIX,
+  PREVIEW_DM_THREAD_ID,
   PREVIEW_KITCHEN_PREFIX,
   PREVIEW_MEMBER_LOGIN,
   PREVIEW_MEMBER_THREAD_PREFIX,
@@ -16,6 +19,9 @@ import {
   PREVIEW_PARTS_PREFIX,
   PREVIEW_PRIVATE_BOT_ID,
   PREVIEW_PRIVATE_THREAD_PREFIX,
+  PREVIEW_ROOM_PREFIX,
+  PREVIEW_ROOM_REPLY_PREFIX,
+  PREVIEW_ROOM_THREAD_ID,
   PREVIEW_TALL_LINE_COUNT,
   PREVIEW_TALL_PREFIX,
   previewKitchenParts,
@@ -23,6 +29,7 @@ import {
   previewMembersRequested,
   previewParts,
   previewPartsRequested,
+  previewRoomsRequested,
   previewSeedAllowed,
   previewTallRequested,
   previewThreadAsMember,
@@ -101,6 +108,7 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   expect(src).toContain('previewPartsRequested')
   expect(src).toContain('previewKitchenRequested')
   expect(src).toContain('previewThreadsRequested')
+  expect(src).toContain('previewRoomsRequested')
   expect(src).toContain('previewThreadAsMember')
   expect(src).toContain('\'/members\'')
   expect(src).toContain('previewChatLocation')
@@ -129,6 +137,7 @@ it('answers HEAD without signing in or writing the Store', () => {
   expect(src).not.toContain('previewMembersRequested')
   expect(src).not.toContain('previewKitchenRequested')
   expect(src).not.toContain('previewThreadsRequested')
+  expect(src).not.toContain('previewRoomsRequested')
   expect(src).not.toContain('/members')
   expect(src).not.toContain('requireOwnerSession')
   expect(src).not.toContain('requireHostSession')
@@ -368,4 +377,33 @@ it('seeds a Member private Bot and separate shared bot-threads once', async () =
   await ensurePreviewCluster(store, hashPassword, verifyPassword, { threads: true })
   expect(listMessages(store, PREVIEW_BOT_ID)).toHaveLength(before)
   expect(listBots(store)).toHaveLength(2)
+})
+
+it('treats rooms=1 as the messenger demo', () => {
+  expect(previewRoomsRequested('1')).toBe(true)
+  expect(previewRoomsRequested(1)).toBe(true)
+  expect(previewRoomsRequested(undefined)).toBe(false)
+})
+
+it('seeds a direct message and a room with one stored mention reply', async () => {
+  const store = memoryStore()
+  const seeded = await ensurePreviewCluster(store, hashPassword, verifyPassword, { rooms: true })
+  expect(seeded.roomId).toBe(PREVIEW_ROOM_THREAD_ID)
+  expect(seeded.member?.role).toBe('member')
+  const dm = listThreadMessages(store, PREVIEW_DM_THREAD_ID)
+  expect(dm.map((line) => line.content)).toEqual([PREVIEW_DM_PREFIX, PREVIEW_DM_REPLY_PREFIX])
+  expect(dm[0]?.personId).toBe(seeded.user.id)
+  expect(dm[1]?.personId).toBe(seeded.member?.id)
+  expect(dm[0]?.botId).toBeNull()
+  const room = listThreadMessages(store, PREVIEW_ROOM_THREAD_ID)
+  expect(room).toHaveLength(2)
+  expect(room[0]?.content.startsWith(PREVIEW_ROOM_PREFIX)).toBe(true)
+  expect(mentionedRoomBot(room[0]?.content ?? '', [{ id: PREVIEW_BOT_ID, name: DEFAULT_BOT_NAME }])?.id).toBe(PREVIEW_BOT_ID)
+  expect(room[1]?.role).toBe('assistant')
+  expect(room[1]?.content).toBe(PREVIEW_ROOM_REPLY_PREFIX)
+  expect(room[1]?.botId).toBe(PREVIEW_BOT_ID)
+  const before = room.length
+  await ensurePreviewCluster(store, hashPassword, verifyPassword, { rooms: true })
+  expect(listThreadMessages(store, PREVIEW_ROOM_THREAD_ID)).toHaveLength(before)
+  expect(listThreadMessages(store, PREVIEW_DM_THREAD_ID)).toHaveLength(2)
 })

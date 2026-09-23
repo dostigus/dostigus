@@ -7,24 +7,33 @@
       alt=""
     />
     <p class="kicker">
-      Bots
+      Threads
     </p>
-    <h1>No Bots yet</h1>
+    <h1>No Threads yet</h1>
     <p class="hint">
       <template v-if="isOwner">
         Create a Bot and start a Chat. You can tell it what it is for.
       </template>
       <template v-else>
-        Bots on this Host show up here. Open a Chat when one is here.
+        Threads on this Host show up here. Open a Chat when one is here.
       </template>
     </p>
-    <KitButton
-      v-if="isOwner"
-      type="button"
-      @click="openCreate"
-    >
-      Create a Bot
-    </KitButton>
+    <div class="actions">
+      <KitButton
+        v-if="isOwner"
+        type="button"
+        @click="openCreate"
+      >
+        Create a Bot
+      </KitButton>
+      <KitButton
+        type="button"
+        variant="ghost"
+        @click="openThreadCreate"
+      >
+        New thread
+      </KitButton>
+    </div>
   </div>
 </template>
 
@@ -33,6 +42,7 @@ import { GooseSticker, KitButton } from '@dostigus/ui-kit'
 
 const { isOwner } = useHostAccount()
 const { openCreate } = useHostCreate()
+const { openThreadCreate } = useHostThreadCreate()
 </script>
 
 <style scoped>
@@ -62,5 +72,12 @@ h1 {
   margin: 0 0 1.2rem;
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
 }
 </style>

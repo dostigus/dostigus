@@ -20,7 +20,7 @@ Settled now, even if this repo only scaffolds them:
 | Declarative modules | SQL + templated MCP before arbitrary sandbox. See [ADR 0006](adr/0006-day-1-declarative-modules.md). |
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
 | Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). |
-| Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. Bot visibility `shared` \| `private`. Bot-threads are in this Host. `dm`, `group`, and `room` are not. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
+| Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. Bot visibility `shared` \| `private`. Bot-threads, direct messages, groups, and rooms are in this Host. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -32,9 +32,10 @@ What the running Cluster does today:
   `--bot-accent-10`, optional `label` and `description` default empty,
   empty skills/modules, `visibility` `shared` \| `private` default
   `shared`, `created_by` the Owner or Member who created it),
-  `threads` (kind `bot` for a bot-thread) and `thread_participants`
-  (a person or a Bot),
-  `messages` (`botId`, `thread_id`, role `user` \| `assistant` \| `system`, content,
+  `threads` (kind `dm`, `group`, `bot`, or `room`; `title` on a group or room)
+  and `thread_participants` (a person or a Bot),
+  `messages` (`botId` on a Bot's lines, empty on a person line in a dm,
+  group, or room; `thread_id`; role `user` \| `assistant` \| `system`, content,
   and `parts_json` for assistant Kit parts — a button and a status;
   user and system stay `[]`),
   `kitchen_pantry` (name, optional qty), `kitchen_cooked` (label, XP,
@@ -85,16 +86,20 @@ What the running Cluster does today:
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
   The Brand goose logo, stickers, and Bot marks live in the Kit. The Host
-  mark uses the goose logo. With no Bots, the sidebar centers a short line
-  and the main pane shows the wave sticker and **Create a Bot**. Add Member opens a Sheet. See
+  mark uses the goose logo. With no Threads, the sidebar centers a short line
+  and the main pane shows the wave sticker, **Create a Bot**, and **New thread**. Add Member opens a Sheet. See
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
-  is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
-  an icon rail.   Each expanded row shows an avatar, the Bot name, **Private** when
-  that Bot is private, and the
-  latest line on the bot-thread that person would open. On the icon rail each Bot’s hit target is a square.
-  A loupe and a `+` sit at the top of the expanded sidebar, both quiet
-  icon buttons with no accent fill. On the icon rail they stack at the
-  bottom, above the user mark: loupe, then `+`, then the user.
+  is a resizable Threads inbox beside Chat. The sidebar can collapse to
+  an icon rail. Each expanded row shows an avatar, the Thread title
+  (**Private** on a private Bot, **DM**, **Group**, or **Room** on those
+  kinds), and the latest line. A bot-thread row opens `/bots/:id`. A
+  direct message, group, or room opens `/threads/:id`. On the icon rail
+  each row’s hit target is a square.
+  A loupe, a `+`, and a **New thread** bubble sit at the top of the
+  expanded sidebar, quiet icon buttons with no accent fill. The `+` stays
+  the Bot picker. **New thread** creates a direct message, a group, or a
+  room. On the icon rail they stack at the bottom, above the user mark:
+  loupe, then `+`, then **New thread**, then the user.
   The loupe opens a centered search Sheet with no title and no close
   control: a field with a loupe and the placeholder Поиск, then rows for
   Bot names, Chat lines, and Host settings that person can open. Escape,
@@ -211,8 +216,20 @@ What the running Cluster does today:
   this Host ([ADR 0024](adr/0024-threads-and-bot-visibility.md)). A shared
   Bot is not one Household-wide timeline. Chat reads and writes the
   viewer's bot-thread. The Owner opening a Member's private Bot reads
-  that Member's bot-thread. A private Bot cannot join a room; this Host
-  has no room join API. `dm`, `group`, and `room` stay out.
+  that Member's bot-thread. A private Bot cannot join a room. The Owner
+  and Members may create a `dm`, a `group`, or a `room`. Adding a Bot
+  requires every participant can see that Bot, so only a `shared` Bot
+  can join. In a `room`, a Bot replies only when the line mentions it:
+  `@` plus the Bot's name, case-insensitive, with a space or the start
+  of the line before `@`, and a space, the end of the line, or
+  `. , ! ? ; :` after the name. The earliest `@` wins. When two names
+  start at that same `@`, the longer name wins. One Bot replies per
+  line. A line with no mention is stored and does not call the LLM
+  gateway. `listen=all` is not in this Host. Preview `?rooms=1` seeds
+  the preview Member, a direct message, and a room on Bot `preview`
+  (the room line mentions that Bot and stores one reply), then opens
+  the room. `?rooms=1&as=member` signs in the Member on that room.
+  HEAD ignores `?rooms=1`.
   Bubble parts are in
   this Host ([ADR 0025](adr/0025-chat-bubble-parts.md)).
   An Invite does not change visibility. Existing `messages` rows are
@@ -236,13 +253,12 @@ and [`docs/deploy.md`](deploy.md)).
 - Builder that writes Module packages (chat Bot ≠ Builder)
 - Marketplace
 - Share link, guests, QR
-- Person Threads (`dm`, `group`, `room`). Bot visibility and per-person
-  bot-threads are in this Host. Decided in
-  [ADR 0024](adr/0024-threads-and-bot-visibility.md). Bubble parts shipped
+- `listen=all` on a room (a Bot replies to every line). Mention-gated
+  replies are in this Host
+  ([ADR 0024](adr/0024-threads-and-bot-visibility.md)). Bubble parts shipped
   in [ADR 0025](adr/0025-chat-bubble-parts.md). The Kitchen Module
   day-1 seed is in this Host
-  ([ADR 0026](adr/0026-kitchen-module-day-1.md)). Still later: `dm`,
-  `group`, and `room`
+  ([ADR 0026](adr/0026-kitchen-module-day-1.md)).
 - Sending an Invite by SMTP (the Owner copies the link)
 - Roles beyond Owner and Member, hard-delete of a Member
 - OAuth, passkeys, email verify, password reset

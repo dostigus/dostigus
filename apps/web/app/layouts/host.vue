@@ -10,8 +10,13 @@
     <HostSidebar />
     <HostSearch />
     <div class="pane">
+      <ThreadComposer
+        v-if="threadOpen"
+        @close="dismissThreadCreate"
+        @created="onThreadCreated"
+      />
       <BotPicker
-        v-if="createOpen"
+        v-else-if="createOpen"
         :bots="bots"
         @close="dismissCreate"
         @created="onCreated"
@@ -28,11 +33,14 @@ import type { Bot } from '@dostigus/shared'
 const route = useRoute()
 const { open, narrow, close } = useHostNav()
 const { open: createOpen, closeCreate, dismissCreate } = useHostCreate()
+const { open: threadOpen, closeThreadCreate, dismissThreadCreate } = useHostThreadCreate()
 const { bots, refresh } = await useHostBots()
+const { refresh: refreshThreads } = await useHostThreads()
 
 watch(() => route.fullPath, () => {
   close()
   closeCreate()
+  closeThreadCreate()
 })
 
 async function onCreated(bot: Bot) {
@@ -46,8 +54,14 @@ async function onOpenBot(id: string) {
   await navigateTo(`/bots/${id}`)
 }
 
+async function onThreadCreated(thread: { href: string }) {
+  closeThreadCreate()
+  await refreshThreads()
+  await navigateTo(thread.href)
+}
+
 function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && open.value && !createOpen.value) {
+  if (event.key === 'Escape' && open.value && !createOpen.value && !threadOpen.value) {
     close()
   }
 }

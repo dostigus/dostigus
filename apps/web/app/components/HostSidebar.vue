@@ -30,7 +30,7 @@
           type="button"
           class="chrome"
           :aria-label="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
-          @click="openCreate"
+          @click="onCreateBot"
         >
           <svg
             viewBox="0 0 24 24"
@@ -39,80 +39,97 @@
             <path d="M12 5.5v13M5.5 12h13" />
           </svg>
         </button>
+        <button
+          type="button"
+          class="chrome"
+          aria-label="New thread"
+          @click="onNewThread"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M7 17.5V8.5A3.5 3.5 0 0 1 10.5 5h3A3.5 3.5 0 0 1 17 8.5v4A3.5 3.5 0 0 1 13.5 16H10l-3 2.5z" />
+          </svg>
+        </button>
       </div>
 
       <nav
         class="list"
-        :class="{ 'list-empty': bots.length === 0 && !pending && !error && !rail }"
-        aria-label="Bots"
+        :class="{ 'list-empty': threads.length === 0 && !pending && !error && !rail }"
+        aria-label="Threads"
       >
         <p
-          v-if="pending && bots.length === 0"
+          v-if="pending && threads.length === 0"
           class="status"
         >
-          Loading Bots…
+          Loading Threads…
         </p>
         <p
-          v-else-if="error && bots.length === 0"
+          v-else-if="error && threads.length === 0"
           class="status error"
         >
-          Could not load Bots.
+          Could not load Threads.
         </p>
         <p
-          v-else-if="bots.length === 0 && !rail"
+          v-else-if="threads.length === 0 && !rail"
           class="status"
         >
-          No Bots yet
+          No Threads yet
         </p>
         <ul
           v-else
           class="bots"
         >
           <li
-            v-for="bot in bots"
-            :key="bot.id"
+            v-for="thread in threads"
+            :key="thread.id"
           >
             <NuxtLink
               v-if="rail"
               class="rail-bot"
-              :to="`/bots/${bot.id}`"
-              :aria-label="botAria(bot, isLive(bot.id))"
-              :title="botTitle(bot)"
-              @click="onRow(bot.id)"
+              :to="thread.href"
+              :aria-label="threadAria(thread, threadLive(thread))"
+              :title="thread.title"
+              @click="onRow(thread.href)"
             >
               <HostBotAvatar
-                :name="bot.name"
-                :seed="bot.id"
-                :shape="bot.manifest.avatarShape"
-                :avatar-color="bot.manifest.avatarColor"
-                :live="isLive(bot.id)"
+                :name="thread.mark.name"
+                :seed="thread.mark.seed"
+                :shape="avatarShape(thread)"
+                :avatar-color="thread.mark.color"
+                :live="threadLive(thread)"
               />
             </NuxtLink>
             <NuxtLink
               v-else
               class="bot"
-              :to="`/bots/${bot.id}`"
-              @click="onRow(bot.id)"
+              :to="thread.href"
+              @click="onRow(thread.href)"
             >
               <HostBotAvatar
-                :name="bot.name"
-                :seed="bot.id"
-                :shape="bot.manifest.avatarShape"
-                :avatar-color="bot.manifest.avatarColor"
-                :live="isLive(bot.id)"
+                :name="thread.mark.name"
+                :seed="thread.mark.seed"
+                :shape="avatarShape(thread)"
+                :avatar-color="thread.mark.color"
+                :live="threadLive(thread)"
               />
               <span class="bot-copy">
                 <span class="bot-title">
-                  <span class="bot-name">{{ bot.name }}</span>
+                  <span class="bot-name">{{ thread.title }}</span>
                   <span
-                    v-if="bot.visibility === 'private'"
+                    v-if="thread.botVisibility === 'private'"
                     class="bot-private"
                   >Private</span>
+                  <span
+                    v-else-if="thread.kind !== 'bot'"
+                    class="bot-private"
+                  >{{ kindLabel(thread.kind) }}</span>
                 </span>
                 <span
-                  v-if="bot.lastMessage?.content"
+                  v-if="thread.lastMessage?.content"
                   class="bot-preview"
-                >{{ bot.lastMessage.content }}</span>
+                >{{ thread.lastMessage.content }}</span>
               </span>
             </NuxtLink>
           </li>
@@ -161,12 +178,15 @@
 </template>
 
 <script setup lang="ts">
+import type { ThreadListItem } from '@dostigus/shared'
+
 const route = useRoute()
 const { isOwner } = useHostAccount()
 const { open, narrow, close } = useHostNav()
 const { openCreate, closeCreate } = useHostCreate()
+const { openThreadCreate, closeThreadCreate } = useHostThreadCreate()
 const { openSearch } = useHostSearch()
-const { bots, pending, error } = await useHostBots()
+const { threads, pending, error } = await useHostThreads()
 const { width, collapsed, resizeTo, toggleCollapsed } = useHostSidebar()
 const { isLive } = useHostBotActivity()
 
@@ -182,19 +202,48 @@ const frameStyle = computed(() => {
 
 let drag: { pointerId: number, startX: number, origin: number } | null = null
 
-function botTitle(bot: { name: string, visibility: string }) {
-  return bot.visibility === 'private' ? `${bot.name} (Private)` : bot.name
+function kindLabel(kind: ThreadListItem['kind']) {
+  if (kind === 'dm') {
+    return 'DM'
+  }
+  if (kind === 'group') {
+    return 'Group'
+  }
+  if (kind === 'room') {
+    return 'Room'
+  }
+  return ''
 }
 
-function botAria(bot: { name: string, visibility: string }, live: boolean) {
-  const privateLabel = bot.visibility === 'private' ? ', private' : ''
-  return live ? `${bot.name}${privateLabel}, online` : `${bot.name}${privateLabel}`
+function avatarShape(thread: ThreadListItem) {
+  return thread.mark.shape ?? ''
 }
 
-function onRow(id: string) {
+function threadLive(thread: ThreadListItem) {
+  return thread.kind === 'bot' && thread.botId ? isLive(thread.botId) : false
+}
+
+function threadAria(thread: ThreadListItem, live: boolean) {
+  const privateLabel = thread.botVisibility === 'private' ? ', private' : ''
+  const kind = thread.kind === 'bot' ? '' : `, ${kindLabel(thread.kind)}`
+  return live ? `${thread.title}${kind}${privateLabel}, online` : `${thread.title}${kind}${privateLabel}`
+}
+
+function onCreateBot() {
+  closeThreadCreate()
+  openCreate()
+}
+
+function onNewThread() {
+  closeCreate()
+  openThreadCreate()
+}
+
+function onRow(href: string) {
   close()
-  if (route.path === `/bots/${id}`) {
+  if (route.path === href) {
     closeCreate()
+    closeThreadCreate()
   }
 }
 
