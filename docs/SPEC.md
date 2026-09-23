@@ -19,7 +19,7 @@ Settled now, even if this repo only scaffolds them:
 | Self-host first | `docker compose up` is the intended path. See [ADR 0005](adr/0005-self-host-first.md). |
 | Declarative modules | SQL + templated MCP before arbitrary sandbox. See [ADR 0006](adr/0006-day-1-declarative-modules.md). |
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
-| Pilot shape | Meal-like loop later: Chat → Card → Sheet via MCP. Not a Meal port. Day-1 is create Bot + Chat only. |
+| Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). |
 | Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. Bot visibility `shared` \| `private`. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). Not current Host code. |
 
 ## This Host (create Bot + Chat)
@@ -34,6 +34,9 @@ What the running Cluster does today:
   `messages` (`botId`, role `user` \| `assistant` \| `system`, content,
   and `parts_json` for assistant Kit parts — a button and a status;
   user and system stay `[]`),
+  `kitchen_pantry` (name, optional qty), `kitchen_cooked` (label, XP,
+  optional person id), and `kitchen_recipe` (one name and ingredients
+  text),
   `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
   default Model tier, optional model overrides), `owners` (exactly one
   Cluster Owner: unique email and/or username, password hash, createdAt),
@@ -113,7 +116,10 @@ What the running Cluster does today:
   that opens a registered Sheet (`KitSheet`), and a status chip. User
   and system bubbles stay plain pre-wrap text and have no parts. See
   [ADR 0022](adr/0022-chat-assistant-markdown.md) and
-  [ADR 0025](adr/0025-chat-bubble-parts.md). The composer stays on screen. Sidebar Bot
+  [ADR 0025](adr/0025-chat-bubble-parts.md). Sheet id `kitchen` opens the
+  Kitchen Module: pantry, one recipe, and a cooked log with an XP
+  counter, in a `KitSheet`. See
+  [ADR 0026](adr/0026-kitchen-module-day-1.md). The composer stays on screen. Sidebar Bot
   rows and the Chat pill show the Manifest Bot mark (`KitBotAvatar`
   idle); the pill greets on open, listens at the composer, thinks while a
   reply is in flight, speaks and cheers it when it lands, tilts on a failed
@@ -152,14 +158,18 @@ What the running Cluster does today:
   `/api/members/invites/:id/revoke` and `…/rotate` (Owner),
   public `/api/invites/:token` read/accept,
   `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured
-  flag only). Persist in SQLite via the same Store helpers as the MCP
-  surface. Bot list, Bot read, and Chat accept an Owner or Member session.
+  flag only), `/api/kitchen` read and `/api/kitchen/pantry`,
+  `/api/kitchen/cooked`, `/api/kitchen/recipe` (Owner or Member). Persist
+  in SQLite via the same Store helpers as the MCP
+  surface. Bot list, Bot read, Chat, and Kitchen accept an Owner or Member session.
   Bot create/update/delete, Members (including Invite create, list, revoke,
   and rotate), and Settings require the Owner. Accepting an Invite is
   public while logged out. See
   [ADR 0008](adr/0008-host-store-routes.md).
 - MCP surface: `@nuxtjs/mcp-toolkit` at `/mcp` (name `Dostigus`). File-based
-  tools under `apps/web/server/mcp/tools/` wrap Bots and Chat messages.
+  tools under `apps/web/server/mcp/tools/` wrap Bots, Chat messages, and
+  the Kitchen Module (pantry list/add, mark cooked, recipe get/save).
+  Kitchen tools are not in the Chat LLM loop.
   Bearer `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`); empty token → tools
   stay disabled. Soft auth (no 401). The MCP token is **not** the Host
   Owner session. See
@@ -178,7 +188,8 @@ What the running Cluster does today:
   is always stored. Keys are **not** required for compose. See
   [ADR 0011](adr/0011-chat-mcp-tool-loop.md).
 - `/health` stays `{ ok: true }`.
-- No seed/demo domain Bot. No Builder or Meal. Household on this Host is
+- No seed/demo domain Bot. No Builder or Meal port. Preview
+  `?kitchen=1` is local tooling, not a domain Bot. Household on this Host is
   the Owner plus Members ([ADR 0012](adr/0012-household-members.md)),
   including Invites the Owner copies by hand
   ([ADR 0023](adr/0023-household-member-invites.md)).
@@ -209,9 +220,10 @@ and [`docs/deploy.md`](deploy.md)).
 - Share link, guests, QR
 - Person Threads (`dm`, `group`, `room`) and Bot visibility. Decided in
   [ADR 0024](adr/0024-threads-and-bot-visibility.md). Bubble parts shipped
-  in [ADR 0025](adr/0025-chat-bubble-parts.md). Still later: a Kitchen
-  Module demo, then visibility and per-person bot-threads, then
-  `dm` / `group` / `room`
+  in [ADR 0025](adr/0025-chat-bubble-parts.md). The Kitchen Module
+  day-1 seed is in this Host
+  ([ADR 0026](adr/0026-kitchen-module-day-1.md)). Still later: visibility
+  and per-person bot-threads, then `dm` / `group` / `room`
 - Sending an Invite by SMTP (the Owner copies the link)
 - Roles beyond Owner and Member, hard-delete of a Member
 - OAuth, passkeys, email verify, password reset

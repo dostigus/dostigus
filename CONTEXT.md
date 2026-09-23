@@ -127,6 +127,15 @@ Versioned unit: schema/migration, MCP tools, Kit UI bindings, Skill diffs.
 Lives in the Cluster Store. Not a Bot.
 _Avoid_: plugin, extension, addon, Bot.
 
+**Kitchen Module**:
+Day-1 Cluster domain: pantry items (name, optional qty), one recipe
+(name and ingredients text), and a cooked log whose rows sum to an XP
+counter. The Host opens it as a Sheet from a Chat button part. The
+tables, MCP tools, and Sheet are the seed of a Module package. There is
+no Apply runtime yet, so this seed is not an installed Module package.
+Not a Meal port.
+_Avoid_: Meal, meal planner, Cook app, plugin.
+
 **Store**:
 Cluster database (SQLite day-1) holding domain data + Manifests + Module
 packages.
@@ -202,6 +211,8 @@ _Avoid_: public share, invite (unqualified).
   give a Bot its own Store. A `private` Bot uses the same MCP surface
   under that person's permissions.
 - A Bot has a Manifest and bound Module packages. A Bot is not a Module package.
+- The Kitchen Module is Cluster Store data, MCP tools, and a Kit Sheet.
+  It is the seed of a Module package. It is not a Meal port and not a Bot.
 - Builder writes Module packages via Job → Apply. Distinct from any Platform
   git agent. The chat Bot does not write Module packages.
 - Host talks to Bots through the MCP surface and renders Cards and Sheets from

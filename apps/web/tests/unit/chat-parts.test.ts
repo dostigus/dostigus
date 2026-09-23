@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
-import { HOST_DEMO_SHEET_ID, hostChatParts, hostSheetById } from '../../app/utils/host-sheets'
+import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID, hostChatParts, hostSheetById } from '../../app/utils/host-sheets'
 
 const chat = readFileSync(join(import.meta.dirname, '../../app/pages/bots/[id].vue'), 'utf8')
 
@@ -15,6 +15,8 @@ it('renders Kit parts on the assistant bubble and opens a Kit Sheet', () => {
   expect(bubble).not.toContain('<button')
   expect(chat).toContain('<KitSheet')
   expect(chat).toContain('v-model:open="sheetOpen"')
+  expect(chat).toContain('<KitchenSheet')
+  expect(chat).toContain('openSheet?.kind === \'kitchen\'')
 })
 
 it('keeps a button only when the Host registry knows the Sheet', () => {
@@ -30,4 +32,10 @@ it('keeps a button only when the Host registry knows the Sheet', () => {
     { kind: 'button', label: 'Open demo', action: { type: 'openSheet', sheetId: 'demo' } },
   ])
   expect(hostSheetById('pantry')).toBeUndefined()
+  expect(hostSheetById(HOST_KITCHEN_SHEET_ID)?.kind).toBe('kitchen')
+  expect(hostChatParts([
+    { kind: 'button', label: 'Open Kitchen', action: { type: 'openSheet', sheetId: 'kitchen' } },
+  ])).toEqual([
+    { kind: 'button', label: 'Open Kitchen', action: { type: 'openSheet', sheetId: 'kitchen' } },
+  ])
 })

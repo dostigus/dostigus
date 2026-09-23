@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0024, so the next ADR
-is **0025**. Name it `0025-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0026, so the next ADR
+is **0027**. Name it `0027-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one.
 
@@ -55,4 +55,7 @@ English.
 | [0021](0021-chat-activity-status.md) | Chat activity status row |
 | [0022](0022-chat-assistant-markdown.md) | Chat assistant Markdown body |
 | [0023](0023-household-member-invites.md) | Household Member Invites |
+| [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility |
+| [0025](0025-chat-bubble-parts.md) | Chat bubble parts |
+| [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
 | [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility |

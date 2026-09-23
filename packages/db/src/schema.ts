@@ -72,6 +72,31 @@ export const messages = sqliteTable('messages', {
   index('messages_bot_id_created_at_idx').on(table.botId, table.createdAt),
 ])
 
+/** Kitchen Module pantry item. qty is optional text. Cluster-wide, not per Bot. */
+export const kitchenPantry = sqliteTable('kitchen_pantry', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  qty: text('qty'),
+  createdAt: integer('created_at').notNull(),
+})
+
+/** Cooked log. xp on each row sums to the Kitchen XP counter. */
+export const kitchenCooked = sqliteTable('kitchen_cooked', {
+  id: text('id').primaryKey(),
+  label: text('label').notNull(),
+  xp: integer('xp').notNull(),
+  personId: text('person_id'),
+  createdAt: integer('created_at').notNull(),
+})
+
+/** The one Kitchen recipe. id is the singleton `recipe`. */
+export const kitchenRecipe = sqliteTable('kitchen_recipe', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  ingredients: text('ingredients').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+})
+
 export type BotRow = typeof bots.$inferSelect
 export type MessageRow = typeof messages.$inferSelect
 export type LlmGatewayRow = typeof llmGateway.$inferSelect

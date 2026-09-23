@@ -31,6 +31,10 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
     'bots/[id]/messages.get.ts',
     'bots/[id]/messages.post.ts',
     'chat/ready.get.ts',
+    'kitchen/index.get.ts',
+    'kitchen/pantry.post.ts',
+    'kitchen/cooked.post.ts',
+    'kitchen/recipe.put.ts',
   ]
   for (const file of files) {
     const src = readFileSync(join(apiRoot, file), 'utf8')

@@ -1,17 +1,20 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { createBot, listBots, listMessages, openStore, updateBot } from '@dostigus/db'
+import { createBot, listBots, listKitchenPantry, listMessages, openStore, readKitchen, updateBot } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import { OwnerAuthError, registerClusterOwner } from '../../server/utils/owner-auth'
 import {
   ensurePreviewCluster,
   PREVIEW_BOT_ID,
+  PREVIEW_KITCHEN_PREFIX,
   PREVIEW_OWNER_LOGIN,
   PREVIEW_OWNER_PASSWORD,
   PREVIEW_PARTS_PREFIX,
   PREVIEW_TALL_LINE_COUNT,
   PREVIEW_TALL_PREFIX,
+  previewKitchenParts,
+  previewKitchenRequested,
   previewMembersRequested,
   previewParts,
   previewPartsRequested,
@@ -89,6 +92,7 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   expect(src).toContain('previewTallRequested')
   expect(src).toContain('previewMembersRequested')
   expect(src).toContain('previewPartsRequested')
+  expect(src).toContain('previewKitchenRequested')
   expect(src).toContain('\'/members\'')
   expect(src).toContain('previewChatLocation')
   expect(src).toContain('statusCode: 404')
@@ -114,6 +118,7 @@ it('answers HEAD without signing in or writing the Store', () => {
   expect(src).not.toContain('ensurePreviewCluster')
   expect(src).not.toContain('previewChatLocation')
   expect(src).not.toContain('previewMembersRequested')
+  expect(src).not.toContain('previewKitchenRequested')
   expect(src).not.toContain('/members')
   expect(src).not.toContain('requireOwnerSession')
   expect(src).not.toContain('requireHostSession')
@@ -242,6 +247,38 @@ it('adds one assistant parts line once, after any tall thread', async () => {
   })
   expect(second.botId).toBe(first.botId)
   expect(listMessages(store, first.botId)).toHaveLength(messages.length)
+})
+
+it('adds one Kitchen button once and fills empty Kitchen tables', async () => {
+  const store = memoryStore()
+  expect(previewKitchenRequested('1')).toBe(true)
+  expect(previewKitchenRequested(1)).toBe(true)
+  expect(previewKitchenRequested(undefined)).toBe(false)
+
+  const first = await ensurePreviewCluster(store, hashPassword, verifyPassword, {
+    parts: true,
+    kitchen: true,
+  })
+  const messages = listMessages(store, first.botId)
+  const kitchenLine = messages.at(-1)
+  expect(kitchenLine?.content.startsWith(PREVIEW_KITCHEN_PREFIX)).toBe(true)
+  expect(kitchenLine?.role).toBe('assistant')
+  expect(kitchenLine?.parts).toEqual(previewKitchenParts())
+  expect(messages.at(-2)?.content.startsWith(PREVIEW_PARTS_PREFIX)).toBe(true)
+  expect(Date.parse(kitchenLine!.createdAt)).toBeGreaterThan(Date.parse(messages.at(-2)!.createdAt))
+  const kitchen = readKitchen(store)
+  expect(kitchen.pantry.map((item) => item.name)).toEqual(['Eggs', 'Milk'])
+  expect(kitchen.pantry[0]?.qty).toBe('6')
+  expect(kitchen.pantry[1]?.qty).toBeNull()
+  expect(kitchen.recipe).toMatchObject({ name: 'Omelette', ingredients: 'eggs\nmilk' })
+  expect(kitchen.xp).toBe(10)
+  expect(kitchen.cooked[0]?.label).toBe('Omelette')
+  expect(kitchen.cooked[0]?.personId).toBe(first.user.id)
+
+  await ensurePreviewCluster(store, hashPassword, verifyPassword, { kitchen: true })
+  expect(listMessages(store, first.botId)).toHaveLength(messages.length)
+  expect(listKitchenPantry(store)).toHaveLength(2)
+  expect(readKitchen(store).xp).toBe(10)
 })
 
 it('fills a tall thread once on the stable Bot', async () => {

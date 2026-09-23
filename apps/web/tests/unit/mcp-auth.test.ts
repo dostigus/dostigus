@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { authorizeMcpAgent, mcpToolsEnabled, readAuthorizationHeader } from '../../server/utils/mcp-auth'
-import { CHAT_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS } from '../../server/utils/mcp-surface'
+import { CHAT_MCP_TOOLS, KITCHEN_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS } from '../../server/utils/mcp-surface'
 
 function event() {
   return { context: {} as { agentOk?: boolean } }
@@ -60,6 +60,7 @@ it('lists the Platform MCP surface tools', () => {
     'dostigus_bots_delete',
     'dostigus_messages_list',
     'dostigus_messages_create',
+    ...KITCHEN_MCP_TOOLS,
   ])
 })
 
@@ -73,6 +74,9 @@ it('keeps delete off the Chat MCP tool list', () => {
     'dostigus_messages_create',
   ])
   expect(CHAT_MCP_TOOLS).not.toContain('dostigus_bots_delete')
+  for (const name of KITCHEN_MCP_TOOLS) {
+    expect(CHAT_MCP_TOOLS).not.toContain(name)
+  }
 })
 
 it('limits Member Chat tools to messages', () => {

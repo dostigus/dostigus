@@ -2,22 +2,32 @@ import type { ChatPart } from '@dostigus/shared'
 
 /**
  * Sheets a Chat button may open. Unknown ids stay off the bubble.
- * Day-1 registers `demo`. A Kitchen Module adds its id here later.
- * See ADR 0025.
+ * `demo` is the ADR 0025 drawer. `kitchen` is the Kitchen Module Sheet
+ * (ADR 0026).
  */
 export type HostSheetEntry = {
   id: string
   title: string
+  /** `note` is a short body. `kitchen` mounts the Kitchen Sheet. */
+  kind: 'note' | 'kitchen'
   body: string
 }
 
 export const HOST_DEMO_SHEET_ID = 'demo'
+export const HOST_KITCHEN_SHEET_ID = 'kitchen'
 
 const HOST_SHEETS: Record<string, HostSheetEntry> = {
   [HOST_DEMO_SHEET_ID]: {
     id: HOST_DEMO_SHEET_ID,
     title: 'Demo sheet',
-    body: 'This Sheet is a Kit drawer. A later Kitchen Module can hang here.',
+    kind: 'note',
+    body: 'This Sheet is a Kit drawer.',
+  },
+  [HOST_KITCHEN_SHEET_ID]: {
+    id: HOST_KITCHEN_SHEET_ID,
+    title: 'Kitchen',
+    kind: 'kitchen',
+    body: '',
   },
 }
 
