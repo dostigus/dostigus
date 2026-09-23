@@ -12,6 +12,8 @@ function bot(name: string, preview: string | null): BotListItem {
       modelTier: 'strong',
       avatarShape: 'goose',
       avatarColor: '#1F7AE5',
+      label: '',
+      description: '',
       skillIds: [],
       modulePackageIds: [],
     },

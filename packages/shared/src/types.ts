@@ -101,6 +101,10 @@ export type Manifest = {
   avatarShape: BotAvatarShape
   /** One of the Bot accent palette hexes — see ADR 0016. */
   avatarColor: BotAccentHex
+  /** Optional short label. Empty when the Owner has not set one. */
+  label: string
+  /** Optional description. Empty when the Owner has not set one. */
+  description: string
   skillIds: string[]
   modulePackageIds: ModulePackageId[]
 }

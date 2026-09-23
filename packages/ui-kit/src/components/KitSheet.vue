@@ -5,6 +5,8 @@
     :edge="edge"
     :title="title"
     :description="description"
+    :title-align="titleAlign"
+    :close="close"
   >
     <template
       v-if="$slots.media"
@@ -24,8 +26,12 @@ withDefaults(defineProps<{
   description?: string
   /** `bottom` is the default drawer. `end` is a right-edge drawer. */
   edge?: 'bottom' | 'end'
+  titleAlign?: 'start' | 'center'
+  close?: 'text' | 'icon'
 }>(), {
   edge: 'bottom',
+  titleAlign: 'start',
+  close: 'text',
 })
 
 const open = defineModel<boolean>('open', { required: true })

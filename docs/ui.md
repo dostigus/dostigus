@@ -211,12 +211,20 @@ Chat does not keep a full-width header. A centered pill overlays the pane:
 the Bot mark and name on a translucent `--sheet` fill, so the thread can
 scroll under it. `--thread-top-gap` pads the thread by about the pill’s
 height, so the first line is not flush under the pill when the thread is
-at the top. Hover or keyboard focus shows an arrow to the right of the
-name. The pill opens a right Sheet
-(`KitSheet` with `edge="end"`): appearance (**Bot** tab: the flock grid
-and hue-ordered color swatches with a centered last row, plus **Reset**),
-name, Model tier, and delete for the
-Owner. Members see the chosen avatar and may read those fields. Bubbles
+at the top. At rest the pill holds only the mark and the name, with the
+same horizontal inset on both sides. Hover or keyboard focus fades an
+arrow in after the name and the pill grows wider to fit it. Padding on
+the trailing side sits past the arrow. The pill opens a right Sheet
+(`KitSheet` with `edge="end"`, title Параметры, × in the top-right).
+A large Bot mark sits under the title. A small pencil badge on the
+bottom-right corner of that mark stays visible for the Owner and opens
+a modal: square flock tiles (the selected frame is the same rounded
+square), smaller hue-ordered color swatches in a block the same width
+as the flock grid, with a centered last row, **Reset** («Сбросить»), and
+**Save** («Сохранить»). The Sheet fields are name («Имя»), an optional
+label («Метка»), and a description («Описание»). Model tier stays on
+Host Settings. Delete is not on this Sheet. Members see the mark and
+may read the fields. Bubbles
 have no author label. The composer stays on screen, over that scroll.
 Its placeholder is «Сообщение для» plus the open Bot’s display name.
 A `+` on the left is

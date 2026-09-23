@@ -39,23 +39,29 @@
         :aria-label="identityLabel"
         @click="settingsOpen = true"
       >
-        <HostBotAvatar
-          :name="bot?.name ?? 'Bot'"
-          :seed="bot?.id ?? ''"
-          :shape="bot?.manifest.avatarShape"
-          :avatar-color="bot?.manifest.avatarColor"
-          :state="markState"
-          :live="botLive"
-          size="sm"
-        />
-        <span class="name">{{ bot?.name ?? 'Bot' }}</span>
-        <svg
-          class="cue"
-          viewBox="0 0 24 24"
+        <span class="identity-copy">
+          <HostBotAvatar
+            :name="bot?.name ?? 'Bot'"
+            :seed="bot?.id ?? ''"
+            :shape="bot?.manifest.avatarShape"
+            :avatar-color="bot?.manifest.avatarColor"
+            :state="markState"
+            :live="botLive"
+            size="sm"
+          />
+          <span class="name">{{ bot?.name ?? 'Bot' }}</span>
+        </span>
+        <span
+          class="cue-slot"
           aria-hidden="true"
         >
-          <path d="M5 12h14M13 6l6 6-6 6" />
-        </svg>
+          <svg
+            class="cue"
+            viewBox="0 0 24 24"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </span>
       </button>
 
       <ol
@@ -197,7 +203,6 @@
       v-model:open="settingsOpen"
       :bot="bot"
       @saved="onBotSaved"
-      @deleted="onBotDeleted"
     />
   </div>
 </template>
@@ -680,12 +685,6 @@ async function deliver(raw: string, existing: TimelineLine | null) {
 async function onBotSaved() {
   await Promise.all([refreshBot(), refreshBots()])
 }
-
-async function onBotDeleted() {
-  settingsOpen.value = false
-  await refreshBots()
-  await navigateTo('/')
-}
 </script>
 
 <style scoped>
@@ -732,16 +731,17 @@ async function onBotDeleted() {
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0;
   min-width: 0;
-  max-width: min(16rem, calc(100% - 6.5rem));
+  max-width: min(18rem, calc(100% - 6.5rem));
   appearance: none;
   border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
   background: color-mix(in srgb, var(--sheet) 62%, transparent);
   backdrop-filter: blur(14px);
   color: inherit;
   border-radius: 999px;
-  padding: 0.2rem 0.7rem 0.2rem 0.2rem;
+  /* Equal inset around the mark and name. The arrow is not reserved. */
+  padding: 0.18rem 0.42rem;
   cursor: pointer;
   font: inherit;
   box-shadow: 0 0.35rem 1.1rem rgb(0 0 0 / 28%);
@@ -760,6 +760,13 @@ async function onBotDeleted() {
   cursor: default;
 }
 
+.identity-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
 .name {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -768,26 +775,44 @@ async function onBotDeleted() {
   font-weight: 700;
 }
 
-.cue {
-  width: 0;
-  height: 0.95rem;
+.cue-slot {
+  display: flex;
   flex: none;
-  opacity: 0;
+  align-items: center;
+  width: 0;
+  margin-inline-start: 0;
   overflow: hidden;
+  opacity: 0;
+  transition:
+    width 180ms ease,
+    margin-inline-start 180ms ease,
+    opacity 160ms ease;
+}
+
+.identity:hover:not(:disabled) .cue-slot,
+.identity:focus-visible .cue-slot {
+  width: 1.05rem;
+  margin-inline-start: 0.32rem;
+  opacity: 1;
+}
+
+.cue {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
   fill: none;
   stroke: currentcolor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   color: var(--text-muted);
-  transition: width 140ms ease, opacity 140ms ease, margin-inline-start 140ms ease;
+  transform: translateX(-0.2rem);
+  transition: transform 180ms ease, color 160ms ease;
 }
 
 .identity:hover:not(:disabled) .cue,
 .identity:focus-visible .cue {
-  width: 0.95rem;
-  margin-inline-start: 0.05rem;
-  opacity: 1;
+  transform: none;
   color: var(--text);
 }
 
@@ -1104,6 +1129,7 @@ textarea:focus {
 
 @media (prefers-reduced-motion: reduce) {
   .composer-row,
+  .cue-slot,
   .cue {
     transition: none;
   }

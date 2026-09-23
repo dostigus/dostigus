@@ -103,6 +103,13 @@ UPDATE bots SET avatar_shape = 'parrot' WHERE avatar_shape IN ('honk', 'cloud');
 UPDATE bots SET avatar_shape = 'owl' WHERE avatar_shape IN ('peek', 'teardrop');
 `,
   },
+  {
+    id: '0007_bot_label_description',
+    sql: `
+ALTER TABLE \`bots\` ADD \`label\` text DEFAULT '' NOT NULL;
+ALTER TABLE \`bots\` ADD \`description\` text DEFAULT '' NOT NULL;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

@@ -5,6 +5,8 @@
     :title="title"
     :description="description"
     :wide="wide"
+    :title-align="titleAlign"
+    :close="close"
   >
     <template
       v-if="$slots.title"
@@ -30,8 +32,12 @@ withDefaults(defineProps<{
   description?: string
   /** Wider centered Sheet for a list, such as Host search. */
   wide?: boolean
+  titleAlign?: 'start' | 'center'
+  close?: 'text' | 'icon'
 }>(), {
   wide: false,
+  titleAlign: 'start',
+  close: 'text',
 })
 
 const open = defineModel<boolean>('open', { required: true })

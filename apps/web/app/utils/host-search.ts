@@ -70,9 +70,9 @@ export function hostSettingsCatalog(input: {
   if (input.bot) {
     entries.push({
       id: 'bot-settings',
-      title: 'Bot settings',
-      subtitle: `${input.bot.name} appearance, name, and Model tier`,
-      keywords: ['appearance', 'rename', 'avatar', 'color', 'delete', 'model tier'],
+      title: 'Параметры',
+      subtitle: `${input.bot.name} name, label, and appearance`,
+      keywords: ['appearance', 'rename', 'avatar', 'color', 'name', 'label', 'description', 'параметры'],
       href: null,
       botId: input.bot.id,
     })

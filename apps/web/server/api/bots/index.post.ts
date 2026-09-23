@@ -3,6 +3,8 @@ type CreateBody = {
   modelTier?: string
   avatarShape?: string
   avatarColor?: string
+  label?: string
+  description?: string
 }
 
 export default defineEventHandler(async (event) => {
@@ -12,6 +14,8 @@ export default defineEventHandler(async (event) => {
     modelTier: body?.modelTier,
     avatarShape: body?.avatarShape,
     avatarColor: body?.avatarColor,
+    label: body?.label,
+    description: body?.description,
   }))
   setResponseStatus(event, 201)
   return created

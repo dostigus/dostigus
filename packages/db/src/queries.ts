@@ -18,6 +18,8 @@ import {
 import { toBot, toMessage } from './map'
 
 const BOT_NAME_MAX = 120
+const BOT_LABEL_MAX = 160
+const BOT_DESCRIPTION_MAX = 2_000
 const MESSAGE_MAX = 16_000
 const PREVIEW_MAX = 140
 
@@ -71,6 +73,14 @@ function normalizeName(name: string | undefined): string {
   return value
 }
 
+function normalizeCapped(value: string | undefined, max: number, label: string): string {
+  const trimmed = value?.trim() ?? ''
+  if (trimmed.length > max) {
+    throw new StoreError(`${label} must be ${max} characters or fewer`, 400)
+  }
+  return trimmed
+}
+
 function normalizeTier(value: string | undefined): ModelTier {
   if (value == null || value === '') {
     return DEFAULT_MODEL_TIER
@@ -115,7 +125,7 @@ function normalizeContent(content: string | undefined): string {
 
 function selectBot(store: OpenedStore, id: string): BotRecord | undefined {
   return store.sqlite.prepare(`
-    SELECT id, name, model_tier, avatar_shape, avatar_color, skills_json, modules_json, created_at
+    SELECT id, name, model_tier, avatar_shape, avatar_color, label, description, skills_json, modules_json, created_at
     FROM bots
     WHERE id = ?
   `).get(id) as BotRecord | undefined
@@ -144,6 +154,8 @@ export function listBots(store: OpenedStore): BotListItem[] {
       model_tier,
       avatar_shape,
       avatar_color,
+      label,
+      description,
       skills_json,
       modules_json,
       created_at,
@@ -297,19 +309,23 @@ export function createBot(
     modelTier?: string
     avatarShape?: string
     avatarColor?: string
+    label?: string
+    description?: string
   } = {},
 ): { bot: Bot, greeting: Message } {
   const name = normalizeName(input.name)
   const modelTier = normalizeTier(input.modelTier)
   const avatarShape = normalizeAvatarShape(input.avatarShape)
   const avatarColor = normalizeAvatarColor(input.avatarColor)
+  const label = normalizeCapped(input.label, BOT_LABEL_MAX, 'Label')
+  const description = normalizeCapped(input.description, BOT_DESCRIPTION_MAX, 'Description')
   const createdAt = nowMs()
   const id = randomUUID()
 
   store.sqlite.prepare(`
-    INSERT INTO bots (id, name, model_tier, avatar_shape, avatar_color, skills_json, modules_json, created_at)
-    VALUES (?, ?, ?, ?, ?, '[]', '[]', ?)
-  `).run(id, name, modelTier, avatarShape, avatarColor, createdAt)
+    INSERT INTO bots (id, name, model_tier, avatar_shape, avatar_color, label, description, skills_json, modules_json, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, '[]', '[]', ?)
+  `).run(id, name, modelTier, avatarShape, avatarColor, label, description, createdAt)
 
   const greeting = insertMessageRow(store, {
     botId: id,
@@ -328,25 +344,46 @@ export function updateBot(
     modelTier?: string
     avatarShape?: string
     avatarColor?: string
+    label?: string
+    description?: string
   },
 ): Bot {
   const current = requireBot(store, id)
-  const name = input.name !== undefined ? normalizeName(input.name) : current.name
-  const modelTier = input.modelTier !== undefined
-    ? normalizeTier(input.modelTier)
-    : current.manifest.modelTier
-  const avatarShape = input.avatarShape !== undefined
-    ? normalizeAvatarShape(input.avatarShape)
-    : current.manifest.avatarShape
-  const avatarColor = input.avatarColor !== undefined
-    ? normalizeAvatarColor(input.avatarColor)
-    : current.manifest.avatarColor
-
+  const sets: string[] = []
+  const params: Array<string | number> = []
+  if (input.name !== undefined) {
+    sets.push('name = ?')
+    params.push(normalizeName(input.name))
+  }
+  if (input.modelTier !== undefined) {
+    sets.push('model_tier = ?')
+    params.push(normalizeTier(input.modelTier))
+  }
+  if (input.avatarShape !== undefined) {
+    sets.push('avatar_shape = ?')
+    params.push(normalizeAvatarShape(input.avatarShape))
+  }
+  if (input.avatarColor !== undefined) {
+    sets.push('avatar_color = ?')
+    params.push(normalizeAvatarColor(input.avatarColor))
+  }
+  if (input.label !== undefined) {
+    sets.push('label = ?')
+    params.push(normalizeCapped(input.label, BOT_LABEL_MAX, 'Label'))
+  }
+  if (input.description !== undefined) {
+    sets.push('description = ?')
+    params.push(normalizeCapped(input.description, BOT_DESCRIPTION_MAX, 'Description'))
+  }
+  if (sets.length === 0) {
+    return current
+  }
+  params.push(id)
   store.sqlite.prepare(`
     UPDATE bots
-    SET name = ?, model_tier = ?, avatar_shape = ?, avatar_color = ?
+    SET ${sets.join(', ')}
     WHERE id = ?
-  `).run(name, modelTier, avatarShape, avatarColor, id)
+  `).run(...params)
 
   return requireBot(store, id)
 }

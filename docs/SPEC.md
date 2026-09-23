@@ -28,7 +28,8 @@ What the running Cluster does today:
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
   default `goose` (Bot mark), `avatarColor` default `#1F7AE5` /
-  `--bot-accent-10`, empty skills/modules),
+  `--bot-accent-10`, optional `label` and `description` default empty,
+  empty skills/modules),
   `messages` (`botId`, role `user` \| `assistant` \| `system`, content),
   `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
   default Model tier, optional model overrides), `owners` (exactly one
@@ -76,9 +77,19 @@ What the running Cluster does today:
   (`/members`), and Sign out. Chat overlays a centered pill on the thread:
   avatar and name, translucent, so lines scroll under it. A top inset about
   the pill’s height keeps the first line clear of the pill when the thread
-  is at the top. There is no full-width header bar. Hover shows an arrow
-  beside the name. The pill opens a right Sheet (appearance Bot mark + color, rename, Model tier,
-  delete for the Owner), unlabeled bubbles, and a composer. Sidebar Bot
+  is at the top. There is no full-width header bar. At rest the pill is
+  only the mark and the name, with the same tight inset on both sides.
+  Hover or focus fades an arrow in on the trailing side and the pill grows
+  to fit it, with padding still sitting past that arrow. The pill opens a
+  right Sheet titled Параметры (name, optional label, description, and a
+  large Bot mark). A small pencil badge on the bottom-right corner of
+  that mark stays visible for the Owner and opens appearance (flock and
+  accent) in a modal, with Save. Flock tiles in that modal are square,
+  including the selected frame. Accent swatches are smaller, and the
+  palette is the same width as that flock grid.
+  Model tier stays on Host
+  Settings. Delete is not on this Sheet. Members may read the fields.
+  Bubbles stay unlabeled. The composer stays on screen. Sidebar Bot
   rows and the Chat pill show the Manifest Bot mark (`KitBotAvatar`
   idle); the pill greets on open, listens at the composer, thinks while a
   reply is in flight, speaks and cheers it when it lands, tilts on a failed

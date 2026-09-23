@@ -50,8 +50,9 @@ The Owner row persists a Bot and opens its Chat immediately:
   `goose` and `#1F7AE5` for other callers.
 - The Store still writes the assistant greeting as the first Chat line.
 
-Rename and appearance stay on the Bot settings Sheet. The Chat pill
-avatar and name open that Sheet, as in
+Rename stays on the Bot settings Sheet. Appearance opens in a modal from
+that Sheet ([ADR 0020](0020-bot-closet.md)). The Chat pill avatar and
+name open that Sheet, as in
 [ADR 0015](0015-host-desktop-shell.md). Create does not ask for a name
 first.
 

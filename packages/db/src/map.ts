@@ -13,6 +13,8 @@ export type BotRecord = {
   model_tier: string
   avatar_shape: string
   avatar_color: string
+  label: string
+  description: string
   skills_json: string
   modules_json: string
   created_at: number
@@ -71,6 +73,8 @@ export function toBot(row: BotRecord): Bot {
       modelTier: modelTierFromRow(row.model_tier),
       avatarShape: avatarShapeFromRow(row.avatar_shape),
       avatarColor: avatarColorFromRow(row.avatar_color),
+      label: row.label ?? '',
+      description: row.description ?? '',
       skillIds: parseStringList(row.skills_json),
       modulePackageIds: parseStringList(row.modules_json),
     },
