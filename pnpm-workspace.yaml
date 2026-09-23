@@ -2,6 +2,13 @@ shamefullyHoist: true
 shellEmulator: true
 
 trustPolicy: no-downgrade
+# semver@6.3.1 (published 2023-07-10) is a 6.x release that landed after
+# semver@7.5.x versions with provenance. pnpm compares trust by publish
+# date, so every non-frozen resolve reports ERR_PNPM_TRUST_DOWNGRADE for
+# this pin (Nuxt → @babel/core) even though pnpm-lock.yaml already has it.
+# Exact version only: newer semver releases stay under no-downgrade.
+trustPolicyExclude:
+  - semver@6.3.1
 
 packages:
   - apps/*
