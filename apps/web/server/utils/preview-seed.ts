@@ -38,6 +38,19 @@ export function previewSeedAllowed(input: { dev: boolean, flag: string | undefin
 
 /** `?tall=1` on GET. h3 may parse the query as a string or a number. */
 export function previewTallRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
+/**
+ * `?members=1` on GET. Opens Members for the signed-in preview Owner.
+ * HEAD ignores this query and still points at the fixture Bot.
+ */
+export function previewMembersRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
+/** Shared by preview query flags. h3 may parse `1` as a string or a number. */
+function previewQueryOn(value: unknown): boolean {
   if (Array.isArray(value)) {
     return value.some((item) => item === '1' || item === 1)
   }

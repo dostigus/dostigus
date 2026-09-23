@@ -54,6 +54,49 @@ if it is dirty), then run `pnpm install`. Do not run
 [`pnpm-workspace.yaml`](pnpm-workspace.yaml) still declares and that
 `apps/web` still uses. The lockfile diff is large and wrong.
 
+## Host API patterns
+
+Owner-only JSON routes live under `apps/web/server/api/`. Copy
+[`apps/web/server/api/members/index.post.ts`](apps/web/server/api/members/index.post.ts)
+for a write and `members/index.get.ts` for a read. Do not re-trace the
+Owner session from middleware.
+
+**Session gate.** `requireOwnerSession(event)` in
+[`apps/web/server/utils/owner-session.ts`](apps/web/server/utils/owner-session.ts)
+runs `requireHostSession` → `requireUserSession`. No session is **401**.
+A Member session is **403** (`Only the Owner can change this`). A read
+that only returns Store data uses `withOwnerStore(event, (store) => …)`,
+which applies the same gate (`members/index.get.ts`,
+`members/invites/index.get.ts`). Bot list and Chat use
+`requireHostSession` / `withHostStore` so a Member can use them. Settings,
+Bot create/delete, and Members stay on the Owner gate. The page gate is
+[`apps/web/app/middleware/owner.global.ts`](apps/web/app/middleware/owner.global.ts):
+`/members` and `/settings` send a Member to `/`. Invite accept
+(`/invite/…`, `/api/invites/:token`) stays public while logged out — those
+handlers do not call `requireOwnerSession`.
+[`apps/web/tests/unit/owner-routes.test.ts`](apps/web/tests/unit/owner-routes.test.ts)
+fails `CI=1 pnpm check` when a new Owner route omits the gate or a public
+Invite route grows one.
+
+**Errors.** Household helpers throw `OwnerAuthError` (validation and
+conflict) or `StoreError`. In the route `catch`, call
+`throwOwnerAuthError(error)` from
+[`apps/web/server/utils/owner-auth.ts`](apps/web/server/utils/owner-auth.ts).
+It maps both classes to `createError({ statusCode, statusMessage })` and
+rethrows anything else. `throwStoreError` maps only `StoreError`. Use it
+when the helper does not throw `OwnerAuthError` (Settings, Member
+disable). Keep this mapping. Do not add a second auth error type.
+
+**Vitest memory Store.** Do not boot Nuxt to test Store behavior.
+`openStore('file::memory:')` from `@dostigus/db`, push the handle onto an
+array, and `close()` it in `afterEach`. Seed an Owner with `createOwner`
+when the helper needs one. Password doubles in these tests are
+`` async (password) => `hash:${password}` ``, not scrypt. Copy
+[`apps/web/tests/unit/household.test.ts`](apps/web/tests/unit/household.test.ts)
+(Members) or
+[`apps/web/tests/unit/household-invites.test.ts`](apps/web/tests/unit/household-invites.test.ts)
+(Invites).
+
 ## Local preview (Host)
 
 ```
@@ -98,6 +141,13 @@ For scroll and overlay screenshots, open
 of preview Chat lines on Bot `preview` once. Another visit with `?tall=1`
 does not append again.
 
+For Members and Invite screenshots, open
+**http://localhost:3000/preview-seed?members=1**. That GET signs in the
+same preview Owner and redirects to `/members` (a Member session cannot
+open that page). `?hold=1` is ignored when `members=1` is set. **HEAD**
+ignores `?members=1` and still answers **204** or **302** to
+`/bots/preview` with no session cookie.
+
 On `nuxt dev`, the Chat thread can force the activity row without a live
 reply: `/bots/preview?activity=typing`, `?activity=command`, or
 `?activity=connect&target=Expi`. A production Host ignores `activity`.
@@ -133,7 +183,8 @@ instead of `return null`.
 With `pnpm preview:host` already up, `pnpm smoke:preview` checks those
 HEAD responses, that GET lands on `/bots/preview` (not a Bot chosen by
 the name **New Bot**), that renaming the Bot does not create another
-Bot, and that `?tall=1` adds the tall thread once. Optional
+Bot, that `?tall=1` adds the tall thread once, and that GET
+`?members=1` lands on `/members` while HEAD ignores that query. Optional
 `PREVIEW_SMOKE_URL` (default `http://localhost:3000`).
 
 Preview Owner: username `preview`, password `preview-owner`. A
@@ -143,8 +194,11 @@ GET and HEAD return 409 — point `DATABASE_URL` at a fresh file (for example
 tooling. It does not add a domain Bot to the Cluster
 ([SPEC](docs/SPEC.md): no seed/demo domain Bot).
 
-In `nuxt dev`, hide `nuxt-devtools-frame` before hit-testing the Chat
-bottom. That frame sits on the composer.
+`pnpm preview:host` sets `devtools.enabled` to false, so
+`nuxt-devtools-frame` is not mounted. That frame otherwise sits on the
+Invite URL field and the Chat composer. A plain
+`pnpm --filter @dostigus/web dev` still mounts it — hide the frame
+before hit-testing those controls.
 
 MCP surface
 is `/mcp` — set `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`) to enable

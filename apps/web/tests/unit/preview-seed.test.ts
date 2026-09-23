@@ -11,6 +11,7 @@ import {
   PREVIEW_OWNER_PASSWORD,
   PREVIEW_TALL_LINE_COUNT,
   PREVIEW_TALL_PREFIX,
+  previewMembersRequested,
   previewSeedAllowed,
   previewTallRequested,
   readPreviewSeedHead,
@@ -83,6 +84,8 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   )
   expect(src).toContain('previewSeedAllowed')
   expect(src).toContain('previewTallRequested')
+  expect(src).toContain('previewMembersRequested')
+  expect(src).toContain('\'/members\'')
   expect(src).toContain('previewChatLocation')
   expect(src).toContain('statusCode: 404')
   expect(src).toContain('startOwnerSession')
@@ -106,6 +109,8 @@ it('answers HEAD without signing in or writing the Store', () => {
   expect(src).not.toContain('startOwnerSession')
   expect(src).not.toContain('ensurePreviewCluster')
   expect(src).not.toContain('previewChatLocation')
+  expect(src).not.toContain('previewMembersRequested')
+  expect(src).not.toContain('/members')
   expect(src).not.toContain('requireOwnerSession')
   expect(src).not.toContain('requireHostSession')
   expect(src).not.toContain('requireUserSession')
@@ -118,6 +123,26 @@ it('treats tall=1 as the layout-thread query', () => {
   expect(previewTallRequested(undefined)).toBe(false)
   expect(previewTallRequested('true')).toBe(false)
   expect(previewTallRequested('0')).toBe(false)
+})
+
+it('treats members=1 as the Members landing query', () => {
+  expect(previewMembersRequested('1')).toBe(true)
+  expect(previewMembersRequested(1)).toBe(true)
+  expect(previewMembersRequested(['1'])).toBe(true)
+  expect(previewMembersRequested(undefined)).toBe(false)
+  expect(previewMembersRequested('true')).toBe(false)
+  expect(previewMembersRequested('0')).toBe(false)
+})
+
+it('turns Nuxt devtools off only while the preview seed flag is set', () => {
+  const src = readFileSync(
+    join(import.meta.dirname, '../../nuxt.config.ts'),
+    'utf8',
+  )
+  expect(src).toContain('DOSTIGUS_PREVIEW_SEED === \'1\'')
+  expect(src).toContain('devtools:')
+  expect(src).toContain('enabled: false')
+  expect(src).toContain('nuxt-devtools-frame')
 })
 
 it('does not look up the preview Bot by display name', () => {

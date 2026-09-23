@@ -33,10 +33,12 @@ On a Cursor cloud agent VM, `nuxt dev` often listens on IPv6 only. Use
 
 Host preview seed (Owner signed in, fixture Bot id `preview`, Chat open):
 `pnpm preview:host`, then GET `http://localhost:3000/preview-seed`
-(redirects to `/bots/preview`; `?tall=1` for a tall thread). Renaming
+(redirects to `/bots/preview`; `?tall=1` for a tall thread;
+`?members=1` opens `/members` with Nuxt devtools off). Renaming
 that Bot does not change the id. HEAD is answered on that route and on
-`/health`. `pnpm smoke:preview` checks that HEAD, the fixture Bot, and the
-tall thread. See [`AGENTS.md`](AGENTS.md).
+`/health` (HEAD ignores `?members=1`). `pnpm smoke:preview` checks that
+HEAD, the fixture Bot, the tall thread, and the Members landing. See
+[`AGENTS.md`](AGENTS.md).
 
 A fresh Cluster opens **Create your Owner** (email or username + password).
 Later visits sign in. Then press **+**: the Chat pane becomes find or

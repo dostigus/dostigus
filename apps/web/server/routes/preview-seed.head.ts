@@ -1,10 +1,11 @@
 import process from 'node:process'
 
 /**
- * HEAD /preview-seed. Same gate and status as GET, without creating the
- * Owner, signing in, creating a Bot, or inserting Chat lines.
+ * HEAD /preview-seed. Same gate and status as GET without a query, without
+ * creating the Owner, signing in, creating a Bot, or inserting Chat lines.
  * 204 when the gate is open and fixture Bot `preview` does not exist yet
  * (GET would create it). 302 to `/bots/preview` when that Bot exists.
+ * `?members=1` is ignored. HEAD never opens the Members page.
  */
 export default defineEventHandler((event) => {
   if (!previewSeedAllowed({

@@ -6,6 +6,8 @@
  * to the GET JSON byte length and ends with an empty body.
  * HEAD /preview-seed is 204 until fixture Bot id `preview` exists, then 302.
  * GET must land on that id. Renaming the Bot must not create another Bot.
+ * GET `?members=1` must 302 to `/members` with a session cookie.
+ * HEAD ignores `?members=1` and still points at `/bots/<id>`.
  *
  *   pnpm preview:host
  *   pnpm smoke:preview
@@ -376,6 +378,25 @@ async function main() {
     fail('HEAD /preview-seed inserted Chat lines')
   }
   note(`HEAD /preview-seed 302 /bots/${botId} with no session cookie`)
+
+  const membersHead = assertPreviewHead(await request('/preview-seed?members=1', { method: 'HEAD' }))
+  if (membersHead.status !== 302 || membersHead.location !== `/bots/${botId}`) {
+    fail(`HEAD /preview-seed?members=1 expected 302 /bots/${botId}, got ${membersHead.status} ${membersHead.location ?? ''}`)
+  }
+  const members = await request('/preview-seed?members=1')
+  const membersPath = locationPath(members.response.headers.get('location'))
+  if (members.response.status !== 302 || membersPath !== '/members') {
+    fail(`GET /preview-seed?members=1 expected 302 /members, got ${members.response.status} ${membersPath ?? members.text.slice(0, 200)}`)
+  }
+  const membersSession = cookieHeader(members.response)
+  if (!membersSession) {
+    fail('GET /preview-seed?members=1 did not set a session cookie')
+  }
+  const membersApi = await request('/api/members', { cookie: membersSession })
+  if (membersApi.response.status !== 200) {
+    fail(`GET /api/members as preview Owner expected 200, got ${membersApi.response.status} ${membersApi.text.slice(0, 200)}`)
+  }
+  note('GET /preview-seed?members=1 302 /members; HEAD ignored the query')
   note('ok')
 }
 
