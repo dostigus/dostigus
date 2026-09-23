@@ -50,15 +50,15 @@ pivots are set per part instead of relying on a default origin.
 | State | What moves | Host call site |
 |-------|-----------|----------------|
 | `none` | nothing | appearance editor, unpicked birds |
-| `idle` | slow breath, small head settle, rare blink | sidebar rows, Chat header at rest |
-| `think` | bill up, long sway, gaze searching | Chat header and the pending Chat mark while a reply is in flight |
-| `reply` | jaw talks three syllables a cycle, head rides them, one wing flick | Chat header as the reply lands |
+| `idle` | slow breath, small head settle, rare blink | sidebar rows, Chat pill at rest |
+| `think` | bill up, long sway, gaze searching | Chat pill and the pending Chat mark while a reply is in flight |
+| `reply` | jaw talks three syllables a cycle, head rides them, one wing flick | Chat pill as the reply lands |
 | `work` | steady flap | Kit only — no Host Job surface yet |
 | `greet` | one nod and a wing wave, then still | Chat open, and the picked bird in the editor |
 | `listen` | leans in, gaze forward, slower blink | Chat composer focused |
-| `celebrate` | one hop and a wing cheer | Chat header after the reply finishes |
-| `error` | confused head wobble, slow blink | Chat header on a failed send |
-| `sleep` | eyes shut to a slit, head down, long breath | Chat header when no LLM gateway key is set, so the Bot cannot answer |
+| `celebrate` | one hop and a wing cheer | Chat pill after the reply finishes |
+| `error` | confused head wobble, slow blink | Chat pill on a failed send |
+| `sleep` | eyes shut to a slit, head down, long breath | Chat pill when no LLM gateway key is set, so the Bot cannot answer |
 
 `greet` and `celebrate` play once (`ONE_SHOT_AVATAR_STATES`); the Host drops
 back to `idle` when they finish. A pupil group (`gaze`) sits inside each eye

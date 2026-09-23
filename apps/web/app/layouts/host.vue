@@ -8,6 +8,7 @@
       @click="close"
     />
     <HostSidebar />
+    <HostSearch />
     <div class="pane">
       <BotPicker
         v-if="createOpen"

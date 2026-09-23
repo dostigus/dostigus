@@ -6,7 +6,7 @@
 ## Decision
 
 Each Bot Manifest stores an avatar as `avatarShape` and `avatarColor`. The
-Host renders that mark in the sidebar Bot rows and the Chat header. The
+Host renders that mark in the sidebar Bot rows and the Chat pill. The
 Owner edits shape and color in the existing right Bot settings Sheet
 ([ADR 0015](0015-host-desktop-shell.md)). Members see the avatars and may
 open the Sheet to read them; only the Owner mutates appearance, same as
@@ -50,7 +50,7 @@ image upload, or custom hex outside the palette.
   Create uses the defaults. Update accepts optional shape and color;
   invalid values are rejected.
 - Kit exports `KitBotAvatar` and the accent CSS variables. Host sidebar
-  and Chat header pass Manifest shape and color into that mark.
+  and Chat pill pass Manifest shape and color into that mark.
 - MCP `dostigus_bots_create` / `dostigus_bots_update` accept the same
   optional fields as the Host PATCH.
 - Out of this change: AI generate, image upload, custom hex, unread

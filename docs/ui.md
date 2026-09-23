@@ -18,7 +18,7 @@ These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
 | `--accent` | `#F25630` | Primary actions, `+` create, focus |
 | `--live` | `#3DDC84` | Green live dot on a busy Bot avatar |
 | `--line` | `#333333` | Quiet borders (slightly lighter than `--surface`) |
-| `--line-soft` | `color-mix(in srgb, var(--line) 55%, var(--bg))` (~`#242424`) | Sidebar \| Chat divider, Chat header edge, rule above the user button |
+| `--line-soft` | `color-mix(in srgb, var(--line) 55%, var(--bg))` (~`#242424`) | Sidebar \| Chat divider, rule above the user button |
 | `--radius-card` | `1.75rem` (~28px) | Large card / Sheet corners |
 | `--radius-bubble` | `1.25rem` (~20px) | Soft Chat message bubbles |
 | `--radius` | `0.75rem` (~12px) | Buttons, inputs, inner chips |
@@ -42,8 +42,9 @@ The composer is the field itself (`--composer` fill, not global
 (`1.15rem`), so the block lines up with Chat bubbles. The side margins
 are the Chat canvas (`--bg-chat`); only the row paints `--composer`,
 so the corners do not pick up a second fill. The field overlays the
-Chat pane. Below the header, that pane is one scroll, so messages can
-pass behind the field instead of stopping in a box above it. The gap
+Chat pane. That pane is one scroll. A translucent pill (avatar and name)
+overlays the top the way the composer overlays the bottom, so messages
+can pass behind both. The gap
 under the row, including the safe area, has a `--bg-chat` background
 fill, so the thread cannot show through that strip. A `--bg-chat` band
 the full width of that inset covers only the bottom half of the row
@@ -51,7 +52,10 @@ the full width of that inset covers only the bottom half of the row
 Chat canvas. The top of the row has no second fill. End padding
 on the thread matches the overlay, plus `--thread-end-gap` (`5rem`,
 ~80px), and Chat opens at the bottom so the latest line sits above the
-field with that clear space under it. When the thread is scrolled above
+field with that clear space under it. `--thread-top-gap` does the same
+job at the top: about the pill’s height (measured from the pill, with a
+fallback), so the first line is not flush under the pill when the thread
+is scrolled to the top. When the thread is scrolled above
 the bottom, a circular control centered on the pane, just above the
 field, scrolls to the latest line. Reduced motion jumps without the
 smooth scroll. A `1px` edge,
@@ -114,12 +118,12 @@ caller returns to `idle` after them.
 
 | State | Host call site |
 |-------|----------------|
-| `idle` | sidebar rows, Chat header at rest |
+| `idle` | sidebar rows, Chat pill at rest |
 | `greet` | Chat open; the picked bird in the appearance editor |
 | `listen` | Chat composer focused |
-| `think` | reply in flight — Chat header and the pending Chat mark |
-| `reply` | Chat header as the reply lands |
-| `celebrate` | Chat header just after the reply finishes |
+| `think` | reply in flight — Chat pill and the pending Chat mark |
+| `reply` | Chat pill as the reply lands |
+| `celebrate` | Chat pill just after the reply finishes |
 | `error` | failed send |
 | `sleep` | no OpenRouter key, so the Bot cannot answer |
 | `work` | Kit only for now |
@@ -172,15 +176,20 @@ it. Dragging below the minimum, or the edge control, collapses it to an
 icon rail (avatars, the picker control, user button). The width and
 collapsed state stay in the browser.
 
-The top of the sidebar is search and a small `+`. Search filters the
-loaded Bot list. With no Bots, that list region centers a short muted
+The top of the sidebar is a loupe and a `+`, side by side, both outlined
+icon buttons with no accent fill. The `+` opens the Bot picker. The loupe
+opens a centered search Sheet titled Поиск: a field, then rows with an
+avatar, a name, an optional section tag, one subtitle line, and ⌘1–⌘9 on
+the first Bots when the field is empty. Search covers Bot names, Chat
+lines, and basic Host settings (Settings, Members, and the open Bot’s
+Sheet). With no Bots, that list region centers a short muted
 line. The main pane then shows the wave sticker and **Create a Bot**.
 The `+` and that button replace the Chat pane with the picker: a **To:**
 field across the pane, a **×** on the right of that row, then **Create
 new Bot** (plain **+**, Owner only), then existing Bots (mark, name,
 latest Chat line). The sidebar stays. **×** and Escape return to the pane
 that was open before the picker. Choosing a Bot, creating a Bot, or a
-sidebar Bot row also leaves it. Search does not create a Bot from the
+sidebar Bot row also leaves it. The picker search does not create a Bot from the
 query. A Member sees search and existing Bots only. Each sidebar row is
 an avatar, the Bot name, and a one-line preview of the latest Chat line.
 The bottom is a user button, under a `--line-soft` rule. Its mark is a
@@ -198,8 +207,12 @@ line. The answer is a normal user message. The Bot replies on the usual
 path (a quiet line when no OpenRouter key is set). Purpose is not stored
 on the Manifest.
 
-Chat has a narrow header with a `--line-soft` edge under the Bot mark and
-name. The Bot avatar and name open a right Sheet
+Chat does not keep a full-width header. A centered pill overlays the pane:
+the Bot mark and name on a translucent `--sheet` fill, so the thread can
+scroll under it. `--thread-top-gap` pads the thread by about the pill’s
+height, so the first line is not flush under the pill when the thread is
+at the top. Hover or keyboard focus shows an arrow to the right of the
+name. The pill opens a right Sheet
 (`KitSheet` with `edge="end"`): appearance (**Bot** tab: the flock grid
 and hue-ordered color swatches with a centered last row, plus **Reset**),
 name, Model tier, and delete for the
@@ -218,9 +231,9 @@ The icon rail is a wide-screen behavior.
 
 A sent line appears in the timeline immediately. While that reply is in
 flight, Chat shows the Bot’s own flock mark in `think` — there is no text
-pill. The Chat header mark thinks with it, then uses `reply` and a short
+pill. The Chat pill mark thinks with it, then uses `reply` and a short
 `celebrate` when the stored reply lands, then returns to `idle`. A small
-green dot (`--live`) sits on the bottom-right of the Chat header avatar and
+green dot (`--live`) sits on the bottom-right of the Chat pill avatar and
 the matching sidebar row while the Bot is busy: the reply in flight, the
 landing `reply` and `celebrate`, and the short `error` pose. It hides for
 `idle`, `sleep`, `listen`, and `greet`. `prefers-reduced-motion` still holds

@@ -29,6 +29,25 @@ function chatPreview(content: string): string {
   return `${oneLine.slice(0, PREVIEW_MAX - 1)}…`
 }
 
+/** One line that still contains the match, for search rows. */
+function searchSnippet(content: string, needle: string): string {
+  const one = content.replace(/\s+/g, ' ').trim()
+  const at = one.toLowerCase().indexOf(needle.toLowerCase())
+  if (at < 0 || one.length <= PREVIEW_MAX) {
+    return chatPreview(one)
+  }
+  const start = Math.max(0, at - 32)
+  const window = 120
+  let slice = one.slice(start, start + window)
+  if (start > 0) {
+    slice = `…${slice}`
+  }
+  if (start + window < one.length) {
+    slice = `${slice}…`
+  }
+  return slice
+}
+
 export class StoreError extends Error {
   constructor(
     message: string,
@@ -206,6 +225,55 @@ export function listMessages(store: OpenedStore, botId: string): Message[] {
     ORDER BY created_at ASC
   `).all(botId) as MessageRecord[]
   return rows.map(toMessage)
+}
+
+export type MessageSearchHit = {
+  id: string
+  botId: string
+  botName: string
+  content: string
+  createdAt: string
+}
+
+const SEARCH_QUERY_MAX = 200
+const SEARCH_LIMIT = 8
+
+type MessageSearchRow = {
+  id: string
+  bot_id: string
+  content: string
+  created_at: number
+  bot_name: string
+}
+
+/** Chat lines whose text contains the query. `%` and `_` stay literal. */
+export function searchMessages(store: OpenedStore, query: string, limit = SEARCH_LIMIT): MessageSearchHit[] {
+  const needle = query.trim().slice(0, SEARCH_QUERY_MAX)
+  if (!needle) {
+    return []
+  }
+  const escaped = needle.replace(/[\\%_]/g, (ch) => `\\${ch}`)
+  const cap = Math.min(SEARCH_LIMIT, Math.max(1, limit))
+  const rows = store.sqlite.prepare(`
+    SELECT
+      messages.id AS id,
+      messages.bot_id AS bot_id,
+      messages.content AS content,
+      messages.created_at AS created_at,
+      bots.name AS bot_name
+    FROM messages
+    JOIN bots ON bots.id = messages.bot_id
+    WHERE messages.content LIKE ? ESCAPE '\\'
+    ORDER BY messages.created_at DESC, messages.rowid DESC
+    LIMIT ?
+  `).all(`%${escaped}%`, cap) as MessageSearchRow[]
+  return rows.map((row) => ({
+    id: row.id,
+    botId: row.bot_id,
+    botName: row.bot_name,
+    content: searchSnippet(row.content, needle),
+    createdAt: new Date(row.created_at).toISOString(),
+  }))
 }
 
 /** Insert the first assistant greeting when the Chat has no messages. */

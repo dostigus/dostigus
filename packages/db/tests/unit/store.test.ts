@@ -12,6 +12,7 @@ import {
   listBots,
   listMessages,
   openStore,
+  searchMessages,
   StoreError,
   storeFilePath,
   updateBot,
@@ -200,4 +201,23 @@ it('writes a SQLite file on a volume-like path', () => {
   opened.push(reopened)
   expect(listBots(reopened).map((bot) => bot.name)).toEqual(['On disk'])
   rmSync(dir, { recursive: true, force: true })
+})
+
+it('searches Chat lines and keeps % literal', () => {
+  const store = memoryStore()
+  const { bot } = createBot(store, { name: 'Notes' })
+  insertMessage(store, { botId: bot.id, role: 'user', content: 'Buy oat milk' })
+  insertMessage(store, { botId: bot.id, role: 'user', content: '100% rye' })
+  const long = `${'word '.repeat(40)}oat milk at the end`
+  insertMessage(store, { botId: bot.id, role: 'user', content: long })
+  expect(searchMessages(store, '')).toEqual([])
+  expect(searchMessages(store, '   ')).toEqual([])
+  const oat = searchMessages(store, 'OAT')
+  expect(oat.map((hit) => hit.botName)).toEqual(['Notes', 'Notes'])
+  expect(oat.every((hit) => hit.content.toLowerCase().includes('oat'))).toBe(true)
+  expect(oat[0]?.content.length).toBeLessThan(180)
+  const percent = searchMessages(store, '%')
+  expect(percent).toHaveLength(1)
+  expect(percent[0]?.content).toContain('100% rye')
+  expect(searchMessages(store, 'missing')).toEqual([])
 })

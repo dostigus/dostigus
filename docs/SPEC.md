@@ -68,13 +68,19 @@ What the running Cluster does today:
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
   is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
   an icon rail. Each row shows an avatar, the Bot name, and the latest
-  Chat line. Search filters that list in the Host. The sidebar `+` opens
+  Chat line. A loupe and a `+` sit at the top of the sidebar, both quiet
+  icon buttons with no accent fill. The loupe opens a centered search
+  Sheet (Bot names, Chat lines, and Host settings that person can open).
+  The `+` opens
   the Bot picker. A user button opens Settings (`/settings`), Members
-  (`/members`), and Sign out.   Chat has a narrow header: avatar and name
-  open a right Sheet (appearance Bot mark + color, rename, Model tier,
+  (`/members`), and Sign out. Chat overlays a centered pill on the thread:
+  avatar and name, translucent, so lines scroll under it. A top inset about
+  the pill’s height keeps the first line clear of the pill when the thread
+  is at the top. There is no full-width header bar. Hover shows an arrow
+  beside the name. The pill opens a right Sheet (appearance Bot mark + color, rename, Model tier,
   delete for the Owner), unlabeled bubbles, and a composer. Sidebar Bot
-  rows and the Chat header show the Manifest Bot mark (`KitBotAvatar`
-  idle); the header greets on open, listens at the composer, thinks while a
+  rows and the Chat pill show the Manifest Bot mark (`KitBotAvatar`
+  idle); the pill greets on open, listens at the composer, thinks while a
   reply is in flight, speaks and cheers it when it lands, tilts on a failed
   send, and sleeps while no key is set. The composer has a disabled
   attachments control and
@@ -84,7 +90,7 @@ What the running Cluster does today:
   there when the thread is above the bottom. On a narrow screen the sidebar
   is a drawer. Sending a line shows it at once, then that Bot’s flock mark
   while the reply is in flight, then the stored reply. A green live dot
-  marks the busy Bot on the Chat header and the matching sidebar row. With no Bots, the main pane offers **Create a Bot**
+  marks the busy Bot on the Chat pill and the matching sidebar row. With no Bots, the main pane offers **Create a Bot**
   and the sidebar stays a short centered line. The `+` and that button open
   the picker as the Chat pane. **×** returns to the pane that was open.
   Creating a Bot opens that Chat. See
@@ -94,6 +100,7 @@ What the running Cluster does today:
   [ADR 0018](adr/0018-bot-mark-flock.md), and
   [ADR 0019](adr/0019-bot-picker-and-chat-purpose.md).
 - Host routes: `/api/bots` CRUD, `/api/bots/:id/messages` list/post,
+  `/api/search/messages` (Chat line search),
   `/api/members` list/create and `/api/members/:id/disable`,
   `/api/settings/llm-gateway` get/put/ping, `/api/chat/ready` (configured
   flag only). Persist in SQLite via the same Store helpers as the MCP
