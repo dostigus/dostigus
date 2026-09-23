@@ -7,7 +7,8 @@ Desktop list chrome, Chat labels, and the composer are refined in
 [ADR 0015](0015-host-desktop-shell.md). The Create Bot modal and the wave
 empty state are replaced by the full-pane picker in
 [ADR 0019](0019-bot-picker-and-chat-purpose.md). Optimistic send and the
-drawer below `52rem` still stand.
+drawer below `52rem` still stand. The in-thread busy mark for a configured
+reply is the activity row in [ADR 0021](0021-chat-activity-status.md).
 
 ## Decision
 
@@ -24,11 +25,12 @@ On a wide screen the Host is a messenger-shaped shell
   control. Chat, Settings, and Members stay usable.
 - Sign-in and onboarding stay outside this shell.
 
-Sending a Chat line is optimistic. The user line shows at once, the Bot
-shows its flock mark while the reply is in flight, and the stored assistant
-line replaces that pending mark when the request finishes. The rest of the
-Host stays usable. There is no page-level spinner. Token streaming is a
-later change.
+Sending a Chat line is optimistic. The user line shows at once. While the
+reply is in flight, a configured Chat shows the activity row from
+[ADR 0021](0021-chat-activity-status.md); with no key it still shows the
+flock mark. The stored assistant line replaces that row when the request
+finishes. The rest of the Host stays usable. There is no page-level
+spinner. Token streaming is a later change.
 
 An empty Bot list shows the wave sticker and **Create a Bot**. Creating a
 Bot opens that Bot’s Chat, composer included. No coach marks.

@@ -78,6 +78,11 @@ For scroll and overlay screenshots, open
 of preview Chat lines on Bot `preview` once. Another visit with `?tall=1`
 does not append again.
 
+On `nuxt dev`, the Chat thread can force the activity row without a live
+reply: `/bots/preview?activity=typing`, `?activity=command`, or
+`?activity=connect&target=Expi`. A production Host ignores `activity`.
+See [ADR 0021](docs/adr/0021-chat-activity-status.md).
+
 **HEAD** (`curl -I`) is answered on `/preview-seed` and on `/health`. It
 does not sign in, create the Owner, create a Bot, or insert Chat lines.
 
