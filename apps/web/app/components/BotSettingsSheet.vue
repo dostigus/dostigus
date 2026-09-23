@@ -381,9 +381,9 @@ onUnmounted(() => {
 <style scoped>
 .mark {
   position: relative;
-  display: flex;
-  justify-content: center;
-  margin: 0.15rem 0 1.35rem;
+  width: 7.25rem;
+  height: 7.25rem;
+  margin: 0.2rem auto 1.35rem;
 }
 
 .mark :deep(.kit-bot-avatar--lg) {
@@ -393,25 +393,25 @@ onUnmounted(() => {
 
 .pencil {
   position: absolute;
-  top: 50%;
-  left: calc(50% + 4.05rem);
-  transform: translateY(-50%);
+  right: -0.15rem;
+  bottom: -0.1rem;
   appearance: none;
-  width: 2.15rem;
-  height: 2.15rem;
+  width: 1.7rem;
+  height: 1.7rem;
   display: grid;
   place-items: center;
-  border-radius: 0.7rem;
-  border: 1px solid color-mix(in srgb, var(--text) 28%, transparent);
-  background: color-mix(in srgb, var(--text) 7%, transparent);
+  border-radius: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--text) 24%, transparent);
+  background: var(--sheet);
   color: var(--text-muted);
+  box-shadow: 0 0.12rem 0.4rem rgb(0 0 0 / 32%);
   cursor: pointer;
   padding: 0;
 }
 
 .pencil svg {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 0.85rem;
+  height: 0.85rem;
   fill: none;
   stroke: currentcolor;
   stroke-width: 1.8;
@@ -488,23 +488,28 @@ textarea:disabled {
 }
 
 .editor {
+  --flock-tile: 4.35rem;
+  --flock-gap: 0.45rem;
+  --flock-width: calc(4 * var(--flock-tile) + 3 * var(--flock-gap));
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.35rem;
 }
 
 .shapes {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.65rem 0.45rem;
+  grid-template-columns: repeat(4, var(--flock-tile));
+  gap: 0.65rem var(--flock-gap);
+  width: var(--flock-width);
   margin-bottom: 0.85rem;
 }
 
 .shape {
   appearance: none;
   box-sizing: border-box;
-  width: 4.35rem;
-  height: 4.35rem;
+  width: var(--flock-tile);
+  height: var(--flock-tile);
   aspect-ratio: 1;
   border: 0;
   background: transparent;
@@ -534,20 +539,22 @@ textarea:disabled {
 }
 
 .swatches {
+  --swatch: 1.85rem;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.7rem 0.55rem;
-  width: 100%;
-  padding: 0.15rem 0.25rem 0.55rem;
+  column-gap: calc((var(--flock-width) - 8 * var(--swatch)) / 7);
+  row-gap: 0.55rem;
+  width: var(--flock-width);
+  padding: 0.2rem 0 0.5rem;
 }
 
 .swatch {
   appearance: none;
-  flex: 0 0 calc((100% - 5 * 0.55rem) / 6);
-  width: calc((100% - 5 * 0.55rem) / 6);
+  flex: 0 0 var(--swatch);
+  width: var(--swatch);
+  height: var(--swatch);
   aspect-ratio: 1;
-  height: auto;
   border-radius: 999px;
   border: 0;
   padding: 0;
@@ -575,6 +582,7 @@ textarea:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  width: 100%;
   margin-top: 0.35rem;
 }
 

@@ -12,10 +12,11 @@ on that Sheet is Russian and casual. Docs stay English.
   top-right, the same mark the Host picker uses for Back. It is not a
   chevron pair.
 - A large Bot mark sits under the title. For the Owner, a small pencil
-  button sits beside the mark and stays visible. That control opens a
-  modal (`KitDialog`) with the eight flock birds on square tiles (the
-  selected frame is the same rounded square) and the
-  hue-ordered accent swatches (last row centered). **Save**
+  badge sits on the bottom-right corner of the mark and stays visible.
+  That control opens a modal (`KitDialog`) with the eight flock birds on
+  square tiles (the selected frame is the same rounded square) and
+  smaller hue-ordered accent swatches. The palette is the same width as
+  the flock grid (last row centered). **Save**
   («Сохранить») writes `avatarShape` and `avatarColor`. **Reset**
   («Сбросить») restores `goose` and `#1F7AE5` in the draft; it does not
   write until Save. Closing the modal drops the draft. Members see the

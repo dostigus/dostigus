@@ -216,10 +216,11 @@ same horizontal inset on both sides. Hover or keyboard focus fades an
 arrow in after the name and the pill grows wider to fit it. Padding on
 the trailing side sits past the arrow. The pill opens a right Sheet
 (`KitSheet` with `edge="end"`, title Параметры, × in the top-right).
-A large Bot mark sits under the title. A small pencil button beside that
-mark stays visible for the Owner and opens a modal: square flock tiles
-(the selected frame is the same rounded square), hue-ordered
-color swatches with a centered last row, **Reset** («Сбросить»), and
+A large Bot mark sits under the title. A small pencil badge on the
+bottom-right corner of that mark stays visible for the Owner and opens
+a modal: square flock tiles (the selected frame is the same rounded
+square), smaller hue-ordered color swatches in a block the same width
+as the flock grid, with a centered last row, **Reset** («Сбросить»), and
 **Save** («Сохранить»). The Sheet fields are name («Имя»), an optional
 label («Метка»), and a description («Описание»). Model tier stays on
 Host Settings. Delete is not on this Sheet. Members see the mark and

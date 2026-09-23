@@ -82,9 +82,11 @@ What the running Cluster does today:
   Hover or focus fades an arrow in on the trailing side and the pill grows
   to fit it, with padding still sitting past that arrow. The pill opens a
   right Sheet titled Параметры (name, optional label, description, and a
-  large Bot mark). A small pencil beside that mark stays visible for the
-  Owner and opens appearance (flock and accent) in a modal, with Save.
-  Flock tiles in that modal are square, including the selected frame.
+  large Bot mark). A small pencil badge on the bottom-right corner of
+  that mark stays visible for the Owner and opens appearance (flock and
+  accent) in a modal, with Save. Flock tiles in that modal are square,
+  including the selected frame. Accent swatches are smaller, and the
+  palette is the same width as that flock grid.
   Model tier stays on Host
   Settings. Delete is not on this Sheet. Members may read the fields.
   Bubbles stay unlabeled. The composer stays on screen. Sidebar Bot
