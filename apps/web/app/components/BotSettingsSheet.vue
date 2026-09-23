@@ -34,14 +34,6 @@
           </svg>
         </span>
       </button>
-      <button
-        v-if="isOwner"
-        type="button"
-        class="change"
-        @click="openAppearance"
-      >
-        Изменить аватар
-      </button>
     </div>
 
     <form
@@ -392,9 +384,7 @@ onUnmounted(() => {
 <style scoped>
 .mark {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.85rem;
+  justify-content: center;
   margin: 0.15rem 0 1.35rem;
 }
 
@@ -426,46 +416,35 @@ onUnmounted(() => {
 
 .pencil {
   position: absolute;
-  inset: 0.2rem;
+  left: 50%;
+  top: 50%;
+  width: 2.4rem;
+  height: 2.4rem;
+  transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
-  border-radius: 999px;
-  background: rgb(0 0 0 / 42%);
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--text) 32%, transparent);
+  background: rgb(0 0 0 / 48%);
   color: #fff;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 120ms ease;
 }
 
 .pencil svg {
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 1.05rem;
+  height: 1.05rem;
   fill: none;
   stroke: currentcolor;
-  stroke-width: 1.7;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.mark:hover .pencil,
-.mark:focus-within .pencil {
+.mark-hit:hover .pencil,
+.mark-hit:focus-visible .pencil {
   opacity: 1;
-}
-
-.change {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: #161616;
-  color: var(--text);
-  border-radius: 0.85rem;
-  padding: 0.5rem 0.95rem;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.change:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .form {

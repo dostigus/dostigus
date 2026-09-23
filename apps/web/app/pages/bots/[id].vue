@@ -731,7 +731,8 @@ async function onBotSaved() {
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 0.15rem;
+  --pill-slot: 0.62rem;
+  gap: 0.08rem;
   min-width: 0;
   max-width: min(18rem, calc(100% - 6.5rem));
   appearance: none;
@@ -740,8 +741,8 @@ async function onBotSaved() {
   backdrop-filter: blur(14px);
   color: inherit;
   border-radius: 999px;
-  /* Equal inset. The arrow slot is mirrored on the left so rest stays centered. */
-  padding: 0.2rem 0.22rem;
+  /* Tight equal inset. The arrow slot is mirrored so rest stays centered. */
+  padding: 0.14rem 0.1rem;
   cursor: pointer;
   font: inherit;
   box-shadow: 0 0.35rem 1.1rem rgb(0 0 0 / 28%);
@@ -777,8 +778,8 @@ async function onBotSaved() {
 
 .cue,
 .cue-balance {
-  width: 0.95rem;
-  height: 0.95rem;
+  width: var(--pill-slot);
+  height: var(--pill-slot);
   flex: none;
 }
 

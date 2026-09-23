@@ -12,8 +12,8 @@ on that Sheet is Russian and casual. Docs stay English.
   top-right, the same mark the Host picker uses for Back. It is not a
   chevron pair.
 - A large Bot mark sits under the title. For the Owner, hover or focus
-  shows a pencil on the mark and «Изменить аватар» under it. Either
-  control opens a modal (`KitDialog`) with the eight flock birds and the
+  shows a small rounded pencil on the mark. That control opens a modal
+  (`KitDialog`) with the eight flock birds and the
   hue-ordered accent swatches (last row centered). **Save**
   («Сохранить») writes `avatarShape` and `avatarColor`. **Reset**
   («Сбросить») restores `goose` and `#1F7AE5` in the draft; it does not
@@ -31,8 +31,8 @@ on that Sheet is Russian and casual. Docs stay English.
 
 The Chat pill still opens this Sheet, including from Host search. The
 pill’s arrow slot is reserved on the left and the right, hidden at rest,
-so the mark and name have the same inset. Hover or focus only fades the
-arrow in.
+so the mark and name have the same inset. That slot stays small, so the
+resting pill is tight. Hover or focus only fades the arrow in.
 
 ## Context
 

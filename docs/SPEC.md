@@ -78,8 +78,9 @@ What the running Cluster does today:
   avatar and name, translucent, so lines scroll under it. A top inset about
   the pill’s height keeps the first line clear of the pill when the thread
   is at the top. There is no full-width header bar. The arrow beside the
-  name sits in a slot reserved on both sides, so at rest the mark and name
-  have the same inset. Hover or focus fades that arrow in without shifting
+  name sits in a small slot reserved on both sides, so at rest the mark
+  and name have the same tight inset. Hover or focus fades that arrow in
+  without shifting
   the name. The pill opens a right Sheet titled Параметры (name, optional
   label, description, and a large Bot mark). Appearance (flock and accent)
   opens in a modal from that mark, with Save. Model tier stays on Host

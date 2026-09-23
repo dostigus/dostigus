@@ -216,8 +216,8 @@ pill, hidden at rest, so the mark and the name have the same horizontal
 inset. Hover or keyboard focus fades the arrow in without moving the name.
 The pill opens a right Sheet
 (`KitSheet` with `edge="end"`, title Параметры, × in the top-right).
-A large Bot mark sits under the title. Hover shows a pencil and
-«Изменить аватар», which opens a modal: the flock grid, hue-ordered
+A large Bot mark sits under the title. Hover shows a small rounded
+pencil on the mark, which opens a modal: the flock grid, hue-ordered
 color swatches with a centered last row, **Reset** («Сбросить»), and
 **Save** («Сохранить»). The Sheet fields are name («Имя»), an optional
 label («Метка»), and a description («Описание»). Model tier stays on
