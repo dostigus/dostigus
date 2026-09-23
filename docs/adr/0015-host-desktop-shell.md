@@ -10,12 +10,13 @@ longer keeps a full-width header bar. A translucent pill (avatar and name)
 overlays the thread; hover shows an arrow; the pill opens the same right
 Bot Sheet. A top inset keeps the first line clear of the pill.
 
-Amended 2026-09-23: the loupe and `+` sit with the user button at the
-bottom of the sidebar. On the icon rail they stack above the user mark
-(loupe, `+`, user), and each Bot hit target is a square. The search
-Sheet is a bare field — a loupe and the placeholder Поиск — with no
-title and no close control. Escape, the overlay, and a chosen row
-dismiss it. The Chat pill’s rest inset is a little wider on both sides.
+Amended 2026-09-23: on the icon rail the loupe and `+` stack above the
+user mark (loupe, `+`, user), and each Bot hit target is a square. The
+expanded sidebar keeps the loupe and `+` at the top, beside each other.
+The search Sheet is a bare field — a loupe and the placeholder Поиск —
+with no title and no close control. Escape, the overlay, and a chosen
+row dismiss it. The Chat pill’s rest inset is a little wider on both
+sides.
 
 The sidebar `+` opens the Bot picker. See
 [ADR 0019](0019-bot-picker-and-chat-purpose.md).
@@ -36,20 +37,21 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
 - Each Bot row shows an avatar (Manifest shape and color; see
   [ADR 0016](0016-bot-avatar-tokens.md)), the name, and a one-line
   preview of the latest Chat line. Unread stays out of this shell.
-- The bottom of the sidebar is a loupe and a `+`, both quiet icon buttons
-  with no accent fill, next to a user button (initials and name). On the
-  icon rail they stack: loupe, `+`, then the user mark. Each Bot hit
-  target on that rail is a square. The loupe opens a centered search
-  Sheet (`KitDialog`) with no title and no close control: a field with a
-  loupe and the placeholder Поиск, then the loaded Bot list, Chat lines
-  in the Store, and Host settings that person can open (Settings and
-  Members for the Owner, and the open Bot’s Sheet). Escape, the overlay,
-  and choosing a row dismiss it. Choosing a row navigates or opens that
-  Sheet. It does not create a Bot and it does not add a route. The `+`
-  opens the Bot picker. The user button’s menu opens Settings
-  (`/settings`), Members (`/members`, Owner only), and Sign out. Those
-  links leave the sidebar chrome. Settings stays a page. Members stays a
-  page.
+- The top of the expanded sidebar is a loupe and a `+`, both quiet icon
+  buttons with no accent fill. On the icon rail those two controls leave
+  the top and stack above the user mark: loupe, `+`, then the user. Each
+  Bot hit target on that rail is a square. The loupe opens a centered
+  search Sheet (`KitDialog`) with no title and no close control: a field
+  with a loupe and the placeholder Поиск, then the loaded Bot list, Chat
+  lines in the Store, and Host settings that person can open (Settings
+  and Members for the Owner, and the open Bot’s Sheet). Escape, the
+  overlay, and choosing a row dismiss it. Choosing a row navigates or
+  opens that Sheet. It does not create a Bot and it does not add a route.
+  The `+` opens the Bot picker.
+- The bottom of the expanded sidebar is a user button (initials and name).
+  Its menu opens Settings (`/settings`), Members (`/members`, Owner only),
+  and Sign out. Those links leave the sidebar chrome. Settings stays a
+  page. Members stays a page.
 - Chat has no full-width header bar. A centered pill overlays the thread:
   the Bot avatar and name. The thread scrolls under the translucent pill.
   A top inset, about the pill height, keeps the first line clear when the

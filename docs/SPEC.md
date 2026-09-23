@@ -70,9 +70,9 @@ What the running Cluster does today:
   is a resizable sidebar of Bots beside Chat. The sidebar can collapse to
   an icon rail. Each expanded row shows an avatar, the Bot name, and the
   latest Chat line. On the icon rail each Bot’s hit target is a square.
-  A loupe and a `+` sit at the bottom of the sidebar, both quiet icon
-  buttons with no accent fill, next to the user button. On the icon rail
-  they stack above that button: loupe, then `+`, then the user mark.
+  A loupe and a `+` sit at the top of the expanded sidebar, both quiet
+  icon buttons with no accent fill. On the icon rail they stack at the
+  bottom, above the user mark: loupe, then `+`, then the user.
   The loupe opens a centered search Sheet with no title and no close
   control: a field with a loupe and the placeholder Поиск, then rows for
   Bot names, Chat lines, and Host settings that person can open. Escape,

@@ -7,6 +7,40 @@
     :inert="narrow && !open"
   >
     <div class="column">
+      <div class="side-head">
+        <button
+          type="button"
+          class="chrome"
+          aria-label="Search"
+          @click="openSearch"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle
+              cx="11"
+              cy="11"
+              r="6.5"
+            />
+            <path d="M16 16.5L20 20.5" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="chrome"
+          :aria-label="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
+          @click="openCreate"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M12 5.5v13M5.5 12h13" />
+          </svg>
+        </button>
+      </div>
+
       <nav
         class="list"
         :class="{ 'list-empty': bots.length === 0 && !pending && !error && !rail }"
@@ -80,39 +114,6 @@
       </nav>
 
       <div class="foot">
-        <div class="side-head">
-          <button
-            type="button"
-            class="chrome"
-            aria-label="Search"
-            @click="openSearch"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <circle
-                cx="11"
-                cy="11"
-                r="6.5"
-              />
-              <path d="M16 16.5L20 20.5" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            class="chrome"
-            :aria-label="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
-            @click="openCreate"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M12 5.5v13M5.5 12h13" />
-            </svg>
-          </button>
-        </div>
         <HostUserMenu :collapsed="rail" />
       </div>
     </div>
@@ -267,8 +268,9 @@ onUnmounted(() => {
 .side-head {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
   flex: none;
+  padding: 0.75rem 0.7rem 0.45rem;
 }
 
 .chrome {
@@ -308,7 +310,7 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 0.75rem 0.55rem 0.7rem;
+  padding: 0.25rem 0.55rem 0.7rem;
 }
 
 .list-empty {
@@ -400,16 +402,8 @@ onUnmounted(() => {
 }
 
 .foot {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.55rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.45rem 0.55rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--line-soft);
-}
-
-.foot :deep(.user) {
-  flex: 1;
-  min-width: 0;
 }
 
 .rail .bots {
@@ -417,27 +411,25 @@ onUnmounted(() => {
   gap: 0.35rem;
 }
 
+.rail .list {
+  order: 1;
+  padding-inline: 0.3rem;
+}
+
 .rail .side-head {
+  order: 2;
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
-}
-
-.rail .list {
-  padding-inline: 0.3rem;
+  padding: 0.55rem 0.35rem 0.35rem;
+  border-top: 1px solid var(--line-soft);
 }
 
 .rail .foot {
-  flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
+  order: 3;
+  border-top: 0;
+  padding-top: 0.1rem;
   padding-inline: 0.3rem;
-  padding-top: 0.55rem;
-}
-
-.rail .foot :deep(.user) {
-  flex: none;
-  width: 100%;
 }
 
 .splitter {

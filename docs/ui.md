@@ -173,13 +173,13 @@ Where the Host uses them today:
 Wide screens keep a sidebar beside the open page. The seam between them
 is `--line-soft` (closer to `--bg` than `--line`). Drag the edge to resize
 it. Dragging below the minimum, or the edge control, collapses it to an
-icon rail (avatars, the loupe, the picker control, and the user button). The width and
-collapsed state stay in the browser.
+icon rail (avatars, the loupe, the picker control, and the user button).
+The width and collapsed state stay in the browser.
 
-The bottom of the sidebar is a loupe and a `+`, side by side, both outlined
-icon buttons with no accent fill, next to the user button. On the icon
-rail they stack above that button: loupe, then `+`, then the user mark,
-and each Bot hit target is a square. The `+` opens the Bot picker. The
+The top of the expanded sidebar is a loupe and a `+`, side by side, both
+outlined icon buttons with no accent fill. On the icon rail they leave
+that header and stack at the bottom: loupe, then `+`, then the user mark.
+Each Bot hit target on the rail is a square. The `+` opens the Bot picker. The
 loupe opens a centered search Sheet with no title and no close control:
 a field with a loupe and the placeholder Поиск, then rows with an
 avatar, a name, an optional section tag, one subtitle line, and ⌘1–⌘9 on
@@ -196,7 +196,7 @@ that was open before the picker. Choosing a Bot, creating a Bot, or a
 sidebar Bot row also leaves it. The picker search does not create a Bot from the
 query. A Member sees search and existing Bots only. Each sidebar row is
 an avatar, the Bot name, and a one-line preview of the latest Chat line.
-The user button sits in that bottom row, under a `--line-soft` rule. Its mark is a
+The bottom of the expanded sidebar is a user button, under a `--line-soft` rule. Its mark is a
 little smaller than a Bot row avatar and sits on a neutral `--surface`
 chip. The name is regular weight and muted.
 Its menu opens Settings, Members (Owner), and Sign out. Those links are
