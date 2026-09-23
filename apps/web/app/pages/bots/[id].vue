@@ -263,6 +263,7 @@ type TimelineLine = ChatMessage & {
 const route = useRoute()
 const { user, isOwner } = useHostAccount()
 const { refresh: refreshBots } = await useHostBots()
+const { refresh: refreshThreads } = await useHostThreads()
 const botId = computed(() => String(route.params.id ?? ''))
 
 const { data: botData, error: botError, refresh: refreshBot } = await useFetch<{ bot: Bot }>(
@@ -731,7 +732,7 @@ async function deliver(raw: string, existing: TimelineLine | null) {
     if (botId.value !== targetId) {
       return
     }
-    await Promise.all([refresh(), refreshBot(), refreshBots()])
+    await Promise.all([refresh(), refreshBot(), refreshBots(), refreshThreads()])
     optimistic.value = null
     if (messages.value.length > before) {
       speakReply()
@@ -757,7 +758,7 @@ async function deliver(raw: string, existing: TimelineLine | null) {
 }
 
 async function onBotSaved() {
-  await Promise.all([refreshBot(), refreshBots()])
+  await Promise.all([refreshBot(), refreshBots(), refreshThreads()])
 }
 </script>
 

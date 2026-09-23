@@ -139,7 +139,8 @@ export const MESSAGE_ROLES = ['user', 'assistant', 'system'] as const
 
 export type Message = {
   id: MessageId
-  botId: BotId
+  /** Set on a Bot's lines. Empty on a person line in a dm, group, or room. */
+  botId: BotId | null
   role: MessageRole
   /** Markdown for an assistant line. Plain text for user and system. */
   content: string

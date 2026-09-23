@@ -38,6 +38,11 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
     'kitchen/pantry.post.ts',
     'kitchen/cooked.post.ts',
     'kitchen/recipe.put.ts',
+    'people/index.get.ts',
+    'threads/index.get.ts',
+    'threads/index.post.ts',
+    'threads/[id].get.ts',
+    'threads/[id]/messages.post.ts',
   ]
   for (const file of files) {
     const src = readFileSync(join(apiRoot, file), 'utf8')
@@ -108,6 +113,14 @@ it('keeps auth status, register, login, and health public', () => {
     expect(src, file).not.toContain('withOwnerStore')
     expect(src, file).not.toContain('withHostStore')
   }
+})
+
+it('replies in a room only after an @Name mention', () => {
+  const src = readFileSync(join(apiRoot, 'threads/[id]/messages.post.ts'), 'utf8')
+  expect(src).toContain('mentionedRoomBot')
+  expect(src).toContain('requireHostSession')
+  expect(src.indexOf('mentionedRoomBot')).toBeLessThan(src.indexOf('completeAssistantReply'))
+  expect(src).toContain('appendMessengerUserLine')
 })
 
 it('invokes Chat MCP tools in-process from the Host message route', () => {

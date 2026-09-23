@@ -63,10 +63,14 @@ export const members = sqliteTable('members', {
   disabledAt: integer('disabled_at'),
 })
 
-/** Chat line for a Bot. personId is the Owner or Member on user lines. partsJson is assistant Kit parts. */
+/**
+ * Chat line on a Thread. personId is the Owner or Member on user lines.
+ * partsJson is assistant Kit parts. botId is set on a Bot's lines and empty
+ * on a person line in a dm, group, or room.
+ */
 export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(),
-  botId: text('bot_id').notNull().references(() => bots.id, { onDelete: 'cascade' }),
+  botId: text('bot_id').references(() => bots.id, { onDelete: 'cascade' }),
   role: text('role').notNull(),
   content: text('content').notNull(),
   createdAt: integer('created_at').notNull(),
@@ -79,12 +83,14 @@ export const messages = sqliteTable('messages', {
   index('messages_thread_id_created_at_idx').on(table.threadId, table.createdAt),
 ])
 
-/** One Thread. Milestone 2 writes kind `bot` only. */
+/** One Thread. Kind is a label: `dm`, `group`, `bot`, or `room`. */
 export const threads = sqliteTable('threads', {
   id: text('id').primaryKey(),
   kind: text('kind').notNull(),
-  /** Set for a bot-thread. Cascade-deletes the Thread with the Bot. */
+  /** Set for a bot-thread. Cascade-deletes that Thread with the Bot. */
   botId: text('bot_id').references(() => bots.id, { onDelete: 'cascade' }),
+  /** Group and room name. Empty on a dm and a bot-thread; the inbox derives those titles. */
+  title: text('title').notNull().default(''),
   createdAt: integer('created_at').notNull(),
 }, (table) => [
   index('threads_bot_id_idx').on(table.botId),

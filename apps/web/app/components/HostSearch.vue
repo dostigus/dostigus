@@ -237,8 +237,14 @@ async function choose(hit: HostSearchHit) {
     await navigateTo(`/bots/${hit.botId}`)
     return
   }
-  if (hit.kind === 'message' && hit.botId) {
-    await navigateTo(`/bots/${hit.botId}`)
+  if (hit.kind === 'message') {
+    if (hit.href) {
+      await navigateTo(hit.href)
+      return
+    }
+    if (hit.botId) {
+      await navigateTo(`/bots/${hit.botId}`)
+    }
     return
   }
   if (hit.botId) {

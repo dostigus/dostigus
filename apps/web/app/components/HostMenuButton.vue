@@ -2,7 +2,7 @@
   <button
     type="button"
     class="menu"
-    aria-label="Bots"
+    aria-label="Threads"
     aria-controls="host-sidebar"
     :aria-expanded="open"
     @click="toggle"

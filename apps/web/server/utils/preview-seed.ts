@@ -1,7 +1,7 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { ChatPart } from '@dostigus/shared'
 import type { HostSessionUser } from './owner-auth'
-import { addKitchenPantry, createBot, createMember, findMemberSecretByLogin, findOwnerSecretByLogin, getBot, getKitchenRecipe, insertMessage, listBots, listKitchenCooked, listKitchenPantry, listMessages, markKitchenCooked, ownerExists, saveKitchenRecipe } from '@dostigus/db'
+import { addKitchenPantry, createBot, createMember, createMessengerThread, findMemberSecretByLogin, findOwnerSecretByLogin, getBot, getKitchenRecipe, insertMessage, insertThreadLine, listBots, listKitchenCooked, listKitchenPantry, listMessages, listThreadMessages, markKitchenCooked, ownerExists, saveKitchenRecipe } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID } from '../../app/utils/host-sheets'
 import { appendClusterMessage } from './cluster-bots'
@@ -33,6 +33,25 @@ export const PREVIEW_MEMBER_THREAD_PREFIX = 'Member thread on the shared Bot.'
 
 /** User line on the Member's only bot-thread with their private Bot. */
 export const PREVIEW_PRIVATE_THREAD_PREFIX = 'Member thread on the private Bot.'
+
+/** Fixture direct message between the preview Owner and Member. */
+export const PREVIEW_DM_THREAD_ID = 'preview-dm'
+
+/** Owner line on that direct message. */
+export const PREVIEW_DM_PREFIX = 'Preview direct message.'
+
+/** Member line on that direct message. */
+export const PREVIEW_DM_REPLY_PREFIX = 'Preview member on the direct message.'
+
+/** Fixture room: Owner, Member, and the shared preview Bot. */
+export const PREVIEW_ROOM_THREAD_ID = 'preview-room'
+export const PREVIEW_ROOM_TITLE = 'Preview room'
+
+/** Owner line in the room. It mentions the shared Bot by name. */
+export const PREVIEW_ROOM_PREFIX = 'Preview room.'
+
+/** Stored Bot reply in the room. Not a live gateway call. */
+export const PREVIEW_ROOM_REPLY_PREFIX = 'Preview room reply.'
 
 /**
  * Fixture Bot id for local preview.
@@ -107,6 +126,15 @@ export function previewThreadsRequested(value: unknown): boolean {
   return previewQueryOn(value)
 }
 
+/**
+ * `?rooms=1` on GET. Seeds the preview Member, a direct message, and a
+ * room with the shared preview Bot. The room line mentions that Bot and
+ * stores one reply. HEAD ignores this query.
+ */
+export function previewRoomsRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
 /** `?threads=1&as=member` signs in the preview Member. Any other value stays the Owner. */
 export function previewThreadAsMember(value: unknown): boolean {
   if (Array.isArray(value)) {
@@ -163,14 +191,15 @@ export function readPreviewSeedHead(store: OpenedStore): PreviewSeedHeadResult {
  * after the parts line.
  * `threads` adds a preview Member, a private Bot, and separate bot-threads
  * on the shared preview Bot.
+ * `rooms` does that and adds a direct message plus a room with the shared Bot.
  * Throws OwnerAuthError 401 when the Store Owner is not this login.
  */
 export async function ensurePreviewCluster(
   store: OpenedStore,
   hashPassword: (password: string) => Promise<string>,
   verifyPassword: (hash: string, password: string) => Promise<boolean>,
-  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, threads?: boolean } = {},
-): Promise<{ user: HostSessionUser, botId: string, member: HostSessionUser | null }> {
+  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, threads?: boolean, rooms?: boolean } = {},
+): Promise<{ user: HostSessionUser, botId: string, member: HostSessionUser | null, roomId: string | null }> {
   const user = await ensurePreviewOwner(store, hashPassword, verifyPassword)
   const botId = stablePreviewBotId(listBots(store))
     ?? createBot(store, {
@@ -188,10 +217,13 @@ export async function ensurePreviewCluster(
   if (options.kitchen) {
     ensurePreviewKitchen(store, botId, user.id)
   }
-  const member = options.threads
+  const member = options.threads || options.rooms
     ? await ensurePreviewThreads(store, hashPassword, user.id, botId)
     : null
-  return { user, botId, member }
+  const roomId = options.rooms && member
+    ? ensurePreviewRooms(store, user.id, member.id, botId)
+    : null
+  return { user, botId, member, roomId }
 }
 
 export function previewPartsContent(): string {
@@ -377,6 +409,70 @@ export async function ensurePreviewThreads(
     })
   }
   return toMemberSession(member)
+}
+
+/**
+ * One direct message and one room. A second call does not append lines.
+ * The room mention uses the shared Bot's current name.
+ */
+export function ensurePreviewRooms(
+  store: OpenedStore,
+  ownerId: string,
+  memberId: string,
+  sharedBotId: string,
+): string {
+  const botName = getBot(store, sharedBotId)?.name ?? 'Bot'
+  createMessengerThread(store, {
+    id: PREVIEW_DM_THREAD_ID,
+    kind: 'dm',
+    actorId: ownerId,
+    personIds: [memberId],
+  })
+  if (!threadHasPrefix(store, PREVIEW_DM_THREAD_ID, PREVIEW_DM_PREFIX)) {
+    insertThreadLine(store, {
+      threadId: PREVIEW_DM_THREAD_ID,
+      role: 'user',
+      content: PREVIEW_DM_PREFIX,
+      personId: ownerId,
+    })
+  }
+  if (!threadHasPrefix(store, PREVIEW_DM_THREAD_ID, PREVIEW_DM_REPLY_PREFIX)) {
+    insertThreadLine(store, {
+      threadId: PREVIEW_DM_THREAD_ID,
+      role: 'user',
+      content: PREVIEW_DM_REPLY_PREFIX,
+      personId: memberId,
+    })
+  }
+  createMessengerThread(store, {
+    id: PREVIEW_ROOM_THREAD_ID,
+    kind: 'room',
+    title: PREVIEW_ROOM_TITLE,
+    actorId: ownerId,
+    personIds: [memberId],
+    botIds: [sharedBotId],
+  })
+  if (!threadHasPrefix(store, PREVIEW_ROOM_THREAD_ID, PREVIEW_ROOM_PREFIX)) {
+    insertThreadLine(store, {
+      threadId: PREVIEW_ROOM_THREAD_ID,
+      role: 'user',
+      content: `${PREVIEW_ROOM_PREFIX} @${botName} hello from the room.`,
+      personId: ownerId,
+    })
+  }
+  if (!threadHasPrefix(store, PREVIEW_ROOM_THREAD_ID, PREVIEW_ROOM_REPLY_PREFIX)) {
+    insertThreadLine(store, {
+      threadId: PREVIEW_ROOM_THREAD_ID,
+      role: 'assistant',
+      content: PREVIEW_ROOM_REPLY_PREFIX,
+      botId: sharedBotId,
+    })
+  }
+  return PREVIEW_ROOM_THREAD_ID
+}
+
+function threadHasPrefix(store: OpenedStore, threadId: string, prefix: string): boolean {
+  return listThreadMessages(store, threadId).some((message) => message.content.startsWith(prefix))
 }
 
 async function ensurePreviewOwner(

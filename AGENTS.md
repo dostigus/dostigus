@@ -206,6 +206,19 @@ button opens the Kitchen Sheet. Another visit does not append that line
 again. **HEAD** ignores `?kitchen=1`. See
 [ADR 0026](docs/adr/0026-kitchen-module-day-1.md).
 
+For a direct message and a room, open
+**http://localhost:3000/preview-seed?rooms=1**. That GET signs in the
+preview Owner, seeds the preview Member (same rows as `?threads=1`),
+a direct message between them, and a room titled **Preview room** with
+the shared preview Bot. The room line mentions that Bot (`@` plus its
+name) and stores one assistant reply. It redirects to
+`/threads/preview-room`. `?rooms=1&as=member` signs in the Member on
+that same room. `?members=1` still wins and opens `/members`. **HEAD**
+ignores `?rooms=1`. In a room, a Bot replies only when a line mentions
+it: `@` plus the Bot's name. A line with no mention is stored and does
+not call the LLM gateway. See
+[ADR 0024](docs/adr/0024-threads-and-bot-visibility.md).
+
 For Members and Invite screenshots, open
 **http://localhost:3000/preview-seed?members=1**. That GET signs in the
 same preview Owner and redirects to `/members` (a Member session cannot
@@ -268,6 +281,8 @@ that query, that `?kitchen=1` adds one Kitchen button once while
 HEAD ignores that query, and that `?threads=1` lists the shared Bot and
 the private Bot for the Owner while `?threads=1&as=member` opens a
 different bot-thread on the same shared Bot. HEAD ignores `?threads=1`.
+`?rooms=1` opens `/threads/preview-room` after seeding a direct message
+and that room. HEAD ignores `?rooms=1`.
 Optional
 `PREVIEW_SMOKE_URL` (default `http://localhost:3000`).
 

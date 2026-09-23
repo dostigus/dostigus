@@ -60,6 +60,7 @@ export {
   getBot,
   getLlmGatewaySettings,
   insertMessage,
+  insertThreadLine,
   listBots,
   listBotThreadMessages,
   listMessages,
@@ -74,3 +75,12 @@ export {
 } from './queries'
 export { type BotRow, bots, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads } from './schema'
 export { type OpenedStore, openStore } from './store'
+export {
+  appendMessengerAssistantLine,
+  appendMessengerUserLine,
+  createMessengerThread,
+  getMessengerThread,
+  listHouseholdPeople,
+  listInboxThreads,
+  listMessengerBots,
+} from './threads'

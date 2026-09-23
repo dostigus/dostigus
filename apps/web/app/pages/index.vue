@@ -3,30 +3,30 @@
     <header class="top">
       <HostMenuButton />
       <p class="mark">
-        Bots
+        Threads
       </p>
     </header>
     <main class="stage">
       <p
-        v-if="pending && bots.length === 0"
+        v-if="pending && threads.length === 0"
         class="status"
       >
-        Loading Bots…
+        Loading Threads…
       </p>
       <p
-        v-else-if="error && bots.length === 0"
+        v-else-if="error && threads.length === 0"
         class="status error"
       >
-        Could not load Bots.
+        Could not load Threads.
       </p>
-      <HostBotEmpty v-else-if="bots.length === 0" />
+      <HostBotEmpty v-else-if="threads.length === 0" />
       <div
         v-else
         class="pick"
       >
-        <h1>Open a Chat</h1>
+        <h1>Open a Thread</h1>
         <p class="hint">
-          Choose a Bot from the list.
+          Choose a Thread from the list.
         </p>
       </div>
     </main>
@@ -36,9 +36,9 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'host' })
 
-useHead({ title: 'Dostigus · Bots' })
+useHead({ title: 'Dostigus · Threads' })
 
-const { bots, pending, error } = await useHostBots()
+const { threads, pending, error } = await useHostThreads()
 </script>
 
 <style scoped>

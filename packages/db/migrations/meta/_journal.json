@@ -85,6 +85,13 @@
       "when": 1759125600000,
       "tag": "0011_bot_visibility_threads",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1759212000000,
+      "tag": "0012_messenger_threads",
+      "breakpoints": true
     }
   ]
 }

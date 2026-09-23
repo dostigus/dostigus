@@ -26,7 +26,7 @@ export type BotRecord = {
 
 export type MessageRecord = {
   id: string
-  bot_id: string
+  bot_id: string | null
   role: string
   content: string
   created_at: number

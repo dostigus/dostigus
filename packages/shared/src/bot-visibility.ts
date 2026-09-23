@@ -1,7 +1,6 @@
 /**
  * Bot visibility and who may open which bot-thread.
- * See ADR 0024. A private Bot cannot join a room; this Host has no room
- * join API, so that rule is access on the Bot, not a room write.
+ * See ADR 0024. A private Bot cannot join a room.
  */
 
 export const BOT_VISIBILITIES = ['shared', 'private'] as const

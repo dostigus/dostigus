@@ -361,7 +361,7 @@ function resolveMessageThreadId(
 function insertMessageRow(
   store: OpenedStore,
   input: {
-    botId: string
+    botId: string | null
     role: MessageRole
     content: string
     personId?: string | null
@@ -423,6 +423,35 @@ export function insertMessage(
   })
 }
 
+/** A line on any Thread. `botId` stays empty on a person line in a dm, group, or room. */
+export function insertThreadLine(
+  store: OpenedStore,
+  input: {
+    threadId: string
+    role: MessageRole
+    content: string
+    personId?: string | null
+    botId?: string | null
+    parts?: unknown
+  },
+): Message {
+  const thread = store.sqlite.prepare('SELECT id FROM threads WHERE id = ?').get(input.threadId) as { id: string } | undefined
+  if (!thread) {
+    throw new StoreError('Thread not found', 404)
+  }
+  if (input.botId) {
+    requireBot(store, input.botId)
+  }
+  return insertMessageRow(store, {
+    botId: input.botId ?? null,
+    role: input.role,
+    content: normalizeContent(input.content),
+    personId: input.personId ?? null,
+    parts: input.parts,
+    threadId: input.threadId,
+  })
+}
+
 const MESSAGE_SELECT = `id, bot_id, role, content, created_at, person_id, parts_json, thread_id`
 
 export function listMessages(store: OpenedStore, botId: string): Message[] {
@@ -467,10 +496,12 @@ export function listThreadMessages(store: OpenedStore, threadId: string): Messag
 
 export type MessageSearchHit = {
   id: string
-  botId: string
+  botId: string | null
   botName: string
   content: string
   createdAt: string
+  threadId: string | null
+  threadKind: string | null
 }
 
 const SEARCH_QUERY_MAX = 200
@@ -478,10 +509,12 @@ const SEARCH_LIMIT = 8
 
 type MessageSearchRow = {
   id: string
-  bot_id: string
+  bot_id: string | null
   content: string
   created_at: number
   bot_name: string
+  thread_id: string | null
+  thread_kind: string | null
 }
 
 /** Chat lines whose text contains the query. `%` and `_` stay literal. */
@@ -507,9 +540,12 @@ export function searchMessages(
       messages.bot_id AS bot_id,
       messages.content AS content,
       messages.created_at AS created_at,
-      bots.name AS bot_name
+      messages.thread_id AS thread_id,
+      COALESCE(bots.name, threads.title, '') AS bot_name,
+      threads.kind AS thread_kind
     FROM messages
-    JOIN bots ON bots.id = messages.bot_id
+    LEFT JOIN bots ON bots.id = messages.bot_id
+    LEFT JOIN threads ON threads.id = messages.thread_id
     WHERE messages.content LIKE ? ESCAPE '\\'
       ${threadClause ? `AND messages.thread_id IN (${threadClause.placeholders})` : ''}
     ORDER BY messages.created_at DESC, messages.rowid DESC
@@ -518,30 +554,53 @@ export function searchMessages(
   return rows.map((row) => ({
     id: row.id,
     botId: row.bot_id,
-    botName: row.bot_name,
+    botName: row.bot_name || searchThreadLabel(row.thread_kind),
     content: searchSnippet(row.content, needle),
     createdAt: new Date(row.created_at).toISOString(),
+    threadId: row.thread_id,
+    threadKind: row.thread_kind,
   }))
 }
 
-/** Thread ids this person would open. Empty when none of those bot-threads exist yet. */
+function searchThreadLabel(kind: string | null): string {
+  if (kind === 'dm') {
+    return 'Direct message'
+  }
+  if (kind === 'group') {
+    return 'Group'
+  }
+  if (kind === 'room') {
+    return 'Room'
+  }
+  return 'Chat'
+}
+
+/** Thread ids this person may search: their bot-threads and Threads they have joined. */
 function viewerThreadClause(
   store: OpenedStore,
   viewer: BotViewer,
 ): { placeholders: string, ids: string[] } | null {
-  const ids: string[] = []
+  const ids = new Set<string>()
   for (const bot of listBots(store, viewer)) {
     const thread = findBotThread(store, bot.id, botThreadPersonId(bot, viewer))
     if (thread) {
-      ids.push(thread.id)
+      ids.add(thread.id)
     }
   }
-  if (ids.length === 0) {
+  const joined = store.sqlite.prepare(`
+    SELECT thread_id FROM thread_participants
+    WHERE kind = 'person' AND ref_id = ?
+  `).all(viewer.id) as { thread_id: string }[]
+  for (const row of joined) {
+    ids.add(row.thread_id)
+  }
+  if (ids.size === 0) {
     return null
   }
+  const list = [...ids]
   return {
-    placeholders: ids.map(() => '?').join(', '),
-    ids,
+    placeholders: list.map(() => '?').join(', '),
+    ids: list,
   }
 }
 
