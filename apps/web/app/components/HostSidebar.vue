@@ -76,8 +76,8 @@
               v-if="rail"
               class="rail-bot"
               :to="`/bots/${bot.id}`"
-              :aria-label="isLive(bot.id) ? `${bot.name}, online` : bot.name"
-              :title="bot.name"
+              :aria-label="botAria(bot, isLive(bot.id))"
+              :title="botTitle(bot)"
               @click="onRow(bot.id)"
             >
               <HostBotAvatar
@@ -102,7 +102,13 @@
                 :live="isLive(bot.id)"
               />
               <span class="bot-copy">
-                <span class="bot-name">{{ bot.name }}</span>
+                <span class="bot-title">
+                  <span class="bot-name">{{ bot.name }}</span>
+                  <span
+                    v-if="bot.visibility === 'private'"
+                    class="bot-private"
+                  >Private</span>
+                </span>
                 <span
                   v-if="bot.lastMessage?.content"
                   class="bot-preview"
@@ -175,6 +181,15 @@ const frameStyle = computed(() => {
 })
 
 let drag: { pointerId: number, startX: number, origin: number } | null = null
+
+function botTitle(bot: { name: string, visibility: string }) {
+  return bot.visibility === 'private' ? `${bot.name} (Private)` : bot.name
+}
+
+function botAria(bot: { name: string, visibility: string }, live: boolean) {
+  const privateLabel = bot.visibility === 'private' ? ', private' : ''
+  return live ? `${bot.name}${privateLabel}, online` : `${bot.name}${privateLabel}`
+}
 
 function onRow(id: string) {
   close()
@@ -385,12 +400,29 @@ onUnmounted(() => {
   gap: 0.08rem;
 }
 
+.bot-title {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
 .bot-name {
+  min-width: 0;
   font-weight: 700;
   font-size: 0.95rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.bot-private {
+  flex: none;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .bot-preview {

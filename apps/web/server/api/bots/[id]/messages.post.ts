@@ -1,6 +1,7 @@
 import process from 'node:process'
 import { getLlmGatewaySettings } from '@dostigus/db'
 import { previewQuietHoldMs, waitPreviewQuietHold } from '../../../../app/utils/preview-hold'
+import { getClusterBot, viewerFromUser } from '../../../utils/cluster-bots'
 import { invokeChatMcpTool } from '../../../utils/mcp-platform-tools'
 
 type PostBody = {
@@ -16,14 +17,16 @@ export default defineEventHandler(async (event) => {
 
   try {
     const store = useStore()
-    const { bot } = getClusterBot(store, botId)
+    const viewer = viewerFromUser(session.user)
+    const { bot } = getClusterBot(store, botId, viewer)
     const user = appendClusterMessage(store, {
       botId,
       role: 'user',
       content: body?.content ?? '',
       personId,
+      viewer,
     })
-    const { messages: history } = listClusterMessages(store, botId)
+    const { messages: history } = listClusterMessages(store, botId, viewer)
     const reply = await completeAssistantReply({
       botName: bot.name,
       botId: bot.id,
@@ -53,6 +56,7 @@ export default defineEventHandler(async (event) => {
       botId,
       role: 'assistant',
       content: reply.content,
+      viewer,
     })
     return { user, assistant, via: reply.via }
   } catch (error) {

@@ -1,7 +1,7 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { ChatPart } from '@dostigus/shared'
 import type { HostSessionUser } from './owner-auth'
-import { addKitchenPantry, createBot, findOwnerSecretByLogin, getKitchenRecipe, insertMessage, listBots, listKitchenCooked, listKitchenPantry, listMessages, markKitchenCooked, ownerExists, saveKitchenRecipe } from '@dostigus/db'
+import { addKitchenPantry, createBot, createMember, findMemberSecretByLogin, findOwnerSecretByLogin, getBot, getKitchenRecipe, insertMessage, listBots, listKitchenCooked, listKitchenPantry, listMessages, markKitchenCooked, ownerExists, saveKitchenRecipe } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID } from '../../app/utils/host-sheets'
 import { appendClusterMessage } from './cluster-bots'
@@ -9,12 +9,30 @@ import {
   loginHostAccount,
   OwnerAuthError,
   registerClusterOwner,
+  toMemberSession,
   toOwnerSession,
 } from './owner-auth'
 
 /** Local preview Owner. Created only when the preview seed route runs. */
 export const PREVIEW_OWNER_LOGIN = 'preview'
 export const PREVIEW_OWNER_PASSWORD = 'preview-owner'
+
+/** Local preview Member. Created by `?threads=1`. */
+export const PREVIEW_MEMBER_LOGIN = 'preview-member'
+export const PREVIEW_MEMBER_PASSWORD = 'preview-member'
+
+/** Member private Bot. Visible to the Owner. Id stays `preview-private`. */
+export const PREVIEW_PRIVATE_BOT_ID = 'preview-private'
+export const PREVIEW_PRIVATE_BOT_NAME = 'Private notes'
+
+/** User line on the Owner's bot-thread with the shared preview Bot. */
+export const PREVIEW_OWNER_THREAD_PREFIX = 'Owner thread on the shared Bot.'
+
+/** User line on the Member's bot-thread with the same shared Bot. */
+export const PREVIEW_MEMBER_THREAD_PREFIX = 'Member thread on the shared Bot.'
+
+/** User line on the Member's only bot-thread with their private Bot. */
+export const PREVIEW_PRIVATE_THREAD_PREFIX = 'Member thread on the private Bot.'
 
 /**
  * Fixture Bot id for local preview.
@@ -80,6 +98,23 @@ export function previewKitchenRequested(value: unknown): boolean {
   return previewQueryOn(value)
 }
 
+/**
+ * `?threads=1` on GET. Seeds a preview Member, that Member's private Bot,
+ * and separate Owner and Member lines on the shared preview Bot.
+ * HEAD ignores this query.
+ */
+export function previewThreadsRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
+/** `?threads=1&as=member` signs in the preview Member. Any other value stays the Owner. */
+export function previewThreadAsMember(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.includes('member')
+  }
+  return value === 'member'
+}
+
 /** Shared by preview query flags. h3 may parse `1` as a string or a number. */
 function previewQueryOn(value: unknown): boolean {
   if (Array.isArray(value)) {
@@ -126,17 +161,24 @@ export function readPreviewSeedHead(store: OpenedStore): PreviewSeedHeadResult {
  * so that line stays at the bottom of the Chat.
  * `kitchen` fills empty Kitchen tables and appends one Kitchen button line once,
  * after the parts line.
+ * `threads` adds a preview Member, a private Bot, and separate bot-threads
+ * on the shared preview Bot.
  * Throws OwnerAuthError 401 when the Store Owner is not this login.
  */
 export async function ensurePreviewCluster(
   store: OpenedStore,
   hashPassword: (password: string) => Promise<string>,
   verifyPassword: (hash: string, password: string) => Promise<boolean>,
-  options: { tall?: boolean, parts?: boolean, kitchen?: boolean } = {},
-): Promise<{ user: HostSessionUser, botId: string }> {
+  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, threads?: boolean } = {},
+): Promise<{ user: HostSessionUser, botId: string, member: HostSessionUser | null }> {
   const user = await ensurePreviewOwner(store, hashPassword, verifyPassword)
   const botId = stablePreviewBotId(listBots(store))
-    ?? createBot(store, { id: PREVIEW_BOT_ID, name: DEFAULT_BOT_NAME }).bot.id
+    ?? createBot(store, {
+      id: PREVIEW_BOT_ID,
+      name: DEFAULT_BOT_NAME,
+      createdBy: user.id,
+      visibility: 'shared',
+    }).bot.id
   if (options.tall) {
     ensurePreviewTallThread(store, botId, user.id)
   }
@@ -146,7 +188,10 @@ export async function ensurePreviewCluster(
   if (options.kitchen) {
     ensurePreviewKitchen(store, botId, user.id)
   }
-  return { user, botId }
+  const member = options.threads
+    ? await ensurePreviewThreads(store, hashPassword, user.id, botId)
+    : null
+  return { user, botId, member }
 }
 
 export function previewPartsContent(): string {
@@ -275,6 +320,63 @@ export function ensurePreviewTallThread(store: OpenedStore, botId: string, perso
     })
     stamp.run(at, message.id)
   }
+}
+
+function previewLineExists(store: OpenedStore, botId: string, prefix: string): boolean {
+  return listMessages(store, botId).some((message) => message.content.startsWith(prefix))
+}
+
+/**
+ * One preview Member, their private Bot, and one user line on each
+ * bot-thread the demo opens. A second call does not append those lines.
+ */
+export async function ensurePreviewThreads(
+  store: OpenedStore,
+  hashPassword: (password: string) => Promise<string>,
+  ownerId: string,
+  sharedBotId: string,
+): Promise<HostSessionUser> {
+  const existing = findMemberSecretByLogin(store, PREVIEW_MEMBER_LOGIN)
+  const member = existing ?? await createMember(store, {
+    displayName: 'Preview Member',
+    username: PREVIEW_MEMBER_LOGIN,
+    passwordHash: await hashPassword(PREVIEW_MEMBER_PASSWORD),
+  })
+  if (!getBot(store, PREVIEW_PRIVATE_BOT_ID)) {
+    createBot(store, {
+      id: PREVIEW_PRIVATE_BOT_ID,
+      name: PREVIEW_PRIVATE_BOT_NAME,
+      visibility: 'private',
+      createdBy: member.id,
+      avatarShape: 'owl',
+      avatarColor: '#8354E6',
+    })
+  }
+  if (!previewLineExists(store, sharedBotId, PREVIEW_OWNER_THREAD_PREFIX)) {
+    insertMessage(store, {
+      botId: sharedBotId,
+      role: 'user',
+      content: PREVIEW_OWNER_THREAD_PREFIX,
+      personId: ownerId,
+    })
+  }
+  if (!previewLineExists(store, sharedBotId, PREVIEW_MEMBER_THREAD_PREFIX)) {
+    insertMessage(store, {
+      botId: sharedBotId,
+      role: 'user',
+      content: PREVIEW_MEMBER_THREAD_PREFIX,
+      personId: member.id,
+    })
+  }
+  if (!previewLineExists(store, PREVIEW_PRIVATE_BOT_ID, PREVIEW_PRIVATE_THREAD_PREFIX)) {
+    insertMessage(store, {
+      botId: PREVIEW_PRIVATE_BOT_ID,
+      role: 'user',
+      content: PREVIEW_PRIVATE_THREAD_PREFIX,
+      personId: member.id,
+    })
+  }
+  return toMemberSession(member)
 }
 
 async function ensurePreviewOwner(

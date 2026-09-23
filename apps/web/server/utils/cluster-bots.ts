@@ -1,15 +1,24 @@
 import type { OpenedStore } from '@dostigus/db'
-import type { MessageRole } from '@dostigus/shared'
+import type { BotViewer, MessageRole } from '@dostigus/shared'
 import {
   createBot,
   deleteBot,
-  ensureGreeting,
   insertMessage,
   listBots,
-  listMessages,
+  listBotThreadMessages,
   requireBot,
+  setBotVisibility,
+  StoreError,
   updateBot,
 } from '@dostigus/db'
+import {
+  botThreadPersonId,
+  canDeleteBot,
+  canEditBot,
+  canFlipBotVisibility,
+  canSeeBot,
+  isBotVisibility,
+} from '@dostigus/shared'
 
 export type ClusterBotInput = {
   name?: string
@@ -18,6 +27,15 @@ export type ClusterBotInput = {
   avatarColor?: string
   label?: string
   description?: string
+  /** Owner may pass `private`. A Member is forced to `private`. */
+  visibility?: string
+}
+
+export function viewerFromUser(user: { id: string, role?: string }): BotViewer {
+  return {
+    id: user.id,
+    role: user.role === 'member' ? 'member' : 'owner',
+  }
 }
 
 export type ClusterMessageInput = {
@@ -31,32 +49,104 @@ export type ClusterMessageInput = {
    * button. See ADR 0025 and ADR 0026.
    */
   parts?: unknown
+  /** The person whose bot-thread this line belongs on. */
+  viewer?: BotViewer
 }
 
-export function listClusterBots(store: OpenedStore) {
-  return { bots: listBots(store) }
+function assertVisible(store: OpenedStore, id: string, viewer: BotViewer) {
+  const bot = requireBot(store, id)
+  if (!canSeeBot(bot, viewer)) {
+    throw new StoreError('Bot not found', 404)
+  }
+  return bot
 }
 
-export function getClusterBot(store: OpenedStore, id: string) {
-  return { bot: requireBot(store, id) }
+export function listClusterBots(store: OpenedStore, viewer?: BotViewer) {
+  return { bots: listBots(store, viewer) }
 }
 
-export function createClusterBot(store: OpenedStore, input: ClusterBotInput = {}) {
-  return createBot(store, input)
+export function getClusterBot(store: OpenedStore, id: string, viewer?: BotViewer) {
+  const bot = requireBot(store, id)
+  if (viewer && !canSeeBot(bot, viewer)) {
+    throw new StoreError('Bot not found', 404)
+  }
+  return { bot }
 }
 
-export function updateClusterBot(store: OpenedStore, id: string, input: ClusterBotInput) {
+export function createClusterBot(
+  store: OpenedStore,
+  input: ClusterBotInput = {},
+  viewer?: BotViewer,
+) {
+  if (viewer?.role === 'member') {
+    if (input.visibility != null && input.visibility !== '' && input.visibility !== 'private') {
+      throw new StoreError('A Member can create only a private Bot', 403)
+    }
+    return createBot(store, {
+      ...input,
+      visibility: 'private',
+      createdBy: viewer.id,
+    })
+  }
+  return createBot(store, {
+    ...input,
+    visibility: input.visibility,
+    createdBy: viewer?.id,
+  })
+}
+
+export function updateClusterBot(
+  store: OpenedStore,
+  id: string,
+  input: ClusterBotInput,
+  viewer?: BotViewer,
+) {
+  if (viewer) {
+    const bot = assertVisible(store, id, viewer)
+    if (!canEditBot(bot, viewer)) {
+      throw new StoreError('Only the Owner can change this', 403)
+    }
+  }
   return { bot: updateBot(store, id, input) }
 }
 
-export function deleteClusterBot(store: OpenedStore, id: string) {
+export function deleteClusterBot(store: OpenedStore, id: string, viewer?: BotViewer) {
+  if (viewer) {
+    const bot = assertVisible(store, id, viewer)
+    if (!canDeleteBot(bot, viewer)) {
+      throw new StoreError('Only the Owner can change this', 403)
+    }
+  }
   deleteBot(store, id)
   return { ok: true as const }
 }
 
-export function listClusterMessages(store: OpenedStore, botId: string) {
-  ensureGreeting(store, botId)
-  return { messages: listMessages(store, botId) }
+/** Owner-only. A flip keeps the creator. */
+export function setClusterBotVisibility(
+  store: OpenedStore,
+  id: string,
+  visibility: string | undefined,
+  viewer: BotViewer,
+) {
+  if (!canFlipBotVisibility(viewer)) {
+    throw new StoreError('Only the Owner can change this', 403)
+  }
+  assertVisible(store, id, viewer)
+  if (!visibility || !isBotVisibility(visibility)) {
+    throw new StoreError('Unknown Bot visibility', 400)
+  }
+  return { bot: setBotVisibility(store, id, visibility) }
+}
+
+export function listClusterMessages(store: OpenedStore, botId: string, viewer?: BotViewer) {
+  const bot = requireBot(store, botId)
+  if (viewer && !canSeeBot(bot, viewer)) {
+    throw new StoreError('Bot not found', 404)
+  }
+  const personId = viewer
+    ? botThreadPersonId(bot, viewer)
+    : (bot.visibility === 'private' ? bot.createdBy : null)
+  return { messages: listBotThreadMessages(store, botId, personId) }
 }
 
 export function appendClusterMessage(store: OpenedStore, input: ClusterMessageInput) {

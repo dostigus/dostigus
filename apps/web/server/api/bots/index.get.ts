@@ -1,3 +1,6 @@
+import { listClusterBots, viewerFromUser } from '../../utils/cluster-bots'
+
 export default defineEventHandler(async (event) => {
-  return withHostStore(event, listClusterBots)
+  const session = await requireHostSession(event)
+  return withClusterStore((store) => listClusterBots(store, viewerFromUser(session.user)))
 })

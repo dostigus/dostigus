@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 /** Portable Bot inside the Cluster Store. Manifest fields live on the row. */
 export const bots = sqliteTable('bots', {
@@ -12,6 +12,10 @@ export const bots = sqliteTable('bots', {
   skillsJson: text('skills_json').notNull().default('[]'),
   modulesJson: text('modules_json').notNull().default('[]'),
   createdAt: integer('created_at').notNull(),
+  /** `shared` or `private`. Existing rows stay `shared`. */
+  visibility: text('visibility').notNull().default('shared'),
+  /** Owner or Member id. A visibility flip does not change this. */
+  createdBy: text('created_by'),
 })
 
 /** Cluster LLM gateway settings. The API key stays in the Store (server-side only). */
@@ -68,8 +72,32 @@ export const messages = sqliteTable('messages', {
   createdAt: integer('created_at').notNull(),
   personId: text('person_id'),
   partsJson: text('parts_json').notNull().default('[]'),
+  /** Bot-thread that holds this line. Null only before cutover finishes. */
+  threadId: text('thread_id'),
 }, (table) => [
   index('messages_bot_id_created_at_idx').on(table.botId, table.createdAt),
+  index('messages_thread_id_created_at_idx').on(table.threadId, table.createdAt),
+])
+
+/** One Thread. Milestone 2 writes kind `bot` only. */
+export const threads = sqliteTable('threads', {
+  id: text('id').primaryKey(),
+  kind: text('kind').notNull(),
+  /** Set for a bot-thread. Cascade-deletes the Thread with the Bot. */
+  botId: text('bot_id').references(() => bots.id, { onDelete: 'cascade' }),
+  createdAt: integer('created_at').notNull(),
+}, (table) => [
+  index('threads_bot_id_idx').on(table.botId),
+])
+
+/** A participant is a person (Owner or Member) or a Bot. */
+export const threadParticipants = sqliteTable('thread_participants', {
+  threadId: text('thread_id').notNull().references(() => threads.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(),
+  refId: text('ref_id').notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.threadId, table.kind, table.refId] }),
+  index('thread_participants_kind_ref_idx').on(table.kind, table.refId),
 ])
 
 /** Kitchen Module pantry item. qty is optional text. Cluster-wide, not per Bot. */
@@ -99,6 +127,8 @@ export const kitchenRecipe = sqliteTable('kitchen_recipe', {
 
 export type BotRow = typeof bots.$inferSelect
 export type MessageRow = typeof messages.$inferSelect
+export type ThreadRow = typeof threads.$inferSelect
+export type ThreadParticipantRow = typeof threadParticipants.$inferSelect
 export type LlmGatewayRow = typeof llmGateway.$inferSelect
 export type OwnerRow = typeof owners.$inferSelect
 export type MemberRow = typeof members.$inferSelect

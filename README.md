@@ -35,7 +35,10 @@ Host preview seed (Owner signed in, fixture Bot id `preview`, Chat open):
 `pnpm preview:host`, then GET `http://localhost:3000/preview-seed`
 (redirects to `/bots/preview`; `?tall=1` for a tall thread;
 `?parts=1` for a demo Sheet button; `?kitchen=1` for the Kitchen
-Sheet button; `?members=1` opens `/members` with Nuxt devtools off). Renaming
+Sheet button; `?members=1` opens `/members`; `?threads=1` signs in the
+preview Owner at `/` with a shared Bot and a Member private Bot;
+`?threads=1&as=member` signs in the preview Member on `/bots/preview`
+with Nuxt devtools off). Renaming
 that Bot does not change the id. HEAD is answered on that route and on
 `/health` (HEAD ignores `?members=1`). `pnpm smoke:preview` checks that
 HEAD, the fixture Bot, the tall thread, and the Members landing. See

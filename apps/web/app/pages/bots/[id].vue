@@ -267,9 +267,11 @@ const botId = computed(() => String(route.params.id ?? ''))
 
 const { data: botData, error: botError, refresh: refreshBot } = await useFetch<{ bot: Bot }>(
   () => `/api/bots/${botId.value}`,
+  { key: computed(() => `bot-${botId.value}-${user.value?.id ?? 'anon'}`) },
 )
 const { data: messageData, error: messageError, refresh } = await useFetch<{ messages: ChatMessage[] }>(
   () => `/api/bots/${botId.value}/messages`,
+  { key: computed(() => `bot-messages-${botId.value}-${user.value?.id ?? 'anon'}`) },
 )
 const { data: readyData } = await useFetch<{ configured: boolean }>('/api/chat/ready')
 

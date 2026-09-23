@@ -60,6 +60,22 @@
             </span>
           </button>
         </li>
+        <li v-else>
+          <button
+            type="button"
+            class="row"
+            :disabled="busy"
+            @click="createNew"
+          >
+            <span
+              class="plus"
+              aria-hidden="true"
+            >+</span>
+            <span class="copy">
+              <span class="name">{{ busy ? 'Creating…' : 'Create private Bot' }}</span>
+            </span>
+          </button>
+        </li>
         <li
           v-for="bot in visible"
           :key="bot.id"
@@ -77,7 +93,13 @@
               :avatar-color="bot.manifest.avatarColor"
             />
             <span class="copy">
-              <span class="name">{{ bot.name }}</span>
+              <span class="name-row">
+                <span class="name">{{ bot.name }}</span>
+                <span
+                  v-if="bot.visibility === 'private'"
+                  class="private"
+                >Private</span>
+              </span>
               <span
                 v-if="bot.lastMessage?.content"
                 class="preview"
@@ -137,7 +159,7 @@ function dismiss() {
 }
 
 async function createNew() {
-  if (!isOwner.value || busy.value) {
+  if (busy.value) {
     return
   }
   busy.value = true
@@ -334,12 +356,29 @@ onUnmounted(() => {
   gap: 0.08rem;
 }
 
+.name-row {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
 .name {
+  min-width: 0;
   font-weight: 700;
   font-size: 1rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.private {
+  flex: none;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .preview {

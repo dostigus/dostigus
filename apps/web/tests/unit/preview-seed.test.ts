@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { createBot, listBots, listKitchenPantry, listMessages, openStore, readKitchen, updateBot } from '@dostigus/db'
+import { createBot, listBots, listBotThreadMessages, listKitchenPantry, listMessages, openStore, readKitchen, updateBot } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import { OwnerAuthError, registerClusterOwner } from '../../server/utils/owner-auth'
@@ -8,9 +8,14 @@ import {
   ensurePreviewCluster,
   PREVIEW_BOT_ID,
   PREVIEW_KITCHEN_PREFIX,
+  PREVIEW_MEMBER_LOGIN,
+  PREVIEW_MEMBER_THREAD_PREFIX,
   PREVIEW_OWNER_LOGIN,
   PREVIEW_OWNER_PASSWORD,
+  PREVIEW_OWNER_THREAD_PREFIX,
   PREVIEW_PARTS_PREFIX,
+  PREVIEW_PRIVATE_BOT_ID,
+  PREVIEW_PRIVATE_THREAD_PREFIX,
   PREVIEW_TALL_LINE_COUNT,
   PREVIEW_TALL_PREFIX,
   previewKitchenParts,
@@ -20,6 +25,8 @@ import {
   previewPartsRequested,
   previewSeedAllowed,
   previewTallRequested,
+  previewThreadAsMember,
+  previewThreadsRequested,
   readPreviewSeedHead,
   stablePreviewBotId,
 } from '../../server/utils/preview-seed'
@@ -93,6 +100,8 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   expect(src).toContain('previewMembersRequested')
   expect(src).toContain('previewPartsRequested')
   expect(src).toContain('previewKitchenRequested')
+  expect(src).toContain('previewThreadsRequested')
+  expect(src).toContain('previewThreadAsMember')
   expect(src).toContain('\'/members\'')
   expect(src).toContain('previewChatLocation')
   expect(src).toContain('statusCode: 404')
@@ -119,6 +128,7 @@ it('answers HEAD without signing in or writing the Store', () => {
   expect(src).not.toContain('previewChatLocation')
   expect(src).not.toContain('previewMembersRequested')
   expect(src).not.toContain('previewKitchenRequested')
+  expect(src).not.toContain('previewThreadsRequested')
   expect(src).not.toContain('/members')
   expect(src).not.toContain('requireOwnerSession')
   expect(src).not.toContain('requireHostSession')
@@ -328,4 +338,34 @@ it('reads HEAD from the Store without writing', async () => {
   await registerClusterOwner(other, { login: 'ada', password: 'secret-pass' }, hashPassword)
   expect(readPreviewSeedHead(other)).toEqual({ statusCode: 409 })
   expect(listBots(other)).toHaveLength(0)
+})
+
+it('treats threads=1 and as=member as the bot-thread demo', () => {
+  expect(previewThreadsRequested('1')).toBe(true)
+  expect(previewThreadsRequested(1)).toBe(true)
+  expect(previewThreadsRequested(undefined)).toBe(false)
+  expect(previewThreadAsMember('member')).toBe(true)
+  expect(previewThreadAsMember(['member'])).toBe(true)
+  expect(previewThreadAsMember('owner')).toBe(false)
+  expect(previewThreadAsMember(undefined)).toBe(false)
+})
+
+it('seeds a Member private Bot and separate shared bot-threads once', async () => {
+  const store = memoryStore()
+  const seeded = await ensurePreviewCluster(store, hashPassword, verifyPassword, { threads: true })
+  expect(seeded.member?.role).toBe('member')
+  expect(seeded.member?.username).toBe(PREVIEW_MEMBER_LOGIN)
+  expect(listBots(store).map((bot) => bot.id).sort()).toEqual([PREVIEW_BOT_ID, PREVIEW_PRIVATE_BOT_ID].sort())
+  const ownerLines = listBotThreadMessages(store, PREVIEW_BOT_ID, seeded.user.id)
+  const memberLines = listBotThreadMessages(store, PREVIEW_BOT_ID, seeded.member!.id)
+  expect(ownerLines.some((line) => line.content.startsWith(PREVIEW_OWNER_THREAD_PREFIX))).toBe(true)
+  expect(ownerLines.some((line) => line.content.startsWith(PREVIEW_MEMBER_THREAD_PREFIX))).toBe(false)
+  expect(memberLines.some((line) => line.content.startsWith(PREVIEW_MEMBER_THREAD_PREFIX))).toBe(true)
+  expect(memberLines.some((line) => line.content.startsWith(PREVIEW_OWNER_THREAD_PREFIX))).toBe(false)
+  const privateLines = listBotThreadMessages(store, PREVIEW_PRIVATE_BOT_ID, seeded.user.id)
+  expect(privateLines.some((line) => line.content.startsWith(PREVIEW_PRIVATE_THREAD_PREFIX))).toBe(true)
+  const before = listMessages(store, PREVIEW_BOT_ID).length
+  await ensurePreviewCluster(store, hashPassword, verifyPassword, { threads: true })
+  expect(listMessages(store, PREVIEW_BOT_ID)).toHaveLength(before)
+  expect(listBots(store)).toHaveLength(2)
 })

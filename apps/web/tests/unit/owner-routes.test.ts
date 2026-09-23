@@ -27,7 +27,10 @@ it('wraps requireUserSession for Host Owner routes', () => {
 it('lets Owner and Member sessions read Bots and Chat', () => {
   const files = [
     'bots/index.get.ts',
+    'bots/index.post.ts',
     'bots/[id].get.ts',
+    'bots/[id].patch.ts',
+    'bots/[id].delete.ts',
     'bots/[id]/messages.get.ts',
     'bots/[id]/messages.post.ts',
     'chat/ready.get.ts',
@@ -46,9 +49,7 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
 
 it('keeps Bot writes, Settings, and Members with the Owner', () => {
   const files = [
-    'bots/index.post.ts',
-    'bots/[id].patch.ts',
-    'bots/[id].delete.ts',
+    'bots/[id]/visibility.patch.ts',
     'settings/llm-gateway.get.ts',
     'settings/llm-gateway.put.ts',
     'settings/llm-gateway/ping.post.ts',
