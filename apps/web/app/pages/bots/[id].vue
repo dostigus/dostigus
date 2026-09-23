@@ -85,6 +85,11 @@
           >
             {{ message.content }}
           </p>
+          <KitChatParts
+            v-if="assistantBubbleUsesMarkdown(message.role) && hostChatParts(message.parts).length"
+            :parts="hostChatParts(message.parts)"
+            @open-sheet="onOpenSheet"
+          />
         </li>
         <li
           v-if="showPurpose"
@@ -225,12 +230,22 @@
       :bot="bot"
       @saved="onBotSaved"
     />
+    <KitSheet
+      v-model:open="sheetOpen"
+      :title="openSheetTitle"
+    >
+      <p class="sheet-copy">
+        {{ openSheetBody }}
+      </p>
+    </KitSheet>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Bot, BotAvatarState, Message } from '@dostigus/shared'
-import { assistantBubbleUsesMarkdown, KitMarkdown } from '@dostigus/ui-kit'
+import type { HostSheetEntry } from '../../utils/host-sheets'
+import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet } from '@dostigus/ui-kit'
+import { hostChatParts, hostSheetById } from '../../utils/host-sheets'
 
 definePageMeta({ layout: 'host' })
 
@@ -280,6 +295,10 @@ const greeting = ref(false)
 const listening = ref(false)
 const markFailed = ref(false)
 const settingsOpen = ref(false)
+const sheetOpen = ref(false)
+const openSheet = ref<HostSheetEntry | null>(null)
+const openSheetTitle = computed(() => openSheet.value?.title ?? 'Sheet')
+const openSheetBody = computed(() => openSheet.value?.body ?? '')
 const threadEl = ref<HTMLOListElement | null>(null)
 const stageEl = ref<HTMLElement | null>(null)
 const pillEl = ref<HTMLButtonElement | null>(null)
@@ -632,6 +651,15 @@ watch([timeline, botPending, showPurpose, threadActivity], () => {
   pinAfterLayout()
 }, { flush: 'post', immediate: true })
 
+function onOpenSheet(sheetId: string) {
+  const sheet = hostSheetById(sheetId)
+  if (!sheet) {
+    return
+  }
+  openSheet.value = sheet
+  sheetOpen.value = true
+}
+
 function isMine(message: TimelineLine): boolean {
   if (message.role !== 'user') {
     return false
@@ -677,6 +705,7 @@ async function deliver(raw: string, existing: TimelineLine | null) {
     content,
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     personId: user.value?.id ?? null,
+    parts: [],
     authorName: user.value?.displayName ?? null,
     pending: true,
     failed: false,
@@ -922,6 +951,11 @@ async function onBotSaved() {
 .text {
   margin: 0;
   white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.sheet-copy {
+  margin: 0;
   line-height: 1.45;
 }
 

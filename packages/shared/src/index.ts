@@ -26,6 +26,19 @@ export {
   randomBotAppearance,
 } from './bot-avatar'
 export {
+  CHAT_PART_LABEL_MAX,
+  CHAT_PART_STATUS_TONES,
+  CHAT_PARTS_MAX,
+  type ChatPart,
+  type ChatPartButton,
+  type ChatPartButtonAction,
+  chatPartsForRole,
+  type ChatPartStatus,
+  type ChatPartStatusTone,
+  parseChatParts,
+  serializeChatParts,
+} from './chat-parts'
+export {
   INVITE_TTL_MS,
   parseInviteEmail,
 } from './invite'

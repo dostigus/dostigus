@@ -60,8 +60,9 @@ finished assistant line
 - The sidebar preview and Host search keep the stored string. They do not
   render Markdown.
 - No change to the message route, the MCP surface, or the LLM prompt.
-- Interactive Kit Cards, buttons, and statuses inside a bubble are a later
-  ADR. The content column stays `string`.
+- Interactive Kit parts on an assistant line are
+  [ADR 0025](0025-chat-bubble-parts.md). The content column stays the
+  Markdown string. Buttons are not Markdown.
 
 ## Alternatives
 

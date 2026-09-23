@@ -59,7 +59,7 @@ export const members = sqliteTable('members', {
   disabledAt: integer('disabled_at'),
 })
 
-/** Chat line for a Bot. personId is the Owner or Member on user lines. */
+/** Chat line for a Bot. personId is the Owner or Member on user lines. partsJson is assistant Kit parts. */
 export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(),
   botId: text('bot_id').notNull().references(() => bots.id, { onDelete: 'cascade' }),
@@ -67,6 +67,7 @@ export const messages = sqliteTable('messages', {
   content: text('content').notNull(),
   createdAt: integer('created_at').notNull(),
   personId: text('person_id'),
+  partsJson: text('parts_json').notNull().default('[]'),
 }, (table) => [
   index('messages_bot_id_created_at_idx').on(table.botId, table.createdAt),
 ])

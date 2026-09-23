@@ -4,9 +4,10 @@ import { previewChatLocation } from '../../app/utils/preview-hold'
 /**
  * Local Host preview entry. GET signs in the preview Owner, ensures the
  * fixture preview Bot (`preview`), and opens that Chat. The display name
- * may change. `?tall=1` fills a tall thread once. `?hold=1` stays on the
+ * may change. `?tall=1` fills a tall thread once. `?parts=1` adds one
+ * assistant line with a Kit button and a status once. `?hold=1` stays on the
  * Chat URL so the next quiet reply waits for a screenshot. `?members=1`
- * opens Members instead of Chat. HEAD ignores that query. Not a domain Bot.
+ * opens Members instead of Chat. HEAD ignores those queries. Not a domain Bot.
  * Answers 404 unless `nuxt dev` is running with `DOSTIGUS_PREVIEW_SEED=1`.
  */
 export default defineEventHandler(async (event) => {
@@ -23,7 +24,10 @@ export default defineEventHandler(async (event) => {
       useStore(),
       hashPassword,
       verifyPassword,
-      { tall: previewTallRequested(query.tall) },
+      {
+        tall: previewTallRequested(query.tall),
+        parts: previewPartsRequested(query.parts),
+      },
     )
     await startOwnerSession(event, seeded.user)
     const location = previewMembersRequested(query.members)
