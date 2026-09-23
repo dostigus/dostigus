@@ -1,6 +1,6 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { Member } from '@dostigus/shared'
-import { createMember, disableMember, listMembers } from '@dostigus/db'
+import { createMember, disableMember, listMembers, revokeOutstandingInvitesForEmail } from '@dostigus/db'
 import { parseMemberDisplayName, parseOwnerIdentifier, parseOwnerPassword } from '@dostigus/shared'
 import { OwnerAuthError } from './owner-auth'
 
@@ -40,10 +40,14 @@ export async function addHouseholdMember(
     )
   }
   const passwordHash = await hashPassword(password)
-  return createMember(store, {
+  const member = createMember(store, {
     displayName,
     email,
     username,
     passwordHash,
   })
+  if (email) {
+    revokeOutstandingInvitesForEmail(store, email)
+  }
+  return member
 }

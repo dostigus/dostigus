@@ -133,6 +133,13 @@ _Avoid_: fast, smart, opus (aliases).
 The Owner and the Members on one Cluster.
 _Avoid_: team, org, family.
 
+**Invite**:
+A one-shot link the Owner creates so someone can become a Member. The Store
+keeps a hash of the token, the reserved email, and an expiry. The raw token
+is shown once, on the Invite URL the Owner copies. Accepting it creates a
+Member. Not a Share link.
+_Avoid_: Share link, guest link, magic link (unqualified), invitee.
+
 **Share link**:
 Narrow public token to one object, not the whole Cluster.
 _Avoid_: public share, invite (unqualified).
@@ -144,6 +151,9 @@ _Avoid_: public share, invite (unqualified).
 - A Member signs in on the same Host. Bot list and Chat are shared. Creating
   or deleting a Bot, Members, and the LLM gateway stay with the Owner. A
   Member may open the list over Chat to find a Bot.
+- The Owner adds a Member by hand, or creates an Invite for an email and
+  copies the link. Accepting an Invite creates a Member and signs them in.
+  Sending that link by SMTP is later. An Invite is not a Share link.
 - The Owner creates a Bot from that list. The name starts as **New Bot**,
   with a random flock mark. What the Bot is for is a Chat line, not a
   Manifest field.

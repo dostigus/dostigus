@@ -1,12 +1,24 @@
 export {
+  acceptInvite,
+  type IssuedInvite,
+  issueInvite,
+  listPendingInvites,
+  readAcceptableInvite,
+  revokeInvite,
+  revokeOutstandingInvitesForEmail,
+  rotateInvite,
+} from './invites'
+export {
   avatarColorFromRow,
   avatarShapeFromRow,
   type BotRecord,
+  type InviteRecord,
   type MemberRecord,
   type MessageRecord,
   modelTierFromRow,
   type OwnerRecord,
   toBot,
+  toInvite,
   toMember,
   toMessage,
   toOwner,
@@ -46,5 +58,5 @@ export {
   updateBot,
   upsertLlmGatewaySettings,
 } from './queries'
-export { type BotRow, bots, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners } from './schema'
+export { type BotRow, bots, type InviteRow, invites, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners } from './schema'
 export { type OpenedStore, openStore } from './store'

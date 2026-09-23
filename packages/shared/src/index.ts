@@ -26,6 +26,10 @@ export {
   randomBotAppearance,
 } from './bot-avatar'
 export {
+  INVITE_TTL_MS,
+  parseInviteEmail,
+} from './invite'
+export {
   ASSISTANT_REPLY_VIAS,
   type AssistantReplyVia,
   baseUrlForLlmGatewayPreset,
@@ -98,6 +102,8 @@ export {
   type Host,
   type Household,
   type HouseholdId,
+  type Invite,
+  type InviteId,
   isModelTier,
   type Job,
   type JobId,

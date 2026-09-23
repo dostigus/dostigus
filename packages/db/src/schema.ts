@@ -34,6 +34,20 @@ export const owners = sqliteTable('owners', {
   singleton: integer('singleton').notNull().default(1).unique(),
 })
 
+/** One-shot Household Invite. tokenHash is the only copy of the secret. */
+export const invites = sqliteTable('invites', {
+  id: text('id').primaryKey(),
+  tokenHash: text('token_hash').notNull().unique(),
+  email: text('email').notNull(),
+  expiresAt: integer('expires_at').notNull(),
+  createdBy: text('created_by').notNull().references(() => owners.id),
+  createdAt: integer('created_at').notNull(),
+  usedAt: integer('used_at'),
+  revokedAt: integer('revoked_at'),
+}, (table) => [
+  index('invites_email_idx').on(table.email),
+])
+
 /** Household Member under the Owner. Sign-in stays off while disabledAt is set. */
 export const members = sqliteTable('members', {
   id: text('id').primaryKey(),
@@ -62,3 +76,4 @@ export type MessageRow = typeof messages.$inferSelect
 export type LlmGatewayRow = typeof llmGateway.$inferSelect
 export type OwnerRow = typeof owners.$inferSelect
 export type MemberRow = typeof members.$inferSelect
+export type InviteRow = typeof invites.$inferSelect
