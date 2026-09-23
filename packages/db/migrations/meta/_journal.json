@@ -64,6 +64,13 @@
       "when": 1758866400000,
       "tag": "0008_member_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1758952800000,
+      "tag": "0009_message_parts",
+      "breakpoints": true
     }
   ]
 }

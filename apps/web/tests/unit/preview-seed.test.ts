@@ -9,9 +9,12 @@ import {
   PREVIEW_BOT_ID,
   PREVIEW_OWNER_LOGIN,
   PREVIEW_OWNER_PASSWORD,
+  PREVIEW_PARTS_PREFIX,
   PREVIEW_TALL_LINE_COUNT,
   PREVIEW_TALL_PREFIX,
   previewMembersRequested,
+  previewParts,
+  previewPartsRequested,
   previewSeedAllowed,
   previewTallRequested,
   readPreviewSeedHead,
@@ -85,6 +88,7 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   expect(src).toContain('previewSeedAllowed')
   expect(src).toContain('previewTallRequested')
   expect(src).toContain('previewMembersRequested')
+  expect(src).toContain('previewPartsRequested')
   expect(src).toContain('\'/members\'')
   expect(src).toContain('previewChatLocation')
   expect(src).toContain('statusCode: 404')
@@ -209,6 +213,35 @@ it('creates the fixture Bot when the Store only has another New Bot', async () =
   expect(listBots(store).find((bot) => bot.id === seeded.botId)?.name).toBe(DEFAULT_BOT_NAME)
   expect(listMessages(store, named.bot.id)).toHaveLength(1)
   expect(listBots(store)).toHaveLength(2)
+})
+
+it('adds one assistant parts line once, after any tall thread', async () => {
+  const store = memoryStore()
+  expect(previewPartsRequested('1')).toBe(true)
+  expect(previewPartsRequested(1)).toBe(true)
+  expect(previewPartsRequested(undefined)).toBe(false)
+
+  const first = await ensurePreviewCluster(store, hashPassword, verifyPassword, {
+    tall: true,
+    parts: true,
+  })
+  const messages = listMessages(store, first.botId)
+  expect(messages).toHaveLength(1 + PREVIEW_TALL_LINE_COUNT + 1)
+  expect(messages[0]?.parts).toEqual([])
+  const partsLine = messages.at(-1)
+  expect(partsLine?.role).toBe('assistant')
+  expect(partsLine?.personId).toBeNull()
+  expect(partsLine?.content.startsWith(PREVIEW_PARTS_PREFIX)).toBe(true)
+  expect(partsLine?.parts).toEqual(previewParts())
+  expect(Date.parse(partsLine!.createdAt)).toBeGreaterThan(Date.parse(messages.at(-2)!.createdAt))
+  expect(messages.filter((message) => message.content.startsWith(PREVIEW_PARTS_PREFIX))).toHaveLength(1)
+
+  const second = await ensurePreviewCluster(store, hashPassword, verifyPassword, {
+    tall: true,
+    parts: true,
+  })
+  expect(second.botId).toBe(first.botId)
+  expect(listMessages(store, first.botId)).toHaveLength(messages.length)
 })
 
 it('fills a tall thread once on the stable Bot', async () => {

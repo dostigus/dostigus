@@ -141,6 +141,13 @@ For scroll and overlay screenshots, open
 of preview Chat lines on Bot `preview` once. Another visit with `?tall=1`
 does not append again.
 
+For a Kit button in an assistant bubble, open
+**http://localhost:3000/preview-seed?parts=1**. That GET adds one
+assistant line once: Markdown body, a status chip, and **Open demo**.
+The button opens the **Demo sheet** (`KitSheet`). Another visit with
+`?parts=1` does not append again. **HEAD** ignores `?parts=1`. See
+[ADR 0025](docs/adr/0025-chat-bubble-parts.md).
+
 For Members and Invite screenshots, open
 **http://localhost:3000/preview-seed?members=1**. That GET signs in the
 same preview Owner and redirects to `/members` (a Member session cannot
@@ -183,8 +190,10 @@ instead of `return null`.
 With `pnpm preview:host` already up, `pnpm smoke:preview` checks those
 HEAD responses, that GET lands on `/bots/preview` (not a Bot chosen by
 the name **New Bot**), that renaming the Bot does not create another
-Bot, that `?tall=1` adds the tall thread once, and that GET
-`?members=1` lands on `/members` while HEAD ignores that query. Optional
+Bot, that `?tall=1` adds the tall thread once, that GET
+`?members=1` lands on `/members` while HEAD ignores that query, and that
+`?parts=1` adds one assistant line with a button once while HEAD ignores
+that query. Optional
 `PREVIEW_SMOKE_URL` (default `http://localhost:3000`).
 
 Preview Owner: username `preview`, password `preview-owner`. A

@@ -10,6 +10,7 @@ empty state are replaced by the full-pane picker in
 drawer below `52rem` still stand. The in-thread busy mark for a configured
 reply is the activity row in [ADR 0021](0021-chat-activity-status.md).
 Assistant bubble Markdown is [ADR 0022](0022-chat-assistant-markdown.md).
+Kit parts under that body are [ADR 0025](0025-chat-bubble-parts.md).
 
 ## Decision
 

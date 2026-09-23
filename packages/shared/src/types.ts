@@ -1,6 +1,7 @@
 /** Stable glossary types — names match CONTEXT.md. Do not invent synonyms. */
 
 import type { BotAccentHex, BotAvatarShape } from './bot-avatar'
+import type { ChatPart } from './chat-parts'
 
 export type ClusterId = string
 export type BotId = string
@@ -135,10 +136,16 @@ export type Message = {
   id: MessageId
   botId: BotId
   role: MessageRole
+  /** Markdown for an assistant line. Plain text for user and system. */
   content: string
   createdAt: string
   /** Owner id or Member id on Host user lines. Empty for assistant, system, and Bearer `/mcp` writes. */
   personId: string | null
+  /**
+   * Kit parts on an assistant line (button, status). Empty for user and system.
+   * See ADR 0025.
+   */
+  parts: ChatPart[]
 }
 
 export type Orchestrator = Bot & {

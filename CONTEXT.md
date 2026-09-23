@@ -56,7 +56,10 @@ A person or a Bot on a Thread. A person is the Owner or a Member.
 _Avoid_: user, attendee.
 
 **Card**:
-Inline structured UI in the Chat (button, table, status).
+Inline structured UI in the Chat (button, table, status). Day-1 renders
+a button and a status as Kit parts on an assistant bubble
+([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). A table and other Card
+kinds stay later.
 _Avoid_: widget, embed, attachment (unqualified).
 
 **Sheet**:
@@ -202,7 +205,13 @@ _Avoid_: public share, invite (unqualified).
 - Builder writes Module packages via Job → Apply. Distinct from any Platform
   git agent. The chat Bot does not write Module packages.
 - Host talks to Bots through the MCP surface and renders Cards and Sheets from
-  the Kit. The Sheet shell and Brand stickers live in the Kit.
+  the Kit. The Sheet shell and Brand stickers live in the Kit. An assistant
+  Chat line keeps Markdown in `content`
+  ([ADR 0022](docs/adr/0022-chat-assistant-markdown.md)) and may carry Kit
+  parts: a button that opens a Sheet, and a status
+  ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). User and system lines
+  have no parts. Threads runtime stays
+  [ADR 0024](docs/adr/0024-threads-and-bot-visibility.md).
 - LLM gateway maps Model tiers to providers for every Bot call.
 - A Share link is a narrow public token to one object, not the Cluster.
   Share links and guests are later.

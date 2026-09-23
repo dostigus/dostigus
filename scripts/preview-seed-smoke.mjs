@@ -8,6 +8,8 @@
  * GET must land on that id. Renaming the Bot must not create another Bot.
  * GET `?members=1` must 302 to `/members` with a session cookie.
  * HEAD ignores `?members=1` and still points at `/bots/<id>`.
+ * GET `?parts=1` adds one assistant line with a button and a status once.
+ * HEAD ignores `?parts=1`.
  *
  *   pnpm preview:host
  *   pnpm smoke:preview
@@ -22,6 +24,7 @@ const RENAMED_BOT_NAME = 'Шеф'
 const GREETING = 'Hello — I\'m New Bot.'
 const TALL_PREFIX = 'Preview layout line '
 const TALL_COUNT = 32
+const PARTS_PREFIX = 'Preview Kit parts.'
 const WAIT_MS = Number(process.env.PREVIEW_SMOKE_WAIT_MS ?? 120_000)
 const REQUEST_MS = 60_000
 
@@ -237,6 +240,29 @@ function assertTall(messages) {
   }
 }
 
+function assertParts(messages) {
+  const lines = messages.filter((message) => message.content.startsWith(PARTS_PREFIX))
+  if (lines.length !== 1) {
+    fail(`expected 1 parts Chat line, found ${lines.length}`)
+  }
+  const line = lines[0]
+  if (line.role !== 'assistant' || line.personId != null) {
+    fail(`parts line expected an assistant line with no personId, got ${line.role} ${line.personId}`)
+  }
+  const parts = line.parts
+  if (!Array.isArray(parts)) {
+    fail('parts line has no parts array')
+  }
+  const button = parts.find((part) => part.kind === 'button')
+  if (button?.label !== 'Open demo' || button.action?.type !== 'openSheet' || button.action?.sheetId !== 'demo') {
+    fail(`parts button was ${JSON.stringify(button)}`)
+  }
+  const status = parts.find((part) => part.kind === 'status')
+  if (status?.label !== 'Preview' || status.tone !== 'neutral') {
+    fail(`parts status was ${JSON.stringify(status)}`)
+  }
+}
+
 async function readJson(path, cookie) {
   const hit = await request(path, { cookie })
   if (hit.response.status !== 200) {
@@ -397,6 +423,47 @@ async function main() {
     fail(`GET /api/members as preview Owner expected 200, got ${membersApi.response.status} ${membersApi.text.slice(0, 200)}`)
   }
   note('GET /preview-seed?members=1 302 /members; HEAD ignored the query')
+
+  const partsHead = assertPreviewHead(await request('/preview-seed?parts=1', { method: 'HEAD' }))
+  if (partsHead.status !== 302 || partsHead.location !== `/bots/${botId}`) {
+    fail(`HEAD /preview-seed?parts=1 expected 302 /bots/${botId}, got ${partsHead.status} ${partsHead.location ?? ''}`)
+  }
+  const beforeParts = await readJson(`/api/bots/${botId}/messages`, session)
+  const beforePartsMessages = beforeParts?.messages
+  if (!Array.isArray(beforePartsMessages)) {
+    fail('Chat messages missing before ?parts=1')
+  }
+  if (beforePartsMessages.length !== afterMessages.length) {
+    fail('HEAD /preview-seed?parts=1 inserted Chat lines')
+  }
+  const hadParts = beforePartsMessages.some((message) => message.content.startsWith(PARTS_PREFIX))
+  const parts = await request('/preview-seed?parts=1', { cookie: session })
+  const partsPath = locationPath(parts.response.headers.get('location'))
+  if (parts.response.status !== 302 || partsPath !== `/bots/${botId}`) {
+    fail(`GET /preview-seed?parts=1 expected 302 /bots/${botId}, got ${parts.response.status} ${partsPath ?? ''}`)
+  }
+  const withParts = await readJson(`/api/bots/${botId}/messages`, session)
+  const withPartsMessages = withParts?.messages
+  if (!Array.isArray(withPartsMessages)) {
+    fail('Chat messages missing after ?parts=1')
+  }
+  assertParts(withPartsMessages)
+  if (hadParts && withPartsMessages.length !== beforePartsMessages.length) {
+    fail(`?parts=1 appended again (${beforePartsMessages.length} → ${withPartsMessages.length})`)
+  }
+  if (!hadParts && withPartsMessages.length !== beforePartsMessages.length + 1) {
+    fail(`?parts=1 expected 1 new line (${beforePartsMessages.length} → ${withPartsMessages.length})`)
+  }
+  const partsAgain = await request('/preview-seed?parts=1', { cookie: session })
+  if (partsAgain.response.status !== 302 || locationPath(partsAgain.response.headers.get('location')) !== `/bots/${botId}`) {
+    fail('second GET /preview-seed?parts=1 did not return to the same Chat')
+  }
+  const keptParts = await readJson(`/api/bots/${botId}/messages`, session)
+  if (!Array.isArray(keptParts?.messages) || keptParts.messages.length !== withPartsMessages.length) {
+    fail(`second ?parts=1 changed Chat length (${withPartsMessages.length} → ${keptParts?.messages?.length ?? 'none'})`)
+  }
+  note(`?parts=1 has one assistant line with a button; second GET did not append`)
+
   note('ok')
 }
 

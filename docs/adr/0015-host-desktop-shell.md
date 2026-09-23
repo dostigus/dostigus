@@ -65,8 +65,9 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
   Sheet and read those fields. Skills and Module packages stay out.
   Appearance detail is in ADR 0016 and ADR 0020.
 - Chat bubbles stay unlabeled. Assistant lines use `KitMarkdown`
-  ([ADR 0022](0022-chat-assistant-markdown.md)). User and system lines stay
-  plain text. The line still stores `personId` and the
+  ([ADR 0022](0022-chat-assistant-markdown.md)) and may show Kit parts
+  under that body ([ADR 0025](0025-chat-bubble-parts.md)). User and
+  system lines stay plain text. The line still stores `personId` and the
   author's name ([ADR 0012](0012-household-members.md)). Optimistic send
   keeps the same timing: the user line shows at once, then the activity row
   from [ADR 0021](0021-chat-activity-status.md) while a configured reply is

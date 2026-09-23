@@ -238,7 +238,13 @@ it opens in a new tab with `rel="noopener noreferrer"`. A single newline
 outside a fence soft-joins; a blank line is a paragraph; a fence keeps
 its line breaks. Raw HTML, tables, images, and headings stay text. User
 and system bubbles stay plain text with `white-space: pre-wrap`. See
-[ADR 0022](adr/0022-chat-assistant-markdown.md). The composer stays on screen, over that scroll.
+[ADR 0022](adr/0022-chat-assistant-markdown.md). Under that Markdown, an
+assistant bubble may show Kit parts: a `KitButton` (`size="sm"`) and a
+status chip (`neutral`, `ok`, or `warn`). The button opens a Sheet the
+Host has registered. Day-1 that Sheet is **Demo sheet**, a `KitSheet`
+drawer with a title and a short body. Unknown Sheet ids are not
+rendered. User and system bubbles have no parts. See
+[ADR 0025](adr/0025-chat-bubble-parts.md). The composer stays on screen, over that scroll.
 Its placeholder is «Сообщение для» plus the open Bot’s display name.
 A `+` on the left is
 reserved for attachments and stays disabled. A send arrow in a circle

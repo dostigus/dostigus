@@ -128,6 +128,12 @@ CREATE UNIQUE INDEX \`invites_token_hash_unique\` ON \`invites\` (\`token_hash\`
 CREATE INDEX \`invites_email_idx\` ON \`invites\` (\`email\`);
 `,
   },
+  {
+    id: '0009_message_parts',
+    sql: `
+ALTER TABLE \`messages\` ADD \`parts_json\` text DEFAULT '[]' NOT NULL;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

@@ -1,7 +1,9 @@
 import type { OpenedStore } from '@dostigus/db'
+import type { ChatPart } from '@dostigus/shared'
 import type { HostSessionUser } from './owner-auth'
 import { createBot, findOwnerSecretByLogin, insertMessage, listBots, listMessages, ownerExists } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
+import { HOST_DEMO_SHEET_ID } from '../../app/utils/host-sheets'
 import {
   loginHostAccount,
   OwnerAuthError,
@@ -29,6 +31,12 @@ export const PREVIEW_TALL_PREFIX = 'Preview layout line '
 export const PREVIEW_TALL_LINE_COUNT = 32
 
 /**
+ * Assistant line inserted by `?parts=1`. The prefix marks a bubble already filled.
+ * Markdown stays in content. The button and status live in parts.
+ */
+export const PREVIEW_PARTS_PREFIX = 'Preview Kit parts.'
+
+/**
  * On only for `nuxt dev` with `DOSTIGUS_PREVIEW_SEED=1`.
  * A production Host stays closed (404).
  */
@@ -46,6 +54,14 @@ export function previewTallRequested(value: unknown): boolean {
  * HEAD ignores this query and still points at the fixture Bot.
  */
 export function previewMembersRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
+/**
+ * `?parts=1` on GET. Inserts one assistant line with a Kit button and a status.
+ * HEAD ignores this query.
+ */
+export function previewPartsRequested(value: unknown): boolean {
   return previewQueryOn(value)
 }
 
@@ -91,13 +107,15 @@ export function readPreviewSeedHead(store: OpenedStore): PreviewSeedHeadResult {
  * Ensure the preview Owner and the fixture preview Bot (`preview`).
  * A rename or a newer Bot does not replace that Chat.
  * `tall` appends preview layout lines once.
+ * `parts` appends one assistant line with Kit parts once, after the tall thread
+ * so that line stays at the bottom of the Chat.
  * Throws OwnerAuthError 401 when the Store Owner is not this login.
  */
 export async function ensurePreviewCluster(
   store: OpenedStore,
   hashPassword: (password: string) => Promise<string>,
   verifyPassword: (hash: string, password: string) => Promise<boolean>,
-  options: { tall?: boolean } = {},
+  options: { tall?: boolean, parts?: boolean } = {},
 ): Promise<{ user: HostSessionUser, botId: string }> {
   const user = await ensurePreviewOwner(store, hashPassword, verifyPassword)
   const botId = stablePreviewBotId(listBots(store))
@@ -105,7 +123,50 @@ export async function ensurePreviewCluster(
   if (options.tall) {
     ensurePreviewTallThread(store, botId, user.id)
   }
+  if (options.parts) {
+    ensurePreviewPartsLine(store, botId)
+  }
   return { user, botId }
+}
+
+export function previewPartsContent(): string {
+  return `${PREVIEW_PARTS_PREFIX}\n\nA **button** in this bubble opens a Sheet.`
+}
+
+export function previewParts(): ChatPart[] {
+  return [
+    { kind: 'status', label: 'Preview', tone: 'neutral' },
+    {
+      kind: 'button',
+      label: 'Open demo',
+      action: { type: 'openSheet', sheetId: HOST_DEMO_SHEET_ID },
+    },
+  ]
+}
+
+/**
+ * Append the parts line once. The timestamp is 1ms after the latest line
+ * so Chat order stays stable when inserts share `Date.now()`.
+ */
+export function ensurePreviewPartsLine(store: OpenedStore, botId: string): void {
+  const existing = listMessages(store, botId)
+  if (existing.some((message) => message.content.startsWith(PREVIEW_PARTS_PREFIX))) {
+    return
+  }
+  let at = 0
+  for (const message of existing) {
+    const ms = Date.parse(message.createdAt)
+    if (ms > at) {
+      at = ms
+    }
+  }
+  const message = insertMessage(store, {
+    botId,
+    role: 'assistant',
+    content: previewPartsContent(),
+    parts: previewParts(),
+  })
+  store.sqlite.prepare('UPDATE messages SET created_at = ? WHERE id = ?').run(at + 1, message.id)
 }
 
 export function previewTallContent(index: number): string {

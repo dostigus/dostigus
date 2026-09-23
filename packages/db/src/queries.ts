@@ -13,6 +13,7 @@ import {
   isModelTier,
   MODEL_TIERS,
   normalizeBotAccentHex,
+  serializeChatParts,
   trimOrUndefined,
 } from '@dostigus/shared'
 import { toBot, toMessage } from './map'
@@ -209,9 +210,17 @@ export function requireBot(store: OpenedStore, id: string): Bot {
 
 function insertMessageRow(
   store: OpenedStore,
-  input: { botId: string, role: MessageRole, content: string, personId?: string | null },
+  input: {
+    botId: string
+    role: MessageRole
+    content: string
+    personId?: string | null
+    /** Assistant Kit parts. User and system lines store `[]`. See ADR 0025. */
+    parts?: unknown
+  },
 ): Message {
   const personId = input.personId ?? null
+  const partsJson = serializeChatParts(input.role, input.parts)
   const row: MessageRecord = {
     id: randomUUID(),
     bot_id: input.botId,
@@ -219,17 +228,25 @@ function insertMessageRow(
     content: input.content,
     created_at: nowMs(),
     person_id: personId,
+    parts_json: partsJson,
   }
   store.sqlite.prepare(`
-    INSERT INTO messages (id, bot_id, role, content, created_at, person_id)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(row.id, row.bot_id, row.role, row.content, row.created_at, personId)
+    INSERT INTO messages (id, bot_id, role, content, created_at, person_id, parts_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(row.id, row.bot_id, row.role, row.content, row.created_at, personId, partsJson)
   return toMessage(row)
 }
 
 export function insertMessage(
   store: OpenedStore,
-  input: { botId: string, role: MessageRole, content: string, personId?: string | null },
+  input: {
+    botId: string
+    role: MessageRole
+    content: string
+    personId?: string | null
+    /** Assistant Kit parts. Ignored for user and system. See ADR 0025. */
+    parts?: unknown
+  },
 ): Message {
   requireBot(store, input.botId)
   return insertMessageRow(store, {
@@ -237,13 +254,14 @@ export function insertMessage(
     role: input.role,
     content: normalizeContent(input.content),
     personId: input.personId ?? null,
+    parts: input.parts,
   })
 }
 
 export function listMessages(store: OpenedStore, botId: string): Message[] {
   requireBot(store, botId)
   const rows = store.sqlite.prepare(`
-    SELECT id, bot_id, role, content, created_at, person_id
+    SELECT id, bot_id, role, content, created_at, person_id, parts_json
     FROM messages
     WHERE bot_id = ?
     ORDER BY created_at ASC

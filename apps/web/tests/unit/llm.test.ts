@@ -89,6 +89,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
         content: 'Hello — I\'m Notes later.',
         createdAt: new Date().toISOString(),
         personId: null,
+        parts: [],
       },
       {
         id: 'm1',
@@ -97,6 +98,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
         content: 'Remember things I type',
         createdAt: new Date().toISOString(),
         personId: null,
+        parts: [],
       },
     ],
     manifest: {

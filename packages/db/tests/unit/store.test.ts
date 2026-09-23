@@ -57,6 +57,7 @@ it('creates a Bot with default name, strong Model tier, and greeting', () => {
   })
   expect(greeting.role).toBe('assistant')
   expect(greeting.content).toBe(botGreetingContent(DEFAULT_BOT_NAME))
+  expect(greeting.parts).toEqual([])
   expect(listMessages(store, bot.id)).toHaveLength(1)
 })
 
@@ -107,6 +108,55 @@ it('persists Chat messages and lists Bots newest first', () => {
     'Help me sort notes later',
   ])
   expect(listMessages(store, older.id)).toHaveLength(1)
+})
+
+it('stores Kit parts on an assistant line and drops them everywhere else', () => {
+  const store = memoryStore()
+  const { bot } = createBot(store, { name: 'Notes' })
+  const parts = [
+    { kind: 'status' as const, label: 'Preview', tone: 'neutral' as const },
+    {
+      kind: 'button' as const,
+      label: 'Open demo',
+      action: { type: 'openSheet' as const, sheetId: 'demo' },
+    },
+    { kind: 'table' as const, label: 'Later' },
+  ]
+  const assistant = insertMessage(store, {
+    botId: bot.id,
+    role: 'assistant',
+    content: 'Open the Sheet.',
+    parts,
+  })
+  expect(assistant.parts).toEqual([
+    { kind: 'status', label: 'Preview', tone: 'neutral' },
+    { kind: 'button', label: 'Open demo', action: { type: 'openSheet', sheetId: 'demo' } },
+  ])
+
+  const user = insertMessage(store, {
+    botId: bot.id,
+    role: 'user',
+    content: 'hi',
+    parts,
+  })
+  expect(user.parts).toEqual([])
+
+  const system = insertMessage(store, {
+    botId: bot.id,
+    role: 'system',
+    content: 'note',
+    parts,
+  })
+  expect(system.parts).toEqual([])
+
+  store.sqlite.prepare('UPDATE messages SET parts_json = ? WHERE id = ?').run('not-json', assistant.id)
+  store.sqlite.prepare('UPDATE messages SET parts_json = ? WHERE id = ?').run(
+    JSON.stringify(parts),
+    user.id,
+  )
+  const listed = listMessages(store, bot.id)
+  expect(listed.find((message) => message.id === assistant.id)?.parts).toEqual([])
+  expect(listed.find((message) => message.id === user.id)?.parts).toEqual([])
 })
 
 it('does not insert a second greeting on first open', () => {

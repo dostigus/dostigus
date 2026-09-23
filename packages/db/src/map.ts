@@ -1,5 +1,6 @@
 import type { Bot, BotAccentHex, BotAvatarShape, Invite, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
 import {
+  chatPartsForRole,
   DEFAULT_AVATAR_COLOR,
   DEFAULT_MODEL_TIER,
   isModelTier,
@@ -27,6 +28,7 @@ export type MessageRecord = {
   content: string
   created_at: number
   person_id: string | null
+  parts_json: string
 }
 
 export type MemberRecord = {
@@ -139,5 +141,6 @@ export function toMessage(row: MessageRecord): Message {
     content: row.content,
     createdAt: new Date(row.created_at).toISOString(),
     personId: row.person_id ?? null,
+    parts: chatPartsForRole(row.role, row.parts_json),
   }
 }

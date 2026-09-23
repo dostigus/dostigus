@@ -31,7 +31,9 @@ What the running Cluster does today:
   default `goose` (Bot mark), `avatarColor` default `#1F7AE5` /
   `--bot-accent-10`, optional `label` and `description` default empty,
   empty skills/modules),
-  `messages` (`botId`, role `user` \| `assistant` \| `system`, content),
+  `messages` (`botId`, role `user` \| `assistant` \| `system`, content,
+  and `parts_json` for assistant Kit parts — a button and a status;
+  user and system stay `[]`),
   `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
   default Model tier, optional model overrides), `owners` (exactly one
   Cluster Owner: unique email and/or username, password hash, createdAt),
@@ -107,8 +109,11 @@ What the running Cluster does today:
   Settings. Delete is not on this Sheet. Members may read the fields.
   Bubbles stay unlabeled. Assistant bubbles render a safe Markdown subset
   (bold, italic, code, lists, and http(s) links) through `KitMarkdown`.
-  User and system bubbles stay plain pre-wrap text. See
-  [ADR 0022](adr/0022-chat-assistant-markdown.md). The composer stays on screen. Sidebar Bot
+  An assistant line may also carry Kit parts under that body: a button
+  that opens a registered Sheet (`KitSheet`), and a status chip. User
+  and system bubbles stay plain pre-wrap text and have no parts. See
+  [ADR 0022](adr/0022-chat-assistant-markdown.md) and
+  [ADR 0025](adr/0025-chat-bubble-parts.md). The composer stays on screen. Sidebar Bot
   rows and the Chat pill show the Manifest Bot mark (`KitBotAvatar`
   idle); the pill greets on open, listens at the composer, thinks while a
   reply is in flight, speaks and cheers it when it lands, tilts on a failed
@@ -180,9 +185,11 @@ What the running Cluster does today:
 - Person Threads (`dm`, `group`, `room`) and Bot visibility (`shared` |
   `private`) are decided in
   [ADR 0024](adr/0024-threads-and-bot-visibility.md). They stay out of
-  this Host until that ADR's milestones. Today the Host still has one
-  Chat timeline per Bot and no visibility field. The Owner still creates
-  and deletes every Bot. An Invite still does not change visibility.
+  this Host until that ADR's later milestones. Bubble parts are in
+  this Host ([ADR 0025](adr/0025-chat-bubble-parts.md)). Today the Host
+  still has one Chat timeline per Bot and no visibility field. The Owner
+  still creates and deletes every Bot. An Invite still does not change
+  visibility.
 
 `pnpm install` and `pnpm check` must stay green.
 
@@ -201,19 +208,20 @@ and [`docs/deploy.md`](deploy.md)).
 - Marketplace
 - Share link, guests, QR
 - Person Threads (`dm`, `group`, `room`) and Bot visibility. Decided in
-  [ADR 0024](adr/0024-threads-and-bot-visibility.md). Current Host code
-  waits for that ADR's order: bubble parts, then visibility and
-  per-person bot-threads, then `dm` / `group` / `room`
+  [ADR 0024](adr/0024-threads-and-bot-visibility.md). Bubble parts shipped
+  in [ADR 0025](adr/0025-chat-bubble-parts.md). Still later: a Kitchen
+  Module demo, then visibility and per-person bot-threads, then
+  `dm` / `group` / `room`
 - Sending an Invite by SMTP (the Owner copies the link)
 - Roles beyond Owner and Member, hard-delete of a Member
 - OAuth, passkeys, email verify, password reset
 - Mobile native
 - Per-bot domains (the `meal.kosarev.space` pattern is temporary and to be replaced)
 - Arbitrary in-cluster sandbox code
-- Chat message `parts[]`, inline buttons, and status chips inside a bubble.
-  Assistant Markdown is [ADR 0022](adr/0022-chat-assistant-markdown.md);
-  richer parts are the first milestone in
-  [ADR 0024](adr/0024-threads-and-bot-visibility.md)
+- Full Card catalog inside a bubble (tables, forms). A button and a
+  status chip on an assistant bubble are
+  [ADR 0025](adr/0025-chat-bubble-parts.md). Assistant Markdown stays
+  [ADR 0022](adr/0022-chat-assistant-markdown.md)
 - Managed/cloud hosting (optional later; not the default)
 
 ## Success for later MVPs (not this PR)

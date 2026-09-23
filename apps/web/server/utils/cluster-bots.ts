@@ -25,6 +25,12 @@ export type ClusterMessageInput = {
   role: MessageRole
   content: string
   personId?: string | null
+  /**
+   * Assistant Kit parts. The Chat reply path and `dostigus_messages_create`
+   * leave this empty. A later tool calls `appendClusterMessage` with parts.
+   * See ADR 0025.
+   */
+  parts?: unknown
 }
 
 export function listClusterBots(store: OpenedStore) {
