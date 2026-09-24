@@ -33,6 +33,13 @@ export const HTTP_MCP_TOOLS = [
 
 export type HttpMcpTool = typeof HTTP_MCP_TOOLS[number]
 
+/** Artifact put. On `/mcp`, Chat slim, and Wake. No get tool. See ADR 0034. */
+export const ARTIFACT_MCP_TOOLS = [
+  'dostigus_artifacts_put',
+] as const
+
+export type ArtifactMcpTool = typeof ARTIFACT_MCP_TOOLS[number]
+
 /** Platform MCP surface tool names (Host + Cluster Store). */
 export const SKILL_MCP_TOOLS = [
   'dostigus_skills_list',
@@ -75,6 +82,7 @@ export const PLATFORM_MCP_TOOLS = [
   'dostigus_messages_create',
   ...SCHEDULE_MCP_TOOLS,
   ...HTTP_MCP_TOOLS,
+  ...ARTIFACT_MCP_TOOLS,
   ...TURN_MCP_TOOLS,
   ...KITCHEN_MCP_TOOLS,
 ] as const
@@ -107,6 +115,7 @@ export const CHAT_SLIM_MCP_TOOLS = [
   'dostigus_schedules_delete',
   'dostigus_cluster_timezone_get',
   'dostigus_http_get',
+  'dostigus_artifacts_put',
   'dostigus_skills_list',
   'dostigus_skills_read',
 ] as const satisfies readonly ChatMcpTool[]
@@ -136,6 +145,7 @@ export const CREATOR_EXPAND_MCP_TOOLS = [
 /** Wake: narrower than user slim. No Schedule writes, no bots_*, no expand. */
 export const WAKE_CHAT_MCP_TOOLS = [
   'dostigus_http_get',
+  'dostigus_artifacts_put',
   'dostigus_skills_list',
   'dostigus_skills_read',
   'dostigus_schedules_list',

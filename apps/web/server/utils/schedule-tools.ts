@@ -1,5 +1,6 @@
 import type { OpenedStore, Schedule, ScheduleCadence, ScheduleWeekday } from '@dostigus/db'
 import type { BotViewer } from '@dostigus/shared'
+import type { ArtifactTurn } from './artifacts'
 import type { HostHttpLookup } from './http-get'
 import process from 'node:process'
 import {
@@ -27,6 +28,9 @@ export type ScheduleToolContext = {
   lookup?: HostHttpLookup
   /** Bot HTTP egress env. Production leaves this unset (process.env). */
   env?: NodeJS.ProcessEnv
+  personId?: string
+  wake?: boolean
+  artifacts?: ArtifactTurn
 }
 
 function actorMayManage(schedulePersonId: string, viewer?: BotViewer): boolean {

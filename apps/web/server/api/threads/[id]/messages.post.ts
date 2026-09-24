@@ -10,7 +10,8 @@ import {
   listMessengerBots,
   listThreadMessages,
 } from '@dostigus/db'
-import { canEditBot, chatExpandKeywordHit, mentionedRoomBot } from '@dostigus/shared'
+import { canEditBot, chatExpandKeywordHit, mentionedRoomBot, parseArtifactIds } from '@dostigus/shared'
+import { annotateHistoryWithArtifacts, attachTurnArtifacts, attachUserArtifacts } from '../../../utils/artifacts'
 import {
   clearChatActivityPhase,
   setChatActivityPhase,
@@ -27,6 +28,7 @@ import {
 
 type PostBody = {
   content?: string
+  artifactIds?: unknown
 }
 
 export default defineEventHandler(async (event) => {
@@ -41,11 +43,16 @@ export default defineEventHandler(async (event) => {
   try {
     const store = useStore()
     const thread = getMessengerThread(store, threadId, personId)
+    const artifactIds = parseArtifactIds(body?.artifactIds)
     const user = appendMessengerUserLine(store, {
       threadId,
       personId,
       content: body?.content ?? '',
+      allowEmpty: artifactIds.length > 0,
     })
+    if (artifactIds.length > 0) {
+      user.artifacts = attachUserArtifacts(store, user.id, artifactIds, personId)
+    }
     if (thread.kind !== 'room') {
       return { user: present(store, user), assistant: null, via: null }
     }
@@ -66,7 +73,7 @@ export default defineEventHandler(async (event) => {
       trigger: 'mention',
     })
     setChatActivityPhase(threadId, activityBotId, 'thinking')
-    const history = listThreadMessages(store, threadId).map((message) => {
+    const history = annotateHistoryWithArtifacts(listThreadMessages(store, threadId)).map((message) => {
       if (message.role !== 'user' || !message.personId) {
         return message
       }
@@ -110,6 +117,9 @@ export default defineEventHandler(async (event) => {
       content: reply.content,
       parts: turn.cards.parts(),
     })
+    if (turn.artifacts.ids.length > 0) {
+      assistant.artifacts = attachTurnArtifacts(store, assistant.id, turn.artifacts.ids)
+    }
     settleChatTurn(store, turnId, settleFromReply({
       via: reply.via,
       aborted: requestAborted(event),

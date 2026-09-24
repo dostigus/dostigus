@@ -200,6 +200,37 @@ export const clusterSettings = sqliteTable('cluster_settings', {
   updatedAt: integer('updated_at').notNull(),
 })
 
+/**
+ * Persisted Cluster file object. Bytes live on the volume; this row is meta.
+ * See ADR 0034.
+ */
+export const artifacts = sqliteTable('artifacts', {
+  id: text('id').primaryKey(),
+  filename: text('filename').notNull(),
+  mime: text('mime').notNull(),
+  byteSize: integer('byte_size').notNull(),
+  contentHash: text('content_hash').notNull(),
+  actorPersonId: text('actor_person_id').notNull(),
+  createdAt: integer('created_at').notNull(),
+  uploadId: text('upload_id'),
+  status: text('status').notNull().default('complete'),
+  /** Set on the first message join. Null means never joined (pending). */
+  lastJoinedAt: integer('last_joined_at'),
+}, (table) => [
+  index('artifacts_upload_id_hash_idx').on(table.uploadId, table.contentHash),
+  index('artifacts_status_created_at_idx').on(table.status, table.createdAt),
+])
+
+/** An Artifact appearing on a Chat message. Attachment is this join. */
+export const messageArtifacts = sqliteTable('message_artifacts', {
+  messageId: text('message_id').notNull().references(() => messages.id, { onDelete: 'cascade' }),
+  artifactId: text('artifact_id').notNull().references(() => artifacts.id, { onDelete: 'cascade' }),
+  createdAt: integer('created_at').notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.messageId, table.artifactId] }),
+  index('message_artifacts_artifact_id_idx').on(table.artifactId),
+])
+
 export type BotRow = typeof bots.$inferSelect
 export type BotGrantRow = typeof botGrants.$inferSelect
 export type MessageRow = typeof messages.$inferSelect
@@ -212,3 +243,5 @@ export type InviteRow = typeof invites.$inferSelect
 export type ScheduleRow = typeof schedules.$inferSelect
 export type TurnRow = typeof turns.$inferSelect
 export type ClusterSettingsRow = typeof clusterSettings.$inferSelect
+export type ArtifactRow = typeof artifacts.$inferSelect
+export type MessageArtifactRow = typeof messageArtifacts.$inferSelect

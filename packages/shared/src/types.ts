@@ -1,5 +1,6 @@
 /** Stable glossary types — names match CONTEXT.md. Do not invent synonyms. */
 
+import type { Artifact } from './artifacts'
 import type { BotAccentHex, BotAvatarShape } from './bot-avatar'
 import type { ChatPart } from './chat-parts'
 
@@ -151,6 +152,11 @@ export type Message = {
    * See ADR 0025.
    */
   parts: ChatPart[]
+  /**
+   * Joined Artifacts on this line. Empty when none. Not `parts_json`.
+   * See ADR 0034.
+   */
+  artifacts?: Artifact[]
 }
 
 export type Orchestrator = Bot & {

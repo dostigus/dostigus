@@ -1,6 +1,7 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { BotViewer, MessageRole } from '@dostigus/shared'
 import {
+  artifactIdsJoinedToBot,
   createBot,
   deleteBot,
   deleteBotSkill,
@@ -27,6 +28,7 @@ import {
   skillCatalogDescription,
   skillCatalogEntry,
 } from '@dostigus/shared'
+import { gcOrphansAfterUnlink } from './artifacts'
 
 export type ClusterBotInput = {
   name?: string
@@ -57,6 +59,7 @@ export type ClusterMessageInput = {
   parts?: unknown
   /** The person whose bot-thread this line belongs on. */
   viewer?: BotViewer
+  allowEmpty?: boolean
 }
 
 function assertVisible(store: OpenedStore, id: string, viewer: BotViewer) {
@@ -187,7 +190,9 @@ export function deleteClusterBot(store: OpenedStore, id: string, viewer?: BotVie
       throw new StoreError('Only the Owner can change this', 403)
     }
   }
+  const orphanIds = artifactIdsJoinedToBot(store, id)
   deleteBot(store, id)
+  gcOrphansAfterUnlink(store, orphanIds)
   return { ok: true as const }
 }
 
@@ -240,7 +245,10 @@ export function listClusterMessages(store: OpenedStore, botId: string, viewer?: 
 }
 
 export function appendClusterMessage(store: OpenedStore, input: ClusterMessageInput) {
-  return insertMessage(store, input)
+  return insertMessage(store, {
+    ...input,
+    allowEmpty: input.allowEmpty === true,
+  })
 }
 
 export function withClusterStore<T>(fn: (store: OpenedStore) => T): T {

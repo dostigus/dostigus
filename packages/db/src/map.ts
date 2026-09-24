@@ -1,4 +1,4 @@
-import type { Bot, BotAccentHex, BotAvatarShape, Invite, Member, Message, MessageRole, ModelTier, Owner, Skill } from '@dostigus/shared'
+import type { Artifact, Bot, BotAccentHex, BotAvatarShape, Invite, Member, Message, MessageRole, ModelTier, Owner, Skill } from '@dostigus/shared'
 import {
   chatPartsForRole,
   DEFAULT_AVATAR_COLOR,
@@ -181,7 +181,7 @@ export function toMember(row: MemberRecord): Member {
   }
 }
 
-export function toMessage(row: MessageRecord): Message {
+export function toMessage(row: MessageRecord, artifacts: Artifact[] = []): Message {
   return {
     id: row.id,
     botId: row.bot_id,
@@ -190,5 +190,29 @@ export function toMessage(row: MessageRecord): Message {
     createdAt: new Date(row.created_at).toISOString(),
     personId: row.person_id ?? null,
     parts: chatPartsForRole(row.role, row.parts_json),
+    artifacts,
+  }
+}
+
+export type ArtifactRecord = {
+  id: string
+  filename: string
+  mime: string
+  byte_size: number
+  content_hash: string
+  actor_person_id: string
+  created_at: number
+  upload_id: string | null
+  status: string
+  last_joined_at: number | null
+}
+
+export function toArtifact(row: ArtifactRecord): Artifact {
+  return {
+    id: row.id,
+    filename: row.filename,
+    mime: row.mime,
+    byteSize: row.byte_size,
+    createdAt: new Date(row.created_at).toISOString(),
   }
 }

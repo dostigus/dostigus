@@ -241,7 +241,7 @@ export function listMessengerBots(store: OpenedStore, threadId: string, personId
 
 export function appendMessengerUserLine(
   store: OpenedStore,
-  input: { threadId: string, personId: string, content: string },
+  input: { threadId: string, personId: string, content: string, allowEmpty?: boolean },
 ) {
   getMessengerThread(store, input.threadId, input.personId)
   return insertThreadLine(store, {
@@ -250,6 +250,7 @@ export function appendMessengerUserLine(
     content: input.content,
     personId: input.personId,
     botId: null,
+    allowEmpty: input.allowEmpty === true,
   })
 }
 

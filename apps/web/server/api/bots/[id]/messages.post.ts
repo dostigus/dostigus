@@ -1,7 +1,8 @@
 import process from 'node:process'
 import { getLlmGatewaySettings, listBotSkills } from '@dostigus/db'
-import { canEditBot, chatExpandKeywordHit } from '@dostigus/shared'
+import { canEditBot, chatExpandKeywordHit, parseArtifactIds } from '@dostigus/shared'
 import { previewQuietHoldMs, waitPreviewQuietHold } from '../../../../app/utils/preview-hold'
+import { annotateHistoryWithArtifacts, attachTurnArtifacts, attachUserArtifacts } from '../../../utils/artifacts'
 import {
   clearChatActivityPhase,
   messageThreadId,
@@ -19,6 +20,7 @@ import {
 
 type PostBody = {
   content?: string
+  artifactIds?: unknown
 }
 
 export default defineEventHandler(async (event) => {
@@ -34,13 +36,18 @@ export default defineEventHandler(async (event) => {
     const store = useStore()
     const viewer = viewerFromUser(session.user)
     const { bot } = getClusterBot(store, botId, viewer)
+    const artifactIds = parseArtifactIds(body?.artifactIds)
     const user = appendClusterMessage(store, {
       botId,
       role: 'user',
       content: body?.content ?? '',
       personId,
       viewer,
+      allowEmpty: artifactIds.length > 0,
     })
+    if (artifactIds.length > 0) {
+      user.artifacts = attachUserArtifacts(store, user.id, artifactIds, personId)
+    }
     activityThreadId = messageThreadId(store, user.id)
     turnId = beginChatTurn(store, {
       threadId: activityThreadId,
@@ -50,6 +57,7 @@ export default defineEventHandler(async (event) => {
     })
     setChatActivityPhase(activityThreadId, bot.id, 'thinking')
     const { messages: history } = listClusterMessages(store, botId, viewer)
+    const llmHistory = annotateHistoryWithArtifacts(history)
     const canEditManifest = canEditBot(bot, viewer)
     const expand = chatExpandKeywordHit(user.content)
     const turn = openChatTurn({
@@ -64,7 +72,7 @@ export default defineEventHandler(async (event) => {
       botName: bot.name,
       botId: bot.id,
       modelTier: bot.manifest.modelTier,
-      history,
+      history: llmHistory,
       manifest: bot.manifest,
       skills: listBotSkills(store, bot.id),
       stored: getLlmGatewaySettings(store),
@@ -95,6 +103,9 @@ export default defineEventHandler(async (event) => {
       parts: turn.cards.parts(),
       viewer,
     })
+    if (turn.artifacts.ids.length > 0) {
+      assistant.artifacts = attachTurnArtifacts(store, assistant.id, turn.artifacts.ids)
+    }
     settleChatTurn(store, turnId, settleFromReply({
       via: reply.via,
       aborted: requestAborted(event),

@@ -90,6 +90,10 @@
             :parts="hostChatParts(message.parts)"
             @open-sheet="onOpenSheet"
           />
+          <ChatMessageArtifacts
+            v-if="message.artifacts?.length"
+            :artifacts="message.artifacts"
+          />
         </li>
         <li
           v-if="showPurpose"
@@ -142,6 +146,13 @@
         </li>
       </ol>
 
+      <div
+        v-if="dropActive"
+        class="drop-mask"
+        aria-hidden="true"
+      >
+        Drop files here
+      </div>
       <form
         ref="composerEl"
         class="composer"
@@ -168,12 +179,21 @@
             class="composer-row"
             :class="{ multiline: composerMultiline }"
           >
+            <input
+              ref="fileInputEl"
+              type="file"
+              class="sr-only"
+              multiple
+              accept="image/*,application/pdf,text/plain,text/markdown,.md,.txt,.pdf"
+              @change="onFileInput"
+            >
             <button
               type="button"
               class="attach"
-              disabled
-              aria-label="Attachments soon"
-              title="Soon"
+              :disabled="!bot"
+              aria-label="Attach"
+              title="Attach"
+              @click="pickFiles()"
             >
               <span aria-hidden="true">+</span>
             </button>
@@ -187,15 +207,16 @@
                 :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
                 :disabled="!bot"
                 @keydown.enter.exact.prevent="send"
+                @paste="onAttachPaste"
                 @focus="listening = true"
                 @blur="listening = false"
               />
             </label>
             <button
-              v-if="draft.trim()"
+              v-if="draft.trim() || canSendAttachments"
               type="submit"
               class="send"
-              :disabled="sending || !bot"
+              :disabled="sending || !bot || attachmentsUploading"
               aria-label="Send"
             >
               <svg
@@ -206,6 +227,34 @@
               </svg>
             </button>
           </div>
+          <ul
+            v-if="pendingAttachments.length"
+            class="pending-chips"
+          >
+            <li
+              v-for="item in pendingAttachments"
+              :key="item.localId"
+              class="pending-chip"
+              :class="item.status"
+            >
+              <img
+                v-if="item.previewUrl"
+                :src="item.previewUrl"
+                :alt="item.filename"
+                class="pending-thumb"
+              >
+              <span class="pending-name">{{ item.filename }}</span>
+              <span class="pending-meta">{{ formatPendingBytes(item.byteSize) }}</span>
+              <button
+                type="button"
+                class="pending-remove"
+                :aria-label="`Remove ${item.filename}`"
+                @click="removeAttachment(item.localId)"
+              >
+                ×
+              </button>
+            </li>
+          </ul>
         </div>
       </form>
 
@@ -289,6 +338,22 @@ useHead({
   title: computed(() => bot.value ? `Dostigus · ${bot.value.name}` : 'Dostigus · Chat'),
 })
 
+const {
+  items: pendingAttachments,
+  fileInput: fileInputEl,
+  dropActive,
+  readyIds: readyArtifactIds,
+  uploading: attachmentsUploading,
+  canSendAttachments,
+  formatArtifactBytes: formatPendingBytes,
+  pick: pickFiles,
+  onFileInput,
+  remove: removeAttachment,
+  onPaste: onAttachPaste,
+  clear: clearAttachments,
+  bindWindow: bindAttachmentWindow,
+  unbindWindow: unbindAttachmentWindow,
+} = useComposerAttachments()
 const draft = ref('')
 const draftEl = ref<HTMLTextAreaElement | null>(null)
 const pageEl = ref<HTMLElement | null>(null)
@@ -599,6 +664,7 @@ function syncPillClearance() {
 }
 
 onMounted(() => {
+  bindAttachmentWindow()
   greetOnOpen()
   measureComposer()
   const el = draftEl.value
@@ -633,6 +699,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  unbindAttachmentWindow()
+  clearAttachments()
   clearMarkTimers()
   threadScrollEl?.removeEventListener('scroll', onThreadScroll)
   threadScrollEl = null
@@ -656,6 +724,7 @@ watch(botId, () => {
   sending.value = false
   sendError.value = ''
   draft.value = ''
+  clearAttachments()
   settingsOpen.value = false
   pinAfterLayout()
 })
@@ -703,7 +772,7 @@ function isMine(message: TimelineLine): boolean {
 }
 
 function send() {
-  void deliver(draft.value, null)
+  void deliver(draft.value, null, [...readyArtifactIds.value])
 }
 
 function onPurpose(content: string) {
@@ -715,12 +784,12 @@ function retry() {
   if (!failed?.failed || sending.value) {
     return
   }
-  void deliver(failed.content, failed)
+  void deliver(failed.content, failed, failed.artifacts?.map((item) => item.id) ?? [])
 }
 
-async function deliver(raw: string, existing: TimelineLine | null) {
+async function deliver(raw: string, existing: TimelineLine | null, artifactIds: string[] = []) {
   const content = raw.trim()
-  if (!content || sending.value || !bot.value) {
+  if ((!content && artifactIds.length === 0) || sending.value || !bot.value || attachmentsUploading.value) {
     return
   }
   const targetId = bot.value.id
@@ -738,6 +807,15 @@ async function deliver(raw: string, existing: TimelineLine | null) {
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     personId: user.value?.id ?? null,
     parts: [],
+    artifacts: existing?.artifacts ?? pendingAttachments.value
+      .filter((item) => item.artifactId && artifactIds.includes(item.artifactId))
+      .map((item) => ({
+        id: item.artifactId!,
+        filename: item.filename,
+        mime: item.mime,
+        byteSize: item.byteSize,
+        createdAt: new Date().toISOString(),
+      })),
     authorName: user.value?.displayName ?? null,
     pending: true,
     failed: false,
@@ -751,11 +829,12 @@ async function deliver(raw: string, existing: TimelineLine | null) {
       query: import.meta.dev && previewHoldRequested(route.query.hold)
         ? { hold: '1' }
         : undefined,
-      body: { content },
+      body: { content, artifactIds },
     })
     if (botId.value !== targetId) {
       return
     }
+    clearAttachments()
     await Promise.all([refresh(), refreshBot(), refreshBots(), refreshThreads()])
     optimistic.value = null
     if (messages.value.length > before) {
@@ -1185,6 +1264,72 @@ async function onBotSaved() {
 .attach:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.drop-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--bg-chat) 55%, transparent);
+  color: var(--text);
+  font-weight: 600;
+  border: 2px dashed color-mix(in srgb, var(--accent) 55%, var(--line));
+}
+
+.pending-chips {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0 0.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.pending-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.25rem 0.4rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 0.8rem;
+}
+
+.pending-chip.error {
+  border-color: var(--accent);
+}
+
+.pending-thumb {
+  width: 1.4rem;
+  height: 1.4rem;
+  object-fit: cover;
+  border-radius: 0.3rem;
+}
+
+.pending-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 8rem;
+}
+
+.pending-meta {
+  color: var(--text-muted);
+}
+
+.pending-remove {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
 }
 
 .send {

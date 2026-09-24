@@ -1,4 +1,23 @@
 export {
+  artifactIdsJoinedToBot,
+  artifactJoinCount,
+  assertAttachableArtifacts,
+  attachArtifactsToMessages,
+  deleteArtifactRows,
+  findArtifactByUpload,
+  getArtifact,
+  getCompleteArtifact,
+  insertArtifactRow,
+  joinMessageArtifacts,
+  listOrphanArtifactIds,
+  listPartialArtifactIds,
+  listPendingArtifactIds,
+  markArtifactComplete,
+  personMayReadArtifact,
+  sumArtifactBytes,
+  toPublicArtifact,
+} from './artifacts'
+export {
   type BotGrant,
   grantBot,
   grantBotToCurrentMembers,
@@ -34,6 +53,7 @@ export {
   saveKitchenRecipe,
 } from './kitchen'
 export {
+  type ArtifactRecord,
   avatarColorFromRow,
   avatarShapeFromRow,
   type BotRecord,
@@ -43,6 +63,7 @@ export {
   modelTierFromRow,
   type OwnerRecord,
   skillsFromJson,
+  toArtifact,
   toBot,
   toInvite,
   toMember,
@@ -77,16 +98,18 @@ export {
   ownerExists,
   type OwnerSecret,
 } from './owners'
-export { COMPOSE_STORE_URL, DEFAULT_STORE_URL, storeFilePath } from './path'
+export { artifactsDirFromStoreUrl, COMPOSE_STORE_URL, DEFAULT_STORE_URL, storeFilePath } from './path'
 export {
   botThreadIdFor,
   createBot,
   deleteBot,
   ensureGreeting,
   getBot,
+  getClusterOwnerId,
   getLlmGatewaySettings,
   insertMessage,
   insertThreadLine,
+  listAccessibleThreadIds,
   listBots,
   listBotThreadMessages,
   listMessages,
@@ -136,7 +159,7 @@ export {
   updateSchedule,
   viewerForPerson,
 } from './schedules'
-export { type BotGrantRow, botGrants, type BotRow, bots, clusterSettings, type ClusterSettingsRow, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ScheduleRow, schedules, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads, type TurnRow, turns } from './schema'
+export { type ArtifactRow, artifacts, type BotGrantRow, botGrants, type BotRow, bots, clusterSettings, type ClusterSettingsRow, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageArtifactRow, messageArtifacts, type MessageRow, messages, type OwnerRow, owners, type ScheduleRow, schedules, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads, type TurnRow, turns } from './schema'
 export {
   deleteBotSkill,
   getBotSkill,

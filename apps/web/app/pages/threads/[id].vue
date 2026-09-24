@@ -73,6 +73,10 @@
             :parts="hostChatParts(message.parts)"
             @open-sheet="onOpenSheet"
           />
+          <ChatMessageArtifacts
+            v-if="message.artifacts?.length"
+            :artifacts="message.artifacts"
+          />
         </li>
         <li
           v-if="threadActivity"

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { authorizeMcpAgent, mcpToolsEnabled, readAuthorizationHeader } from '../../server/utils/mcp-auth'
-import { CHAT_MCP_TOOLS, CHAT_SLIM_MCP_TOOLS, CREATOR_EXPAND_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, HTTP_MCP_TOOLS, KITCHEN_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS, SCHEDULE_MCP_TOOLS, SKILL_MCP_TOOLS, SKILL_WRITE_MCP_TOOLS, TURN_MCP_TOOLS, WAKE_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
+import { ARTIFACT_MCP_TOOLS, CHAT_MCP_TOOLS, CHAT_SLIM_MCP_TOOLS, CREATOR_EXPAND_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, HTTP_MCP_TOOLS, KITCHEN_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS, SCHEDULE_MCP_TOOLS, SKILL_MCP_TOOLS, SKILL_WRITE_MCP_TOOLS, TURN_MCP_TOOLS, WAKE_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
 
 function event() {
   return { context: {} as { agentOk?: boolean } }
@@ -63,6 +63,7 @@ it('lists the Platform MCP surface tools', () => {
     'dostigus_messages_create',
     ...SCHEDULE_MCP_TOOLS,
     ...HTTP_MCP_TOOLS,
+    ...ARTIFACT_MCP_TOOLS,
     ...TURN_MCP_TOOLS,
     ...KITCHEN_MCP_TOOLS,
   ])
@@ -79,6 +80,7 @@ it('keeps delete off the Chat MCP tool list', () => {
     'dostigus_messages_create',
     ...SCHEDULE_MCP_TOOLS,
     ...HTTP_MCP_TOOLS,
+    ...ARTIFACT_MCP_TOOLS,
   ])
   expect(CHAT_MCP_TOOLS).not.toContain('dostigus_bots_delete')
   for (const name of KITCHEN_MCP_TOOLS) {
@@ -104,6 +106,7 @@ it('lets Member Chat manage Schedules, read timezone, and read Skills', () => {
     'dostigus_schedules_delete',
     'dostigus_cluster_timezone_get',
     'dostigus_http_get',
+    'dostigus_artifacts_put',
     'dostigus_skills_list',
     'dostigus_skills_read',
   ])
@@ -114,6 +117,10 @@ it('lets Member Chat manage Schedules, read timezone, and read Skills', () => {
   expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_bots_update')
   expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_bots_delete')
   expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_cluster_timezone_set')
+  expect(MEMBER_CHAT_MCP_TOOLS).toContain('dostigus_artifacts_put')
+  expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_artifacts_get')
+  expect(CHAT_MCP_TOOLS).not.toContain('dostigus_artifacts_get')
+  expect(WAKE_CHAT_MCP_TOOLS).not.toContain('dostigus_artifacts_get')
   expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_cluster_http_allowlist_get')
   expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_cluster_http_allowlist_set')
   expect(CHAT_MCP_TOOLS).toContain('dostigus_cluster_timezone_set')
@@ -144,6 +151,7 @@ it('gives a creator Member update and Skill write tools on expand', () => {
 it('narrows Wake Chat tools and keeps Skills list and read', () => {
   expect(WAKE_CHAT_MCP_TOOLS).toEqual([
     'dostigus_http_get',
+    'dostigus_artifacts_put',
     'dostigus_skills_list',
     'dostigus_skills_read',
     'dostigus_schedules_list',
