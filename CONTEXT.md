@@ -42,6 +42,16 @@ per-bot SPA.
 The lines a person reads and writes on a Thread in the Host.
 _Avoid_: messenger, inbox (unqualified).
 
+**Activity**:
+Ephemeral Chat status for an in-flight Bot reply on a Thread. One row
+in the thread: a glyph and a short line. Not a Chat line. Not stored.
+_Avoid_: typing indicator (unqualified), presence, spinner.
+
+**Activity phase**:
+Which Activity that row shows while the reply is in flight: `thinking`,
+`tool`, or `typing`. `connect` is a local preview row only.
+_Avoid_: tool name, status string, Store row.
+
 **Thread**:
 One conversation in the Cluster. It has participants and Chat lines.
 Kinds are labels, not separate products: `dm` (person and person),
@@ -219,6 +229,10 @@ _Avoid_: public share, invite (unqualified).
   their own bot-thread. A `room` is the Thread that includes a Bot and
   more than one person. `dm` and `group` are Threads among people. See
   [ADR 0024](docs/adr/0024-threads-and-bot-visibility.md).
+- While a Bot reply is in flight, Chat may show Activity on that Thread.
+  The Activity phase is ephemeral. The Owner and a Member see the same
+  row. See
+  [ADR 0021](docs/adr/0021-chat-activity-status.md) (amended 2026-09-24).
 - Module package data lives in the Cluster Store. Bot visibility does not
   give a Bot its own Store. A personal Bot uses the same MCP surface
   under that person's permissions.
