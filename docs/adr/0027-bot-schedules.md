@@ -3,12 +3,14 @@
 - Status: accepted
 - Date: 2026-09-24
 - Amended: 2026-09-24 — Schedule Chat Cards are [ADR 0030](0030-chat-cards-module-catalog.md). Schedule rows and the ticker stay this record. Weather stays out of this monorepo. A Marketplace of packages is later.
+- Amended: 2026-09-24 — Host UI: closet «Расписания» list, create Sheet, and detail Sheet are day-1. Optional `name` on the row. Run history is Turn journal rows ([ADR 0029](0029-turn-journal.md)). Card «Изменить» opens the same detail Sheet ([ADR 0030](0030-chat-cards-module-catalog.md)).
 
 Chat turns stay [ADR 0011](0011-chat-mcp-tool-loop.md). Activity phases
 stay [ADR 0021](0021-chat-activity-status.md). Bot visibility and
 bot-threads stay [ADR 0024](0024-threads-and-bot-visibility.md).
 Settings stay with the Owner
-([ADR 0012](0012-household-members.md)).
+([ADR 0012](0012-household-members.md)). The closet stays
+[ADR 0020](0020-bot-closet.md).
 
 ## Decision
 
@@ -22,11 +24,12 @@ is full create, read, update, delete, pause, and resume.
 
 | Field | Writer | Meaning |
 | --- | --- | --- |
-| cadence | the Bot, or the Owner | `daily` or `weekly` |
-| timeLocal | the Bot, or the Owner | `HH:MM` wall clock in the Cluster timezone |
-| daysOfWeek | the Bot, or the Owner | omitted for `daily`; the weekdays when `weekly` |
-| wakeText | the Bot supplies it; the Owner may set it | the string the Wake line shows |
-| paused / enabled | the Bot, or the Owner | paused rows do not fire |
+| name | the Bot, that person (Host UI), or the Owner | optional display name. Empty: the list falls back to truncated `wakeText` |
+| cadence | the Bot, that person (Host UI), or the Owner | `daily` or `weekly` |
+| timeLocal | the Bot, that person (Host UI), or the Owner | `HH:MM` wall clock in the Cluster timezone |
+| daysOfWeek | the Bot, that person (Host UI), or the Owner | omitted for `daily`; the weekdays when `weekly` |
+| wakeText | the Bot supplies it; that person (Host UI) or the Owner may set it | the string the Wake line shows |
+| paused / enabled | the Bot, that person (Host UI), or the Owner | paused rows do not fire |
 | next_run_at | Host | next fire instant |
 | last run | Host | last-run metadata |
 
@@ -96,12 +99,68 @@ Schedule is Self-settings
 ([ADR 0028](0028-bot-self-settings-via-chat.md)). The tools and this
 row stay this record. Manifest and Skills writes are not this scope.
 
-A Schedule list Sheet is later. It is not a day-1 must-have.
+`dostigus_schedules_create` and `dostigus_schedules_update` accept
+optional `name`. Empty or omitted `name` stores empty. The Host UI
+falls back to truncated `wakeText`.
+
+### Host UI (day-1)
+
+The closet Параметры Sheet ([ADR 0020](0020-bot-closet.md)) holds a
+**Расписания** block under the Manifest fields. Visual intent follows
+the Grok Bot Routines list and detail (named rows; detail with Active,
+cadence, instruction, run history). Dostigus labels stay the glossary:
+Schedule, Bot, Wake, Turn, Chat Card, Sheet, Параметры. Host copy is
+Russian («Расписания»). Docs stay English. Do not use Grok «Routines».
+
+Who sees the block: any person who can open the Bot. The list is that
+person's rows on this Bot `(botId, personId)`. Day-1 UI does not list
+another person's rows. Owner MCP scope for others stays as above.
+
+The block is a list, not a second API. Create, update, pause, resume,
+and delete write through the same Store handlers as
+`dostigus_schedules_*`. The Host UI does not add a separate JSON
+surface.
+
+**List.** Each row shows the display name, or a truncated `wakeText`
+when `name` is empty, plus a human cadence («каждый день · 08:00»).
+Paused rows are muted. `next_run_at` is not on the list. Pause is not
+a list toggle.
+
+Header **+** opens the create Sheet. Empty state: short text plus
+**Добавить** (and the header **+**).
+
+**Create Sheet.** Optional `name`, cadence `daily` \| `weekly`,
+`timeLocal`, `daysOfWeek` when weekly, and `wakeText`. Cadence UI is
+daily or weekly plus wall clock. No free crontab. After create, the
+Host returns to the list with the new row.
+
+**Detail Sheet.** Opened by tapping a list row, or by Chat Card
+**Изменить** ([ADR 0030](0030-chat-cards-module-catalog.md)). It
+holds: Active / pause toggle, cadence + time (+ days when weekly),
+`wakeText` (instruction), Run history, and danger **Удалить**. Pause
+and resume live only here. `next_run_at` may appear here; it is not
+required on day-1.
+
+**Run history.** Turn journal rows with `trigger` `wake` and this
+`scheduleId` ([ADR 0029](0029-turn-journal.md)). Empty copy: «Пока не
+было запусков». Day-1 does not add a runs table.
+
+Chat Schedule Cards stay
+([ADR 0030](0030-chat-cards-module-catalog.md)). Card **Изменить**
+opens this same detail Sheet. Card Pause still opens that Sheet. The
+Card does not pause by itself.
+
+Cluster timezone is unchanged.
+
+This record decides the UI. The code PR adds the Sheets and the
+`name` column.
 
 ### Ownership
 
 A Schedule is owned by `(botId, personId)`. That person manages it
-through the Bot in their turn. The Owner can always manage it.
+through the Bot in their turn, and through the closet list when they
+can open the Bot. The Owner can always manage it through MCP. Day-1
+closet UI still shows only the current person's rows.
 
 If that person's grant on the Bot is revoked, the Schedule row stays.
 Fires do not run until access is restored
@@ -136,6 +195,12 @@ time in one Cluster timezone, and a Wake that reuses the existing turn.
 The Bot asks for the Schedule by calling tools. The Host does not
 interpret the sentence.
 
+A later grill the same day promotes the deferred list into day-1 Host
+UI: a «Расписания» block in the closet, a create Sheet, and a detail
+Sheet. Chat Cards stay. Run history reads the Turn journal. Optional
+`name` is a Store field so a row can show a title when `wakeText` is
+long.
+
 [ADR 0021](0021-chat-activity-status.md) lists Host schedules as outside
 that record. This record is the schedule decision. Weather stays out.
 
@@ -143,6 +208,10 @@ that record. This record is the schedule decision. Weather stays out.
 
 - The code PR adds `schedules` and `cluster_settings.timezone`. This
   record does not.
+- The same code path, or a follow-up Host UI PR, adds optional `name`
+  on `schedules`, accepts it on MCP create/update, and mounts the
+  closet list, create Sheet, and detail Sheet. This record does not
+  add that UI.
 - The ticker runs in the Host process. A second process is not day-1.
 - A fire writes a system Wake, then the
   [ADR 0011](0011-chat-mcp-tool-loop.md) pipeline, with
@@ -158,17 +227,26 @@ that record. This record is the schedule decision. Weather stays out.
 - The Platform does not gain a Weather Module, a weather Skill, a
   weather API, or a Kitchen-style weather seed. A Schedule only
   provides the Wake.
+- Run history does not add a table. It lists journal rows.
+- Closet PATCH for Manifest fields stays
+  [ADR 0020](0020-bot-closet.md). Schedule writes are not that PATCH.
 
 ### Out of scope
 
 - Weather Module, weather Skill, weather API, and any Kitchen-style
   seed of weather. Those are not a Host seed in this monorepo.
-- A Schedule list Sheet.
 - Full crontab syntax, an interval of every N minutes, and one-shot
   fires.
 - Wakes on a room, a direct message, or a group.
 - An SSE ticker and a multi-node lease.
 - The Host parsing natural language into a Schedule.
+- Listing another person's Schedules in the closet.
+- A pause toggle on the list.
+- A new runs table.
+- A separate Host JSON API for Schedules.
+- Free crontab in the cadence UI.
+- Changing Skills or self-settings system-line behavior
+  ([ADR 0028](0028-bot-self-settings-via-chat.md)).
 
 ## Alternatives
 
@@ -191,3 +269,17 @@ that record. This record is the schedule decision. Weather stays out.
   stays. Fires wait for access.
 - Ship a weather seed beside Kitchen — rejected. Weather is not
   Platform scope.
+- Defer the Schedule list Sheet — rejected on 2026-09-24. The closet
+  list, create Sheet, and detail Sheet are day-1.
+- Pause from the list — rejected. Pause only in the detail Sheet.
+- Free crontab in the Host UI — rejected. Daily or weekly plus wall
+  clock.
+- A new runs table for history — rejected. Turn journal rows with
+  `trigger` `wake` and this `scheduleId`.
+- Day-1 closet lists every person's rows on the Bot — rejected. Own
+  rows. Owner MCP for others stays.
+- A second REST or JSON API for the closet — rejected. Same Store
+  handlers as `dostigus_schedules_*`.
+- Replace Chat Cards with the closet list — rejected. Cards stay
+  ([ADR 0030](0030-chat-cards-module-catalog.md)). **Изменить** opens
+  the same detail Sheet.

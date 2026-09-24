@@ -5,6 +5,7 @@
 - Amended: 2026-09-24 — a missing capability stays on the constructor tools in this record (Skills upsert, Schedules, Bot self-settings). [ADR 0030](0030-chat-cards-module-catalog.md) is Schedule Chat Cards. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, writes a system Chat line. It does not add a stock package. The tools in this record stay. There is no Card kind `skill` or `bot` and no Sheet id `skill` from a Card.
 - Amended: 2026-09-24 — on Bot create the Host may insert meta Skills (constructor how-to). Ids, Russian text, and insert-if-absent are [ADR 0030](0030-chat-cards-module-catalog.md). The tools and the platform instruction in this record stay. Deleting a meta Skill does not remove that duty.
 - Amended: 2026-09-24 — Skills live in `bots.skills_json` as `{ id, instructions }` (`packages/db/src/skills.ts`). A Skill id is letters, digits, `_`, or `-` (`parseSkillId` in `packages/shared/src/skill.ts`). One `instructions` string; no locale column.
+- Amended: 2026-09-24 — closet Schedule list stays [ADR 0027](0027-bot-schedules.md). This record does not repeat it.
 
 Chat turns stay [ADR 0011](0011-chat-mcp-tool-loop.md). The closet
 fields stay [ADR 0020](0020-bot-closet.md). Who may edit a Bot stays
@@ -96,9 +97,9 @@ is unchanged ([ADR 0009](0009-mcp-toolkit-endpoint.md)).
 
 Schedule tools and behavior stay
 [ADR 0027](0027-bot-schedules.md). This record does not repeat the
-row, the timezone, or the ticker. A Chat request to create or change a
-Schedule is Self-settings: the Bot calls those tools. The Host does
-not parse the sentence.
+row, the timezone, the ticker, or the closet list. A Chat request to
+create or change a Schedule is Self-settings: the Bot calls those
+tools. The Host does not parse the sentence.
 
 Who may write a Schedule stays that record: the person on their
 bot-thread, and the Owner.
@@ -232,7 +233,7 @@ Code today, not reopened by this record:
 
 - A Weather Module, a weather Skill, a weather API, and any
   Kitchen-style seed of weather.
-- Schedule schema, timezone, and ticker
+- Schedule schema, timezone, ticker, and closet UI
   ([ADR 0027](0027-bot-schedules.md)).
 - Appearance via Chat (`avatarShape`, `avatarColor`).
 - Model tier via Chat self-settings.

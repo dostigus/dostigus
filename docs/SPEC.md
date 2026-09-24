@@ -130,7 +130,11 @@ What the running Cluster does today:
   Hover or focus fades an arrow in on the trailing side and the pill grows
   to fit it, with padding still sitting past that arrow. The pill opens a
   right Sheet titled Параметры (name, optional label, description, who
-  may open the Bot, and a large Bot mark). The creator and the Owner open
+  may open the Bot, a large Bot mark, and a «Расписания» block for that
+  person's Schedules on this Bot). Schedules on that Sheet are Store
+  rows, not Manifest fields
+  ([ADR 0020](adr/0020-bot-closet.md),
+  [ADR 0027](adr/0027-bot-schedules.md)). The creator and the Owner open
   appearance by clicking that mark or
   the small pencil badge on its bottom-right corner. The badge stays
   visible. Appearance (flock and accent) opens in a modal, with Save.
@@ -330,10 +334,11 @@ them on the assistant line.
   bot-thread with that Bot. Many rows per person and Bot are allowed.
   Cadence is `daily` or `weekly`. `timeLocal` is `HH:MM` wall clock in
   the Cluster timezone. `daysOfWeek` is omitted for `daily` and lists
-  the weekdays for `weekly`. `wakeText` is the string the Bot supplies.
-  The row is paused or enabled. The Host owns `next_run_at` and
-  last-run metadata, and recomputes `next_run_at` after create, update,
-  and fire.
+  the weekdays for `weekly`. `name` is optional. `wakeText` is the
+  string the Bot supplies. Empty name: the Host list falls back to
+  truncated `wakeText`. The row is paused or enabled. The Host owns
+  `next_run_at` and last-run metadata, and recomputes `next_run_at`
+  after create, update, and fire.
 - **Fire.** The Host writes a visible system Wake on that bot-thread
   with `wakeText`, then starts the same Bot turn as a user message
   ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)). Activity phases apply
@@ -352,10 +357,28 @@ them on the assistant line.
   `dostigus_schedules_update`, `dostigus_schedules_pause`,
   `dostigus_schedules_resume`, and `dostigus_schedules_delete`. Text
   such as «каждое утро в 8:00…» is the Bot calling those tools. The
-  Host does not parse it. That person manages rows for their bot-thread
-  in their turn. The Owner can always manage. A revoked grant leaves
-  the row; fires do not run until access is restored. A Schedule list
-  Sheet is later.
+  Host does not parse it. Create and update accept optional `name`.
+  That person manages rows for their bot-thread in their turn. The
+  Owner can always manage. A revoked grant leaves the row; fires do
+  not run until access is restored.
+- **Host UI.** Closet Параметры holds a «Расписания» block under the
+  Manifest fields ([ADR 0020](adr/0020-bot-closet.md)). Any person who
+  can open the Bot sees their own rows on this Bot. Day-1 UI does not
+  list another person's rows. Owner MCP scope for others stays above.
+  List row: display name or truncated `wakeText`, plus a human cadence
+  («каждый день · 08:00»). Paused rows are muted. `next_run_at` is not
+  on the list. Pause is not a list toggle. Header **+** opens a create
+  Sheet (optional `name`, daily|weekly + `timeLocal`, `daysOfWeek`
+  when weekly, `wakeText`). After create, back to the list. Empty
+  state: short text + **Добавить**. A row, or Chat Card **Изменить**,
+  opens the same detail Sheet: Active / pause, cadence + time (+ days),
+  `wakeText` (instruction), run history, danger **Удалить**. Run
+  history is Turn journal rows with `trigger` `wake` and this
+  `scheduleId` ([ADR 0029](adr/0029-turn-journal.md)). Empty copy:
+  «Пока не было запусков». No new runs table. Writes go through the
+  same Store handlers as `dostigus_schedules_*`. Cadence UI is daily or
+  weekly plus wall clock. No free crontab. Chat Cards stay
+  ([ADR 0030](adr/0030-chat-cards-module-catalog.md)).
 - **Cluster timezone.** One IANA name in `cluster_settings.timezone`.
   The Schedule stores wall clock; the Host converts it for
   `next_run_at`. The default is `DOSTIGUS_TZ` when set, otherwise
@@ -469,6 +492,10 @@ section above. Turn tools are not on those lists.
   bearer as the other Host tools. Day-1 the token sees every Cluster
   Turn. List filters are `botId`, `threadId`, `since`, and `limit`
   (default 50, cap 100), newest first. Get is by id.
+- Schedule detail lists journal rows with `trigger` `wake` and that
+  `scheduleId` ([ADR 0027](adr/0027-bot-schedules.md)). Empty copy:
+  «Пока не было запусков». That is not an Owner journal Sheet. Day-1
+  does not add a runs table.
 - The harness smoke is in this Host. `pnpm smoke:turns` needs
   `pnpm preview:host` with `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`)
   set to the same value the smoke sends. When that env is unset, the
@@ -494,9 +521,11 @@ Module.
   person and Bot already has the same cadence, local time, and
   weekdays. Create against that row does not insert another. The Card
   body is «уже стоит». One turn keeps one Schedule Card per Schedule
-  id. Pause and Изменить open Sheet id `schedule` for that row. Delete
-  confirms inside the Sheet. The model does not emit the part. There
-  is no Card after Apply. There is no Card kind `skill` or `bot`.
+  id. Pause and Изменить open Sheet id `schedule` for that row — the
+  same detail Sheet as the closet «Расписания» list
+  ([ADR 0027](adr/0027-bot-schedules.md)). Delete confirms inside the
+  Sheet. The model does not emit the part. There is no Card after
+  Apply. There is no Card kind `skill` or `bot`.
 - **Skill and self-settings lines.** After a successful
   `dostigus_skills_upsert`, `dostigus_skills_delete`, or
   `dostigus_bots_update` that sets name and/or label and/or
@@ -584,11 +613,13 @@ and [`docs/deploy.md`](deploy.md)).
   Activity from the Turn journal, and Schedule ticker debug tools
   ([ADR 0029](adr/0029-turn-journal.md)). The Turn journal above, and
   the harness smoke `pnpm smoke:turns`, are in this Host.
-- Schedule list Sheet; full crontab; an interval of every N minutes;
-  one-shot fires; wakes on a room, a direct message, or a group; an SSE
-  ticker; a multi-node lease
-  ([ADR 0027](adr/0027-bot-schedules.md)). The Schedule behavior above
-  is in this Host.
+- Full crontab; an interval of every N minutes; one-shot fires; wakes
+  on a room, a direct message, or a group; an SSE ticker; a multi-node
+  lease; listing other people's Schedules in the closet; a list pause
+  toggle; a new runs table
+  ([ADR 0027](adr/0027-bot-schedules.md)). The Schedule behavior above,
+  including the closet «Расписания» block, is day-1 Host UI. The code
+  PR adds that UI.
 - Stock Module packages in this monorepo, a `packages/modules/` catalog
   seed, Host-bundled Apply of platform packages, baking packages into
   the Host image, and a Weather seed (including Open-Meteo). A

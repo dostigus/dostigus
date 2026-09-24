@@ -69,8 +69,10 @@ _Avoid_: trace, span, log (unqualified), transcript.
 **Turn journal**:
 The Store table and MCP surface tools an ops agent uses to read Turns
 on a live Host (`dostigus_turns_list`, `dostigus_turns_get`). Not an
-Owner Sheet. Not part of the Chat LLM allowlist. See
-[ADR 0029](docs/adr/0029-turn-journal.md).
+Owner Sheet. Not part of the Chat LLM allowlist. Schedule detail may
+list wake Turns for one `scheduleId`
+([ADR 0027](docs/adr/0027-bot-schedules.md)). That is not a journal
+browser. See [ADR 0029](docs/adr/0029-turn-journal.md).
 _Avoid_: trace store, debug log, Activity poll.
 
 **Thread**:
@@ -100,12 +102,14 @@ _Avoid_: widget, embed, attachment (unqualified).
 A Kit Card the Host injects in the thread after a successful Schedule
 change. Stored as one assistant message part (`kind: card`) so reload
 keeps it. Card kind is `schedule`. Not a system line and not a closet
-control. Pause and Изменить open Sheet id `schedule`. Delete confirms
-in that Sheet. The model does not emit the part. Day-1 does not inject
-a Card after Apply, and does not inject a Card for a Skill upsert or
-delete, a Bot self-settings update, or a bare list or get. Those Skill
-and self-settings successes are a Host-written system Chat line (the
-Wake family): plain string, no parts, no Изменить.
+control. Pause and Изменить open Sheet id `schedule`, the same detail
+Sheet as the closet «Расписания» block
+([ADR 0027](docs/adr/0027-bot-schedules.md)). Delete confirms in that
+Sheet. The model does not emit the part. Day-1 does not inject a Card
+after Apply, and does not inject a Card for a Skill upsert or delete,
+a Bot self-settings update, or a bare list or get. Those Skill and
+self-settings successes are a Host-written system Chat line (the Wake
+family): plain string, no parts, no Изменить.
 _Avoid_: widget, toast, system line, embed.
 
 **Sheet**:
@@ -190,8 +194,13 @@ Not a Manifest field and not a Skill. A Skill says what; a Schedule
 says when. Many Schedules may belong to one person and one Bot, on
 that person's bot-thread (`botId`, `personId`). The Bot supplies the
 cadence (`daily` or `weekly`), the local `HH:MM`, optional weekdays
-when weekly, and the wake text. The Host owns the next fire instant.
-_Avoid_: cron, crontab, alarm, reminder, Skill, Manifest field.
+when weekly, an optional display name, and the wake text. Empty name:
+the Host list falls back to truncated wake text. The Host owns the
+next fire instant. Closet Параметры shows a «Расписания» block for
+this person's rows on this Bot
+([ADR 0027](docs/adr/0027-bot-schedules.md)).
+_Avoid_: cron, crontab, alarm, reminder, Skill, Manifest field,
+Routines.
 
 **Self-settings**:
 A person's request in Chat that the Bot change its own name, label,
@@ -338,7 +347,8 @@ _Avoid_: public share, invite (unqualified).
   tools. See [ADR 0029](docs/adr/0029-turn-journal.md).
 - When a Schedule is due, the Host writes a Wake on that person's
   bot-thread with that Bot, then runs the Bot turn. A room, a direct
-  message, and a group do not get that fire. See
+  message, and a group do not get that fire. Closet Параметры lists
+  this person's Schedules on this Bot. See
   [ADR 0027](docs/adr/0027-bot-schedules.md).
 - When a person asks a Bot to change its name, label, description,
   Skills, or Schedules, that is Self-settings. The Bot calls MCP

@@ -5,6 +5,7 @@
 - Amended: 2026-09-24 — Nick reverse decision. This monorepo ships no stock Module packages and no Weather seed. Schedule Chat Cards stay. A Marketplace of packages is later.
 - Amended: 2026-09-24 — Nick: on Bot create the Host inserts missing meta Skills (constructor how-to). The seed is insert-if-missing and does not call `upsertBotSkill`. Chat Cards are unchanged. Still no stock Module packages and no Weather seed.
 - Amended: 2026-09-24 — Nick product reverse. Chat Cards stay Schedule-only. A successful `dostigus_skills_upsert`, `dostigus_skills_delete`, or `dostigus_bots_update` of name, label, or description writes one system Chat line on that bot-thread (same family as a Wake). Not kind `card`. No Sheet id `skill` opened from a Card. No Изменить on those lines. Card kinds `skill` and `bot` are not in this record.
+- Amended: 2026-09-24 — Schedule closet list, create Sheet, and detail Sheet are day-1 ([ADR 0027](0027-bot-schedules.md)). Card «Изменить» opens that same detail Sheet. Cards stay. Still no stock Module packages and no Weather seed.
 
 Assistant parts stay [ADR 0025](0025-chat-bubble-parts.md). Schedules
 and the Wake stay [ADR 0027](0027-bot-schedules.md). The platform
@@ -102,10 +103,13 @@ Delete is not a Card button. The Sheet confirms, then deletes. Both
 Card buttons open that Sheet. The Card does not pause or delete by
 itself.
 
-Sheet id `schedule` is one Schedule, the id on the action. It shows
-cadence, time, weekdays, `wakeText`, and paused. It can pause, resume,
-save those fields, and delete. Delete asks for confirm in the Sheet.
-It is not a list of every Schedule in the Cluster. Who may write stays
+Sheet id `schedule` is one Schedule, the id on the action. It is the
+same detail Sheet as the closet «Расписания» list
+([ADR 0027](0027-bot-schedules.md)): Active / pause, cadence + time
+(+ days), `wakeText`, run history from the Turn journal
+([ADR 0029](0029-turn-journal.md)), and danger «Удалить». Delete asks
+for confirm in the Sheet. It is not a list of every Schedule in the
+Cluster. Who may write stays
 [ADR 0027](0027-bot-schedules.md): that person, or the Owner.
 
 Bodies the Host writes:
@@ -206,8 +210,9 @@ the later path that writes a Module package
 [ADR 0025](0025-chat-bubble-parts.md) stores button and status parts
 on the assistant line and refuses model-authored parts. A Chat Card
 extends that family. Tables and forms in the bubble still wait. The
-Schedule Sheet is the editor for one row, which
-[ADR 0027](0027-bot-schedules.md) deferred as a list.
+Schedule Sheet is the editor for one row. The closet list of that
+person's rows on this Bot is day-1
+([ADR 0027](0027-bot-schedules.md)).
 
 Kitchen remains a Host seed with no package row
 ([ADR 0026](0026-kitchen-module-day-1.md)). It is not a catalog seed.
@@ -302,7 +307,7 @@ Kitchen remains a Host seed with no package row
 - A Chat Card after Apply, and a catalog-miss Card.
 - Open-Meteo, OpenWeather, an API key, and weather numbers invented
   by the model.
-- A Weather Sheet, and a full Schedule list as the primary UI.
+- A Weather Sheet.
 - Tables and forms in the bubble. Cards for every MCP tool. Card
   kinds other than `schedule`. A Skill Card, a self-settings Card,
   Sheet id `skill` opened from a Card, and Изменить on a Skill or
