@@ -90,9 +90,20 @@ _Avoid_: user, attendee.
 **Card**:
 Inline structured UI in the Chat (button, table, status). Day-1 renders
 a button and a status as Kit parts on an assistant bubble
-([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). A table and other Card
-kinds stay later.
+([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). A **Chat Card** is the
+Host-injected Card for a Schedule change or a Module Apply
+([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). A table and
+other Card kinds stay later.
 _Avoid_: widget, embed, attachment (unqualified).
+
+**Chat Card**:
+A Kit Card the Host injects in the thread after a successful Schedule
+change, after Apply, or when the Module catalog has no match. Stored as
+one assistant message part (`kind: card`) so reload keeps it. Not a
+system line and not a closet control. Pause and Изменить open a Sheet
+for that Schedule. Delete confirms in the Sheet. The model does not
+emit the part.
+_Avoid_: widget, toast, system line, embed.
 
 **Sheet**:
 Modal/drawer app slice from the Kit, not a separate site.
@@ -192,15 +203,24 @@ _Avoid_: config, profile (unqualified).
 
 **Module package**:
 Versioned unit: schema/migration, MCP tools, Kit UI bindings, Skill diffs.
-Lives in the Cluster Store. Not a Bot.
+Lives in the Cluster Store after Apply. Not a Bot.
 _Avoid_: plugin, extension, addon, Bot.
+
+**Module catalog**:
+Stock Module package seeds in Platform git at `packages/modules/<id>/`
+(`module.json` and `SKILL.md`). Not the Cluster Store and not a
+marketplace. Apply copies one hashed seed into the Store and binds it
+on one Bot. The Host image ships the seed and does not enable it on
+every Bot. See [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
+_Avoid_: marketplace, registry, plugin gallery, Builder.
 
 **Kitchen Module**:
 Day-1 Cluster domain: pantry items (name, optional qty), one recipe
 (name and ingredients text), and a cooked log whose rows sum to an XP
 counter. The Host opens it as a Sheet from a Chat button part. The
-tables, MCP tools, and Sheet are the seed of a Module package. There is
-no Apply runtime yet, so this seed is not an installed Module package.
+tables, MCP tools, and Sheet are the seed of a Module package. Catalog
+Apply is [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md). Kitchen
+is not in the Module catalog and is not an applied Module package.
 Not a Meal port.
 _Avoid_: Meal, meal planner, Cook app, plugin.
 
@@ -220,8 +240,14 @@ Approved request to run a Builder for a missing module/feature.
 _Avoid_: ticket, task (unqualified).
 
 **Apply**:
-Install a Module package into the live Cluster (after staging review).
-_Avoid_: deploy, merge, ship (unqualified).
+Copy a Module package into the live Cluster Store and bind it on a Bot.
+Day-1 Apply copies a Module catalog seed (content hash, Skill text, and
+tool declarations) onto one Bot. The creator or the Owner does this
+from Chat, with no confirm tap for the stock Weather package. The Chat
+Card announces what was applied. A Builder Job that Applies a package
+after staging review stays the later path. See
+[ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
+_Avoid_: deploy, merge, ship (unqualified), auto-enable.
 
 **LLM gateway**:
 Cluster config mapping Model tiers to providers.
@@ -309,21 +335,30 @@ _Avoid_: public share, invite (unqualified).
   grantee cannot. Schedule writes stay
   [ADR 0027](docs/adr/0027-bot-schedules.md). See
   [ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md).
+  When that turn may Apply and the Bot lacks a capability, the Bot
+  Applies a Module catalog seed or the Host shows a Chat Card that
+  none matches ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)).
 - Module package data lives in the Cluster Store. Bot visibility does not
   give a Bot its own Store. A personal Bot uses the same MCP surface
   under that person's permissions.
 - A Bot has a Manifest and bound Module packages. A Bot is not a Module package.
 - The Kitchen Module is Cluster Store data, MCP tools, and a Kit Sheet.
   It is the seed of a Module package. It is not a Meal port and not a Bot.
-- Builder writes Module packages via Job → Apply. Distinct from any Platform
-  git agent. The chat Bot does not write Module packages.
+  It is not a Module catalog seed.
+- The Module catalog is Platform git (`packages/modules/<id>/`). Apply
+  copies one hashed seed into the Cluster Store and binds it on one Bot.
+  The chat Bot does not author a Module package. Builder still writes
+  new packages via Job → Apply, and that path is later. See
+  [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
 - Host talks to Bots through the MCP surface and renders Cards and Sheets from
   the Kit. The Sheet shell and Brand stickers live in the Kit. An assistant
   Chat line keeps Markdown in `content`
   ([ADR 0022](docs/adr/0022-chat-assistant-markdown.md)) and may carry Kit
-  parts: a button that opens a Sheet, and a status
-  ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). User and system lines
-  have no parts. Bot-threads, `dm`, `group`, and `room` are in the Host.
+  parts: a button that opens a Sheet, a status
+  ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)), and a Chat Card the
+  Host injects after a Schedule change or Apply
+  ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). User and
+  system lines have no parts. Bot-threads, `dm`, `group`, and `room` are in the Host.
   Grant rows are in the Host
   ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md)).
 - LLM gateway maps Model tiers to providers for every Bot call.

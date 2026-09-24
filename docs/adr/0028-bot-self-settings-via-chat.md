@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-24
+- Amended: 2026-09-24 — a missing Skill or Module package follows [ADR 0030](0030-chat-cards-module-catalog.md). Self-settings in this record are unchanged.
 
 Chat turns stay [ADR 0011](0011-chat-mcp-tool-loop.md). The closet
 fields stay [ADR 0020](0020-bot-closet.md). Who may edit a Bot stays
