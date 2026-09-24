@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 import { chatMcpToolsAsOpenAi, listChatMcpToolSpecs } from '../../server/utils/mcp-platform-tools'
-import { CHAT_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
+import { CHAT_MCP_TOOLS, CHAT_SLIM_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
 import {
   mcpToolsToOpenAiFunctions,
   parseToolCallArguments,
@@ -9,17 +9,22 @@ import {
 
 it('maps MCP Zod tools to OpenAI function schemas', () => {
   const tools = chatMcpToolsAsOpenAi()
-  expect(tools.map((tool) => tool.function.name)).toEqual([...CHAT_MCP_TOOLS])
+  expect(tools.map((tool) => tool.function.name)).toEqual([...CHAT_SLIM_MCP_TOOLS])
   expect(chatMcpToolsAsOpenAi('member').map((tool) => tool.function.name)).toEqual([
     ...MEMBER_CHAT_MCP_TOOLS,
   ])
   expect(chatMcpToolsAsOpenAi('member', { canEditManifest: true }).map((tool) => tool.function.name))
+    .toEqual([...CHAT_SLIM_MCP_TOOLS])
+  expect(chatMcpToolsAsOpenAi('member', { canEditManifest: true, expand: true }).map((tool) => tool.function.name))
     .toEqual([...CREATOR_MEMBER_CHAT_MCP_TOOLS])
-  expect(chatMcpToolsAsOpenAi('owner', { canEditManifest: true }).map((tool) => tool.function.name))
+  expect(chatMcpToolsAsOpenAi('owner', { expand: true }).map((tool) => tool.function.name))
     .toEqual([...CHAT_MCP_TOOLS])
+  expect(chatMcpToolsAsOpenAi('owner', { canEditManifest: true }).map((tool) => tool.function.name))
+    .toEqual([...CHAT_SLIM_MCP_TOOLS])
   expect(tools.every((tool) => tool.type === 'function')).toBe(true)
 
-  const update = tools.find((tool) => tool.function.name === 'dostigus_bots_update')
+  const expanded = chatMcpToolsAsOpenAi('owner', { expand: true })
+  const update = expanded.find((tool) => tool.function.name === 'dostigus_bots_update')
   expect(update?.function.parameters).toEqual({
     type: 'object',
     properties: {
@@ -70,7 +75,7 @@ it('maps MCP Zod tools to OpenAI function schemas', () => {
     additionalProperties: false,
   })
 
-  const list = tools.find((tool) => tool.function.name === 'dostigus_bots_list')
+  const list = expanded.find((tool) => tool.function.name === 'dostigus_bots_list')
   expect(list?.function.parameters).toEqual({
     type: 'object',
     properties: {},

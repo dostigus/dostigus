@@ -74,6 +74,8 @@ export type Kit = {
 
 export type Skill = {
   id: string
+  /** Catalog line. Empty on a legacy row until upsert or lazy meta backfill. */
+  description: string
   instructions: string
 }
 

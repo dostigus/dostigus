@@ -18,6 +18,15 @@ export const CHAT_SELF_SETTINGS_RULE
 export const CHAT_NO_PACKAGE_RULE
   = 'This Host has no stock Module catalog to Apply. If a capability is missing, say briefly that there is no package yet. Do not author a Module package. A Schedule change uses the Schedule tools. When the person asked to set a Schedule and you list first, pass intent set plus cadence, timeLocal, and daysOfWeek. A paused row with that clock is not already standing; resume it. The Host adds the Chat Card, so do not end that turn by only saying the Schedule changed.'
 
+/**
+ * One-line Host HTTP get hint. Long how-to stays in platform-meta-http-get.
+ * See ADR 0031 and ADR 0032.
+ */
+export const CHAT_HTTP_GET_HINT
+  = 'You may GET a public http or https URL with dostigus_http_get. If truncated is true, the body is incomplete.'
+
+export type ChatToolSurface = 'slim' | 'owner-expand' | 'creator-expand' | 'wake'
+
 /** OpenRouter-shaped default. Used when a key is set and no base URL is stored or in env. */
 export const OPENROUTER_DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1' as const
 
@@ -288,21 +297,52 @@ export function toPublicLlmGateway(input: {
   }
 }
 
+export function chatToolSurface(input: {
+  audience?: 'owner' | 'member'
+  canEditManifest?: boolean
+  expand?: boolean
+  wake?: boolean
+}): ChatToolSurface {
+  if (input.wake) {
+    return 'wake'
+  }
+  if (input.audience !== 'member' && input.expand) {
+    return 'owner-expand'
+  }
+  if (input.audience === 'member' && input.canEditManifest && input.expand) {
+    return 'creator-expand'
+  }
+  return 'slim'
+}
+
+function skillCatalogLine(skill: Skill): string {
+  const description = skill.description.trim()
+  return description ? `Skill ${skill.id}: ${description}` : `Skill ${skill.id}`
+}
+
 export function chatSystemPrompt(input: {
   botName: string
   manifest: {
     name: string
+    label?: string
+    description?: string
     modelTier: ModelTier
     skillIds: string[]
     modulePackageIds: string[]
   }
   botId?: string
   tools?: boolean
-  /** Grantee Chat: messages, Schedules, timezone read, and Host HTTP get. Not Manifest or Skills. */
+  /** Grantee or slim Chat: messages, Schedules, timezone read, Host HTTP get, Skills list/read. */
   messagesOnly?: boolean
-  /** Member who created this Bot may edit its Manifest and Skills. */
+  /** Member who created this Bot may edit its Manifest and Skills when expand hits. */
   creatorManifest?: boolean
-  /** Skill text for this Bot. Ids with empty instructions are omitted. */
+  /** Keyword expand added builder tools on this user turn. */
+  expand?: boolean
+  /** Wake turn: narrower tools, same Skill catalog. */
+  wake?: boolean
+  /** Tool surface. Overrides messagesOnly / creatorManifest / expand / wake when set. */
+  surface?: ChatToolSurface
+  /** Skill catalog for this Bot. Instructions stay out; load through dostigus_skills_read. */
   skills?: Skill[]
 }): string {
   const skills = input.manifest.skillIds.length > 0
@@ -311,53 +351,78 @@ export function chatSystemPrompt(input: {
   const modules = input.manifest.modulePackageIds.length > 0
     ? input.manifest.modulePackageIds.join(', ')
     : 'none yet'
+  const label = input.manifest.label ?? ''
+  const description = input.manifest.description ?? ''
+  const surface = input.surface ?? chatToolSurface({
+    audience: input.messagesOnly
+      ? 'member'
+      : input.creatorManifest
+        ? 'member'
+        : 'owner',
+    canEditManifest: input.creatorManifest,
+    expand: input.expand,
+    wake: input.wake,
+  })
   const lines = [
     `You are ${input.botName}, a Bot in a Dostigus Cluster.`,
-    'You are new. Ask and learn what this Bot is for.',
+    'Stay on the Manifest. Reply briefly.',
     'Keep the Manifest the user describes. Do not invent Skills or Module packages.',
-    `Manifest: name=${input.manifest.name}; Model tier=${input.manifest.modelTier}; Skills=${skills}; Module packages=${modules}.`,
+    `Manifest: name=${input.manifest.name}; label=${label}; description=${description}; Model tier=${input.manifest.modelTier}; Skills=${skills}; Module packages=${modules}.`,
   ]
   for (const skill of input.skills ?? []) {
-    if (skill.instructions.trim()) {
-      lines.push(`Skill ${skill.id}: ${skill.instructions.trim()}`)
-    }
+    lines.push(skillCatalogLine(skill))
   }
   if (input.botId) {
     lines.push(`This Chat is with Bot id=${input.botId}.`)
   }
-  if (input.tools && input.messagesOnly) {
+  if (input.tools && surface === 'wake') {
     lines.push(
       'You may call tools to list and append Chat messages for this Bot.',
-      'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time) and you may read the Cluster timezone. You cannot set the Cluster timezone.',
-      'You may GET a public http or https URL with dostigus_http_get. Build the full URL, including query parameters. If truncated is true, the body is incomplete. You cannot set the Cluster http allowlist.',
+      'You may list Schedules for this person and this Bot. You cannot create, update, pause, resume, or delete Schedules.',
+      'You may read the Cluster timezone. You cannot set the Cluster timezone.',
+      'You may list and read Skills on this Bot. Full Skill instructions load through dostigus_skills_read. You cannot write Skills or the Manifest.',
       'Do not create, rename, or delete Bots.',
       'Prefer tools over guessing Store state.',
       'The Host already stores this Chat turn; do not append it again unless asked.',
+      'You cannot set the Cluster http allowlist.',
     )
-  } else if (input.tools && input.creatorManifest) {
-    lines.push(
-      'You may call tools to list and append Chat messages for this Bot, and to update this Bot\'s name, label, description, and Skills.',
-      'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time) and you may read the Cluster timezone. You cannot set the Cluster timezone.',
-      'You may GET a public http or https URL with dostigus_http_get. Build the full URL, including query parameters. If truncated is true, the body is incomplete. You cannot set the Cluster http allowlist.',
-      'Do not create or delete Bots. Do not change a Bot you did not create.',
-      'Prefer tools over guessing Store state.',
-      'The Host already stores this Chat turn; do not append it again unless asked.',
-      'You cannot delete Bots from Chat.',
-    )
-  } else if (input.tools) {
+  } else if (input.tools && surface === 'owner-expand') {
     lines.push(
       'You may call Cluster MCP surface tools to read and write Bots and Chat messages in this Owner Cluster.',
       'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time in the Cluster timezone) and you may read or set the Cluster timezone.',
-      'You may GET a public http or https URL with dostigus_http_get. Build the full URL, including query parameters (for example an Open-Meteo forecast). If truncated is true, the body is incomplete. You may read or set the Cluster http allowlist.',
+      'You may list, read, and write Skills on this Bot. Full Skill instructions load through dostigus_skills_read.',
+      'You may read or set the Cluster http allowlist.',
       'Stay on this Bot\'s purpose. This Cluster has one Owner.',
       'Prefer tools over guessing Store state.',
       'The Host already stores this Chat turn; do not append it again unless asked.',
       'You cannot delete Bots from Chat.',
     )
+  } else if (input.tools && surface === 'creator-expand') {
+    lines.push(
+      'You may call tools to list and append Chat messages for this Bot, and to update this Bot\'s name, label, description, and Skills.',
+      'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time) and you may read the Cluster timezone. You cannot set the Cluster timezone.',
+      'You may list, read, upsert, and delete Skills on this Bot. Full Skill instructions load through dostigus_skills_read.',
+      'Do not create or delete Bots. Do not change a Bot you did not create.',
+      'Prefer tools over guessing Store state.',
+      'The Host already stores this Chat turn; do not append it again unless asked.',
+      'You cannot delete Bots from Chat.',
+      'You cannot set the Cluster http allowlist.',
+    )
+  } else if (input.tools) {
+    lines.push(
+      'You may call tools to list and append Chat messages for this Bot.',
+      'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time) and you may read the Cluster timezone. You cannot set the Cluster timezone.',
+      'You may list and read Skills on this Bot. Full Skill instructions load through dostigus_skills_read. You cannot write Skills or the Manifest unless those tools are available.',
+      'Do not create, rename, or delete Bots.',
+      'Prefer tools over guessing Store state.',
+      'The Host already stores this Chat turn; do not append it again unless asked.',
+      'You cannot set the Cluster http allowlist.',
+    )
   }
   lines.push(
     CHAT_SELF_SETTINGS_RULE,
     CHAT_NO_PACKAGE_RULE,
+    CHAT_HTTP_GET_HINT,
     'Do not offer to write Module packages — that is the Builder.',
     'Reply briefly and stay in character.',
   )

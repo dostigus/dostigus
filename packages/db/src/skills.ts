@@ -1,13 +1,15 @@
 import type { Skill } from '@dostigus/shared'
 import type { OpenedStore } from './store'
-import { parseSkillId, parseSkillInstructions, SkillInputError } from '@dostigus/shared'
+import { parseSkillDescription, parseSkillId, parseSkillInstructions, SkillInputError } from '@dostigus/shared'
 import { skillsFromJson } from './map'
 import { requireBot } from './queries'
 import { StoreError } from './store-error'
 
 /**
- * Skill text lives in `bots.skills_json` as `{ id, instructions }` objects.
- * No new column. Legacy id strings still read. See ADR 0028.
+ * Skill text lives in `bots.skills_json` as
+ * `{ id, description, instructions }` objects.
+ * No new column. Legacy id strings and objects without description still
+ * read. See ADR 0028 and ADR 0032.
  */
 
 function asSkillInput<T>(fn: () => T): T {
@@ -39,20 +41,35 @@ export function listBotSkills(store: OpenedStore, botId: string): Skill[] {
   return readSkills(store, botId)
 }
 
-/** Same id replaces instructions. A new id is appended. The id is not regenerated. */
+export function getBotSkill(
+  store: OpenedStore,
+  botId: string,
+  skillId: unknown,
+): Skill {
+  const id = asSkillInput(() => parseSkillId(skillId))
+  const skill = readSkills(store, botId).find((row) => row.id === id)
+  if (!skill) {
+    throw new StoreError('Skill not found', 404)
+  }
+  return skill
+}
+
+/** Same id replaces description and instructions. A new id is appended. */
 export function upsertBotSkill(
   store: OpenedStore,
   botId: string,
-  input: { id: unknown, instructions: unknown },
+  input: { id: unknown, description: unknown, instructions: unknown },
 ): Skill[] {
   const id = asSkillInput(() => parseSkillId(input.id))
+  const description = asSkillInput(() => parseSkillDescription(input.description))
   const instructions = asSkillInput(() => parseSkillInstructions(input.instructions))
   const skills = readSkills(store, botId)
+  const next: Skill = { id, description, instructions }
   const index = skills.findIndex((skill) => skill.id === id)
   if (index >= 0) {
-    skills[index] = { id, instructions }
+    skills[index] = next
   } else {
-    skills.push({ id, instructions })
+    skills.push(next)
   }
   writeSkills(store, botId, skills)
   return skills

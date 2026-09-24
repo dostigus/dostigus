@@ -372,6 +372,7 @@ it('appends one system line per Skill upsert or delete and no Card', () => {
     args: {
       botId: bot.id,
       id: 'notes',
+      description: 'Keep short notes.',
       instructions: 'Keep short notes.\nSecond line stays off the line.',
     },
     store,
@@ -386,7 +387,7 @@ it('appends one system line per Skill upsert or delete and no Card', () => {
 
   const again = invokeChatMcpTool({
     name: 'dostigus_skills_upsert',
-    args: { botId: bot.id, id: 'notes', instructions: 'Shorter.' },
+    args: { botId: bot.id, id: 'notes', description: 'Shorter.', instructions: 'Shorter.' },
     store,
     role: 'owner',
     personId: owner.id,
@@ -444,7 +445,7 @@ it('uses «записан» when the Skill line does not fit and skips a failed 
   const longLine = 'n'.repeat(81)
   const upserted = invokeChatMcpTool({
     name: 'dostigus_skills_upsert',
-    args: { botId: bot.id, id: 'long-note', instructions: longLine },
+    args: { botId: bot.id, id: 'long-note', description: 'Long note.', instructions: longLine },
     store,
     role: 'owner',
     personId: owner.id,

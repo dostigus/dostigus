@@ -14,7 +14,9 @@ import type { OpenAiChatFunctionTool, OpenAiChatMessage, OpenAiToolCall } from '
 import process from 'node:process'
 import {
   CHAT_MCP_TOOL_MAX_ITERATIONS,
+  chatLlmHistory,
   chatSystemPrompt,
+  chatToolSurface,
   isLlmGatewayConfigured as envOrStoreConfigured,
   LLM_GATEWAY_PING_TIMEOUT_MS,
   LLM_GATEWAY_RETRY_BACKOFF_MS,
@@ -79,7 +81,11 @@ export async function completeAssistantReply(input: {
   audience?: 'owner' | 'member'
   /** Creator or Owner of the Bot on this turn. */
   canEditManifest?: boolean
-  /** Skill instructions loaded into the system prompt. */
+  /** Keyword expand on this user line. This turn only. */
+  expand?: boolean
+  /** Wake turn: narrower tools, same Skill catalog. */
+  wake?: boolean
+  /** Skill catalog loaded into the system prompt. */
   skills?: Skill[]
   /** Live Activity phase. Quiet (no key) replies do not call this. */
   onActivity?: (phase: ChatActivityPhase) => void
@@ -96,8 +102,12 @@ export async function completeAssistantReply(input: {
     return { content: stubAssistantReply(audience), via: 'stub' }
   }
 
+  const expand = input.expand === true
+  const wake = input.wake === true
   const tools = input.tools ?? chatMcpToolsAsOpenAi(audience, {
     canEditManifest: creatorManifest,
+    expand,
+    wake,
   })
   const invokeTool = input.invokeTool ?? (async (name) => {
     logChatTool(name, 'skip')
@@ -119,8 +129,11 @@ export async function completeAssistantReply(input: {
       fetchImpl: input.fetchImpl ?? fetch,
       tools,
       invokeTool,
+      audience,
       messagesOnly: audience === 'member' && !creatorManifest,
       creatorManifest,
+      expand,
+      wake,
       skills: input.skills,
       onActivity: input.onActivity,
       onTool: input.onTool,
@@ -213,8 +226,11 @@ async function callOpenAiCompatible(input: {
   fetchImpl: typeof fetch
   tools: OpenAiChatFunctionTool[]
   invokeTool: ChatToolInvoker
+  audience?: 'owner' | 'member'
   messagesOnly?: boolean
   creatorManifest?: boolean
+  expand?: boolean
+  wake?: boolean
   skills?: Skill[]
   onActivity?: (phase: ChatActivityPhase) => void
   onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
@@ -228,21 +244,26 @@ async function callOpenAiCompatible(input: {
         tools: input.tools.length > 0,
         messagesOnly: input.messagesOnly,
         creatorManifest: input.creatorManifest,
+        expand: input.expand,
+        wake: input.wake,
+        surface: chatToolSurface({
+          audience: input.audience,
+          canEditManifest: input.creatorManifest,
+          expand: input.expand,
+          wake: input.wake,
+        }),
         skills: input.skills,
         manifest: input.manifest ?? {
           name: input.botName,
+          label: '',
+          description: '',
           modelTier: input.modelTier,
           skillIds: [],
           modulePackageIds: [],
         },
       }),
     },
-    ...input.history.map((message) => ({
-      // A stored system line is a Wake or a Skill / self-settings notice.
-      // The Bot sees it as a user line. It does not start a turn by itself.
-      role: message.role === 'system' ? 'user' as const : message.role,
-      content: message.content,
-    })),
+    ...chatLlmHistory(input.history, input.history.at(-1)),
   ]
 
   let usedTools = false
@@ -273,6 +294,7 @@ async function callOpenAiCompatible(input: {
       toolCalls,
       messages,
       invokeTool: input.invokeTool,
+      allowedTools: input.tools.map((tool) => tool.function.name),
       onTool: input.onTool,
     })
   }
@@ -291,12 +313,13 @@ async function appendToolResults(input: {
   toolCalls: OpenAiToolCall[]
   messages: OpenAiChatMessage[]
   invokeTool: ChatToolInvoker
+  allowedTools: readonly string[]
   onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
 }): Promise<void> {
   for (const call of input.toolCalls) {
     const name = call.function?.name ?? ''
     const toolCallId = call.id
-    if (!isChatMcpTool(name)) {
+    if (!isChatMcpTool(name) || !input.allowedTools.includes(name)) {
       logChatTool(name || 'unknown', 'skip')
       input.onTool?.({ name, ok: false, ms: 0 })
       input.messages.push({

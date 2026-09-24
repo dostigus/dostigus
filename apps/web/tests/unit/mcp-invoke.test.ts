@@ -1,6 +1,7 @@
 import { createMember, createOwner, grantBot, META_SKILL_IDS, openStore } from '@dostigus/db'
 import { afterEach, expect, it } from 'vitest'
 import { invokeChatMcpTool } from '../../server/utils/mcp-platform-tools'
+import { CHAT_SLIM_MCP_TOOLS, WAKE_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
 
 const opened: Array<ReturnType<typeof openStore>> = []
 
@@ -218,7 +219,7 @@ it('lets the creator Member update and edit Skills, and refuses a grantee', () =
 
   const upserted = invokeChatMcpTool({
     name: 'dostigus_skills_upsert',
-    args: { botId, id: 'notes', instructions: 'Keep short notes.' },
+    args: { botId, id: 'notes', description: 'Keep short notes.', instructions: 'Keep short notes.' },
     store,
     role: 'member',
     personId: creator.id,
@@ -226,6 +227,7 @@ it('lets the creator Member update and edit Skills, and refuses a grantee', () =
   expect(upserted.ok).toBe(true)
   expect(JSON.parse(upserted.content).skills).toContainEqual({
     id: 'notes',
+    description: 'Keep short notes.',
     instructions: 'Keep short notes.',
   })
 
@@ -237,6 +239,35 @@ it('lets the creator Member update and edit Skills, and refuses a grantee', () =
     personId: owner.id,
   })
   expect(listed.ok).toBe(true)
+  const catalog = JSON.parse(listed.content).skills as Array<{ id: string, description?: string, instructions?: string }>
+  expect(catalog.find((skill) => skill.id === 'notes')).toEqual({
+    id: 'notes',
+    description: 'Keep short notes.',
+  })
+  expect(catalog[0]).not.toHaveProperty('instructions')
+
+  const read = invokeChatMcpTool({
+    name: 'dostigus_skills_read',
+    args: { botId, id: 'notes' },
+    store,
+    role: 'member',
+    personId: grantee.id,
+  })
+  expect(read.ok).toBe(true)
+  expect(JSON.parse(read.content).skill).toEqual({
+    id: 'notes',
+    description: 'Keep short notes.',
+    instructions: 'Keep short notes.',
+  })
+
+  const granteeList = invokeChatMcpTool({
+    name: 'dostigus_skills_list',
+    args: { botId },
+    store,
+    role: 'member',
+    personId: grantee.id,
+  })
+  expect(granteeList.ok).toBe(true)
 
   const blockedUpdate = invokeChatMcpTool({
     name: 'dostigus_bots_update',
@@ -277,4 +308,52 @@ it('lets the creator Member update and edit Skills, and refuses a grantee', () =
     personId: owner.id,
   })
   expect(JSON.parse(still.content)).toMatchObject({ bot: { name: 'Дождевик' } })
+})
+
+it('rejects a Skill upsert without description and a slim turn calling builder tools', () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const created = invokeChatMcpTool({
+    name: 'dostigus_bots_create',
+    args: { name: 'Notes' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+  })
+  const botId = (JSON.parse(created.content) as { bot: { id: string } }).bot.id
+
+  const missing = invokeChatMcpTool({
+    name: 'dostigus_skills_upsert',
+    args: { botId, id: 'notes', instructions: 'Keep short notes.' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+  })
+  expect(missing.ok).toBe(false)
+
+  const blocked = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: botId, name: 'Nope' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    allowedTools: CHAT_SLIM_MCP_TOOLS,
+  })
+  expect(blocked.ok).toBe(false)
+  expect(JSON.parse(blocked.content).error).toMatch(/unknown or unavailable tool/)
+
+  const wakeWrite = invokeChatMcpTool({
+    name: 'dostigus_schedules_create',
+    args: {
+      botId,
+      cadence: 'daily',
+      timeLocal: '08:00',
+      wakeText: 'Morning',
+    },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    allowedTools: WAKE_CHAT_MCP_TOOLS,
+  })
+  expect(wakeWrite.ok).toBe(false)
 })

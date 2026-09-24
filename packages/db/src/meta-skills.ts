@@ -1,13 +1,14 @@
 import type { Skill } from '@dostigus/shared'
 import type { OpenedStore } from './store'
-import { parseSkillId, parseSkillInstructions } from '@dostigus/shared'
+import { parseSkillDescription, parseSkillId, parseSkillInstructions } from '@dostigus/shared'
 import { skillsFromJson } from './map'
 import { StoreError } from './store-error'
 
 /**
- * Meta Skills are constructor how-to on a Bot. Plain `{ id, instructions }`
- * in `bots.skills_json`. Insert when the id is absent. Do not call
- * `upsertBotSkill`: that replaces text. See ADR 0030.
+ * Meta Skills are constructor how-to on a Bot. Plain
+ * `{ id, description, instructions }` in `bots.skills_json`. Insert when the
+ * id is absent. Do not call `upsertBotSkill`: that replaces text.
+ * See ADR 0030 and ADR 0032.
  */
 
 export const META_SKILL_IDS = [
@@ -21,6 +22,14 @@ export const META_SKILL_IDS = [
 export type MetaSkillId = (typeof META_SKILL_IDS)[number]
 
 const META_SKILL_ID_SET = new Set<string>(META_SKILL_IDS)
+
+export const META_SKILL_DESCRIPTIONS: Record<MetaSkillId, string> = {
+  'platform-meta-schedules': 'Create, list, pause, update, resume, and delete Schedules (daily or weekly wall-clock Wake).',
+  'platform-meta-skills': 'List, read, upsert, and delete Skill text on this Bot.',
+  'platform-meta-self-settings': 'Change this Bot name, label, and description through dostigus_bots_update.',
+  'platform-meta-marketplace': 'There is no Module catalog yet. Do not invent weather tools or packages.',
+  'platform-meta-http-get': 'GET a public URL with dostigus_http_get. truncated means the body is incomplete.',
+}
 
 const META_SKILL_INSTRUCTIONS: Record<MetaSkillId, string> = {
   'platform-meta-schedules': `
@@ -42,10 +51,11 @@ Owner может передать \`personId\` в create и list. Фраза в�
   'platform-meta-skills': `
 # Skill
 
-Skill на этом Bot — объект \`{ id, instructions }\`. Это не Module package и не инструмент.
+Skill на этом Bot — объект \`{ id, description, instructions }\`. Это не Module package и не инструмент.
 
-- Список: \`dostigus_skills_list\` с \`botId\`.
-- Записать или заменить текст: \`dostigus_skills_upsert\`. \`id\` — буквы, цифры, \`_\` или \`-\`. Тот же \`id\` заменяет \`instructions\` и не создаёт новый id. \`instructions\` обязательны.
+- Каталог: \`dostigus_skills_list\` с \`botId\` — \`{ id, description }[]\`.
+- Полный текст: \`dostigus_skills_read\` с \`botId\` и \`id\`.
+- Записать или заменить: \`dostigus_skills_upsert\`. \`id\` — буквы, цифры, \`_\` или \`-\`. Нужны \`description\` (1–200) и \`instructions\`. Тот же \`id\` заменяет текст и не создаёт новый id.
 - Удалить: \`dostigus_skills_delete\` с \`botId\` и \`id\`.
 
 Писать может создатель этого Bot или Owner. Не говори, что Skill изменён, пока инструмент не вернул успех.
@@ -84,7 +94,16 @@ Allowlist задаёт Owner в Settings. Пустой список — любы
 
 for (const id of META_SKILL_IDS) {
   parseSkillId(id)
+  parseSkillDescription(META_SKILL_DESCRIPTIONS[id])
   parseSkillInstructions(META_SKILL_INSTRUCTIONS[id])
+}
+
+function seededMetaSkill(id: MetaSkillId): Skill {
+  return {
+    id,
+    description: META_SKILL_DESCRIPTIONS[id],
+    instructions: META_SKILL_INSTRUCTIONS[id],
+  }
 }
 
 function readSkills(store: OpenedStore, botId: string): Skill[] {
@@ -108,7 +127,7 @@ function missingMetaSkills(skills: Skill[]): Skill[] {
   const missing: Skill[] = []
   for (const id of META_SKILL_IDS) {
     if (!present.has(id)) {
-      missing.push({ id, instructions: META_SKILL_INSTRUCTIONS[id] })
+      missing.push(seededMetaSkill(id))
     }
   }
   return missing
@@ -142,10 +161,51 @@ export function upgradeBotMetaSkills(store: OpenedStore, botId: string): Skill[]
   return insertMissingMetaSkills(store, botId)
 }
 
+/**
+ * Live Bot repair on Host open. Inserts platform-meta-http-get when that
+ * id is absent (same insert-if-missing as Bot create). Does not restore
+ * other deleted meta Skills.
+ */
+export function insertMissingHttpGetMetaSkill(store: OpenedStore, botId: string): Skill[] {
+  const skills = readSkills(store, botId)
+  if (skills.some((skill) => skill.id === 'platform-meta-http-get')) {
+    return skills
+  }
+  const next = [...skills, seededMetaSkill('platform-meta-http-get')]
+  writeSkills(store, botId, next)
+  return next
+}
+
+/**
+ * Fill empty `description` on stored platform-meta-* Skills. Does not
+ * replace instructions or a description that is already set.
+ */
+export function backfillMetaSkillDescriptions(store: OpenedStore, botId: string): Skill[] {
+  const skills = readSkills(store, botId)
+  let changed = false
+  const next = skills.map((skill) => {
+    if (!META_SKILL_ID_SET.has(skill.id) || skill.description.trim()) {
+      return skill
+    }
+    changed = true
+    return {
+      ...skill,
+      description: META_SKILL_DESCRIPTIONS[skill.id as MetaSkillId],
+    }
+  })
+  if (!changed) {
+    return skills
+  }
+  writeSkills(store, botId, next)
+  return next
+}
+
 /** Image upgrade for every Bot. Host open calls this. It does not overwrite. */
 export function upgradeClusterMetaSkills(store: OpenedStore): void {
   const rows = store.sqlite.prepare('SELECT id FROM bots').all() as Array<{ id: string }>
   for (const row of rows) {
     upgradeBotMetaSkills(store, row.id)
+    insertMissingHttpGetMetaSkill(store, row.id)
+    backfillMetaSkillDescriptions(store, row.id)
   }
 }

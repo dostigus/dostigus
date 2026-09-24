@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 import {
   baseUrlForLlmGatewayPreset,
+  CHAT_HTTP_GET_HINT,
   CHAT_NO_PACKAGE_RULE,
   CHAT_SELF_SETTINGS_RULE,
   chatSystemPrompt,
@@ -189,19 +190,50 @@ it('never returns the full key from mask or public JSON', () => {
   expect(pub).not.toHaveProperty('apiKey')
 })
 
-it('asks a new Bot to learn its purpose and keep the Manifest', () => {
-  expect(chatSystemPrompt({
+it('stays on the Manifest and drops the learn-your-purpose line', () => {
+  const prompt = chatSystemPrompt({
     botName: 'New Bot',
     manifest: {
       name: 'New Bot',
+      label: 'notes',
+      description: 'Keeps field notes',
       modelTier: 'strong',
-      skillIds: [],
+      skillIds: ['notes'],
       modulePackageIds: [],
     },
-  })).toContain('You are new. Ask and learn what this Bot is for.')
+    skills: [{
+      id: 'notes',
+      description: 'Keep short notes.',
+      instructions: 'Write everything down. This body stays off the catalog.',
+    }],
+  })
+  expect(prompt).toContain('Stay on the Manifest. Reply briefly.')
+  expect(prompt).toContain('Reply briefly and stay in character.')
+  expect(prompt).not.toContain('You are new. Ask and learn what this Bot is for.')
+  expect(prompt).toContain('Manifest: name=New Bot; label=notes; description=Keeps field notes; Model tier=strong; Skills=notes; Module packages=none yet.')
+  expect(prompt).toContain('Skill notes: Keep short notes.')
+  expect(prompt).not.toContain('Write everything down')
+  expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
+  expect(prompt).toContain(CHAT_NO_PACKAGE_RULE)
+  expect(prompt).toContain(CHAT_HTTP_GET_HINT)
 })
 
-it('tells a configured Chat Bot it may use the MCP surface', () => {
+it('falls back to Skill {id} when a catalog description is missing', () => {
+  const prompt = chatSystemPrompt({
+    botName: 'Notes',
+    manifest: {
+      name: 'Notes',
+      modelTier: 'strong',
+      skillIds: ['notes'],
+      modulePackageIds: [],
+    },
+    skills: [{ id: 'notes', description: '', instructions: 'Keep short notes.' }],
+  })
+  expect(prompt).toContain('Skill notes')
+  expect(prompt).not.toContain('Keep short notes.')
+})
+
+it('tells a slim Chat Bot it may list and read Skills, not write Bots', () => {
   const prompt = chatSystemPrompt({
     botName: 'Notes',
     botId: 'bot-1',
@@ -214,19 +246,22 @@ it('tells a configured Chat Bot it may use the MCP surface', () => {
     },
   })
   expect(prompt).toContain('This Chat is with Bot id=bot-1.')
-  expect(prompt).toContain('You may call Cluster MCP surface tools')
-  expect(prompt).toContain('This Cluster has one Owner')
-  expect(prompt).toContain('You cannot delete Bots from Chat')
-  expect(prompt).toContain('you may read or set the Cluster timezone')
+  expect(prompt).toContain('list and append Chat messages')
+  expect(prompt).toContain('dostigus_skills_read')
+  expect(prompt).toContain('Do not create, rename, or delete Bots')
+  expect(prompt).toContain('You cannot set the Cluster timezone')
+  expect(prompt).toContain('You cannot set the Cluster http allowlist')
   expect(prompt).toContain('dostigus_http_get')
-  expect(prompt).toContain('You may read or set the Cluster http allowlist')
+  expect(prompt).not.toContain('read and write Bots')
+  expect(prompt).not.toContain('You may read or set the Cluster http allowlist')
+  expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
 })
 
-it('tells a Member Chat Bot to stay on messages', () => {
+it('opens Owner builder tools only on expand', () => {
   const prompt = chatSystemPrompt({
     botName: 'Notes',
     tools: true,
-    messagesOnly: true,
+    expand: true,
     manifest: {
       name: 'Notes',
       modelTier: 'strong',
@@ -234,17 +269,15 @@ it('tells a Member Chat Bot to stay on messages', () => {
       modulePackageIds: [],
     },
   })
-  expect(prompt).toContain('list and append Chat messages')
-  expect(prompt).toContain('Do not create, rename, or delete Bots')
-  expect(prompt).toContain('You cannot set the Cluster timezone')
-  expect(prompt).toContain('You cannot set the Cluster http allowlist')
-  expect(prompt).toContain('dostigus_http_get')
-  expect(prompt).not.toContain('read and write Bots')
-  expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
+  expect(prompt).toContain('You may call Cluster MCP surface tools')
+  expect(prompt).toContain('This Cluster has one Owner')
+  expect(prompt).toContain('You cannot delete Bots from Chat')
+  expect(prompt).toContain('you may read or set the Cluster timezone')
+  expect(prompt).toContain('You may read or set the Cluster http allowlist')
 })
 
-it('lets a creator Member rename this Bot and still forbids a blanket rename ban', () => {
-  const prompt = chatSystemPrompt({
+it('lets a creator Member rename this Bot only on expand', () => {
+  const slim = chatSystemPrompt({
     botName: 'Notes',
     tools: true,
     creatorManifest: true,
@@ -254,7 +287,25 @@ it('lets a creator Member rename this Bot and still forbids a blanket rename ban
       skillIds: ['notes'],
       modulePackageIds: [],
     },
-    skills: [{ id: 'notes', instructions: 'Keep short notes.' }],
+    skills: [{ id: 'notes', description: 'Keep short notes.', instructions: 'Write it down.' }],
+  })
+  expect(slim).toContain('Do not create, rename, or delete Bots')
+  expect(slim).not.toContain('update this Bot\'s name, label, description, and Skills')
+  expect(slim).toContain('Skill notes: Keep short notes.')
+  expect(slim).not.toContain('Write it down.')
+
+  const prompt = chatSystemPrompt({
+    botName: 'Notes',
+    tools: true,
+    creatorManifest: true,
+    expand: true,
+    manifest: {
+      name: 'Notes',
+      modelTier: 'strong',
+      skillIds: ['notes'],
+      modulePackageIds: [],
+    },
+    skills: [{ id: 'notes', description: 'Keep short notes.', instructions: 'Write it down.' }],
   })
   expect(prompt).toContain('update this Bot\'s name, label, description, and Skills')
   expect(prompt).not.toContain('Do not create, rename, or delete Bots')
@@ -262,7 +313,6 @@ it('lets a creator Member rename this Bot and still forbids a blanket rename ban
   expect(prompt).toContain('You cannot set the Cluster timezone')
   expect(prompt).toContain('You cannot set the Cluster http allowlist')
   expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
-  expect(prompt).toContain('Skill notes: Keep short notes.')
   expect(prompt).toContain('Do not claim success without a successful tool result')
 })
 
@@ -285,4 +335,24 @@ it('puts the self-settings rule on an Owner turn', () => {
   expect(prompt).toContain('The Host adds the Chat Card')
   expect(prompt).not.toContain('dostigus_modules_apply')
   expect(prompt).not.toContain('Apply a stock')
+})
+
+it('gives a Wake the Skill catalog and a narrower tool story', () => {
+  const prompt = chatSystemPrompt({
+    botName: 'Notes',
+    tools: true,
+    wake: true,
+    manifest: {
+      name: 'Notes',
+      modelTier: 'strong',
+      skillIds: ['notes'],
+      modulePackageIds: [],
+    },
+    skills: [{ id: 'notes', description: 'Keep short notes.', instructions: 'Write it down.' }],
+  })
+  expect(prompt).toContain('Skill notes: Keep short notes.')
+  expect(prompt).not.toContain('Write it down.')
+  expect(prompt).toContain('You cannot create, update, pause, resume, or delete Schedules')
+  expect(prompt).toContain('dostigus_skills_read')
+  expect(prompt).not.toContain('You may call Cluster MCP surface tools')
 })
