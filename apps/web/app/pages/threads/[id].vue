@@ -437,6 +437,17 @@ async function send() {
   align-self: flex-start;
 }
 
+.bubble.system {
+  align-self: center;
+  max-width: min(28rem, 92%);
+  padding: 0.15rem 0.6rem;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.82rem;
+}
+
 .who {
   margin: 0 0 0.25rem;
   color: var(--text-muted);

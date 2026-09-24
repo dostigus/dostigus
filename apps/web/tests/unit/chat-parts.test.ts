@@ -19,10 +19,17 @@ it('renders Kit parts on the assistant bubble and opens a Kit Sheet', () => {
   expect(chat).toContain('openSheet?.kind === \'kitchen\'')
   expect(chat).toContain('<ScheduleSheet')
   expect(chat).toContain('openSheet?.kind === \'schedule\'')
+  expect(chat).not.toContain('<SkillSheet')
+  expect(chat).not.toContain('sheet.kind === \'bot\'')
+  expect(chat).toMatch(/\.bubble\.system\s*\{[^}]*align-self:\s*center/)
   const room = readFileSync(join(import.meta.dirname, '../../app/pages/threads/[id].vue'), 'utf8')
   expect(room).toContain('KitChatParts')
   expect(room).toContain('<ScheduleSheet')
   expect(room).toContain('openSheet?.kind === \'schedule\'')
+  expect(room).not.toContain('<SkillSheet')
+  expect(room).not.toContain('sheet.kind === \'bot\'')
+  expect(room).not.toContain('<BotSettingsSheet')
+  expect(room).toMatch(/\.bubble\.system\s*\{[^}]*align-self:\s*center/)
 })
 
 it('keeps a button only when the Host registry knows the Sheet', () => {
@@ -45,6 +52,8 @@ it('keeps a button only when the Host registry knows the Sheet', () => {
     { kind: 'button', label: 'Open Kitchen', action: { type: 'openSheet', sheetId: 'kitchen' } },
   ])
   expect(hostSheetById(HOST_SCHEDULE_SHEET_ID)?.kind).toBe('schedule')
+  expect(hostSheetById('skill')).toBeUndefined()
+  expect(hostSheetById('bot')).toBeUndefined()
   expect(hostChatParts([
     {
       kind: 'card',

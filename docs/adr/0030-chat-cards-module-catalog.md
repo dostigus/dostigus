@@ -4,6 +4,7 @@
 - Date: 2026-09-24
 - Amended: 2026-09-24 — Nick reverse decision. This monorepo ships no stock Module packages and no Weather seed. Schedule Chat Cards stay. A Marketplace of packages is later.
 - Amended: 2026-09-24 — Nick: on Bot create the Host inserts missing meta Skills (constructor how-to). The seed is insert-if-missing and does not call `upsertBotSkill`. Chat Cards are unchanged. Still no stock Module packages and no Weather seed.
+- Amended: 2026-09-24 — Nick product reverse. Chat Cards stay Schedule-only. A successful `dostigus_skills_upsert`, `dostigus_skills_delete`, or `dostigus_bots_update` of name, label, or description writes one system Chat line on that bot-thread (same family as a Wake). Not kind `card`. No Sheet id `skill` opened from a Card. No Изменить on those lines. Card kinds `skill` and `bot` are not in this record.
 
 Assistant parts stay [ADR 0025](0025-chat-bubble-parts.md). Schedules
 and the Wake stay [ADR 0027](0027-bot-schedules.md). The platform
@@ -17,13 +18,15 @@ glossary term for later. This record does not run a Builder.
 ## Decision
 
 Day-1 closes the Schedule confirmation gap with a Host-injected Chat
-Card. It does not close capability gaps by shipping a ready Module
-package.
+Card. A successful Skill upsert or delete, and a Bot self-settings
+update of name, label, or description, write a system Chat line. It
+does not close capability gaps by shipping a ready Module package.
 
 A **Chat Card** is a Kit Card in the thread. The Host injects it as
 assistant message parts after a successful Schedule change. A prose
 reply alone leaves the person unsure the Store changed. A system line
-is not the Card. The closet is not the Card.
+is not the Card. The closet is not the Card. Skill and self-settings
+success is that system line, not a Card.
 
 This Platform monorepo ships **no stock Module packages** and **no
 Weather seed**. There is no `packages/modules/` catalog seed, no
@@ -35,9 +38,9 @@ A missing capability uses the constructor tools already in Chat: Skills
 upsert, Schedule tools, and Bot self-settings
 ([ADR 0028](0028-bot-self-settings-via-chat.md)). Those tools are not a
 stock package. On Bot create the Host also inserts missing meta Skills
-that teach those tools. The rows are plain Skill text. The ids and the
-insert-if-missing rule are under Consequences. Chat Cards in this record
-stay as written here.
+that teach those tools. The seed is insert-if-missing and does not call
+`upsertBotSkill` (that call replaces instructions). The rows are plain
+Skill text. The ids and the insert-if-missing rule are under Consequences.
 
 ### Chat Cards
 
@@ -119,11 +122,43 @@ A delete Card stays on the old line. Opening it later shows a Sheet
 that says the Schedule is gone. The Host does not rewrite the stored
 Card.
 
-The Host appends this part on the assistant line it stores for the
+The Host appends these parts on the assistant line it stores for the
 turn. One Schedule Card per Schedule id. The last successful Schedule
-tool for that id sets the body. The existing parts cap stays. If the
-completion fails after a tool succeeded, the stored error line still
-carries the Cards for the tools that succeeded.
+tool for that id sets the body. The existing parts cap counts every
+Card on the turn. If the completion fails after a tool succeeded, the
+stored error line still carries the Cards for the tools that succeeded.
+
+### Skill and self-settings lines
+
+The Host writes one system Chat line after a successful
+`dostigus_skills_upsert`, `dostigus_skills_delete`, or
+`dostigus_bots_update` that sets name and/or label and/or description.
+The line is the same family as a Wake
+([ADR 0027](0027-bot-schedules.md)): visible, a plain string, no parts,
+on that person's bot-thread. It does not start a Bot turn. The model
+does not emit the line.
+
+`dostigus_skills_list`, `dostigus_bots_list`, and `dostigus_bots_get`
+write nothing. A `dostigus_bots_update` that sets only avatar or Model
+tier writes nothing.
+
+One successful tool appends one line. A later success appends another
+line. The Host does not replace an earlier line.
+
+| Tool | Line |
+| --- | --- |
+| `dostigus_skills_upsert` | `Skill · <id> · <first instruction line>` when that line fits the part label cap, otherwise `Skill · <id> · записан` |
+| `dostigus_skills_delete` | `Skill · <id> · Удалено` |
+| `dostigus_bots_update` | `Бот · <name> · <label>` when the label is set and fits the part label cap, otherwise `Бот · <name> · обновлено` |
+
+The Bot name is the name after the write. Who may write stays
+[ADR 0028](0028-bot-self-settings-via-chat.md): the creator of that
+Bot, or the Owner.
+
+There is no Card kind `skill` or `bot`. There is no Sheet id `skill`
+opened from a Card, and no Изменить button on these lines. The Bot
+Параметры closet stays the Host closet for name, label, and
+description. It is not opened from a Chat Card.
 
 ### No stock packages
 
@@ -179,11 +214,15 @@ Kitchen remains a Host seed with no package row
 
 ## Consequences
 
-- This record is documentation. The code PR extends part parsing with
-  kind `card`, registers Sheet id `schedule`, and injects the Schedule
-  Cards. Tests cover the equivalent-Schedule Card. The code PR does
-  not add `packages/modules/`, catalog or Apply tools, Open-Meteo
-  handlers, or a Host-bundled stock package.
+- This record is documentation plus the Host that injects Schedule
+  Cards and writes Skill and self-settings system lines. Part parsing
+  accepts kind `card` with card kind `schedule` only. Sheet id
+  `schedule` is one Schedule. There is no Sheet id `skill` from a Card
+  and no Card kind `skill` or `bot`. Tests cover the
+  equivalent-Schedule Card and the system lines for Skill upsert and
+  delete and for `dostigus_bots_update` of name, label, or
+  description. The code does not add `packages/modules/`, catalog or
+  Apply tools, Open-Meteo handlers, or a Host-bundled stock package.
 - `messages.parts_json` gains no new column. Kind `card` has to be
   accepted on read or reload drops the Card.
 - The Chat allowlist does not gain `dostigus_modules_catalog` or
@@ -199,14 +238,16 @@ Kitchen remains a Host seed with no package row
 - The prompt line that forbids inventing Module packages stays. There
   is no stock-package exception.
 - Sheet id `schedule` is a Kit Sheet for one row. Kitchen's Sheet id
-  is unchanged ([ADR 0026](0026-kitchen-module-day-1.md)).
+  is unchanged. The Bot Параметры closet stays the Host closet. It is
+  not opened from a Chat Card.
+  ([ADR 0026](0026-kitchen-module-day-1.md)).
 - The runtime image does not gain a Module catalog seed. Host boot
   does not Apply a platform package. Boot does not rewrite meta Skill
   text.
 - The Kitchen Module is still not an applied Module package.
 - **Meta Skills.** On Bot create the Host inserts a fixed set of Skill
-  rows on that Bot when each id is absent (insert-if-missing). They are
-  constructor how-to: plain Skill text in
+  rows on that Bot when each id is absent (insert-if-missing). It does
+  not call `upsertBotSkill`. They are constructor how-to: plain Skill text in
   `bots.skills_json` (`{ id, instructions }`, as
   [ADR 0028](0028-bot-self-settings-via-chat.md)). They are not Module
   packages, not MCP tools, not Apply, and not files under
@@ -244,8 +285,8 @@ Kitchen remains a Host seed with no package row
 - The platform instruction stays on every turn. It is not one of these
   Skills. Rename, Schedule changes, and other self-edits stay a
   platform duty if a meta Skill is deleted.
-- Chat Cards in this record are unchanged. Inserting these rows does
-  not add `packages/modules/`, catalog or Apply tools, or a Weather seed.
+- Inserting these rows does not add `packages/modules/`, catalog or
+  Apply tools, or a Weather seed.
 - [`docs/deploy.md`](../deploy.md) does not require Open-Meteo hosts
   in `NO_PROXY` for a Module.
 
@@ -262,7 +303,10 @@ Kitchen remains a Host seed with no package row
 - Open-Meteo, OpenWeather, an API key, and weather numbers invented
   by the model.
 - A Weather Sheet, and a full Schedule list as the primary UI.
-- Tables, forms, and other Card kinds in the bubble.
+- Tables and forms in the bubble. Cards for every MCP tool. Card
+  kinds other than `schedule`. A Skill Card, a self-settings Card,
+  Sheet id `skill` opened from a Card, and Изменить on a Skill or
+  self-settings success line.
 - A Kitchen package in a catalog.
 - The Host parsing a sentence into a Schedule or a package id.
 - Force-overwrite of meta Skill instructions on Host boot, or on image
@@ -275,9 +319,12 @@ Kitchen remains a Host seed with no package row
 
 ## Alternatives
 
-- A system line instead of an assistant part — rejected. The Chat Card
-  reloads with the reply, in the [ADR 0025](0025-chat-bubble-parts.md)
-  family.
+- A system line instead of an assistant part for a Schedule Card —
+  rejected. The Schedule Chat Card reloads with the reply, in the
+  [ADR 0025](0025-chat-bubble-parts.md) family. A Skill upsert or
+  delete, and a Bot self-settings update of name, label, or
+  description, use a system Chat line (Nick, 2026-09-24). That line
+  is not a Card.
 - Confirmation only in the closet — rejected. The person is in the
   thread.
 - Ask the model to emit part JSON — rejected. The Host injects the

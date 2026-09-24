@@ -2,6 +2,9 @@ import {
   createBot,
   createMember,
   createOwner,
+  grantBot,
+  listBotSkills,
+  listBotThreadMessages,
   listSchedules,
   openStore,
   StoreError,
@@ -349,6 +352,217 @@ it('does not inject a Card for a failed tool or a catalog name', () => {
   noteToolCard(cards, 'dostigus_modules_apply', { applied: true, id: 'weather', title: 'Weather' })
   noteToolCard(cards, 'dostigus_modules_catalog', { miss: true })
   expect(cards.parts()).toEqual([])
+})
+
+function systemLines(store: ReturnType<typeof openStore>, botId: string, personId: string): string[] {
+  return listBotThreadMessages(store, botId, personId)
+    .filter((message) => message.role === 'system')
+    .map((message) => message.content)
+}
+
+it('appends one system line per Skill upsert or delete and no Card', () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const bot = createBot(store, { name: 'Notes', createdBy: owner.id }).bot
+  const cards = new ChatCardTurn()
+  const upserted = invokeChatMcpTool({
+    name: 'dostigus_skills_upsert',
+    args: {
+      botId: bot.id,
+      id: 'notes',
+      instructions: 'Keep short notes.\nSecond line stays off the line.',
+    },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(upserted.ok).toBe(true)
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual(['Skill · notes · Keep short notes.'])
+
+  const again = invokeChatMcpTool({
+    name: 'dostigus_skills_upsert',
+    args: { botId: bot.id, id: 'notes', instructions: 'Shorter.' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(again.ok).toBe(true)
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual([
+    'Skill · notes · Keep short notes.',
+    'Skill · notes · Shorter.',
+  ])
+
+  const listed = invokeChatMcpTool({
+    name: 'dostigus_skills_list',
+    args: { botId: bot.id },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(listed.ok).toBe(true)
+  expect(systemLines(store, bot.id, owner.id)).toHaveLength(2)
+
+  const removed = invokeChatMcpTool({
+    name: 'dostigus_skills_delete',
+    args: { botId: bot.id, id: 'notes' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(removed.ok).toBe(true)
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual([
+    'Skill · notes · Keep short notes.',
+    'Skill · notes · Shorter.',
+    'Skill · notes · Удалено',
+  ])
+})
+
+it('uses «записан» when the Skill line does not fit and skips a failed delete', () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const member = createMember(store, {
+    displayName: 'Grace',
+    username: 'grace',
+    passwordHash: 'hash:grace',
+  })
+  const bot = createBot(store, { name: 'Notes', createdBy: owner.id }).bot
+  grantBot(store, bot.id, member.id)
+  const cards = new ChatCardTurn()
+  const longLine = 'n'.repeat(81)
+  const upserted = invokeChatMcpTool({
+    name: 'dostigus_skills_upsert',
+    args: { botId: bot.id, id: 'long-note', instructions: longLine },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(upserted.ok).toBe(true)
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual(['Skill · long-note · записан'])
+
+  const denied = invokeChatMcpTool({
+    name: 'dostigus_skills_delete',
+    args: { botId: bot.id, id: 'long-note' },
+    store,
+    role: 'member',
+    personId: member.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(denied.ok).toBe(false)
+  expect(systemLines(store, bot.id, owner.id)).toEqual(['Skill · long-note · записан'])
+  expect(systemLines(store, bot.id, member.id)).toEqual([])
+  expect(listBotSkills(store, bot.id).some((skill) => skill.id === 'long-note')).toBe(true)
+})
+
+it('appends a system line when name, label, or description changes and no Card', () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const bot = createBot(store, { name: 'Notes', createdBy: owner.id }).bot
+  const cards = new ChatCardTurn()
+  const renamed = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: bot.id, name: 'Field notes', label: 'учёба' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(renamed.ok).toBe(true)
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual(['Бот · Field notes · учёба'])
+
+  const described = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: bot.id, description: 'For class.' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(described.ok).toBe(true)
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual([
+    'Бот · Field notes · учёба',
+    'Бот · Field notes · учёба',
+  ])
+
+  const cleared = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: bot.id, label: '' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(cleared.ok).toBe(true)
+  expect(systemLines(store, bot.id, owner.id).at(-1)).toBe('Бот · Field notes · обновлено')
+
+  const beforeAvatar = systemLines(store, bot.id, owner.id).length
+  const avatar = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: bot.id, avatarColor: '#1F7AE5' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(avatar.ok).toBe(true)
+  expect(systemLines(store, bot.id, owner.id)).toHaveLength(beforeAvatar)
+
+  const listed = invokeChatMcpTool({
+    name: 'dostigus_bots_list',
+    args: {},
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(listed.ok).toBe(true)
+  const got = invokeChatMcpTool({
+    name: 'dostigus_bots_get',
+    args: { id: bot.id },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(got.ok).toBe(true)
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toHaveLength(beforeAvatar)
+
+  const longName = 'N'.repeat(90)
+  const longLabel = 'L'.repeat(90)
+  const wide = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: bot.id, name: longName, label: longLabel },
+    store,
+    role: 'owner',
+    personId: owner.id,
+    turnBotId: bot.id,
+    cards,
+  })
+  expect(wide.ok).toBe(true)
+  expect(systemLines(store, bot.id, owner.id).at(-1)).toBe(`Бот · ${longName} · обновлено`)
 })
 
 it('requires cadence and timeLocal for intent set', () => {

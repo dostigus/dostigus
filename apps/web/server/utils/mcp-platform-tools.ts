@@ -41,6 +41,7 @@ import {
   schedulesResume,
   schedulesUpdate,
 } from './schedule-tools'
+import { writeSelfSettingsNotice } from './self-settings-notice'
 import { turnsGet, turnsList } from './turn-tools'
 
 export type PlatformToolSpec = {
@@ -410,7 +411,7 @@ export function invokeChatMcpTool(input: {
   personId?: string
   /** Schedule tools stay on the Bot for this Chat turn. */
   turnBotId?: string
-  /** Host-injected Schedule Chat Cards for this turn. */
+  /** Host-injected Chat Cards for this turn. */
   cards?: ChatCardTurn
 }): ChatToolInvokeResult {
   const name = input.name
@@ -452,6 +453,15 @@ export function invokeChatMcpTool(input: {
     if (input.cards) {
       noteToolCard(input.cards, spec.name, result)
     }
+    writeSelfSettingsNotice({
+      store: input.store,
+      personId: input.personId,
+      role: input.role,
+      turnBotId: input.turnBotId,
+      name: spec.name,
+      result,
+      args: parsed,
+    })
     logChatTool(spec.name, 'ok')
     return { ok: true, name: spec.name, content: mcpJson(result) }
   } catch (error) {

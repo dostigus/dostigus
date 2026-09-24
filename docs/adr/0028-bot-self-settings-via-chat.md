@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-24
-- Amended: 2026-09-24 — a missing capability stays on the constructor tools in this record (Skills upsert, Schedules, Bot self-settings). [ADR 0030](0030-chat-cards-module-catalog.md) is Schedule Chat Cards and does not add a stock package. Self-settings in this record are unchanged.
+- Amended: 2026-09-24 — a missing capability stays on the constructor tools in this record (Skills upsert, Schedules, Bot self-settings). [ADR 0030](0030-chat-cards-module-catalog.md) is Schedule Chat Cards. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, writes a system Chat line. It does not add a stock package. The tools in this record stay. There is no Card kind `skill` or `bot` and no Sheet id `skill` from a Card.
 - Amended: 2026-09-24 — on Bot create the Host may insert meta Skills (constructor how-to). Ids, Russian text, and insert-if-absent are [ADR 0030](0030-chat-cards-module-catalog.md). The tools and the platform instruction in this record stay. Deleting a meta Skill does not remove that duty.
 - Amended: 2026-09-24 — Skills live in `bots.skills_json` as `{ id, instructions }` (`packages/db/src/skills.ts`). A Skill id is letters, digits, `_`, or `-` (`parseSkillId` in `packages/shared/src/skill.ts`). One `instructions` string; no locale column.
 

@@ -4,6 +4,7 @@ import { CHAT_PART_LABEL_MAX, CHAT_PARTS_MAX } from '@dostigus/shared'
 /**
  * Schedule Cards the Host injects onto the assistant line of one turn.
  * One Card per Schedule id; the last successful tool for that id sets the body.
+ * Skill and self-settings success is a system Chat line, not a Card.
  * See ADR 0030.
  */
 

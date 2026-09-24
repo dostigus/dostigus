@@ -6,7 +6,8 @@ import { chatMcpToolsAsOpenAi, invokeChatMcpTool } from './mcp-platform-tools'
 
 /**
  * One Chat turn's tool list and Schedule Card collector.
- * The Host injects a Card after a Schedule tool. See ADR 0030.
+ * The Host injects a Card after a Schedule tool. A Skill or self-settings
+ * success writes a system line on the bot-thread. See ADR 0030.
  */
 export function openChatTurn(input: {
   store: OpenedStore

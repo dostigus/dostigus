@@ -99,10 +99,13 @@ _Avoid_: widget, embed, attachment (unqualified).
 **Chat Card**:
 A Kit Card the Host injects in the thread after a successful Schedule
 change. Stored as one assistant message part (`kind: card`) so reload
-keeps it. Not a system line and not a closet control. Pause and
-Изменить open a Sheet for that Schedule. Delete confirms in the Sheet.
-The model does not emit the part. Day-1 does not inject a Card after
-Apply.
+keeps it. Card kind is `schedule`. Not a system line and not a closet
+control. Pause and Изменить open Sheet id `schedule`. Delete confirms
+in that Sheet. The model does not emit the part. Day-1 does not inject
+a Card after Apply, and does not inject a Card for a Skill upsert or
+delete, a Bot self-settings update, or a bare list or get. Those Skill
+and self-settings successes are a Host-written system Chat line (the
+Wake family): plain string, no parts, no Изменить.
 _Avoid_: widget, toast, system line, embed.
 
 **Sheet**:
@@ -348,8 +351,11 @@ _Avoid_: public share, invite (unqualified).
   A missing capability uses Skills upsert, Schedule tools, and Bot
   self-settings already in Chat. On Bot create the Host inserts missing
   meta Skills that teach those tools (insert-if-missing). That seed does
-  not call `upsertBotSkill`. They are plain Skills. This
-  monorepo does not ship a stock Module package
+  not call `upsertBotSkill`. They are plain Skills. A successful Skill
+  upsert or delete, and a successful `dostigus_bots_update` of name,
+  label, or description, appends one system Chat line on that
+  bot-thread (plain string, no parts, same family as a Wake). It is
+  not a Chat Card. This monorepo does not ship a stock Module package
   ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)).
 - Module package data lives in the Cluster Store. Bot visibility does not
   give a Bot its own Store. A personal Bot uses the same MCP surface
