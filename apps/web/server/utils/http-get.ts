@@ -1,7 +1,14 @@
 import type { LookupAddress, LookupOptions } from 'node:dns'
 import { lookup as dnsLookup } from 'node:dns/promises'
 import { BlockList, isIP } from 'node:net'
+import process from 'node:process'
 import { httpAllowlistAllows, StoreError } from '@dostigus/db'
+import {
+  attachOutboundDispatcher,
+  createOutboundDispatcher,
+  resolveBotHttpOutboundProxy,
+  undiciOutboundFetch,
+} from './outbound-fetch'
 
 /**
  * Abort a hung GET so it cannot stall a Chat or Wake turn.
@@ -46,6 +53,8 @@ export type HostHttpGetOptions = {
   lookup?: HostHttpLookup
   timeoutMs?: number
   now?: () => number
+  /** Process env for Bot HTTP egress. Tests pass a bag. Production uses process.env. */
+  env?: NodeJS.ProcessEnv
 }
 
 function mappedIpv4(address: string): string | null {
@@ -193,7 +202,15 @@ export async function hostHttpGet(
   options: HostHttpGetOptions = {},
 ): Promise<HostHttpGetResult> {
   const allowlist = options.allowlist ?? []
-  const fetchImpl = options.fetchImpl ?? fetch
+  const env = options.env ?? process.env
+  const proxy = resolveBotHttpOutboundProxy(env)
+  if (proxy.kind === 'invalid') {
+    throw new StoreError('Bot HTTP proxy URL is invalid', 400)
+  }
+  const fetchImpl = attachOutboundDispatcher(
+    options.fetchImpl ?? undiciOutboundFetch,
+    createOutboundDispatcher(proxy.kind === 'proxy' ? proxy.href : null),
+  )
   const lookupFn = options.lookup ?? dnsLookup
   const timeoutMs = options.timeoutMs ?? HOST_HTTP_GET_TIMEOUT_MS
   const started = (options.now ?? Date.now)()

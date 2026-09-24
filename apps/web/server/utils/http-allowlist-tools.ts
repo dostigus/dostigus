@@ -28,5 +28,6 @@ export async function clusterHttpGet(
     allowlist: getClusterHttpAllowlist(store),
     fetchImpl: ctx?.fetchImpl,
     lookup: ctx?.lookup,
+    env: ctx?.env,
   })
 }

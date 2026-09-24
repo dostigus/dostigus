@@ -25,6 +25,8 @@ export type ScheduleToolContext = {
   /** Host HTTP get test doubles. Production leaves these unset. */
   fetchImpl?: typeof fetch
   lookup?: HostHttpLookup
+  /** Bot HTTP egress env. Production leaves this unset (process.env). */
+  env?: NodeJS.ProcessEnv
 }
 
 function actorMayManage(schedulePersonId: string, viewer?: BotViewer): boolean {

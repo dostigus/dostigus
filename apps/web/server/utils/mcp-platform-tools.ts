@@ -465,6 +465,7 @@ export function invokeChatMcpTool(input: {
   allowedTools?: readonly string[]
   fetchImpl?: typeof fetch
   lookup?: ScheduleToolContext['lookup']
+  env?: NodeJS.ProcessEnv
 }): ChatToolInvokeResult | Promise<ChatToolInvokeResult> {
   const name = input.name
   if (input.allowedTools && !input.allowedTools.includes(name)) {
@@ -512,6 +513,7 @@ export function invokeChatMcpTool(input: {
       turnBotId: input.turnBotId,
       fetchImpl: input.fetchImpl,
       lookup: input.lookup,
+      env: input.env,
     }
     const result = spec.run(parsed, input.store, viewer, ctx)
     if (isPromise(result)) {

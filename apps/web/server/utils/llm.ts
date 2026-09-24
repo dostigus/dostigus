@@ -31,8 +31,29 @@ import {
 import { chatMcpToolsAsOpenAi } from './mcp-platform-tools'
 import { isChatMcpTool } from './mcp-surface'
 import { collectToolCalls, toolResultError } from './openai-tools'
+import {
+  attachOutboundDispatcher,
+  createOutboundDispatcher,
+  resolveLlmOutboundProxy,
+  undiciOutboundFetch,
+} from './outbound-fetch'
 
 export { readLlmGatewayEnv }
+
+function llmOutboundFetch(
+  targetUrl: string | null,
+  env: NodeJS.ProcessEnv,
+  fetchImpl?: typeof fetch,
+): typeof fetch {
+  const parsed = resolveLlmOutboundProxy(targetUrl ?? '', env)
+  if (parsed.kind === 'invalid') {
+    throw new Error('LLM proxy URL is invalid')
+  }
+  return attachOutboundDispatcher(
+    fetchImpl ?? undiciOutboundFetch,
+    createOutboundDispatcher(parsed.kind === 'proxy' ? parsed.href : null),
+  )
+}
 
 export type ChatToolInvoker = (
   name: string,
@@ -126,7 +147,7 @@ export async function completeAssistantReply(input: {
       history: input.history,
       manifest: input.manifest,
       resolved,
-      fetchImpl: input.fetchImpl ?? fetch,
+      fetchImpl: llmOutboundFetch(resolved.baseUrl, input.env ?? process.env, input.fetchImpl),
       tools,
       invokeTool,
       audience,
@@ -171,8 +192,12 @@ export async function pingLlmGateway(input: {
     return { ok: false, error: 'LLM gateway is not configured' }
   }
 
-  const fetchImpl = input.fetchImpl ?? fetch
   try {
+    const fetchImpl = llmOutboundFetch(
+      resolved.baseUrl,
+      input.env ?? process.env,
+      input.fetchImpl,
+    )
     const models = await fetchImpl(`${resolved.baseUrl.replace(/\/$/, '')}/models`, {
       method: 'GET',
       headers: gatewayHeaders(resolved.apiKey),
