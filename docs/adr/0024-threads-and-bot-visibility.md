@@ -225,13 +225,14 @@ first open of a Bot they did not create follows the same rule.
 How current `shared` and `private` rows became creator access, Owner
 access, and grant rows is migration `0013_bot_grants`, described above.
 
-The room create entry is the sidebar `+` item «Создать групповой чат».
-The picker lists Household people and Bots the current person can open.
-A Bot can be chosen only when every selected person can already open it.
-The create does not write grant rows. Add Member (Invite or a password)
-also starts from that menu for the Owner. Direct messages and
-people-only groups stay on the same menu. There is no separate
-new-thread control on the rail.
+«Создать групповой чат» on the sidebar `+` is the only group create
+entry. The picker lists Household people and Bots the current person
+can open. No Bot selected stores a `group`. A Bot can be chosen only
+when every selected person can already open it, and that choice stores
+a `room`. The create does not write grant rows. Add Member (Invite or a
+password) also starts from that menu for the Owner. A direct message
+stays on the same menu. There is no separate people-only item and no
+separate new-thread control on the rail.
 
 Outside these milestones: SMTP, guests, Share link, and any role
 besides Owner and Member. No Org entity. `listen=all` stays later.

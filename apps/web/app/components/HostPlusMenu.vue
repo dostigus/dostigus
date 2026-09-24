@@ -49,19 +49,10 @@
         type="button"
         class="plus-item"
         role="menuitem"
-        @click="onThread('group')"
-      >
-        <span class="plus-label">Создать группу</span>
-        <span class="plus-hint">Только люди</span>
-      </button>
-      <button
-        type="button"
-        class="plus-item"
-        role="menuitem"
         @click="onThread('room')"
       >
         <span class="plus-label">Создать групповой чат</span>
-        <span class="plus-hint">Люди и Bot</span>
+        <span class="plus-hint">Люди, Bot по желанию</span>
       </button>
       <button
         v-if="isOwner"

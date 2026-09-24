@@ -11,7 +11,8 @@ and **Create a Bot**.
 Amended 2026-09-24: the sidebar `+` opens a menu first. **Найти или
 создать Bot** still replaces the Chat pane with this picker. A room is
 not a row in the picker. It starts from **Создать групповой чат** in
-that same menu.
+that same menu. That item is the only group create entry. No Bot
+selected stores a `group`. A selected Bot stores a `room`.
 
 ## Decision
 

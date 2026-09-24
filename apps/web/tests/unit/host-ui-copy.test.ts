@@ -96,6 +96,7 @@ it('keeps Bot list and Chat copy product-facing when no key is set', () => {
   const plus = read('components/HostPlusMenu.vue')
   expect(plus).toContain('Найти или создать Bot')
   expect(plus).toContain('Создать групповой чат')
+  expect(plus).not.toContain('Создать группу')
   expect(plus).toContain('Добавить Member')
   expect(plus).not.toContain('Kinnu')
   expect(plus).not.toMatch(leftover)

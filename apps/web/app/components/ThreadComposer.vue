@@ -62,7 +62,7 @@
         v-if="kind === 'room'"
         class="hint"
       >
-        Bot попадает в чат, только если его уже видит каждый человек. Создать чат не выдаёт доступ.
+        Bot можно не выбирать. Он попадает в чат, только если его уже видит каждый человек. Создать чат не выдаёт доступ.
       </p>
       <p
         v-if="others.length === 0"
@@ -237,13 +237,7 @@ const visibleBots = computed(() => {
 })
 
 const canSubmit = computed(() => {
-  if (!title.value.trim() || personIds.value.length < 1) {
-    return false
-  }
-  if (kind.value === 'room') {
-    return botIds.value.length > 0
-  }
-  return true
+  return title.value.trim().length > 0 && personIds.value.length > 0
 })
 
 watch(personIds, () => {
@@ -286,7 +280,7 @@ function togglePerson(id: string) {
     return
   }
   if (kind.value === 'dm') {
-    void createThread([id], [])
+    void createThread('dm', [id], [])
     return
   }
   const next = new Set(personIds.value)
@@ -318,17 +312,24 @@ function submit() {
   const selectedBots = kind.value === 'room'
     ? botIds.value.filter((id) => !botBlocked(id))
     : []
-  void createThread(personIds.value, selectedBots)
+  const postedKind = kind.value === 'room' && selectedBots.length === 0
+    ? 'group'
+    : kind.value
+  void createThread(postedKind, personIds.value, selectedBots)
 }
 
-async function createThread(people: string[], selectedBots: string[]) {
+async function createThread(
+  postedKind: 'dm' | 'group' | 'room',
+  people: string[],
+  selectedBots: string[],
+) {
   error.value = ''
   busy.value = true
   try {
     const created = await $fetch<{ thread: ThreadListItem }>('/api/threads', {
       method: 'POST',
       body: {
-        kind: kind.value,
+        kind: postedKind,
         title: title.value,
         personIds: people,
         botIds: selectedBots,

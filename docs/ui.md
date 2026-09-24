@@ -180,9 +180,9 @@ The top of the expanded sidebar is a loupe and a `+`, side by side, both
 outlined icon buttons with no accent fill. On the icon rail they leave
 that header and stack at the bottom: loupe, then `+`, then the user mark.
 Each Bot hit target on the rail is a square. The `+` opens one menu:
-find or create a Bot, a direct message, a people-only group, a room
-(«Создать групповой чат»), and, for the Owner, Add Member. The rail is
-loupe, `+`, then the user. There is no third create control. The
+find or create a Bot, a direct message, and «Создать групповой чат»
+(people, and a Bot when one is chosen), and, for the Owner, Add Member.
+The rail is loupe, `+`, then the user. There is no third create control. The
 loupe opens a centered search Sheet with no title and no close control:
 a field with a loupe and the placeholder Поиск, then rows with an
 avatar, a name, an optional section tag, one subtitle line, and ⌘1–⌘9 on

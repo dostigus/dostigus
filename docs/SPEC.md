@@ -97,10 +97,12 @@ What the running Cluster does today:
   A loupe and a `+` sit at the top of the
   expanded sidebar, quiet icon buttons with no accent fill. The `+` opens
   one menu: **Найти или создать Bot** (the Bot picker), **Написать лично**
-  (a direct message), **Создать группу** (people only), **Создать групповой
-  чат** (a `room`: Household people and Bots the current person can open),
-  and, for the Owner, **Добавить Member** (Invite, or add a Member with a
-  password). There is no separate new-thread control on the rail. On the
+  (a direct message), **Создать групповой чат** (Household people, and
+  Bots the current person can open), and, for the Owner, **Добавить
+  Member** (Invite, or add a Member with a password). That group item is
+  the only group create entry. People alone store a `group`. At least one
+  Bot stores a `room`. There is no separate new-thread control on the
+  rail. On the
   icon rail the loupe and `+` stack at the bottom, above the user mark:
   loupe, then `+`, then the user.
   The loupe opens a centered search Sheet with no title and no close
@@ -228,7 +230,7 @@ What the running Cluster does today:
   viewer's own bot-thread. The Owner opening a Bot they did not create
   uses the Owner's bot-thread and does not copy another person's lines.
   The Owner and Members may create a `dm`, a `group`, or a `room` from the sidebar `+`.
-  **Создать групповой чат** is the `room`. The picker lists Household people and Bots the current person can open. A Bot stays selectable only when every chosen person can already open it.
+  **Создать групповой чат** is the only group entry. The picker lists Household people and Bots the current person can open. No Bot selected stores a `group`. A selected Bot stores a `room`, and that Bot stays selectable only when every chosen person can already open it.
   Adding a Bot requires every person participant to already have access.
   The add does not grant that access. In a `room`, a Bot replies only
   when the line mentions it:
