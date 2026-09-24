@@ -88,7 +88,10 @@ is unchanged ([ADR 0009](0009-mcp-toolkit-endpoint.md)). A Member turn
 may call the schedule tools for that person's rows with the Bot on
 that turn, and may call timezone get. The Owner may manage any
 Schedule and may set the timezone. Schedule delete is on this loop.
-`dostigus_bots_delete` stays off it.
+`dostigus_bots_delete` stays off it. A Chat request to change a
+Schedule is Self-settings
+([ADR 0028](0028-bot-self-settings-via-chat.md)). The tools and this
+row stay this record. Manifest and Skills writes are not this scope.
 
 A Schedule list Sheet is later. It is not a day-1 must-have.
 

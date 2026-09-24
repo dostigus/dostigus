@@ -22,6 +22,7 @@ Settled now, even if this repo only scaffolds them:
 | Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). |
 | Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. A Bot is personal to its creator. The Owner always sees it. Other people need an explicit grant (`bot_id` + `person_id`). Bot-threads, direct messages, groups, and rooms are in this Host. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
 | Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. Not running in this Host yet. See [ADR 0027](adr/0027-bot-schedules.md). |
+| Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. Not running as specified yet. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -230,7 +231,12 @@ What the running Cluster does today:
   fails → clear error, not a stub. The
   full key is never returned to the client or written to logs. Greeting
   is always stored. Keys are **not** required for compose. See
-  [ADR 0011](adr/0011-chat-mcp-tool-loop.md).
+  [ADR 0011](adr/0011-chat-mcp-tool-loop.md). Self-settings of name,
+  label, description, and Skills is
+  [ADR 0028](adr/0028-bot-self-settings-via-chat.md). This Host does
+  not do that yet: Owner Chat already lists `dostigus_bots_update`,
+  and Member Chat is still messages only, including a Member who
+  created the Bot. See Self-settings.
 - `/health` stays `{ ok: true }`.
 - No seed/demo domain Bot. No Builder or Meal port. Preview
   `?kitchen=1` is local tooling, not a domain Bot. Household on this Host is
@@ -320,6 +326,69 @@ seed a Weather Module, a weather Skill, or a weather API.
   `dostigus_cluster_timezone_get` and may not set it. The settings
   field is this decision; the code PR adds the control.
 
+## Self-settings
+
+Decided in [ADR 0028](adr/0028-bot-self-settings-via-chat.md). This Host
+does not inject the platform rule, does not expose Skills tools, and
+does not give a Member creator Manifest tools in Chat yet. Owner Chat
+already lists `dostigus_bots_update`. Member Chat tools are still
+`dostigus_messages_list` and `dostigus_messages_create` only, and the
+Member prompt says not to rename. The code PR implements this section.
+Schedule tools and the Schedule row stay
+[ADR 0027](adr/0027-bot-schedules.md). The Platform does not seed a
+Weather Module or a weather Skill.
+
+- **Write.** When a person asks the Bot to change itself (name, label,
+  description, Skills, or Schedules), the Bot writes the Store through
+  MCP surface tools. A reply that claims success without a successful
+  tool result is wrong.
+- **Platform rule.** The Host injects one short instruction into every
+  Bot turn (Owner, Member, room mention, and Wake). It is not a
+  Manifest field and not a Skill. It says Self-settings use the MCP
+  surface, and the Bot must not assert success without a tool result.
+  A Skill may add domain procedure. Rename, Schedule changes, and
+  other self-edits are platform duty.
+- **Manifest.** Day-1 uses the existing `dostigus_bots_update` for
+  `name`, `label`, and `description` only. There is no second update
+  tool. An empty name is rejected. Length limits stay the closet
+  limits ([ADR 0020](adr/0020-bot-closet.md)). Label and description
+  stay optional. `avatarShape` and `avatarColor` stay closet-only.
+  `modelTier` stays Owner Settings and the existing MCP path. Delete
+  of a Bot or of Chat stays off Chat
+  ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)).
+- **Skills.** MCP tools `dostigus_skills_list`,
+  `dostigus_skills_upsert`, and `dostigus_skills_delete` list, upsert,
+  and delete Skill text on that Bot. That is not a Module package and
+  not the Builder. Storage may use or extend `bots.skills_json` or
+  Skill records. This spec does not choose the SQL. Today
+  `skills_json` maps to `Manifest.skillIds` (ids only).
+- **Schedules.** A request to create or change a Schedule is
+  Self-settings, and the Bot calls the
+  [ADR 0027](adr/0027-bot-schedules.md) tools. This section does not
+  repeat that schema or the ticker. The Host does not parse the
+  sentence.
+- **Who.** Name, label, description, and Skills: the creator of that
+  Bot, or the Owner. A grantee cannot. A Member who created the Bot
+  must receive `dostigus_bots_update` and the Skills tools on that
+  Bot, matching closet creator rights
+  ([ADR 0024](adr/0024-threads-and-bot-visibility.md)). The "do not
+  rename" Member prompt does not apply to that creator on their own
+  Bot, or to the Owner. Schedules stay the
+  [ADR 0027](adr/0027-bot-schedules.md) actors: the person on their
+  bot-thread, and the Owner. A grantee may still manage those
+  Schedules. The allowlist follows the viewer and that Bot on every
+  turn kind.
+- **Confirm.** After a successful tool result, the Bot confirms the
+  fact briefly. On failure, it reports the error and does not pretend.
+- **Refresh.** After a successful `dostigus_bots_update` or Skills
+  tool in a Host Chat turn, the Manifest shows in the Chat pill, the
+  sidebar, and an open closet Sheet. `apps/web/app/pages/bots/[id].vue`
+  already refreshes the Bot, the Bot list, and Threads when the
+  message POST completes. Keep that. Do not require a full page
+  reload. The name may stay the previous name while Activity is in
+  flight. A raw `/mcp` write may leave an already-open Chat stale
+  until the next refresh. That edge is acceptable for day-1.
+
 ## Self-host (compose)
 
 `docker compose -f docker/compose.yml up --build` serves the Host on port 3000
@@ -369,6 +438,12 @@ and [`docs/deploy.md`](deploy.md)).
 - A Weather Module, a weather Skill, a weather API, and a Kitchen-style
   weather seed. They are not in this Platform. A Schedule only writes a
   Wake ([ADR 0027](adr/0027-bot-schedules.md)).
+- Appearance via Chat, Model tier via Chat self-settings, and delete of
+  a Bot or of Chat via Chat. The Host parsing a sentence into a
+  Manifest, Skill, or Schedule write. Pushing a raw `/mcp` write into
+  an already-open Chat page. Self-settings behavior above is in scope
+  ([ADR 0028](adr/0028-bot-self-settings-via-chat.md)). This Host does
+  not run it yet.
 - Managed/cloud hosting (optional later; not the default)
 
 ## Success for later MVPs (not this PR)
