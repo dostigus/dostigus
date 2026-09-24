@@ -73,6 +73,7 @@ export {
   listMessages,
   listThreadMessages,
   type MessageSearchHit,
+  openBotThread,
   requireBot,
   searchMessages,
   StoreError,
@@ -80,7 +81,43 @@ export {
   upsertLlmGatewaySettings,
   viewerMaySeeBot,
 } from './queries'
-export { type BotGrantRow, botGrants, type BotRow, bots, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads } from './schema'
+export {
+  decideScheduleFire,
+  isValidIanaTimeZone,
+  nextScheduleRunAt,
+  SCHEDULE_CATCH_UP_MS,
+  SCHEDULE_DEFER_LIMIT,
+  SCHEDULE_DEFER_MS,
+  SCHEDULE_TICK_MS,
+  SCHEDULE_WEEKDAYS,
+  type ScheduleCadence,
+  type ScheduleFireDecision,
+  type ScheduleWeekday,
+} from './schedule-time'
+export {
+  type ClusterTimeZone,
+  createSchedule,
+  deleteSchedule,
+  type DueSchedule,
+  effectiveClusterTimeZone,
+  getSchedule,
+  listDueSchedules,
+  listSchedules,
+  pauseSchedule,
+  personMayOpenBot,
+  recordScheduleDefer,
+  recordScheduleFire,
+  recordScheduleSkip,
+  resumeSchedule,
+  type Schedule,
+  type ScheduleClock,
+  type ScheduleLastRunStatus,
+  type ScheduleWrite,
+  setClusterTimeZone,
+  updateSchedule,
+  viewerForPerson,
+} from './schedules'
+export { type BotGrantRow, botGrants, type BotRow, bots, clusterSettings, type ClusterSettingsRow, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ScheduleRow, schedules, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads } from './schema'
 export { type OpenedStore, openStore } from './store'
 export {
   appendMessengerAssistantLine,

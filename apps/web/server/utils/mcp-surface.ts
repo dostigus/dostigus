@@ -12,6 +12,18 @@ export const KITCHEN_MCP_TOOLS = [
 
 export type KitchenMcpTool = typeof KITCHEN_MCP_TOOLS[number]
 
+/** Schedule and Cluster timezone tools. On `/mcp` and the Chat loop. See ADR 0027. */
+export const SCHEDULE_MCP_TOOLS = [
+  'dostigus_schedules_list',
+  'dostigus_schedules_create',
+  'dostigus_schedules_update',
+  'dostigus_schedules_pause',
+  'dostigus_schedules_resume',
+  'dostigus_schedules_delete',
+  'dostigus_cluster_timezone_get',
+  'dostigus_cluster_timezone_set',
+] as const
+
 /** Platform MCP surface tool names (Host + Cluster Store). */
 export const PLATFORM_MCP_TOOLS = [
   'dostigus_bots_list',
@@ -21,6 +33,7 @@ export const PLATFORM_MCP_TOOLS = [
   'dostigus_bots_delete',
   'dostigus_messages_list',
   'dostigus_messages_create',
+  ...SCHEDULE_MCP_TOOLS,
   ...KITCHEN_MCP_TOOLS,
 ] as const
 
@@ -36,10 +49,21 @@ export const CHAT_MCP_TOOLS = PLATFORM_MCP_TOOLS.filter(
 
 export type ChatMcpTool = typeof CHAT_MCP_TOOLS[number]
 
-/** Member Chat may read and append messages only. */
+/**
+ * Member Chat may read and append messages, manage that person's
+ * Schedules on the Bot in the turn, and read the Cluster timezone.
+ * Setting the timezone stays with the Owner.
+ */
 export const MEMBER_CHAT_MCP_TOOLS = [
   'dostigus_messages_list',
   'dostigus_messages_create',
+  'dostigus_schedules_list',
+  'dostigus_schedules_create',
+  'dostigus_schedules_update',
+  'dostigus_schedules_pause',
+  'dostigus_schedules_resume',
+  'dostigus_schedules_delete',
+  'dostigus_cluster_timezone_get',
 ] as const satisfies readonly ChatMcpTool[]
 
 export type MemberChatMcpTool = typeof MEMBER_CHAT_MCP_TOOLS[number]

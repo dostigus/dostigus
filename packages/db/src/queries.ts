@@ -319,6 +319,11 @@ function ensureBotThread(store: OpenedStore, botId: string, personId: string): B
   return { id }
 }
 
+/** The person's bot-thread with this Bot, creating it when missing. */
+export function openBotThread(store: OpenedStore, botId: string, personId: string): string {
+  return ensureBotThread(store, botId, personId).id
+}
+
 /** Greeting thread when the Store has no Owner and no creator yet. */
 function soleBotThreadId(store: OpenedStore, botId: string): string {
   const rows = store.sqlite.prepare(`

@@ -322,6 +322,14 @@ HTTP tools; empty token leaves them disabled. That token is not the Owner
 session (`NUXT_SESSION_PASSWORD`). Configured Chat invokes the same tool
 handlers in-process (no HTTP `/mcp`; delete is not a Chat tool).
 
+Schedules are Store rows. Chat tools are `dostigus_schedules_list`,
+`dostigus_schedules_create`, `dostigus_schedules_update`,
+`dostigus_schedules_pause`, `dostigus_schedules_resume`, and
+`dostigus_schedules_delete`, plus `dostigus_cluster_timezone_get`.
+A Member may call those. `dostigus_cluster_timezone_set` is Owner only.
+The Owner sets the Cluster timezone on Settings. The Host process polls
+due Schedules. See [ADR 0027](docs/adr/0027-bot-schedules.md).
+
 Self-host compose (Store volume + published image): see [`docs/deploy.md`](docs/deploy.md).
 
 ```

@@ -161,9 +161,52 @@ it('calls chat completions with greeting history and the Manifest system prompt'
     'dostigus_bots_update',
     'dostigus_messages_list',
     'dostigus_messages_create',
+    'dostigus_schedules_list',
+    'dostigus_schedules_create',
+    'dostigus_schedules_update',
+    'dostigus_schedules_pause',
+    'dostigus_schedules_resume',
+    'dostigus_schedules_delete',
+    'dostigus_cluster_timezone_get',
+    'dostigus_cluster_timezone_set',
   ])
   expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_bots_delete')
   expect(JSON.stringify(body)).not.toContain('sk-test-secret-key')
+})
+
+it('sends a system Wake to the model as the line to answer', async () => {
+  let body: unknown
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body))
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'Here is the morning note.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    history: [
+      {
+        id: 'wake',
+        botId: 'b1',
+        role: 'system',
+        content: 'Morning briefing',
+        createdAt: new Date().toISOString(),
+        personId: null,
+        parts: [],
+      },
+    ],
+    env: {
+      OPENAI_COMPATIBLE_BASE_URL: 'https://example.test/v1',
+      LLM_API_KEY: 'sk-test',
+    },
+    fetchImpl,
+  })
+
+  const payload = body as { messages: Array<{ role: string, content: string }> }
+  expect(payload.messages.map((message) => message.role)).toEqual(['system', 'user'])
+  expect(payload.messages[1]?.content).toBe('Morning briefing')
 })
 
 it('fails clearly instead of stubbing when the LLM gateway is configured', async () => {

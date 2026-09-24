@@ -210,12 +210,11 @@ async function callOpenAiCompatible(input: {
         },
       }),
     },
-    ...input.history
-      .filter((message) => message.role !== 'system')
-      .map((message) => ({
-        role: message.role,
-        content: message.content,
-      })),
+    ...input.history.map((message) => ({
+      // A stored system line is the Wake. The Bot replies to it as a user line.
+      role: message.role === 'system' ? 'user' as const : message.role,
+      content: message.content,
+    })),
   ]
 
   let usedTools = false

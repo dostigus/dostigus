@@ -99,6 +99,13 @@
       "when": 1759298400000,
       "tag": "0013_bot_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1759384800000,
+      "tag": "0014_schedules",
+      "breakpoints": true
     }
   ]
 }

@@ -252,6 +252,7 @@ export function chatSystemPrompt(input: {
   if (input.tools && input.messagesOnly) {
     lines.push(
       'You may call tools to list and append Chat messages for this Bot.',
+      'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time) and you may read the Cluster timezone. You cannot set the Cluster timezone.',
       'Do not create, rename, or delete Bots.',
       'Prefer tools over guessing Store state.',
       'The Host already stores this Chat turn; do not append it again unless asked.',
@@ -259,6 +260,7 @@ export function chatSystemPrompt(input: {
   } else if (input.tools) {
     lines.push(
       'You may call Cluster MCP surface tools to read and write Bots and Chat messages in this Owner Cluster.',
+      'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time in the Cluster timezone) and you may read or set the Cluster timezone.',
       'Stay on this Bot\'s purpose. This Cluster has one Owner.',
       'Prefer tools over guessing Store state.',
       'The Host already stores this Chat turn; do not append it again unless asked.',

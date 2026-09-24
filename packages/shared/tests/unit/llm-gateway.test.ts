@@ -174,6 +174,7 @@ it('tells a configured Chat Bot it may use the MCP surface', () => {
   expect(prompt).toContain('You may call Cluster MCP surface tools')
   expect(prompt).toContain('This Cluster has one Owner')
   expect(prompt).toContain('You cannot delete Bots from Chat')
+  expect(prompt).toContain('you may read or set the Cluster timezone')
 })
 
 it('tells a Member Chat Bot to stay on messages', () => {
@@ -190,5 +191,6 @@ it('tells a Member Chat Bot to stay on messages', () => {
   })
   expect(prompt).toContain('list and append Chat messages')
   expect(prompt).toContain('Do not create, rename, or delete Bots')
+  expect(prompt).toContain('You cannot set the Cluster timezone')
   expect(prompt).not.toContain('read and write Bots')
 })

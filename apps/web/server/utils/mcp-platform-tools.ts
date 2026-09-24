@@ -3,6 +3,7 @@ import type { BotViewer } from '@dostigus/shared'
 import type { ZodRawShape } from 'zod'
 import type { PlatformMcpTool } from './mcp-surface'
 import type { OpenAiChatFunctionTool } from './openai-tools'
+import type { ScheduleToolContext } from './schedule-tools'
 import { StoreError } from '@dostigus/db'
 import { BOT_ACCENT_HEXES, BOT_AVATAR_SHAPES, MESSAGE_ROLES, MODEL_TIERS } from '@dostigus/shared'
 import { z } from 'zod'
@@ -25,6 +26,16 @@ import {
 import { mcpJson } from './mcp'
 import { CHAT_MCP_TOOLS, isChatMcpTool, isMemberChatMcpTool, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS } from './mcp-surface'
 import { mcpToolsToOpenAiFunctions, parseToolCallArguments, toolResultError } from './openai-tools'
+import {
+  clusterTimezoneGet,
+  clusterTimezoneSet,
+  schedulesCreate,
+  schedulesDelete,
+  schedulesList,
+  schedulesPause,
+  schedulesResume,
+  schedulesUpdate,
+} from './schedule-tools'
 
 export type PlatformToolSpec = {
   name: PlatformMcpTool
@@ -32,7 +43,12 @@ export type PlatformToolSpec = {
   annotations?: { readOnlyHint?: boolean, destructiveHint?: boolean }
   chat: boolean
   inputSchema?: ZodRawShape
-  run: (input: Record<string, unknown>, store: OpenedStore, viewer?: BotViewer) => unknown
+  run: (
+    input: Record<string, unknown>,
+    store: OpenedStore,
+    viewer?: BotViewer,
+    ctx?: ScheduleToolContext,
+  ) => unknown
 }
 
 export type ChatToolInvokeResult = {
@@ -199,6 +215,88 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
       ingredients: input.ingredients,
     }),
   },
+  dostigus_schedules_list: {
+    name: 'dostigus_schedules_list',
+    description: 'List Schedules for this person and this Bot, oldest first. Each row has id, cadence (daily or weekly), timeLocal (HH:MM wall clock in the Cluster timezone), daysOfWeek (sun–sat, weekly only), wakeText, paused, and nextRunAt. The Owner may pass personId to list another person. Omit personId to list every Schedule on this Bot when you are the Owner.',
+    annotations: { readOnlyHint: true },
+    chat: true,
+    inputSchema: {
+      botId: z.string().min(1),
+      personId: z.string().min(1).optional(),
+    },
+    run: (input, store, viewer, ctx) => schedulesList(store, input, viewer, ctx),
+  },
+  dostigus_schedules_create: {
+    name: 'dostigus_schedules_create',
+    description: 'Create a Schedule that wakes this Bot on this person\'s bot-thread. cadence is daily or weekly. timeLocal is HH:MM 24-hour wall clock in the Cluster timezone. daysOfWeek is required for weekly and omitted for daily (sun, mon, tue, wed, thu, fri, sat). wakeText is the Wake line. The Host sets the next fire. A sentence such as every morning at 08:00 is this call. Do not pass nextRunAt.',
+    chat: true,
+    inputSchema: {
+      botId: z.string().min(1),
+      cadence: z.enum(['daily', 'weekly']),
+      timeLocal: z.string().min(4).max(5),
+      daysOfWeek: z.array(z.string()).optional(),
+      wakeText: z.string().min(1).max(2000),
+      personId: z.string().min(1).optional(),
+    },
+    run: (input, store, viewer, ctx) => schedulesCreate(store, input, viewer, ctx),
+  },
+  dostigus_schedules_update: {
+    name: 'dostigus_schedules_update',
+    description: 'Update a Schedule (cadence, timeLocal, daysOfWeek, and/or wakeText) for this person and this Bot. Recomputes the next fire. The Owner may update any Schedule.',
+    chat: true,
+    inputSchema: {
+      id: z.string().min(1),
+      cadence: z.enum(['daily', 'weekly']).optional(),
+      timeLocal: z.string().min(4).max(5).optional(),
+      daysOfWeek: z.array(z.string()).optional(),
+      wakeText: z.string().min(1).max(2000).optional(),
+    },
+    run: (input, store, viewer, ctx) => schedulesUpdate(store, input, viewer, ctx),
+  },
+  dostigus_schedules_pause: {
+    name: 'dostigus_schedules_pause',
+    description: 'Pause a Schedule. Paused rows do not fire. The row stays.',
+    chat: true,
+    inputSchema: {
+      id: z.string().min(1),
+    },
+    run: (input, store, viewer, ctx) => schedulesPause(store, input, viewer, ctx),
+  },
+  dostigus_schedules_resume: {
+    name: 'dostigus_schedules_resume',
+    description: 'Resume a paused Schedule and recompute the next fire from the wall clock.',
+    chat: true,
+    inputSchema: {
+      id: z.string().min(1),
+    },
+    run: (input, store, viewer, ctx) => schedulesResume(store, input, viewer, ctx),
+  },
+  dostigus_schedules_delete: {
+    name: 'dostigus_schedules_delete',
+    description: 'Delete a Schedule for this person and this Bot. The Owner may delete any Schedule.',
+    annotations: { destructiveHint: true },
+    chat: true,
+    inputSchema: {
+      id: z.string().min(1),
+    },
+    run: (input, store, viewer, ctx) => schedulesDelete(store, input, viewer, ctx),
+  },
+  dostigus_cluster_timezone_get: {
+    name: 'dostigus_cluster_timezone_get',
+    description: 'Read the Cluster timezone. stored is the IANA name in Settings when one is set. effective is stored, else DOSTIGUS_TZ, else UTC. source is store, env, or utc.',
+    annotations: { readOnlyHint: true },
+    chat: true,
+    run: (_input, store) => clusterTimezoneGet(store),
+  },
+  dostigus_cluster_timezone_set: {
+    name: 'dostigus_cluster_timezone_set',
+    description: 'Set the Cluster timezone to an IANA name such as America/New_York or UTC. Owner only. Wall clocks on Schedules stay; next fire instants move.',
+    chat: true,
+    inputSchema: {
+      timezone: z.string().min(1).max(64),
+    },
+    run: (input, store, viewer) => clusterTimezoneSet(store, input, viewer),
+  },
 }
 
 export function platformToolSpec(name: PlatformMcpTool): PlatformToolSpec {
@@ -243,6 +341,8 @@ export function invokeChatMcpTool(input: {
   store: OpenedStore
   role?: 'owner' | 'member'
   personId?: string
+  /** Schedule tools stay on the Bot for this Chat turn. */
+  turnBotId?: string
 }): ChatToolInvokeResult {
   const name = input.name
   if (input.role === 'member') {
@@ -278,7 +378,7 @@ export function invokeChatMcpTool(input: {
           role: input.role === 'member' ? 'member' as const : 'owner' as const,
         }
       : undefined
-    const result = spec.run(parsed, input.store, viewer)
+    const result = spec.run(parsed, input.store, viewer, { turnBotId: input.turnBotId })
     logChatTool(spec.name, 'ok')
     return { ok: true, name: spec.name, content: mcpJson(result) }
   } catch (error) {

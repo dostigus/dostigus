@@ -164,6 +164,57 @@
           </button>
         </div>
       </form>
+
+      <form
+        class="card tz"
+        @submit.prevent="saveTimezone"
+      >
+        <p class="mark">
+          Cluster timezone
+        </p>
+        <p class="hint">
+          Schedules use this wall clock. An IANA name such as America/New_York or UTC.
+        </p>
+        <p
+          v-if="timezone?.source === 'env'"
+          class="note"
+        >
+          Using {{ timezone.effective }} from the server until you save a timezone here.
+        </p>
+        <p
+          v-else-if="timezone && !timezone.stored"
+          class="note"
+        >
+          Using UTC until you set a timezone.
+        </p>
+        <label class="field">
+          <span>IANA timezone</span>
+          <input
+            v-model="timezoneInput"
+            type="text"
+            name="timezone"
+            placeholder="America/New_York"
+            autocomplete="off"
+            spellcheck="false"
+          >
+        </label>
+        <p
+          v-if="timezoneMessage"
+          class="flash"
+          :class="{ error: timezoneMessageError }"
+        >
+          {{ timezoneMessage }}
+        </p>
+        <div class="actions">
+          <button
+            type="submit"
+            class="solid"
+            :disabled="timezoneSaving || !timezoneInput.trim()"
+          >
+            {{ timezoneSaving ? 'Saving…' : 'Save timezone' }}
+          </button>
+        </div>
+      </form>
     </main>
   </div>
 </template>
@@ -187,6 +238,16 @@ const { data, error: loadError, refresh } = await useFetch<{ llmGateway: LlmGate
   '/api/settings/llm-gateway',
 )
 
+type ClusterTimezoneSettings = {
+  stored: string | null
+  effective: string
+  source: 'store' | 'env' | 'utc'
+}
+
+const { data: timezoneData, refresh: refreshTimezone } = await useFetch<{
+  timezone: ClusterTimezoneSettings
+}>('/api/settings/timezone')
+
 const gateway = computed(() => data.value?.llmGateway)
 const preset = ref<LlmGatewayPreset>('openrouter')
 const baseUrl = ref('')
@@ -197,6 +258,11 @@ const saving = ref(false)
 const pinging = ref(false)
 const message = ref('')
 const messageError = ref(false)
+const timezoneInput = ref('')
+const timezoneSaving = ref(false)
+const timezoneMessage = ref('')
+const timezoneMessageError = ref(false)
+const timezone = computed(() => timezoneData.value?.timezone)
 
 const busy = computed(() => saving.value || pinging.value)
 const hint = computed(() => {
@@ -239,6 +305,19 @@ function choosePreset(next: LlmGatewayPreset) {
 }
 
 watch(gateway, (next) => applyGateway(next), { immediate: true })
+watch(timezone, (next) => {
+  timezoneInput.value = next?.stored ?? ''
+}, { immediate: true })
+
+function timezoneErrorText(error: unknown): string {
+  if (error && typeof error === 'object' && 'statusMessage' in error) {
+    const statusMessage = error.statusMessage
+    if (typeof statusMessage === 'string' && statusMessage.trim()) {
+      return statusMessage
+    }
+  }
+  return 'Cluster timezone must be an IANA name.'
+}
 
 async function save() {
   saving.value = true
@@ -284,6 +363,27 @@ async function clearKey() {
     messageError.value = true
   } finally {
     saving.value = false
+  }
+}
+
+async function saveTimezone() {
+  timezoneSaving.value = true
+  timezoneMessage.value = ''
+  timezoneMessageError.value = false
+  try {
+    const result = await $fetch<{ timezone: ClusterTimezoneSettings }>('/api/settings/timezone', {
+      method: 'PUT',
+      body: { timezone: timezoneInput.value.trim() },
+    })
+    timezoneData.value = result
+    timezoneInput.value = result.timezone.stored ?? ''
+    timezoneMessage.value = 'Timezone saved.'
+  } catch (error) {
+    timezoneMessage.value = timezoneErrorText(error)
+    timezoneMessageError.value = true
+  } finally {
+    timezoneSaving.value = false
+    await refreshTimezone()
   }
 }
 
@@ -362,6 +462,10 @@ async function ping() {
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
   background: var(--card);
+}
+
+.card.tz {
+  margin-top: 1.25rem;
 }
 
 .status-row {

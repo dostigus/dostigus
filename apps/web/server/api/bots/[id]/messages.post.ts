@@ -33,6 +33,7 @@ export default defineEventHandler(async (event) => {
       viewer,
     })
     activityThreadId = messageThreadId(store, user.id)
+    setChatActivityPhase(activityThreadId, bot.id, 'thinking')
     const { messages: history } = listClusterMessages(store, botId, viewer)
     const reply = await completeAssistantReply({
       botName: bot.name,
@@ -49,6 +50,7 @@ export default defineEventHandler(async (event) => {
         store,
         role,
         personId,
+        turnBotId: bot.id,
       }),
       onActivity: (phase) => {
         setChatActivityPhase(activityThreadId, bot.id, phase)
