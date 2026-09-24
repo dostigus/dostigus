@@ -77,6 +77,23 @@ docker compose -f docker/compose.yml up --build
 Or open **Settings** on the Host and paste the same base + key. See
 [`.env.example`](../.env.example) and [ADR 0004](adr/0004-llm-gateway-tiers.md).
 
+### Open-Meteo (stock Weather package)
+
+[ADR 0030](adr/0030-chat-cards-module-catalog.md) decides a stock Weather
+seed. The code PR is not in this image yet. When it is, the Host fetches
+Open-Meteo itself, only after Apply on a Bot:
+
+- `https://api.open-meteo.com`
+- `https://geocoding-api.open-meteo.com`
+
+That fetch is not the Cluster LLM gateway and does not use the proxy set
+for OpenRouter. Include both hosts in `NO_PROXY` and `no_proxy`, or the
+Host uses a separate fetch that ignores `HTTPS_PROXY` / `https_proxy`.
+Host boot does not call Open-Meteo and does not enable Weather on every
+Bot. Upgrade the running Cluster onto that image only after the image is
+green. The volume stays. Existing Bots do not gain the package until a
+later Apply.
+
 ## MCP surface
 
 The Host serves the Cluster MCP surface at `/mcp` (`@nuxtjs/mcp-toolkit`,
