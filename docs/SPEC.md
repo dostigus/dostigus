@@ -581,11 +581,14 @@ Module.
   `platform-meta-marketplace`, and `platform-meta-http-get`.
   Instructions are Russian markdown in
   the one `instructions` string. There is no English column. The text
-  teaches Schedule tools (create, list, pause, edit), Skills upsert,
-  Bot self-settings, that domain Module packages come later
-  through Marketplace, and Host HTTP get (`dostigus_http_get`,
-  including how to build a query URL). It does not invent weather
-  tools. Image upgrade
+  teaches Schedule tools (create, list, pause, edit; a fetch Wake
+  `wakeText` should call `dostigus_http_get` and not invent numbers),
+  Skills upsert, Bot self-settings, that domain Module packages come
+  later through Marketplace (public HTTP still uses
+  `dostigus_http_get`, for example Open-Meteo; still no Weather
+  Module or weather Skill seed), and Host HTTP get
+  (`dostigus_http_get`, including how to build a query URL). It does
+  not invent weather tools. Image upgrade
   may insert the set only on a Bot that has none of these ids. Stored
   instructions stay. The creator or the Owner may edit or delete them
   with the Skills tools. This seed is in this Host. It is

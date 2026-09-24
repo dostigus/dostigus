@@ -9,7 +9,7 @@ import {
   isBlockedIpAddress,
   parseHostHttpGetUrl,
 } from '../../server/utils/http-get'
-import { invokeChatMcpTool } from '../../server/utils/mcp-platform-tools'
+import { invokeChatMcpTool, platformToolSpec } from '../../server/utils/mcp-platform-tools'
 
 const opened: Array<ReturnType<typeof openStore>> = []
 
@@ -31,6 +31,17 @@ function lookup(map: Record<string, string[]>) {
     family: address.includes(':') ? 6 : 4,
   })) ?? Promise.reject(new Error('ENOTFOUND'))
 }
+
+it('describes how to build an Open-Meteo forecast URL', () => {
+  const description = platformToolSpec('dostigus_http_get').description
+  expect(description).toContain('api.open-meteo.com')
+  expect(description).toContain('latitude')
+  expect(description).toContain('longitude')
+  expect(description).toContain('temperature_2m')
+  expect(description).toContain('apparent_temperature')
+  expect(description).toContain('timezone')
+  expect(description).not.toMatch(/dostigus_modules|Weather Skill seed/)
+})
 
 it('blocks loopback, private, link-local, and unspecified addresses', () => {
   expect(isBlockedIpAddress('127.0.0.1')).toBe(true)
