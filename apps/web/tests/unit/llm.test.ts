@@ -1,7 +1,17 @@
-import { CHAT_MCP_TOOL_MAX_ITERATIONS } from '@dostigus/shared'
-import { expect, it } from 'vitest'
+import {
+  CHAT_MCP_TOOL_MAX_ITERATIONS,
+  LLM_GATEWAY_AUTH_ERROR_REPLY,
+  LLM_GATEWAY_EMPTY_ERROR_REPLY,
+  LLM_GATEWAY_RETRY_BACKOFF_MS,
+  LLM_GATEWAY_TRANSIENT_ERROR_REPLY,
+  MEMBER_GATEWAY_AUTH_ERROR_REPLY,
+  MEMBER_GATEWAY_EMPTY_ERROR_REPLY,
+  MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY,
+} from '@dostigus/shared'
+import { expect, it, vi } from 'vitest'
 import {
   completeAssistantReply,
+  gatewayErrorReply,
   isLlmGatewayConfigured,
   pingLlmGateway,
   readLlmGatewayEnv,
@@ -263,8 +273,10 @@ it('loads Skill instructions and creator tools into a Member turn', async () => 
   expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_cluster_timezone_set')
 })
 
-it('fails clearly instead of stubbing when the LLM gateway is configured', async () => {
+it('retries a configured HTTP 500 once, then stores the transient reply', async () => {
+  let calls = 0
   const fetchImpl = (async () => {
+    calls += 1
     return new Response('nope', { status: 500 })
   }) as typeof fetch
 
@@ -279,9 +291,10 @@ it('fails clearly instead of stubbing when the LLM gateway is configured', async
     fetchImpl,
   })
 
+  expect(calls).toBe(2)
   expect(result.via).toBe('error')
+  expect(result.content).toBe(LLM_GATEWAY_TRANSIENT_ERROR_REPLY)
   expect(result.content).not.toBe(stubAssistantReply())
-  expect(result.content).toContain('Check the key in Settings')
 })
 
 it('sanitizes ping errors so the key never appears', async () => {
@@ -497,4 +510,295 @@ it('skips unknown tools and does not invoke delete from Chat', async () => {
   })
   expect(result.via).toBe('llm+tools')
   expect(invoked).toEqual([])
+})
+
+const GATEWAY_ENV = {
+  OPENAI_COMPATIBLE_BASE_URL: 'https://example.test/v1',
+  LLM_API_KEY: 'sk-test-secret-key',
+}
+
+function completionResponse(content: string | null, status = 200): Response {
+  return new Response(JSON.stringify({
+    choices: [{ message: { content } }],
+  }), { status })
+}
+
+function namedError(name: string, message: string): Error {
+  const error = new Error(message)
+  error.name = name
+  return error
+}
+
+function captureGatewayLogs(): { lines: string[], restore: () => void } {
+  const lines: string[] = []
+  const spy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+    lines.push(args.map((part) => String(part)).join(' '))
+  })
+  return {
+    lines,
+    restore() {
+      spy.mockRestore()
+    },
+  }
+}
+
+it('defaults an unexpected gateway failure to the transient reply', () => {
+  expect(gatewayErrorReply()).toBe(LLM_GATEWAY_TRANSIENT_ERROR_REPLY)
+  expect(gatewayErrorReply('member')).toBe(MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY)
+})
+
+it('retries HTTP 429 once after a short backoff and stays on thinking', async () => {
+  const logs = captureGatewayLogs()
+  const times: number[] = []
+  const phases: string[] = []
+  try {
+    const fetchImpl = (async () => {
+      times.push(Date.now())
+      if (times.length === 1) {
+        return new Response('slow down sk-test-secret-key', { status: 429 })
+      }
+      return completionResponse('Back now.')
+    }) as typeof fetch
+
+    const result = await completeAssistantReply({
+      botName: 'New Bot',
+      modelTier: 'strong',
+      history: [],
+      env: GATEWAY_ENV,
+      fetchImpl,
+      onActivity: (phase) => {
+        phases.push(phase)
+      },
+    })
+
+    const gap = (times[1] ?? 0) - (times[0] ?? 0)
+    expect(result).toEqual({ via: 'llm', content: 'Back now.' })
+    expect(times).toHaveLength(2)
+    expect(gap).toBeGreaterThanOrEqual(LLM_GATEWAY_RETRY_BACKOFF_MS - 30)
+    expect(phases).toEqual(['thinking', 'typing'])
+    const logged = logs.lines.join('\n')
+    expect(logged).toContain('LLM gateway request failed (HTTP 429); retrying')
+    expect(logged).not.toContain('sk-test-secret-key')
+    expect(logged).not.toContain('slow down')
+    expect(logged).not.toContain('Authorization')
+  } finally {
+    logs.restore()
+  }
+})
+
+it('retries a timeout once and does not show an error phase', async () => {
+  const phases: string[] = []
+  let calls = 0
+  const fetchImpl = (async () => {
+    calls += 1
+    if (calls === 1) {
+      throw namedError('TimeoutError', 'The operation was aborted due to timeout')
+    }
+    return completionResponse('Recovered.')
+  }) as typeof fetch
+
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    fetchImpl,
+    onActivity: (phase) => {
+      phases.push(phase)
+    },
+  })
+
+  expect(calls).toBe(2)
+  expect(result).toEqual({ via: 'llm', content: 'Recovered.' })
+  expect(phases).toEqual(['thinking', 'typing'])
+})
+
+it('retries AbortError and a network failure once', async () => {
+  const abortCalls = { n: 0 }
+  const abortFetch = (async () => {
+    abortCalls.n += 1
+    if (abortCalls.n === 1) {
+      throw namedError('AbortError', 'This operation was aborted')
+    }
+    return completionResponse('After abort.')
+  }) as typeof fetch
+  const aborted = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    fetchImpl: abortFetch,
+  })
+  expect(abortCalls.n).toBe(2)
+  expect(aborted.content).toBe('After abort.')
+
+  const networkCalls = { n: 0 }
+  const networkFetch = (async () => {
+    networkCalls.n += 1
+    if (networkCalls.n === 1) {
+      throw new TypeError('fetch failed')
+    }
+    return completionResponse('After network.')
+  }) as typeof fetch
+  const networked = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    fetchImpl: networkFetch,
+  })
+  expect(networkCalls.n).toBe(2)
+  expect(networked.content).toBe('After network.')
+})
+
+it('does not retry HTTP 401, 403, or other 4xx', async () => {
+  for (const status of [401, 403, 400]) {
+    const logs = captureGatewayLogs()
+    let calls = 0
+    const phases: string[] = []
+    try {
+      const fetchImpl = (async () => {
+        calls += 1
+        return new Response(`bad key sk-test-secret-key ${status}`, { status })
+      }) as typeof fetch
+      const result = await completeAssistantReply({
+        botName: 'New Bot',
+        modelTier: 'strong',
+        history: [],
+        env: GATEWAY_ENV,
+        fetchImpl,
+        onActivity: (phase) => {
+          phases.push(phase)
+        },
+      })
+      expect(calls).toBe(1)
+      expect(result).toEqual({ via: 'error', content: LLM_GATEWAY_AUTH_ERROR_REPLY })
+      expect(phases).toEqual(['thinking'])
+      const logged = logs.lines.join('\n')
+      expect(logged).toContain(`LLM gateway request failed (HTTP ${status})`)
+      expect(logged).not.toContain('retrying')
+      expect(logged).not.toContain('sk-test-secret-key')
+      expect(logged).not.toContain('bad key')
+    } finally {
+      logs.restore()
+    }
+  }
+})
+
+it('tells a Member to ask the Owner after an auth failure', async () => {
+  let calls = 0
+  const fetchImpl = (async () => {
+    calls += 1
+    return new Response('nope', { status: 401 })
+  }) as typeof fetch
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    audience: 'member',
+    fetchImpl,
+  })
+  expect(calls).toBe(1)
+  expect(result.content).toBe(MEMBER_GATEWAY_AUTH_ERROR_REPLY)
+  expect(result.content).not.toBe(LLM_GATEWAY_AUTH_ERROR_REPLY)
+})
+
+it('tells a Member they can send again after a transient miss', async () => {
+  let calls = 0
+  const phases: string[] = []
+  const fetchImpl = (async () => {
+    calls += 1
+    return new Response('down', { status: 503 })
+  }) as typeof fetch
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    audience: 'member',
+    fetchImpl,
+    onActivity: (phase) => {
+      phases.push(phase)
+    },
+  })
+  expect(calls).toBe(2)
+  expect(result).toEqual({ via: 'error', content: MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY })
+  expect(phases).toEqual(['thinking'])
+  expect(result.content).not.toContain('Settings')
+})
+
+it('does not retry an empty assistant body', async () => {
+  let calls = 0
+  const fetchImpl = (async () => {
+    calls += 1
+    return completionResponse('   ')
+  }) as typeof fetch
+  const owner = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    fetchImpl,
+  })
+  expect(calls).toBe(1)
+  expect(owner).toEqual({ via: 'error', content: LLM_GATEWAY_EMPTY_ERROR_REPLY })
+
+  const memberFetch = (async () => completionResponse('')) as typeof fetch
+  const member = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    audience: 'member',
+    fetchImpl: memberFetch,
+  })
+  expect(member.content).toBe(MEMBER_GATEWAY_EMPTY_ERROR_REPLY)
+  expect(member.content).not.toBe(LLM_GATEWAY_EMPTY_ERROR_REPLY)
+})
+
+it('retries one completion inside a tool loop without repeating the tool', async () => {
+  let calls = 0
+  const invoked: string[] = []
+  const phases: string[] = []
+  const fetchImpl = (async () => {
+    calls += 1
+    if (calls === 1) {
+      return new Response(JSON.stringify({
+        choices: [{
+          message: {
+            tool_calls: [{
+              id: 'call_1',
+              type: 'function',
+              function: { name: 'dostigus_bots_list', arguments: '{}' },
+            }],
+          },
+        }],
+      }), { status: 200 })
+    }
+    if (calls === 2) {
+      return new Response('unavailable', { status: 502 })
+    }
+    return completionResponse('Listed.')
+  }) as typeof fetch
+
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    fetchImpl,
+    invokeTool: async (name) => {
+      invoked.push(name)
+      return { ok: true, name, content: '{"bots":[]}' }
+    },
+    onActivity: (phase) => {
+      phases.push(phase)
+    },
+  })
+
+  expect(result).toEqual({ via: 'llm+tools', content: 'Listed.' })
+  expect(invoked).toEqual(['dostigus_bots_list'])
+  expect(calls).toBe(3)
+  expect(phases).toEqual(['thinking', 'tool', 'thinking', 'typing'])
 })

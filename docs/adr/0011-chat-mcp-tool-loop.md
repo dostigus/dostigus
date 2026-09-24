@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-21
+- Amended: 2026-09-24
 
 ## Decision
 
@@ -39,7 +40,10 @@ data.
   model receives error content. Logs are `Chat MCP tool <name> ok|fail|skip`
   with no secrets or arguments.
 - No key: stub reply, no tools, same as ADR 0004.
-- Configured but failed: persist a clear error, not a stub.
+- Configured but failed: persist a clear error, not a stub. A transient
+  failure retries that one completion, not the tool loop, so a tool
+  that already ran is not applied again. Activity stays on thinking
+  for the retry. See [ADR 0004](0004-llm-gateway-tiers.md).
 - Reply `via` may be `llm+tools`. Host Chat may show a quiet “Used Cluster
   tools” line. Host Bot list and Chat stay consistent because they share
   the Store.

@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-21
+- Amended: 2026-09-24
 
 ## Decision
 
@@ -37,6 +38,18 @@ blur runtime and authoring.
   `https://openrouter.ai/api/v1`.
 - No key: Chat still works; replies are stubs and Chat shows a quiet
   banner. Configured but failed: persist a clear error, do not stub.
+  Chat retries that one completion when the failure is transient
+  (timeout, abort, network, HTTP 429, or HTTP 5xx). HTTP 429 waits
+  about 600ms first. Activity stays on thinking; the error bubble
+  appears only after that retry is exhausted. HTTP 401, HTTP 403,
+  other 4xx, and a successful response with empty assistant text are
+  not retried. The bubble is Russian. The Owner is told to check the
+  key in Settings (auth and other non-retry 4xx), to send the line
+  again after a transient miss (Settings only if it keeps failing),
+  or to write again after an empty body. A Member is pointed at the
+  Owner for a key problem and can still send again after a transient
+  miss. Logs may name the status class and must not include the key,
+  headers, or provider body.
 - Never echo the full key to the client or logs (mask last four).
 - Types and mapping live in `packages/shared`.
 
@@ -44,3 +57,7 @@ blur runtime and authoring.
 
 - Hard-code one vendor SDK — rejected; fights self-host and user keys.
 - Unlimited free-tier routing for production Bots — rejected; toy only.
+- Retry HTTP 401 or an empty body — rejected. A bad key will not
+  succeed on the second try, and an empty body is a finished response.
+- A Retry control in the composer — rejected for this slice. One
+  automatic retry plus the bubble text is the next step.
