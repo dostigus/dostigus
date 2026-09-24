@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import {
   CHAT_ACTIVITY_CONNECT,
@@ -116,6 +118,16 @@ it('holds a phase for the minimum display before switching', () => {
   const switched = noteChatActivityPhase(started.clock, 'tool', 1_300)
   expect(switched.clock).toEqual({ shown: 'tool', shownAt: 1_300, queued: null })
   expect(switched.waitMs).toBeNull()
+})
+
+it('sweeps the status line and pulses it when motion is reduced', () => {
+  const row = readFileSync(join(import.meta.dirname, '../../app/components/ChatActivityRow.vue'), 'utf8')
+  expect(row).toContain('class="label"')
+  expect(row).toContain('@keyframes activity-label-shimmer')
+  expect(row).toContain('@keyframes activity-label-pulse')
+  expect(row).toContain('@media (prefers-reduced-motion: reduce)')
+  expect(row).toContain('animation: activity-label-pulse')
+  expect(row).not.toContain('Думает')
 })
 
 it('keeps the current phase when a poll is idle', () => {

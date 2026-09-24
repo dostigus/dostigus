@@ -262,7 +262,8 @@ The icon rail is a wide-screen behavior.
 
 A sent line appears in the timeline immediately. While a configured reply
 is in flight, the thread shows one activity row under the latest line:
-a glyph and a short Russian line, muted Nunito on `--text-muted`. Phases
+a glyph and a short Russian line, muted Nunito on `--text-muted`. That
+line uses a soft gradient sweep so the wait reads as in progress. Phases
 on that same row: thinking (flock mark in `think`, «Думает…»), tool
 (orange cluster pulse, «Выполняет команду…»), typing (green three-dot
 wave, «Печатает…»). The row hides when the assistant line lands, and on
@@ -274,7 +275,8 @@ known). Production does not drive connect from the live path. Local
 `nuxt dev` may also force `?activity=thinking`, `?activity=tool`,
 `?activity=typing`, or `?activity=command` (`command` uses the tool glyph
 and copy). A production Host ignores `activity`. `prefers-reduced-motion`
-holds the glyph still. Composer focus does not add a thread row. The Chat
+holds the glyph still and replaces the sweep with a subtle opacity pulse
+on the status line. Composer focus does not add a thread row. The Chat
 pill flock stays in `think` for the whole in-flight reply; the row is the
 phase. The pill then
 uses `reply` and a short `celebrate` when the stored reply lands, then
