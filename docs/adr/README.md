@@ -43,7 +43,7 @@ English.
 | [0009](0009-mcp-toolkit-endpoint.md) | MCP toolkit endpoint |
 | [0010](0010-owner-auth-session.md) | Owner auth and Host session |
 | [0011](0011-chat-mcp-tool-loop.md) | Chat ↔ MCP tool loop |
-| [0012](0012-household-members.md) | Household Members on the Host |
+| [0012](0012-household-members.md) | Household Members on the Host (Bot visibility: [0024](0024-threads-and-bot-visibility.md)) |
 | [0013](0013-kit-reka-ui-and-brand.md) | Kit on Reka UI, Sheet shell, and Brand |
 | [0014](0014-host-messenger-shell.md) | Host messenger shell |
 | [0015](0015-host-desktop-shell.md) | Host desktop shell |
@@ -54,7 +54,7 @@ English.
 | [0020](0020-bot-closet.md) | Bot closet |
 | [0021](0021-chat-activity-status.md) | Chat activity status row |
 | [0022](0022-chat-assistant-markdown.md) | Chat assistant Markdown body |
-| [0023](0023-household-member-invites.md) | Household Member Invites |
+| [0023](0023-household-member-invites.md) | Household Member Invites (an Invite does not grant Bots; [0024](0024-threads-and-bot-visibility.md)) |
 | [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility (amended 2026-09-24: personal Bot + grants) |
-| [0025](0025-chat-bubble-parts.md) | Chat bubble parts |
+| [0025](0025-chat-bubble-parts.md) | Chat bubble parts (Bot visibility stays [0024](0024-threads-and-bot-visibility.md)) |
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |

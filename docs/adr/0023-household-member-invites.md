@@ -40,12 +40,14 @@ Owner onboarding and manual Add Member.
 
 On success the Host creates a Member (display name, that email, password
 hash, `disabledAt` null), marks the Invite used, starts a Member session,
-and lands in the Host. Permissions stay [ADR 0012](0012-household-members.md):
-the Bot list and Chat of this slice; no Bot create or delete, no Members,
-no Settings. Bot visibility after accept is
-[ADR 0024](0024-threads-and-bot-visibility.md). An Invite does not flip a
-Bot to `shared`. An Invite is not a Share link. This slice does not add
-visibility.
+and lands in the Host. A Member may open the Bot list and Chat.
+**Members** and Settings stay with the Owner
+([ADR 0012](0012-household-members.md)). Bot visibility after accept is
+[ADR 0024](0024-threads-and-bot-visibility.md) (amended 2026-09-24).
+An Invite creates a Member. It does not grant Bots. "All current
+Members" is a one-shot batch grant to Members who exist now. A later
+Invite does not receive those Bots. An Invite is not a Share link.
+This slice does not add grants.
 
 Manual Add Member stays beside Invite. Adding a Member for an email
 revokes any outstanding Invite for that email.
@@ -83,7 +85,7 @@ the link and cheap to throw away on revoke or rotate.
   creating Invites, changing email after accept, team or org CRM, and
   Bot visibility or Threads
   ([ADR 0024](0024-threads-and-bot-visibility.md)). An Invite still does
-  not change who may open a Bot.
+  not grant Bots.
 
 ## Alternatives
 

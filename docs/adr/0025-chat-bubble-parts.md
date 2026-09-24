@@ -7,8 +7,8 @@ Assistant Markdown stays [ADR 0022](0022-chat-assistant-markdown.md).
 Bubbles stay unlabeled
 ([ADR 0015](0015-host-desktop-shell.md)). Sheets stay Kit drawers
 ([ADR 0002](0002-host-ui-kit-and-sheets.md)). Threads and Bot visibility
-stay [ADR 0024](0024-threads-and-bot-visibility.md) and are not built
-here.
+stay [ADR 0024](0024-threads-and-bot-visibility.md) (amended 2026-09-24:
+a personal Bot plus explicit grants). This ADR does not build them.
 
 ## Decision
 
@@ -54,10 +54,13 @@ The LLM is not asked to emit them. The prompt is unchanged
 ## Context
 
 [ADR 0024](0024-threads-and-bot-visibility.md) ordered the next Host
-work as bubble parts, then a Kitchen Module demo, then visibility and
-per-person bot-threads, then `dm` / `group` / `room`. Nick’s note on
-2026-09-23 locked day-1 as a button in an assistant bubble that opens a
-Sheet. A Card catalog (tables, forms) waits. Threads runtime waits.
+work as bubble parts, then a Kitchen Module demo, then Bot visibility
+and per-person bot-threads, then `dm` / `group` / `room`. Amended
+2026-09-24, Bot visibility is a personal Bot plus explicit grants.
+Household-wide `shared` | `private` is not the target. The running
+Host may still store that column until the grants milestone. Nick’s note
+on 2026-09-23 locked day-1 as a button in an assistant bubble that opens
+a Sheet. A Card catalog (tables, forms) waits. Threads runtime waits.
 
 The glossary **Card** names inline structured UI in the Chat (button,
 table, status). This ADR ships the button and the status as Kit parts
@@ -73,9 +76,10 @@ on the assistant message. It does not introduce a Card catalog.
   through `appendClusterMessage`
   ([ADR 0026](0026-kitchen-module-day-1.md)). It does not get a new
   CSS app.
-- Out of this ADR: Kitchen domain data, Bot visibility, per-person
-  threads, `dm` / `group` / `room`, forms inside a bubble, and a
-  status-driven tool loop beyond the chip.
+- Out of this ADR: Kitchen domain data, Bot visibility
+  ([ADR 0024](0024-threads-and-bot-visibility.md): personal Bot plus
+  explicit grants), per-person threads, `dm` / `group` / `room`,
+  forms inside a bubble, and a status-driven tool loop beyond the chip.
 
 ## Alternatives
 

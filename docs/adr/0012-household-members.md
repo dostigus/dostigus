@@ -3,15 +3,15 @@
 - Status: accepted
 - Date: 2026-09-22
 
-The sidebar `+` also opens a finder for a Member. Create stays with the
-Owner. See [ADR 0019](0019-bot-picker-and-chat-purpose.md).
+The sidebar `+` also opens a finder for a Member. See
+[ADR 0019](0019-bot-picker-and-chat-purpose.md).
 
 Household **Invites** (a one-shot link the Owner copies) are
 [ADR 0023](0023-household-member-invites.md). Manual Add Member in this
 ADR stays. Bot visibility and Threads are
-[ADR 0024](0024-threads-and-bot-visibility.md). This slice still has one
-Chat timeline per Bot, and only the Owner creates or deletes a Bot. An
-Invite does not change Bot visibility.
+[ADR 0024](0024-threads-and-bot-visibility.md) (amended 2026-09-24:
+a personal Bot plus explicit grants). This slice shipped one Chat
+timeline per Bot. An Invite does not grant Bots.
 
 ## Decision
 
@@ -25,10 +25,16 @@ Members sign in with the same `nuxt-auth-utils` sealed cookie as the Owner.
 Login accepts either account. Onboarding still creates only the Owner when
 the Store is empty. `/mcp` stays Bearer token, not the Host session.
 
-On the Host, a Member may open the Bot list and Chat. Bots are
-Cluster-shared. The Owner alone may create or delete a Bot, open
-**Members**, or change the LLM gateway in Settings. A Member has no `+`,
-no delete, no Members admin, and no Settings.
+On the Host, a Member may open the Bot list and Chat. This slice said
+Bots are visible to the Household, and that only the Owner creates or
+deletes a Bot.
+[ADR 0024](0024-threads-and-bot-visibility.md) (amended 2026-09-24)
+supersedes both. Bot visibility there is a personal Bot plus explicit
+grants: the creator, the Owner always, and a grant row (`bot_id` and
+`person_id`) for anyone else. The creator and the Owner may delete
+the Bot. A grantee does not delete it. The Owner alone opens
+**Members** and changes the LLM gateway in Settings. A Member does
+not open **Members** or Settings.
 
 Owner Chat keeps the full Chat tool surface from
 [ADR 0011](0011-chat-mcp-tool-loop.md) (`dostigus_bots_list` / `get` /
@@ -72,15 +78,18 @@ those writes may leave `personId` empty. The HTTP MCP surface is unchanged.
 - A Member with `disabled_at` set cannot sign in. The failure looks like a
   bad password. Chat still resolves their display name from the row.
 - Host routes: Bot list, Bot read, and Chat accept an Owner or Member
-  session. Bot create, update, and delete, `/api/members`, and
-  `/api/settings/*` require the Owner (Member receives 403).
+  session. `/api/members` and `/api/settings/*` require the Owner
+  (Member receives 403). This slice also required the Owner for Bot
+  create, update, and delete. Who may create, delete, or open a Bot
+  follows [ADR 0024](0024-threads-and-bot-visibility.md).
 - `/api/chat/ready` returns only whether replies are live, for the Chat
   banner. It does not return the key or the Settings payload.
 - Member sessions that are missing or turned off fail the next Host API
   call. The Host then sends them to sign in.
 - Out of this slice: person Threads and Bot visibility
-  ([ADR 0024](0024-threads-and-bot-visibility.md); the model is accepted,
-  this slice does not build them), Share link, QR guests, SMTP
+  ([ADR 0024](0024-threads-and-bot-visibility.md), amended 2026-09-24:
+  a personal Bot plus explicit grants; this slice does not build
+  them), Share link, QR guests, SMTP
   delivery of an Invite ([ADR 0023](0023-household-member-invites.md)),
   OAuth, passkeys, email verify, password reset, federation, Telegram,
   and any role besides Owner and Member.
