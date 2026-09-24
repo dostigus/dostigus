@@ -6,6 +6,7 @@
 - Amended: 2026-09-24 — on Bot create the Host may insert meta Skills (constructor how-to). Ids, Russian text, and insert-if-absent are [ADR 0030](0030-chat-cards-module-catalog.md). The tools and the platform instruction in this record stay. Deleting a meta Skill does not remove that duty.
 - Amended: 2026-09-24 — Skills live in `bots.skills_json` as `{ id, instructions }` (`packages/db/src/skills.ts`). A Skill id is letters, digits, `_`, or `-` (`parseSkillId` in `packages/shared/src/skill.ts`). One `instructions` string; no locale column.
 - Amended: 2026-09-24 — closet Schedule list stays [ADR 0027](0027-bot-schedules.md). This record does not repeat it.
+- Amended: 2026-09-24 — a Skill is `{ id, description, instructions }`. The system prompt is a catalog (`id` + `description`); full `instructions` load through `dostigus_skills_read`. Manifest and Skill write tools wait for keyword expand. Assembly is [ADR 0032](0032-chat-llm-context-assembly.md). The platform Host rule and who may write stay this record.
 
 Chat turns stay [ADR 0011](0011-chat-mcp-tool-loop.md). The closet
 fields stay [ADR 0020](0020-bot-closet.md). Who may edit a Bot stays
@@ -65,18 +66,22 @@ instructions. It is not a Module package and not the Builder.
 
 | Tool | Who |
 | --- | --- |
-| `dostigus_skills_list` | the creator of that Bot, or the Owner |
+| `dostigus_skills_list` | anyone who can open that Bot (catalog: `{ id, description }[]`) |
+| `dostigus_skills_read` | anyone who can open that Bot (full `{ id, description, instructions }` by id) |
 | `dostigus_skills_upsert` | the creator of that Bot, or the Owner |
 | `dostigus_skills_delete` | the creator of that Bot, or the Owner |
 
-A Skill is an id plus one `instructions` string. There is no locale
+A Skill is `{ id, description, instructions }`. There is no locale
 column. The id is letters, digits, `_`, or `-` only. A dotted id is
 not a Skill id. `parseSkillId` in `packages/shared/src/skill.ts`
-checks that charset.
+checks that charset. `description` is required on upsert (1–200).
+List returns the catalog only. Full instructions load through
+`dostigus_skills_read`. The system prompt does not always-inject
+Skill bodies ([ADR 0032](0032-chat-llm-context-assembly.md)).
 
-Skills live in `bots.skills_json` as `{ id, instructions }`
-(`packages/db/src/skills.ts`). `Manifest.skillIds` is those ids. No
-new table and no new column.
+Skills live in `bots.skills_json` as
+`{ id, description, instructions }` (`packages/db/src/skills.ts`).
+`Manifest.skillIds` is those ids. No new table and no new column.
 
 On Bot create, the Host may insert meta Skills (constructor how-to) on
 that Bot. The ids, the Russian instructions, and the rule that an
@@ -128,11 +133,14 @@ Bots. A Member who created the Bot can edit it in the closet and
 cannot change it from Chat.
 
 This record closes that gap. A creator who is a Member receives
-`dostigus_bots_update` and the Skills tools on their own Bot. A Member
-who is only a grantee does not receive those tools. The Owner receives
-Manifest and Skills tools for any Bot. The "do not rename" line does
-not apply to the Owner, and it does not apply to a creator on their
-own Bot.
+`dostigus_bots_update` and Skills upsert/delete on their own Bot
+when keyword expand hits that user turn
+([ADR 0032](0032-chat-llm-context-assembly.md)). Slim already has
+Skills list/read. A Member who is only a grantee does not receive
+Manifest or Skill write tools and does not expand. The Owner
+receives Manifest and Skill write tools on expand for any Bot. The
+"do not rename" line does not apply to the Owner, and it does not
+apply to a creator on their own Bot.
 
 Schedule tools stay on the [ADR 0027](0027-bot-schedules.md) scope.
 That scope is wider than Manifest and Skills: a grantee may still
@@ -184,10 +192,12 @@ Code today, not reopened by this record:
 - `dostigus_bots_update` accepts `name`, `label`, `description`,
   `avatarShape`, `avatarColor`, and `modelTier`. It has no Skills
   field. This record does not add a second update tool.
-- Skills live in `bots.skills_json` as `{ id, instructions }`
+- Skills live in `bots.skills_json` as
+  `{ id, description, instructions }`
   (`packages/db/src/skills.ts`). `Manifest.skillIds` is those ids.
-  List, upsert, and delete use that column. This record does not add
-  a new table.
+  List, read, upsert, and delete use that column. This record does
+  not add a new table. Catalog vs body is
+  [ADR 0032](0032-chat-llm-context-assembly.md).
 - Owner Chat lists `dostigus_bots_update`. Member Chat is messages
   only, and the Member prompt says not to rename. The closet already
   lets a Member creator edit. Chat does not. The code PR aligns the
@@ -205,14 +215,18 @@ Code today, not reopened by this record:
 - Appearance stays closet-only. Model tier stays Owner Settings and
   the existing MCP path. Neither is a Chat self-settings write.
 - Delete stays off Chat.
-- Skills list, upsert, and delete are MCP tools on that Bot, for the
-  creator or the Owner. A grantee does not receive them. A Member
-  creator does, on their own Bot.
+- Skills list and read are MCP tools on that Bot for anyone who can
+  open it. Upsert and delete are for the creator or the Owner. A
+  grantee does not receive write tools. A Member creator does, on
+  their own Bot, behind keyword expand
+  ([ADR 0032](0032-chat-llm-context-assembly.md)).
 - A Skill id is letters, digits, `_`, or `-`. `parseSkillId` in
   `packages/shared/src/skill.ts` checks that. A dotted id is rejected.
-  A Skill is one `instructions` string. There is no locale column.
-  Skills live in `bots.skills_json` as `{ id, instructions }`
-  (`packages/db/src/skills.ts`). No new table.
+  A Skill is `{ id, description, instructions }`. `description` is
+  required on upsert (1–200). There is no locale column. Skills live
+  in `bots.skills_json` (`packages/db/src/skills.ts`). No new table.
+  The system prompt is the catalog, not full bodies
+  ([ADR 0032](0032-chat-llm-context-assembly.md)).
 - The Member prompt that forbids rename does not apply on a turn where
   that Member is the creator of that Bot, or where the viewer is the
   Owner.
@@ -271,7 +285,8 @@ Code today, not reopened by this record:
 - Live-update every open Chat on a raw `/mcp` write — rejected for
   day-1. Stale until the next refresh is acceptable.
 - Store Skills in a new table, or add a locale column — rejected.
-  Skills stay `{ id, instructions }` in `bots.skills_json`
-  (`packages/db/src/skills.ts`).
+  Skills stay `{ id, description, instructions }` in
+  `bots.skills_json` (`packages/db/src/skills.ts`). `description`
+  is [ADR 0032](0032-chat-llm-context-assembly.md).
 - A dotted Skill id — rejected. The charset is letters, digits, `_`,
   or `-` (`parseSkillId` in `packages/shared/src/skill.ts`).

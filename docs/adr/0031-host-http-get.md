@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-24
+- Amended: 2026-09-24 — `dostigus_http_get` stays on user slim and on Wake. Owner Chat allowlist get/set, and timezone set, wait for keyword expand ([ADR 0032](0032-chat-llm-context-assembly.md)). GET, allowlist, and SSRF stay this record.
 
 The Chat tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). The
 MCP surface stays [ADR 0009](0009-mcp-toolkit-endpoint.md). Cluster
@@ -64,8 +65,10 @@ sets it through MCP (`dostigus_cluster_http_allowlist_get`,
 `dostigus_cluster_http_allowlist_set`) and through an Owner Settings
 field. Members do not set it. Members do not open Settings
 ([ADR 0012](0012-household-members.md)). Member Chat does not receive
-the allowlist get or set tools. Owner Chat may receive them the same
-way it receives timezone set.
+the allowlist get or set tools. Owner Chat receives them on keyword
+expand, the same family as timezone set
+([ADR 0032](0032-chat-llm-context-assembly.md)). `dostigus_http_get`
+stays on slim (user) and on Wake.
 
 The Settings field is part of this decision. This record does not add
 the control. The code PR does.
@@ -148,13 +151,17 @@ not a platform seed.
 - The code PR adds `dostigus_http_get`, the two Owner allowlist
   tools, `cluster_settings.http_allowlist`, and the Owner Settings
   field. This record does not.
-- Owner Chat and Member Chat, and a Wake, gain `dostigus_http_get`.
-  The Chat allowlist still does not gain a Module catalog tool, an
-  Apply tool, or weather tools
-  ([ADR 0011](0011-chat-mcp-tool-loop.md),
+- Owner Chat and Member Chat, and a Wake, gain `dostigus_http_get`
+  on the slim / Wake lists in
+  [ADR 0032](0032-chat-llm-context-assembly.md). The Chat allowlist
+  still does not gain a Module catalog tool, an Apply tool, or
+  weather tools ([ADR 0011](0011-chat-mcp-tool-loop.md),
   [ADR 0030](0030-chat-cards-module-catalog.md)).
-- Owner Chat may gain allowlist get and set. Member Chat does not.
-  Timezone get and set stay [ADR 0027](0027-bot-schedules.md).
+- Owner Chat may gain allowlist get and set on keyword expand.
+  Member Chat does not. Timezone get stays on slim. Timezone set
+  waits for Owner expand
+  ([ADR 0027](0027-bot-schedules.md),
+  [ADR 0032](0032-chat-llm-context-assembly.md)).
 - `/mcp` lists the same tools. Bearer auth is unchanged
   ([ADR 0009](0009-mcp-toolkit-endpoint.md)).
 - Truncation is `truncated: true` plus a 64 KiB prefix. The Host

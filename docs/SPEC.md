@@ -25,6 +25,7 @@ Settled now, even if this repo only scaffolds them:
 | Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
 | Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
 | Host HTTP get | MCP surface tool `dostigus_http_get` on Chat and Wake. Cluster http allowlist in Store settings. See [ADR 0031](adr/0031-host-http-get.md). |
+| Chat LLM context | System prompt is Manifest (including label and description) plus a Skill catalog (`id` + `description`). History is the last 40 lines. Chat tools start slim; keyword expand adds builder tools on that user turn only. Wake is narrower and has no expand. See [ADR 0032](adr/0032-chat-llm-context-assembly.md). |
 | Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, appends one system Chat line (plain string, no parts). This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 
 ## This Host (create Bot + Chat)
@@ -246,21 +247,25 @@ What the running Cluster does today:
 - LLM gateway: OpenAI-compatible client, Model tiers mapped to
   OpenRouter-friendly default model ids. The Owner sets base URL + key in
   Host Settings (Store) or via compose env (env overrides Store). Chat
-  sends that person's bot-thread (greeting + history) and a system prompt (new Bot, learn purpose,
-  keep Manifest). When a key is set, Chat also sends Cluster MCP surface
-  tools and runs an in-process tool loop (same handlers as `/mcp`, no
-  HTTP hop). Owner Chat tools: Bots list/get/create/update, Skills
-  list/upsert/delete, messages list/create, Schedule tools, and Cluster
-  timezone get and set, Host HTTP get, and Cluster http allowlist get
-  and set. Member Chat tools: messages list/create, Schedule tools,
-  Cluster timezone get, and Host HTTP get. Timezone set and the
-  allowlist stay with the Owner. A Member who created the Bot also receives
-  `dostigus_bots_update` and the Skills tools on that Bot. A grantee
-  does not receive Manifest or Skills tools. Delete stays
-  off Chat. Turn journal list and get stay on `/mcp` and off both Chat
-  lists ([ADR 0029](adr/0029-turn-journal.md)). This loop does not
-  gain a Module catalog tool, an Apply tool, or Weather tools. This
-  monorepo ships no stock package
+  LLM context assembly is [ADR 0032](adr/0032-chat-llm-context-assembly.md):
+  last 40 messages (`role` + `content`, stored `system` stays `system`),
+  a system prompt with Manifest name/label/description/modelTier/
+  skillIds/modulePackageIds and a Skill catalog (`id` + `description`),
+  stay-on-Manifest / reply-briefly (not «You are new. Ask and learn…»).
+  The impl PR lands that Host change. When a key is set, Chat also
+  sends Cluster MCP surface tools and runs an in-process tool loop
+  (same handlers as `/mcp`, no HTTP hop). Owner and creator-Member
+  slim: messages list/create, all six Schedule tools, timezone get,
+  Host HTTP get, Skills list and read. Keyword expand on that user
+  line adds builder tools for the turn only (Owner: Bots
+  list/get/create/update, Skills upsert/delete, timezone set,
+  allowlist get/set; creator Member: `dostigus_bots_update` and
+  Skills upsert/delete). Member grantee: messages, Schedule tools,
+  timezone get, Host HTTP get, Skills list/read; no expand. Delete
+  stays off Chat. Turn journal list and get stay on `/mcp` and off
+  both Chat lists ([ADR 0029](adr/0029-turn-journal.md)). This loop
+  does not gain a Module catalog tool, an Apply tool, or Weather
+  tools. This monorepo ships no stock package
   ([ADR 0030](adr/0030-chat-cards-module-catalog.md)). Host HTTP get
   (`dostigus_http_get` on Chat and Wake, plus the Cluster http
   allowlist) is [ADR 0031](adr/0031-host-http-get.md). A Bot that
@@ -346,8 +351,14 @@ them on the assistant line.
   `next_run_at` and last-run metadata, and recomputes `next_run_at`
   after create, update, and fire.
 - **Fire.** The Host writes a visible system Wake on that bot-thread
-  with `wakeText`, then starts the same Bot turn as a user message
-  ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)). Activity phases apply
+  with `wakeText`, then starts a Bot turn
+  ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)). The Skill catalog
+  matches a user turn. Wake tools are narrower than user slim (HTTP
+  get, Skills list/read, Schedule list, messages list/create,
+  timezone get). No Schedule writes, no `dostigus_bots_*`, no
+  keyword expand ([ADR 0032](adr/0032-chat-llm-context-assembly.md)).
+  The line is stored as `system` and sent as `role: system`.
+  Activity phases apply
   ([ADR 0021](adr/0021-chat-activity-status.md)). Day-1 fires on a
   bot-thread only.
 - **Catch-up.** If the Host was down or late, it fires once when
@@ -415,20 +426,68 @@ tool, the Store field, and the Settings control.
   stays. A Bot that needs weather uses Host HTTP get against an
   allowed public API from a Skill or `wakeText`.
 
+## Chat LLM context
+
+Decided in [ADR 0032](adr/0032-chat-llm-context-assembly.md). This
+section is the contract. The impl PR lands the Host change. Until
+then the running Host still injects full Skill bodies, remaps stored
+`system` lines to `user`, and offers the wide Owner Chat tool list.
+
+- **Catalog.** The system prompt lists each Skill as `id` +
+  `description`. Full `instructions` load through
+  `dostigus_skills_read`. `dostigus_skills_list` returns
+  `{ id, description }[]` only. Upsert requires `description`
+  (1–200). Store shape is `{ id, description, instructions }` in
+  `bots.skills_json`. A legacy Skill with no description catalogs as
+  `Skill {id}` until upsert.
+- **History.** Last 40 messages (`role` + `content`). Always include
+  the triggering user or Wake line. Stored `system` stays
+  `role: system`. Chat Cards / `parts` and prior-turn tool
+  transcripts stay out of that window.
+- **System prompt.** Manifest line includes name, label, description,
+  modelTier, skillIds, modulePackageIds. Stay-on-Manifest /
+  reply-briefly. Not «You are new. Ask and learn…». Short Host
+  rules stay (`CHAT_SELF_SETTINGS_RULE`, `CHAT_NO_PACKAGE_RULE`, a
+  one-line HTTP hint if needed). Meta Skills stay catalog + read.
+- **Slim.** Owner and creator-Member: messages list/create, six
+  Schedule tools, timezone get, Host HTTP get, Skills list/read.
+  Grantee: messages list/create, six Schedule tools, timezone get,
+  Host HTTP get, Skills list/read. No Manifest write. No Skill
+  write.
+- **Expand.** Case-insensitive substring match on the current user
+  line only (name / название / имя / rename, label / метка,
+  description / описание, Skill / навык / skills, allowlist,
+  Marketplace, timezone / таймзон*, настрой бота / параметры /
+  self-settings). Owner expand adds Bots list/get/create/update,
+  Skills upsert/delete, timezone set, allowlist get/set.
+  Creator-Member expand adds `dostigus_bots_update` and Skills
+  upsert/delete. Grantee does not expand. Wake does not expand.
+  A miss means the person rephrases or uses the Closet / Sheet.
+- **Wake.** Same catalog and `dostigus_skills_read`. Tools:
+  `dostigus_http_get`, Skills list/read, `dostigus_schedules_list`,
+  messages list/create, timezone get. No Schedule writes. No
+  `dostigus_bots_*`.
+- **Still never in Chat.** `dostigus_bots_delete`, Kitchen tools,
+  Turn journal tools.
+
 ## Self-settings
 
 Decided in [ADR 0028](adr/0028-bot-self-settings-via-chat.md). This Host
-injects the platform rule on every Bot turn, exposes Skills tools, and
-gives a Member creator `dostigus_bots_update` and the Skills tools on
-that Bot. A grantee does not receive Manifest or Skills tools. The
-grantee prompt still says not to rename. Member Chat tools are messages
-list/create, Schedule tools, `dostigus_cluster_timezone_get`
-([ADR 0027](adr/0027-bot-schedules.md)), and Host HTTP get
-([ADR 0031](adr/0031-host-http-get.md)). The Host fires a Wake. A
-missing capability uses Skills upsert, Schedule tools, and Bot
-self-settings already in Chat. The Platform does not seed a Weather
-Module or a stock Module package. On Bot create it may insert meta
-Skills as plain Skill text. Both are
+injects the short platform Host rules on every Bot turn. Skills are
+catalog + `dostigus_skills_read`
+([ADR 0032](adr/0032-chat-llm-context-assembly.md)). A Member creator
+receives `dostigus_bots_update` and Skills upsert/delete on that Bot
+when keyword expand hits. A grantee does not receive Manifest or
+Skill write tools and does not expand. The grantee prompt still
+says not to rename. Member Chat slim is messages list/create,
+Schedule tools, `dostigus_cluster_timezone_get`
+([ADR 0027](adr/0027-bot-schedules.md)), Host HTTP get
+([ADR 0031](adr/0031-host-http-get.md)), and Skills list/read. The
+Host fires a Wake (narrower tools, same catalog). A missing
+capability uses Skills upsert, Schedule tools, and Bot self-settings
+already in Chat. The Platform does not seed a Weather Module or a
+stock Module package. On Bot create it may insert meta Skills as
+plain Skill text (catalog + read). Both are
 [ADR 0030](adr/0030-chat-cards-module-catalog.md).
 
 - **Write.** When a person asks the Bot to change itself (name, label,
@@ -450,16 +509,21 @@ Skills as plain Skill text. Both are
   of a Bot or of Chat stays off Chat
   ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)).
 - **Skills.** MCP tools `dostigus_skills_list`,
-  `dostigus_skills_upsert`, and `dostigus_skills_delete` list, upsert,
-  and delete Skill text on that Bot. That is not a Module package and
-  not the Builder. Storage is `bots.skills_json`: a JSON array of
-  `{ id, instructions }`. `Manifest.skillIds` is those ids. A legacy
-  array of id strings still reads as ids with empty instructions.
-  Upsert rewrites the column as objects. No new table. A Skill id is
-  letters, digits, `_`, or `-`. A dotted id is not a Skill id.
-  `parseSkillId` in `packages/shared/src/skill.ts` checks that charset.
-  A Skill is one `instructions` string. There is no locale column.
-  Meta Skill ids and insert-if-missing are
+  `dostigus_skills_read`, `dostigus_skills_upsert`, and
+  `dostigus_skills_delete` list, read, upsert, and delete Skill text
+  on that Bot. That is not a Module package and not the Builder.
+  Storage is `bots.skills_json`: a JSON array of
+  `{ id, description, instructions }`. `Manifest.skillIds` is those
+  ids. A legacy array of id strings still reads as ids with empty
+  instructions and a catalog fallback `Skill {id}`. Upsert rewrites
+  the column as objects and requires `description` (1–200). List
+  returns `{ id, description }[]` only. Read returns the full object
+  by id. No new table. A Skill id is letters, digits, `_`, or `-`.
+  A dotted id is not a Skill id. `parseSkillId` in
+  `packages/shared/src/skill.ts` checks that charset. There is no
+  locale column. The system prompt is the catalog, not full bodies
+  ([ADR 0032](adr/0032-chat-llm-context-assembly.md)). Meta Skill ids
+  and insert-if-missing are
   [ADR 0030](adr/0030-chat-cards-module-catalog.md). That seed is in
   this Host. It writes a missing id only and does not call
   `upsertBotSkill` or `dostigus_skills_upsert`.
@@ -472,13 +536,15 @@ Skills as plain Skill text. Both are
   Bot, or the Owner. A grantee cannot. A Member who created the Bot
   must receive `dostigus_bots_update` and the Skills tools on that
   Bot, matching closet creator rights
-  ([ADR 0024](adr/0024-threads-and-bot-visibility.md)). The "do not
+  ([ADR 0024](adr/0024-threads-and-bot-visibility.md)), when keyword
+  expand hits that user turn
+  ([ADR 0032](adr/0032-chat-llm-context-assembly.md)). The "do not
   rename" Member prompt does not apply to that creator on their own
   Bot, or to the Owner. Schedules stay the
   [ADR 0027](adr/0027-bot-schedules.md) actors: the person on their
   bot-thread, and the Owner. A grantee may still manage those
   Schedules. The allowlist follows the viewer and that Bot on every
-  turn kind.
+  turn kind. A Wake does not expand.
 - **Confirm.** After a successful tool result, the Bot confirms the
   fact briefly. On failure, it reports the error and does not pretend.
 - **Refresh.** After a successful `dostigus_bots_update` or Skills
@@ -655,6 +721,12 @@ and [`docs/deploy.md`](deploy.md)).
   ([ADR 0027](adr/0027-bot-schedules.md)). The Schedule behavior above,
   including the closet «Расписания» block, is day-1 Host UI. The code
   PR adds that UI.
+- History summary or compaction beyond the window of 40, persisting
+  tool transcripts into Store history, and an LLM classifier for
+  Chat tool expand
+  ([ADR 0032](adr/0032-chat-llm-context-assembly.md)). Chat LLM
+  context assembly above is the contract. The impl PR lands the
+  Host change.
 - Stock Module packages in this monorepo, a `packages/modules/` catalog
   seed, Host-bundled Apply of platform packages, baking packages into
   the Host image, and a Weather seed (including Open-Meteo). A

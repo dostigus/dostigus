@@ -6,6 +6,7 @@
 - Amended: 2026-09-24 — Nick: on Bot create the Host inserts missing meta Skills (constructor how-to). The seed is insert-if-missing and does not call `upsertBotSkill`. Chat Cards are unchanged. Still no stock Module packages and no Weather seed.
 - Amended: 2026-09-24 — Nick product reverse. Chat Cards stay Schedule-only. A successful `dostigus_skills_upsert`, `dostigus_skills_delete`, or `dostigus_bots_update` of name, label, or description writes one system Chat line on that bot-thread (same family as a Wake). Not kind `card`. No Sheet id `skill` opened from a Card. No Изменить on those lines. Card kinds `skill` and `bot` are not in this record.
 - Amended: 2026-09-24 — Schedule closet list, create Sheet, and detail Sheet are day-1 ([ADR 0027](0027-bot-schedules.md)). Card «Изменить» opens that same detail Sheet. Cards stay. Still no stock Module packages and no Weather seed.
+- Amended: 2026-09-24 — meta Skills stay on the Bot as catalog + `dostigus_skills_read`. Always-on Host rules stay short (`CHAT_SELF_SETTINGS_RULE`, `CHAT_NO_PACKAGE_RULE`). Assembly is [ADR 0032](0032-chat-llm-context-assembly.md). Cards and system lines stay this record.
 
 Assistant parts stay [ADR 0025](0025-chat-bubble-parts.md). Schedules
 and the Wake stay [ADR 0027](0027-bot-schedules.md). The platform
@@ -237,9 +238,13 @@ Kitchen remains a Host seed with no package row
   not a forecast and not the arguments.
 - Member Chat that is messages-only stays messages-only for a grantee,
   plus the Schedule tools and timezone get already on that list
-  ([ADR 0027](0027-bot-schedules.md)). A Member creator still receives
-  Skills tools and `dostigus_bots_update` on their Bot
-  ([ADR 0028](0028-bot-self-settings-via-chat.md)).
+  ([ADR 0027](0027-bot-schedules.md)), Host HTTP get
+  ([ADR 0031](0031-host-http-get.md)), and Skills list/read
+  ([ADR 0032](0032-chat-llm-context-assembly.md)). A Member creator
+  still receives Skills write tools and `dostigus_bots_update` on
+  their Bot behind keyword expand
+  ([ADR 0028](0028-bot-self-settings-via-chat.md),
+  [ADR 0032](0032-chat-llm-context-assembly.md)).
 - The prompt line that forbids inventing Module packages stays. There
   is no stock-package exception.
 - Sheet id `schedule` is a Kit Sheet for one row. Kitchen's Sheet id
@@ -252,11 +257,17 @@ Kitchen remains a Host seed with no package row
 - The Kitchen Module is still not an applied Module package.
 - **Meta Skills.** On Bot create the Host inserts a fixed set of Skill
   rows on that Bot when each id is absent (insert-if-missing). It does
-  not call `upsertBotSkill`. They are constructor how-to: plain Skill text in
-  `bots.skills_json` (`{ id, instructions }`, as
-  [ADR 0028](0028-bot-self-settings-via-chat.md)). They are not Module
+  not call `upsertBotSkill`. They are constructor how-to: plain Skill
+  text in `bots.skills_json`
+  (`{ id, description, instructions }`, as
+  [ADR 0028](0028-bot-self-settings-via-chat.md) and
+  [ADR 0032](0032-chat-llm-context-assembly.md)). They are not Module
   packages, not MCP tools, not Apply, and not files under
-  `packages/modules/`. No new column and no new tool.
+  `packages/modules/`. No new column. `dostigus_skills_read` is
+  [ADR 0032](0032-chat-llm-context-assembly.md). The system prompt
+  lists them as catalog lines; it does not always-inject the bodies.
+  Always-on Host rules stay short
+  (`CHAT_SELF_SETTINGS_RULE`, `CHAT_NO_PACKAGE_RULE`).
 - The Store Skill is one `instructions` string. There is no locale
   column and no English twin. This codebase does not dual-locale
   Skills, so the seed text is Russian markdown only, inside the
@@ -289,7 +300,9 @@ Kitchen remains a Host seed with no package row
   [ADR 0028](0028-bot-self-settings-via-chat.md).
 - The platform instruction stays on every turn. It is not one of these
   Skills. Rename, Schedule changes, and other self-edits stay a
-  platform duty if a meta Skill is deleted.
+  platform duty if a meta Skill is deleted. The Host does not
+  always-inject these bodies
+  ([ADR 0032](0032-chat-llm-context-assembly.md)).
 - Inserting these rows does not add `packages/modules/`, catalog or
   Apply tools, or a Weather seed.
 - [`docs/deploy.md`](../deploy.md) does not require Open-Meteo hosts

@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-21
 - Amended: 2026-09-24
+- Amended: 2026-09-24 — Chat history window and system prompt assembly are [ADR 0032](0032-chat-llm-context-assembly.md). This record still owns the gateway, tiers, and retry.
 
 ## Decision
 
@@ -23,8 +24,10 @@ blur runtime and authoring.
 - Tier names stay `cheap`, `strong`, `code` — no “fast/smart/opus” aliases.
 - Builder Jobs (if any) are a later, separate path — out of this MVP.
 - The Host Chat path calls an OpenAI-compatible LLM gateway
-  (`POST {base}/chat/completions`) with conversation history and a system
-  prompt (new Bot, learn purpose, keep the Manifest). When a key is set,
+  (`POST {base}/chat/completions`) with a bounded history window and a
+  system prompt (Manifest including label and description, Skill
+  catalog, stay-on-Manifest / reply-briefly). Assembly is
+  [ADR 0032](0032-chat-llm-context-assembly.md). When a key is set,
   that call includes Cluster MCP surface tools and a short tool loop
   ([ADR 0011](0011-chat-mcp-tool-loop.md)).
 - Cluster settings live in the Store (`llm_gateway`: base URL, key
