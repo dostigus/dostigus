@@ -6,8 +6,8 @@
 2. Use glossary terms from [`CONTEXT.md`](CONTEXT.md) only.
    **Dostigus, Platform, Cluster, Owner, Member, Host, Chat, Card, Sheet, Kit,
    Brand, Sticker, Sheet shell, Bot, Orchestrator, Builder, Skill, Manifest,
-   Module package, Store, MCP surface, Job, Apply, LLM gateway, Model tier,
-   Household, Share link.**
+   Module package, Store, Artifact, MCP surface, Job, Apply, LLM gateway,
+   Model tier, Household, Share link.**
    Prefer **Host** (Host shell is a synonym). Prefer **MCP surface** (MCP
    contract is its interface definition). A Bot is not a Module package. Avoid
    bare “cloud agent” — use Builder. Do not invent synonyms. All repo docs are
@@ -409,8 +409,10 @@ not a Chat tool). Turn journal list and get stay on `/mcp`.
 Schedules are Store rows. Chat tools are `dostigus_schedules_list`,
 `dostigus_schedules_create`, `dostigus_schedules_update`,
 `dostigus_schedules_pause`, `dostigus_schedules_resume`, and
-`dostigus_schedules_delete`, plus `dostigus_cluster_timezone_get` and
-`dostigus_http_get`.
+`dostigus_schedules_delete`, plus `dostigus_cluster_timezone_get`,
+`dostigus_http_get`, and `dostigus_artifacts_put`
+([ADR 0034](docs/adr/0034-artifacts.md)). There is no
+`dostigus_artifacts_get`.
 A Member may call those. `dostigus_cluster_timezone_set`,
 `dostigus_cluster_http_allowlist_get`, and
 `dostigus_cluster_http_allowlist_set` are Owner only.

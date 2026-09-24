@@ -2,13 +2,17 @@
 
 - Status: accepted
 - Date: 2026-09-24
+- Amended: 2026-09-24 — Chat slim and Wake gain `dostigus_artifacts_put`.
+  There is no `dostigus_artifacts_get`. Current-turn Artifact text /
+  meta inject is [ADR 0034](0034-artifacts.md).
 
 The tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). Gateway
 and Model tiers stay [ADR 0004](0004-llm-gateway-tiers.md). Schedules
 and the Wake line stay [ADR 0027](0027-bot-schedules.md). Self-settings
 write rules stay [ADR 0028](0028-bot-self-settings-via-chat.md). Meta
 Skills stay [ADR 0030](0030-chat-cards-module-catalog.md). Host HTTP
-get stays [ADR 0031](0031-host-http-get.md). This record is how the
+get stays [ADR 0031](0031-host-http-get.md). Artifacts stay
+[ADR 0034](0034-artifacts.md). This record is how the
 Host builds the LLM request on one Bot turn: system prompt, Skill
 catalog, history window, and Chat tool allowlist.
 
@@ -122,6 +126,7 @@ Before expand, Owner Chat and a creator-Member Chat receive:
   resume, delete)
 - `dostigus_cluster_timezone_get`
 - `dostigus_http_get`
+- `dostigus_artifacts_put`
 - `dostigus_skills_list`, `dostigus_skills_read`
 
 #### Outside slim until expand
@@ -136,6 +141,7 @@ Before expand, Owner Chat and a creator-Member Chat receive:
 #### Still never in Chat
 
 Unchanged: `dostigus_bots_delete`, Kitchen tools, Turn journal tools.
+There is no `dostigus_artifacts_get` ([ADR 0034](0034-artifacts.md)).
 
 #### Keyword expand (this turn only)
 
@@ -176,8 +182,8 @@ timezone set, allowlist get and set).
 
 Slim like today's Member set, plus `dostigus_skills_list` and
 `dostigus_skills_read`. Messages, that person's Schedule tools,
-timezone get, and Host HTTP get stay. No Manifest write. No Skill
-upsert or delete.
+timezone get, Host HTTP get, and `dostigus_artifacts_put` stay. No
+Manifest write. No Skill upsert or delete.
 
 #### Room mention
 
@@ -193,6 +199,7 @@ current bug where a Wake omits `skills` entirely.
 Wake tools are **narrower than user slim**:
 
 - `dostigus_http_get`
+- `dostigus_artifacts_put`
 - `dostigus_skills_list`, `dostigus_skills_read`
 - `dostigus_schedules_list`
 - `dostigus_messages_list`, `dostigus_messages_create`

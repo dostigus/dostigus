@@ -102,8 +102,9 @@ a button and a status as Kit parts on an assistant bubble
 ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). A **Chat Card** is the
 Host-injected Card for a Schedule change
 ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). A table and
-other Card kinds stay later.
-_Avoid_: widget, embed, attachment (unqualified).
+other Card kinds stay later. An Artifact on a message is not a Card.
+_Avoid_: widget, embed, attachment (unqualified; that word is the
+Artifact join, not a Card).
 
 **Chat Card**:
 A Kit Card the Host injects in the thread after a successful Schedule
@@ -269,6 +270,17 @@ _Avoid_: Meal, meal planner, Cook app, plugin.
 Cluster database (SQLite day-1) holding domain data + Manifests + Module
 packages.
 _Avoid_: database (unqualified), repo.
+
+**Artifact**:
+A persisted Cluster file object: Store meta plus bytes on the Cluster
+volume (`cluster-data` → `/var/lib/dostigus/artifacts/<uuid>`). An
+**attachment** is that Artifact appearing on a Chat message (the join),
+not a second Store type. UI may say «файл» or show a chip. Person
+upload and Bot `dostigus_artifacts_put` both create Artifacts. There
+is no `dostigus_artifacts_get`. See
+[ADR 0034](docs/adr/0034-artifacts.md).
+_Avoid_: attachment (as a Store type), blob (unqualified), library
+file, S3 object (day-1 is volume + Store).
 
 **MCP surface**:
 Tools a Bot calls to read/write the Store. The Host UI uses the same tools.
@@ -448,7 +460,9 @@ _Avoid_: public share, invite (unqualified).
   ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)), and a Chat Card the
   Host injects after a Schedule change
   ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). User and
-  system lines have no parts. Bot-threads, `dm`, `group`, and `room` are in the Host.
+  system lines have no parts. A Chat line may join Artifacts
+  ([ADR 0034](docs/adr/0034-artifacts.md)). Those refs are the join, not
+  `parts_json`. Bot-threads, `dm`, `group`, and `room` are in the Host.
   Grant rows are in the Host
   ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md)).
 - LLM gateway maps Model tiers to providers for every Bot call.

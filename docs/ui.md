@@ -240,19 +240,30 @@ have no author label. An assistant bubble renders Markdown through
 highlighting), lists, and links. A link is only `http:` or `https:`, and
 it opens in a new tab with `rel="noopener noreferrer"`. A single newline
 outside a fence soft-joins; a blank line is a paragraph; a fence keeps
-its line breaks. Raw HTML, tables, images, and headings stay text. User
+its line breaks. Raw HTML, tables, Markdown images, and headings stay text. User
 and system bubbles stay plain text with `white-space: pre-wrap`. See
-[ADR 0022](adr/0022-chat-assistant-markdown.md). Under that Markdown, an
+[ADR 0022](adr/0022-chat-assistant-markdown.md). An Artifact image
+preview is Kit + session GET, not Markdown `![]()` and not a raw
+`<img>` in `content` ([ADR 0034](adr/0034-artifacts.md)). Under that
+Markdown, an
 assistant bubble may show Kit parts: a `KitButton` (`size="sm"`) and a
 status chip (`neutral`, `ok`, or `warn`). The button opens a Sheet the
 Host has registered. Day-1 that Sheet is **Demo sheet**, a `KitSheet`
 drawer with a title and a short body. Unknown Sheet ids are not
 rendered. User and system bubbles have no parts. See
-[ADR 0025](adr/0025-chat-bubble-parts.md). The composer stays on screen, over that scroll.
+[ADR 0025](adr/0025-chat-bubble-parts.md). A bubble may also show
+joined Artifacts: `image/*` as a thumb via session GET; PDF / text as
+a chip (name, size, download). Those refs are the Store join, not
+`parts_json`. The composer stays on screen, over that scroll.
 Its placeholder is «Сообщение для» plus the open Bot’s display name.
-A `+` on the left is
-reserved for attachments and stays disabled. A send arrow in a circle
-appears when the draft has text.
+A `+` on the left attaches files
+([ADR 0034](adr/0034-artifacts.md)): pick, window drag-drop (depth
+tracking), or paste → upload → pending chips → Send with
+`artifactIds`. An empty `FileList` must not steal a text paste. A
+long paste becomes a chip and does not flood the composer. While
+upload runs, a local object URL may preview the file (non-durable).
+A send arrow in a circle
+appears when the draft has text or pending Artifacts.
 
 Settings is the `/settings` page. Members is the `/members` page. Neither
 opens as a Sheet over Chat. Bot settings are the right Sheet above.

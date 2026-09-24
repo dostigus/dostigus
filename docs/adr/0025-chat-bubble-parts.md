@@ -3,6 +3,8 @@
 - Status: accepted
 - Date: 2026-09-23
 - Amended: 2026-09-24 — Schedule Chat Cards extend this parts family ([ADR 0030](0030-chat-cards-module-catalog.md)). Tables and forms still wait. A Card after Apply is not in this record. Skill and self-settings success is a system Chat line, not a Card.
+- Amended: 2026-09-24 — Artifact refs are a Store join, not `parts_json`
+  ([ADR 0034](0034-artifacts.md)). This record stays Kit UI parts only.
 
 Assistant Markdown stays [ADR 0022](0022-chat-assistant-markdown.md).
 Bubbles stay unlabeled

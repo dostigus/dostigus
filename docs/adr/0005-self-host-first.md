@@ -21,6 +21,9 @@ surface.
 
 - `docker/compose.yml` boots the Host on port 3000 and mounts named volume
   `cluster-data` at `/var/lib/dostigus` for the Store (`DATABASE_URL=file:...`).
+  Artifact bytes live on that same volume at
+  `/var/lib/dostigus/artifacts/<uuid>`
+  ([ADR 0034](0034-artifacts.md)).
 - Day-1 image is `ghcr.io/dostigus/dostigus` (see
   [ADR 0007](0007-platform-image-tags.md)).
 - Do not assume SaaS auth, billing, or a central Bot registry in platform code.
