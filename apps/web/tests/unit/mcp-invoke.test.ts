@@ -110,6 +110,7 @@ it('attributes Member Chat messages and refuses Bot tools', () => {
     store,
   })
   const botId = (JSON.parse(created.content) as { bot: { id: string } }).bot.id
+  store.sqlite.prepare('UPDATE bots SET created_by = ? WHERE id = ?').run('member-1', botId)
 
   const blocked = invokeChatMcpTool({
     name: 'dostigus_bots_create',

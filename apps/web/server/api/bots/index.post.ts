@@ -7,7 +7,6 @@ type CreateBody = {
   avatarColor?: string
   label?: string
   description?: string
-  visibility?: string
 }
 
 export default defineEventHandler(async (event) => {
@@ -20,7 +19,6 @@ export default defineEventHandler(async (event) => {
     avatarColor: body?.avatarColor,
     label: body?.label,
     description: body?.description,
-    visibility: body?.visibility,
   }, viewerFromUser(session.user)))
   setResponseStatus(event, 201)
   return created

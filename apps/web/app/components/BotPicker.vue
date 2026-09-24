@@ -72,7 +72,7 @@
               aria-hidden="true"
             >+</span>
             <span class="copy">
-              <span class="name">{{ busy ? 'Creating…' : 'Create private Bot' }}</span>
+              <span class="name">{{ busy ? 'Creating…' : 'Create new Bot' }}</span>
             </span>
           </button>
         </li>
@@ -93,13 +93,7 @@
               :avatar-color="bot.manifest.avatarColor"
             />
             <span class="copy">
-              <span class="name-row">
-                <span class="name">{{ bot.name }}</span>
-                <span
-                  v-if="bot.visibility === 'private'"
-                  class="private"
-                >Private</span>
-              </span>
+              <span class="name">{{ bot.name }}</span>
               <span
                 v-if="bot.lastMessage?.content"
                 class="preview"

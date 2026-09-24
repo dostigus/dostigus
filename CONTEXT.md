@@ -94,18 +94,19 @@ the user. A Bot is **not** a Module package.
 _Avoid_: app, assistant, Module package (a Bot binds packages; it is not one).
 
 **Bot visibility**:
-Who may see a Bot. The target is a personal Bot plus explicit grants
+Who may see a Bot. A personal Bot plus explicit grants
 ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md), amended
 2026-09-24). A new Bot is personal to its creator. The creator can see
 it. The Owner always can, including a Member-created Bot with no grant.
 Anyone else needs a grant: one row, `bot_id` and `person_id`. "All
-current Members" grants Members who exist now. A later Invite does not
+current Members" grants Members who can sign in now. A later Invite does not
 receive those Bots. The Owner may grant or revoke on any Bot. The
 creator may grant or revoke on their own Bot. A grantee cannot
 re-share unless they are also the Owner or the creator. Revoke drops
 list and open. That person's bot-thread rows
-stay. The running Host still stores `visibility` `shared` | `private`
-until the grants milestone. It has no grants table yet. Module data
+stay. The Host stores `bot_grants`. Migration `0013_bot_grants` copied
+former `shared` Bots into one grant per Member row that existed then,
+including a disabled Member, and dropped `visibility`. Module data
 stays in the Cluster Store.
 _Avoid_: public, secret, hidden.
 
@@ -194,23 +195,21 @@ _Avoid_: public share, invite (unqualified).
   One Cluster is one Household.
 - A Member signs in on the same Host. Bot visibility decides which Bots
   they see ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md),
-  amended 2026-09-24). The target: a Bot is personal to its creator;
+  amended 2026-09-24). A Bot is personal to its creator;
   the Owner always sees the full list; other people need a grant. The
   creator and the Owner may edit the Manifest and delete the Bot. A
   grantee chats on their own bot-thread. Members and the LLM gateway
   stay with the Owner. Finding a Bot stays the picker. One bot-thread
-  per person. The running Host still stores `visibility` `shared` |
-  `private` and has no grant rows yet. `dm`, `group`, and `room` are
-  in the Host under that column.
+  per person. The Host stores `bot_grants`. `dm`, `group`, and `room` are
+  in the Host. A room does not grant access.
 - The Owner adds a Member by hand, or creates an Invite for an email and
   copies the link. Accepting an Invite creates a Member and signs them in.
   Sending that link by SMTP is later. An Invite is not a Share link and
   does not grant Bots.
 - The Owner or a Member creates a Bot from that list. The name starts as
-  **New Bot**, with a random flock mark. The target Bot is personal to
-  its creator. The running Host still starts an Owner-created Bot as
-  `shared` and a Member-created Bot as `private` until the grants
-  milestone ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md)).
+  **New Bot**, with a random flock mark. The Bot is personal to
+  its creator
+  ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md)).
   What the Bot is for is a Chat line, not a Manifest field.
 - A Host user message stores the Owner id or Member id, and the Host
   keeps that author's name on the line. Chat bubbles stay unlabeled.
@@ -235,8 +234,8 @@ _Avoid_: public share, invite (unqualified).
   parts: a button that opens a Sheet, and a status
   ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). User and system lines
   have no parts. Bot-threads, `dm`, `group`, and `room` are in the Host.
-  Grant rows are the grants milestone in
-  [ADR 0024](docs/adr/0024-threads-and-bot-visibility.md).
+  Grant rows are in the Host
+  ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md)).
 - LLM gateway maps Model tiers to providers for every Bot call.
 - A Share link is a narrow public token to one object, not the Cluster.
   Share links and guests are later.

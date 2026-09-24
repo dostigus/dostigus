@@ -118,11 +118,7 @@
                 <span class="bot-title">
                   <span class="bot-name">{{ thread.title }}</span>
                   <span
-                    v-if="thread.botVisibility === 'private'"
-                    class="bot-private"
-                  >Private</span>
-                  <span
-                    v-else-if="thread.kind !== 'bot'"
+                    v-if="thread.kind !== 'bot'"
                     class="bot-private"
                   >{{ kindLabel(thread.kind) }}</span>
                 </span>
@@ -224,9 +220,8 @@ function threadLive(thread: ThreadListItem) {
 }
 
 function threadAria(thread: ThreadListItem, live: boolean) {
-  const privateLabel = thread.botVisibility === 'private' ? ', private' : ''
   const kind = thread.kind === 'bot' ? '' : `, ${kindLabel(thread.kind)}`
-  return live ? `${thread.title}${kind}${privateLabel}, online` : `${thread.title}${kind}${privateLabel}`
+  return live ? `${thread.title}${kind}, online` : `${thread.title}${kind}`
 }
 
 function onCreateBot() {

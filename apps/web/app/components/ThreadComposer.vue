@@ -102,13 +102,13 @@
       >
         <legend>Bots</legend>
         <p
-          v-if="sharedBots.length === 0"
+          v-if="roomBots.length === 0"
           class="hint"
         >
-          A room needs a shared Bot. A private Bot stays off rooms.
+          You can add a Bot you can open. Everyone in the room must already have access.
         </p>
         <label
-          v-for="bot in sharedBots"
+          v-for="bot in roomBots"
           :key="bot.id"
           class="person"
         >
@@ -170,7 +170,7 @@ const others = computed(() => {
   return people.filter((person) => person.id !== user.value?.id)
 })
 
-const sharedBots = computed(() => bots.value.filter((bot) => bot.visibility === 'shared'))
+const roomBots = computed(() => bots.value)
 
 function dismiss() {
   emit('close')

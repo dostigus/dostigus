@@ -1,7 +1,7 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { ChatPart } from '@dostigus/shared'
 import type { HostSessionUser } from './owner-auth'
-import { addKitchenPantry, createBot, createMember, createMessengerThread, findMemberSecretByLogin, findOwnerSecretByLogin, getBot, getKitchenRecipe, insertMessage, insertThreadLine, listBots, listKitchenCooked, listKitchenPantry, listMessages, listThreadMessages, markKitchenCooked, ownerExists, saveKitchenRecipe } from '@dostigus/db'
+import { addKitchenPantry, createBot, createMember, createMessengerThread, findMemberSecretByLogin, findOwnerSecretByLogin, getBot, getKitchenRecipe, grantBot, insertMessage, insertThreadLine, listBots, listKitchenCooked, listKitchenPantry, listMessages, listThreadMessages, markKitchenCooked, ownerExists, saveKitchenRecipe } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID } from '../../app/utils/host-sheets'
 import { appendClusterMessage } from './cluster-bots'
@@ -21,7 +21,7 @@ export const PREVIEW_OWNER_PASSWORD = 'preview-owner'
 export const PREVIEW_MEMBER_LOGIN = 'preview-member'
 export const PREVIEW_MEMBER_PASSWORD = 'preview-member'
 
-/** Member private Bot. Visible to the Owner. Id stays `preview-private`. */
+/** Member-created Bot. The Owner sees it. Id stays `preview-private`. */
 export const PREVIEW_PRIVATE_BOT_ID = 'preview-private'
 export const PREVIEW_PRIVATE_BOT_NAME = 'Private notes'
 
@@ -189,8 +189,8 @@ export function readPreviewSeedHead(store: OpenedStore): PreviewSeedHeadResult {
  * so that line stays at the bottom of the Chat.
  * `kitchen` fills empty Kitchen tables and appends one Kitchen button line once,
  * after the parts line.
- * `threads` adds a preview Member, a private Bot, and separate bot-threads
- * on the shared preview Bot.
+ * `threads` adds a preview Member, that Member's Bot, a grant for the
+ * Member on Bot `preview`, and separate bot-threads.
  * `rooms` does that and adds a direct message plus a room with the shared Bot.
  * Throws OwnerAuthError 401 when the Store Owner is not this login.
  */
@@ -206,7 +206,6 @@ export async function ensurePreviewCluster(
       id: PREVIEW_BOT_ID,
       name: DEFAULT_BOT_NAME,
       createdBy: user.id,
-      visibility: 'shared',
     }).bot.id
   if (options.tall) {
     ensurePreviewTallThread(store, botId, user.id)
@@ -378,12 +377,12 @@ export async function ensurePreviewThreads(
     createBot(store, {
       id: PREVIEW_PRIVATE_BOT_ID,
       name: PREVIEW_PRIVATE_BOT_NAME,
-      visibility: 'private',
       createdBy: member.id,
       avatarShape: 'owl',
       avatarColor: '#8354E6',
     })
   }
+  grantBot(store, sharedBotId, member.id)
   if (!previewLineExists(store, sharedBotId, PREVIEW_OWNER_THREAD_PREFIX)) {
     insertMessage(store, {
       botId: sharedBotId,

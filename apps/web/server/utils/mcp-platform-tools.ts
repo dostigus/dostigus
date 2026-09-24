@@ -44,10 +44,10 @@ export type ChatToolInvokeResult = {
 const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   dostigus_bots_list: {
     name: 'dostigus_bots_list',
-    description: 'List Bots in the Cluster Store, newest first. Each Bot includes id, name, createdAt, Manifest (modelTier, avatarShape, avatarColor, label, description, skillIds, modulePackageIds), and lastMessage (latest Chat line preview, or null).',
+    description: 'List Bots this caller can open, newest first. The Owner sees every Bot. Each Bot includes id, name, createdAt, createdBy, Manifest (modelTier, avatarShape, avatarColor, label, description, skillIds, modulePackageIds), and lastMessage (latest line on that caller\'s bot-thread, or null).',
     annotations: { readOnlyHint: true },
     chat: true,
-    run: (_input, store) => listClusterBots(store),
+    run: (_input, store, viewer) => listClusterBots(store, viewer),
   },
   dostigus_bots_get: {
     name: 'dostigus_bots_get',
@@ -57,11 +57,11 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
     inputSchema: {
       id: z.string().min(1),
     },
-    run: (input, store) => getClusterBot(store, String(input.id)),
+    run: (input, store, viewer) => getClusterBot(store, String(input.id), viewer),
   },
   dostigus_bots_create: {
     name: 'dostigus_bots_create',
-    description: 'Create a Bot in the Cluster Store. Optional name (default New Bot), Model tier (default strong), avatarShape, avatarColor (Bot accent palette hex), label, and description. Stores an assistant greeting. Chat asks what the Bot is for.',
+    description: 'Create a Bot in the Cluster Store. The Bot is personal to its creator. Optional name (default New Bot), Model tier (default strong), avatarShape, avatarColor (Bot accent palette hex), label, and description. Stores an assistant greeting on the creator\'s bot-thread. Chat asks what the Bot is for.',
     chat: true,
     inputSchema: {
       name: z.string().optional(),
@@ -71,18 +71,18 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
       label: z.string().optional(),
       description: z.string().optional(),
     },
-    run: (input, store) => createClusterBot(store, {
+    run: (input, store, viewer) => createClusterBot(store, {
       name: optionalString(input.name),
       modelTier: optionalString(input.modelTier),
       avatarShape: optionalString(input.avatarShape),
       avatarColor: optionalString(input.avatarColor),
       label: optionalString(input.label),
       description: optionalString(input.description),
-    }),
+    }, viewer),
   },
   dostigus_bots_update: {
     name: 'dostigus_bots_update',
-    description: 'Update a Bot name, Model tier, avatarShape, avatarColor, label, and/or description in the Cluster Store.',
+    description: 'Update a Bot Manifest (name, Model tier, avatarShape, avatarColor, label, and/or description). The creator and the Owner may edit. A grantee cannot.',
     chat: true,
     inputSchema: {
       id: z.string().min(1),
@@ -93,14 +93,14 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
       label: z.string().optional(),
       description: z.string().optional(),
     },
-    run: (input, store) => updateClusterBot(store, String(input.id), {
+    run: (input, store, viewer) => updateClusterBot(store, String(input.id), {
       name: optionalString(input.name),
       modelTier: optionalString(input.modelTier),
       avatarShape: optionalString(input.avatarShape),
       avatarColor: optionalString(input.avatarColor),
       label: optionalString(input.label),
       description: optionalString(input.description),
-    }),
+    }, viewer),
   },
   dostigus_bots_delete: {
     name: 'dostigus_bots_delete',
@@ -110,11 +110,11 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
     inputSchema: {
       id: z.string().min(1),
     },
-    run: (input, store) => deleteClusterBot(store, String(input.id)),
+    run: (input, store, viewer) => deleteClusterBot(store, String(input.id), viewer),
   },
   dostigus_messages_list: {
     name: 'dostigus_messages_list',
-    description: 'List Chat messages on the caller\'s bot-thread with a Bot, oldest first. Writes the assistant greeting if that bot-thread is empty. A shared Bot is not one Household-wide timeline.',
+    description: 'List Chat messages on the caller\'s bot-thread with a Bot, oldest first. Writes the assistant greeting if that bot-thread is empty. Does not copy another person\'s bot-thread.',
     chat: true,
     inputSchema: {
       botId: z.string().min(1),

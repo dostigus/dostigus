@@ -7,14 +7,15 @@ import {
   createMember,
   createOwner,
   disableMember,
+  grantBot,
   insertMessage,
   listBots,
   listBotThreadMessages,
   listMessages,
   listThreadMessages,
   openStore,
+  revokeBotGrant,
   searchMessages,
-  setBotVisibility,
   STORE_MIGRATIONS,
   StoreError,
 } from '../../src/index'
@@ -142,7 +143,7 @@ it('places existing messages onto one bot-thread per person', () => {
   sqlite.close()
 })
 
-it('keeps each person on their own bot-thread and lets the Owner open a private one', () => {
+it('keeps each person on their own bot-thread and does not copy history', () => {
   const store = memoryStore()
   const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
   const member = createMember(store, {
@@ -155,16 +156,14 @@ it('keeps each person on their own bot-thread and lets the Owner open a private 
     username: 'lin',
     passwordHash: 'hash:lin',
   })
-  const shared = createBot(store, { name: 'Shared', createdBy: owner.id, visibility: 'shared' }).bot
-  expect(shared.visibility).toBe('shared')
+  const shared = createBot(store, { name: 'Shared', createdBy: owner.id }).bot
   expect(shared.createdBy).toBe(owner.id)
   const priv = createBot(store, {
     name: 'Shelf',
-    visibility: 'private',
     createdBy: member.id,
   }).bot
-  expect(priv.visibility).toBe('private')
   expect(priv.createdBy).toBe(member.id)
+  grantBot(store, shared.id, member.id)
 
   insertMessage(store, {
     botId: shared.id,
@@ -208,26 +207,22 @@ it('keeps each person on their own bot-thread and lets the Owner open a private 
   const otherView = { id: other.id, role: 'member' as const }
   expect(listBots(store, ownerView).map((bot) => bot.id).sort()).toEqual([priv.id, shared.id].sort())
   expect(listBots(store, memberView).map((bot) => bot.id).sort()).toEqual([priv.id, shared.id].sort())
-  expect(listBots(store, otherView).map((bot) => bot.id)).toEqual([shared.id])
+  expect(listBots(store, otherView).map((bot) => bot.id)).toEqual([])
 
   const opened = listBotThreadMessages(store, priv.id, botThreadPersonId(priv, ownerView))
-  expect(opened.map((line) => line.content)).toContain('private line')
+  expect(opened.map((line) => line.content)).not.toContain('private line')
+  expect(opened[0]?.role).toBe('assistant')
   const ownerOpen = listBotThreadMessages(store, priv.id, owner.id)
-  expect(ownerOpen.map((line) => line.content)).toContain('private line')
+  expect(ownerOpen.map((line) => line.content)).not.toContain('private line')
   const threadCount = store.sqlite.prepare(`
     SELECT count(*) AS n FROM threads WHERE bot_id = ?
   `).get(priv.id) as { n: number }
-  expect(threadCount.n).toBe(1)
+  expect(threadCount.n).toBe(2)
 
   expect(searchMessages(store, 'only', 8, memberView).map((hit) => hit.content)).toEqual(['member only'])
-  expect(searchMessages(store, 'private line', 8, ownerView)).toHaveLength(1)
+  expect(searchMessages(store, 'private line', 8, ownerView)).toEqual([])
+  expect(searchMessages(store, 'private line', 8, memberView)).toHaveLength(1)
   expect(searchMessages(store, 'private line', 8, otherView)).toEqual([])
-
-  const flipped = setBotVisibility(store, priv.id, 'shared')
-  expect(flipped.visibility).toBe('shared')
-  expect(flipped.createdBy).toBe(member.id)
-  setBotVisibility(store, priv.id, 'private')
-  expect(setBotVisibility(store, priv.id, 'private').createdBy).toBe(member.id)
 
   disableMember(store, member.id)
   expect(listBots(store, ownerView).some((bot) => bot.id === priv.id)).toBe(true)
@@ -239,6 +234,14 @@ it('keeps each person on their own bot-thread and lets the Owner open a private 
     personId: other.id,
     viewer: otherView,
   })).toThrow(StoreError)
+
+  grantBot(store, priv.id, other.id)
+  const grantedOpen = listBotThreadMessages(store, priv.id, other.id)
+  expect(grantedOpen.map((line) => line.content)).not.toContain('private line')
+  expect(grantedOpen).toHaveLength(1)
+  revokeBotGrant(store, priv.id, other.id)
+  expect(listBots(store, otherView).map((bot) => bot.id)).toEqual([])
+  expect(listBotThreadMessages(store, priv.id, other.id)).toHaveLength(1)
 
   store.close()
 })

@@ -1,5 +1,4 @@
 import type { BotAccentHex, BotAvatarShape } from './bot-avatar'
-import type { BotVisibility } from './bot-visibility'
 import type { BotLastMessage } from './types'
 
 /** One Thread. The kind is a label, not a separate product. See ADR 0024. */
@@ -52,7 +51,6 @@ export type ThreadListItem = {
   title: string
   /** Set on a bot-thread. A room keeps its Bots on participants. */
   botId: string | null
-  botVisibility: BotVisibility | null
   href: string
   createdAt: string
   lastMessage: BotLastMessage | null

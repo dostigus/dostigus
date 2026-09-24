@@ -10,10 +10,11 @@ import { previewChatLocation } from '../../app/utils/preview-hold'
  * `?hold=1` stays on the Chat URL so the next quiet reply waits for a
  * screenshot. `?members=1`
  * opens Members instead of Chat. `?threads=1` seeds a preview Member,
- * their private Bot, and separate Owner and Member bot-threads on the
- * shared preview Bot, then opens the Bot list as the Owner.
- * `?threads=1&as=member` signs in that Member and opens the shared Bot.
- * `?rooms=1` also seeds a direct message and a room with the shared Bot.
+ * that Member's Bot, a grant for the Member on Bot `preview`, and
+ * separate Owner and Member bot-threads on Bot `preview`, then opens
+ * the Bot list as the Owner.
+ * `?threads=1&as=member` signs in that Member and opens Bot `preview`.
+ * `?rooms=1` also seeds a direct message and a room with Bot `preview`.
  * The room line mentions that Bot and stores one reply, then opens the room.
  * `?rooms=1&as=member` signs in the Member on that same room.
  * `?members=1` still opens Members. HEAD ignores those queries. Not a domain Bot.

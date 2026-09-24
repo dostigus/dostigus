@@ -12,8 +12,8 @@
  * HEAD ignores `?parts=1`.
  * GET `?kitchen=1` adds one Kitchen button once and fills empty Kitchen tables.
  * HEAD ignores `?kitchen=1`.
- * GET `?threads=1` lists the shared Bot and a Member private Bot for the Owner.
- * GET `?threads=1&as=member` opens the Member bot-thread on that shared Bot.
+ * GET `?threads=1` lists Bot `preview` and the Member's Bot for the Owner.
+ * GET `?threads=1&as=member` opens the Member bot-thread on Bot `preview`.
  * HEAD ignores `?threads=1`.
  *
  *   pnpm preview:host
@@ -32,6 +32,7 @@ const TALL_COUNT = 32
 const PARTS_PREFIX = 'Preview Kit parts.'
 const KITCHEN_PREFIX = 'Kitchen is open.'
 const PRIVATE_BOT_ID = 'preview-private'
+const PRIVATE_THREAD_PREFIX = 'Member thread on the private Bot.'
 const OWNER_THREAD_PREFIX = 'Owner thread on the shared Bot.'
 const MEMBER_THREAD_PREFIX = 'Member thread on the shared Bot.'
 const WAIT_MS = Number(process.env.PREVIEW_SMOKE_WAIT_MS ?? 120_000)
@@ -544,8 +545,18 @@ async function main() {
     fail(`Owner list expected ${PREVIEW_BOT_ID} and ${PRIVATE_BOT_ID}, got ${ownerBotIds.join(', ') || '(none)'}`)
   }
   const privateBot = ownerBots.bots.find((bot) => bot.id === PRIVATE_BOT_ID)
-  if (privateBot?.visibility !== 'private') {
-    fail(`private Bot visibility was ${privateBot?.visibility ?? '(missing)'}`)
+  if (!privateBot?.createdBy) {
+    fail('Member Bot is missing its creator')
+  }
+  if (privateBot.visibility != null) {
+    fail('Bot list still returns visibility')
+  }
+  const ownerPrivate = await readJson(`/api/bots/${PRIVATE_BOT_ID}/messages`, ownerSession)
+  const ownerPrivateContents = Array.isArray(ownerPrivate?.messages)
+    ? ownerPrivate.messages.map((message) => message.content)
+    : []
+  if (ownerPrivateContents.some((content) => content.startsWith(PRIVATE_THREAD_PREFIX))) {
+    fail('Owner bot-thread includes the Member line on that Bot')
   }
   const ownerChat = await readJson(`/api/bots/${PREVIEW_BOT_ID}/messages`, ownerSession)
   const ownerContents = Array.isArray(ownerChat?.messages) ? ownerChat.messages.map((message) => message.content) : []
@@ -577,7 +588,7 @@ async function main() {
   if (!memberIds.includes(PRIVATE_BOT_ID) || !memberIds.includes(PREVIEW_BOT_ID)) {
     fail(`Member list expected both Bots, got ${memberIds.join(', ') || '(none)'}`)
   }
-  note('?threads=1 separates Owner and Member bot-threads; Owner sees the private Bot')
+  note('?threads=1 separates Owner and Member bot-threads; Owner sees the Member Bot on their own thread')
 
   note('ok')
 }

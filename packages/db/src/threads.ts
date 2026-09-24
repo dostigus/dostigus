@@ -3,14 +3,13 @@ import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
 import {
   botThreadPersonId,
-  canSeeBot,
   isMessengerThreadKind,
   ownerDisplayName,
   THREAD_TITLE_MAX,
 } from '@dostigus/shared'
 import { authorNameForPerson, getMember, listMembers } from './members'
 import { getOwner } from './owners'
-import { getBot, insertThreadLine, listBots, requireBot, StoreError } from './queries'
+import { getBot, insertThreadLine, listBots, requireBot, StoreError, viewerMaySeeBot } from './queries'
 
 const PEOPLE_MAX = 50
 const BOTS_MAX = 20
@@ -67,11 +66,21 @@ export function listInboxThreads(store: OpenedStore, viewer: BotViewer): ThreadL
     }
   }
   const items: ThreadListItem[] = []
+  const coveredBots = new Set<string>()
   for (const id of ids) {
     const item = readThreadListItem(store, id, viewer.id)
     if (item) {
       items.push(item)
+      if (item.kind === 'bot' && item.botId) {
+        coveredBots.add(item.botId)
+      }
     }
+  }
+  for (const bot of listBots(store, viewer)) {
+    if (coveredBots.has(bot.id)) {
+      continue
+    }
+    items.push(botInboxRow(store, bot, viewer.id))
   }
   items.sort((a, b) => activityMs(b) - activityMs(a) || b.createdAt.localeCompare(a.createdAt))
   return items
@@ -247,12 +256,9 @@ export function appendMessengerAssistantLine(
 function assertRoomBots(store: OpenedStore, bots: Bot[], personIds: string[]) {
   const viewers = personIds.map((id) => personViewer(store, id))
   for (const bot of bots) {
-    if (bot.visibility !== 'shared') {
-      throw new StoreError('A private Bot cannot join a room', 400)
-    }
     for (const viewer of viewers) {
-      if (!canSeeBot(bot, viewer)) {
-        throw new StoreError('Every person in the room must be able to see that Bot', 400)
+      if (!viewerMaySeeBot(store, bot, viewer)) {
+        throw new StoreError('Every person in the room must already have access to that Bot', 400)
       }
     }
   }
@@ -384,7 +390,6 @@ function readThreadListItem(
     kind,
     title,
     botId: thread.bot_id,
-    botVisibility: kind === 'bot' ? (bot?.visibility ?? 'shared') : null,
     href: kind === 'bot' && thread.bot_id ? `/bots/${thread.bot_id}` : `/threads/${thread.id}`,
     createdAt: new Date(thread.created_at).toISOString(),
     lastMessage: lastMessage(store, thread.id),
@@ -497,4 +502,38 @@ function activityMs(item: ThreadListItem): number {
     return Date.parse(item.lastMessage.createdAt)
   }
   return Date.parse(item.createdAt)
+}
+
+/** A Bot this person can open before their bot-thread exists. First open writes the greeting. */
+function botInboxRow(store: OpenedStore, bot: Bot, viewerId: string): ThreadListItem {
+  return {
+    id: `bt:${bot.id}:${viewerId}`,
+    kind: 'bot',
+    title: bot.name,
+    botId: bot.id,
+    href: `/bots/${bot.id}`,
+    createdAt: bot.createdAt,
+    lastMessage: null,
+    participants: [
+      {
+        kind: 'person',
+        id: viewerId,
+        name: authorNameForPerson(store, viewerId) ?? 'Someone',
+      },
+      {
+        kind: 'bot',
+        id: bot.id,
+        name: bot.name,
+        avatarShape: bot.manifest.avatarShape,
+        avatarColor: bot.manifest.avatarColor,
+      },
+    ],
+    mark: {
+      type: 'bot',
+      name: bot.name,
+      seed: bot.id,
+      shape: bot.manifest.avatarShape,
+      color: bot.manifest.avatarColor,
+    },
+  }
 }

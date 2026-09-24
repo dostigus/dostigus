@@ -1,7 +1,6 @@
 /** Stable glossary types — names match CONTEXT.md. Do not invent synonyms. */
 
 import type { BotAccentHex, BotAvatarShape } from './bot-avatar'
-import type { BotVisibility } from './bot-visibility'
 import type { ChatPart } from './chat-parts'
 
 export type ClusterId = string
@@ -115,9 +114,7 @@ export type Bot = {
   id: BotId
   name: string
   createdAt: string
-  /** `shared` is the Household Bot. `private` stays with its creator and the Owner. */
-  visibility: BotVisibility
-  /** Owner or Member who created the Bot. A flip does not change this. */
+  /** Owner or Member who created the Bot. */
   createdBy: string | null
   manifest: Manifest
 }

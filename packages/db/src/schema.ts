@@ -12,11 +12,22 @@ export const bots = sqliteTable('bots', {
   skillsJson: text('skills_json').notNull().default('[]'),
   modulesJson: text('modules_json').notNull().default('[]'),
   createdAt: integer('created_at').notNull(),
-  /** `shared` or `private`. Existing rows stay `shared`. */
-  visibility: text('visibility').notNull().default('shared'),
-  /** Owner or Member id. A visibility flip does not change this. */
+  /** Owner or Member id. Access beyond the creator is a grant row, not a flag. */
   createdBy: text('created_by'),
 })
+
+/**
+ * One explicit Bot grant. The creator and the Owner do not need a row.
+ * See ADR 0024.
+ */
+export const botGrants = sqliteTable('bot_grants', {
+  botId: text('bot_id').notNull().references(() => bots.id, { onDelete: 'cascade' }),
+  personId: text('person_id').notNull(),
+  createdAt: integer('created_at').notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.botId, table.personId] }),
+  index('bot_grants_person_id_idx').on(table.personId),
+])
 
 /** Cluster LLM gateway settings. The API key stays in the Store (server-side only). */
 export const llmGateway = sqliteTable('llm_gateway', {
@@ -133,6 +144,7 @@ export const kitchenRecipe = sqliteTable('kitchen_recipe', {
 })
 
 export type BotRow = typeof bots.$inferSelect
+export type BotGrantRow = typeof botGrants.$inferSelect
 export type MessageRow = typeof messages.$inferSelect
 export type ThreadRow = typeof threads.$inferSelect
 export type ThreadParticipantRow = typeof threadParticipants.$inferSelect
