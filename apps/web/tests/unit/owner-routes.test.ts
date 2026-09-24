@@ -69,6 +69,8 @@ it('keeps Bot writes, Settings, and Members with the Owner', () => {
     'settings/llm-gateway/ping.post.ts',
     'settings/timezone.get.ts',
     'settings/timezone.put.ts',
+    'settings/http-allowlist.get.ts',
+    'settings/http-allowlist.put.ts',
     'members/index.get.ts',
     'members/index.post.ts',
     'members/[id]/disable.post.ts',

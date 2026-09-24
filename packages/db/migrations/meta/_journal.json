@@ -120,6 +120,13 @@
       "when": 1759557600000,
       "tag": "0016_schedule_name",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1759644000000,
+      "tag": "0017_http_allowlist",
+      "breakpoints": true
     }
   ]
 }

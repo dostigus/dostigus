@@ -38,6 +38,7 @@ import {
   previewSchedulesRequested,
   previewSeedAllowed,
   previewSeedRedirect,
+  previewSettingsRequested,
   previewSystemRequested,
   previewTallRequested,
   previewThreadAsMember,
@@ -113,6 +114,7 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   expect(src).toContain('previewSeedAllowed')
   expect(src).toContain('previewTallRequested')
   expect(src).toContain('members: query.members')
+  expect(src).toContain('settings: query.settings')
   expect(src).toContain('previewPartsRequested')
   expect(src).toContain('previewKitchenRequested')
   expect(src).toContain('previewSchedulesRequested')
@@ -145,6 +147,7 @@ it('answers HEAD without signing in or writing the Store', () => {
   expect(src).not.toContain('previewChatLocation')
   expect(src).not.toContain('previewSeedRedirect')
   expect(src).not.toContain('previewMembersRequested')
+  expect(src).not.toContain('previewSettingsRequested')
   expect(src).not.toContain('previewKitchenRequested')
   expect(src).not.toContain('previewSchedulesRequested')
   expect(src).not.toContain('previewSystemRequested')
@@ -460,6 +463,9 @@ it('redirects preview seed the way the live smoke checks', () => {
   expect(previewSeedRedirect(chat)).toBe(`/bots/${PREVIEW_BOT_ID}`)
   expect(previewSeedRedirect({ ...chat, members: '1', activity: 'typing', hold: '1' })).toBe('/members')
   expect(previewSeedRedirect({ ...chat, members: 1, rooms: '1', threads: '1' })).toBe('/members')
+  expect(previewSeedRedirect({ ...chat, settings: '1' })).toBe('/settings')
+  expect(previewSeedRedirect({ ...chat, settings: 1, activity: 'typing', hold: '1' })).toBe('/settings')
+  expect(previewSeedRedirect({ ...chat, members: '1', settings: '1' })).toBe('/members')
   expect(previewSeedRedirect({ ...chat, rooms: '1', as: 'member', activity: 'typing' })).toBe(`/threads/${PREVIEW_ROOM_THREAD_ID}`)
   expect(previewSeedRedirect({ ...chat, rooms: '1', roomId: null })).toBe(`/bots/${PREVIEW_BOT_ID}`)
   expect(previewSeedRedirect({ ...chat, threads: '1' })).toBe('/')
@@ -473,6 +479,12 @@ it('treats rooms=1 as the messenger demo', () => {
   expect(previewRoomsRequested('1')).toBe(true)
   expect(previewRoomsRequested(1)).toBe(true)
   expect(previewRoomsRequested(undefined)).toBe(false)
+})
+
+it('treats settings=1 as Owner Settings', () => {
+  expect(previewSettingsRequested('1')).toBe(true)
+  expect(previewSettingsRequested(1)).toBe(true)
+  expect(previewSettingsRequested(undefined)).toBe(false)
 })
 
 it('seeds a direct message and a room with one stored mention reply', async () => {

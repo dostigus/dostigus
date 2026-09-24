@@ -188,7 +188,8 @@ often listens on IPv6 only: open **http://localhost:3000/**.
 
 The Host is a Bot list + Chat. Press
 **+** to create a Bot (default **New Bot**). **Settings** holds the Cluster
-LLM gateway (base URL + key). Not a landing page. Store is SQLite
+LLM gateway (base URL + key), the Cluster timezone, and the Cluster
+http allowlist. Not a landing page. Store is SQLite
 (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
 First visit creates the Cluster Owner; later visits sign in. The Owner opens
 **Members** to add a Member (display name, email or username, password). A
@@ -263,6 +264,11 @@ open that page). `?hold=1` and `?activity=` are ignored when `members=1`
 is set. **HEAD**
 ignores `?members=1` and still answers **204** or **302** to
 `/bots/preview` with no session cookie.
+
+For Settings (timezone and http allowlist), open
+**http://localhost:3000/preview-seed?settings=1**. That GET signs in the
+same preview Owner and redirects to `/settings`. `?members=1` still
+wins when both are set. **HEAD** ignores `?settings=1`.
 
 For Bot grants and bot-threads, open
 **http://localhost:3000/preview-seed?threads=1**. That GET signs in the
@@ -403,9 +409,15 @@ not a Chat tool). Turn journal list and get stay on `/mcp`.
 Schedules are Store rows. Chat tools are `dostigus_schedules_list`,
 `dostigus_schedules_create`, `dostigus_schedules_update`,
 `dostigus_schedules_pause`, `dostigus_schedules_resume`, and
-`dostigus_schedules_delete`, plus `dostigus_cluster_timezone_get`.
-A Member may call those. `dostigus_cluster_timezone_set` is Owner only.
-The Owner sets the Cluster timezone on Settings. The Host process polls
+`dostigus_schedules_delete`, plus `dostigus_cluster_timezone_get` and
+`dostigus_http_get`.
+A Member may call those. `dostigus_cluster_timezone_set`,
+`dostigus_cluster_http_allowlist_get`, and
+`dostigus_cluster_http_allowlist_set` are Owner only.
+The Owner sets the Cluster timezone and the Cluster http allowlist on
+Settings. Host HTTP get is GET only, 64 KiB body cap with `truncated`,
+and always blocks loopback, private, and link-local destinations
+([ADR 0031](docs/adr/0031-host-http-get.md)). The Host process polls
 due Schedules. See [ADR 0027](docs/adr/0027-bot-schedules.md).
 
 Self-host compose (Store volume + published image): see [`docs/deploy.md`](docs/deploy.md).

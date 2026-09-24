@@ -25,7 +25,7 @@ export default defineNuxtConfig({
     name: 'Dostigus',
     route: '/mcp',
     description: 'Cluster Store MCP surface: Bots, Chat messages, and Schedules.',
-    instructions: 'Call dostigus_bots_*, dostigus_messages_*, and dostigus_schedules_* against the Cluster Store. The Host UI uses the same Store helpers. dostigus_cluster_timezone_get reads the Cluster timezone. dostigus_cluster_timezone_set is Owner only.',
+    instructions: 'Call dostigus_bots_*, dostigus_messages_*, and dostigus_schedules_* against the Cluster Store. The Host UI uses the same Store helpers. dostigus_cluster_timezone_get reads the Cluster timezone. dostigus_cluster_timezone_set is Owner only. dostigus_http_get GETs a public URL. dostigus_cluster_http_allowlist_get and dostigus_cluster_http_allowlist_set are Owner only.',
     // Cursor / IDE clients are not same-origin
     security: { allowedOrigins: '*' },
   },

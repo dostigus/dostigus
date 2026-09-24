@@ -24,6 +24,15 @@ export const SCHEDULE_MCP_TOOLS = [
   'dostigus_cluster_timezone_set',
 ] as const
 
+/** Host HTTP get and Cluster http allowlist. On `/mcp` and the Chat loop. See ADR 0031. */
+export const HTTP_MCP_TOOLS = [
+  'dostigus_http_get',
+  'dostigus_cluster_http_allowlist_get',
+  'dostigus_cluster_http_allowlist_set',
+] as const
+
+export type HttpMcpTool = typeof HTTP_MCP_TOOLS[number]
+
 /** Platform MCP surface tool names (Host + Cluster Store). */
 export const SKILL_MCP_TOOLS = [
   'dostigus_skills_list',
@@ -54,6 +63,7 @@ export const PLATFORM_MCP_TOOLS = [
   'dostigus_messages_list',
   'dostigus_messages_create',
   ...SCHEDULE_MCP_TOOLS,
+  ...HTTP_MCP_TOOLS,
   ...TURN_MCP_TOOLS,
   ...KITCHEN_MCP_TOOLS,
 ] as const
@@ -88,6 +98,7 @@ export const MEMBER_CHAT_MCP_TOOLS = [
   'dostigus_schedules_resume',
   'dostigus_schedules_delete',
   'dostigus_cluster_timezone_get',
+  'dostigus_http_get',
 ] as const satisfies readonly ChatMcpTool[]
 
 export type MemberChatMcpTool = typeof MEMBER_CHAT_MCP_TOOLS[number]

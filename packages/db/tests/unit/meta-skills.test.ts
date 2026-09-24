@@ -40,7 +40,7 @@ afterEach(() => {
   }
 })
 
-it('seeds four meta Skills on Bot create and stays under the instructions cap', () => {
+it('seeds meta Skills on Bot create and stays under the instructions cap', () => {
   const store = memoryStore()
   const { bot } = createBot(store, { name: 'Notes' })
   const skills = listBotSkills(store, bot.id)
@@ -65,6 +65,9 @@ it('seeds four meta Skills on Bot create and stays under the instructions cap', 
   expect(byId['platform-meta-self-settings']).toContain('dostigus_bots_update')
   expect(byId['platform-meta-marketplace']).toContain('Marketplace')
   expect(byId['platform-meta-marketplace']).not.toMatch(/Open-Meteo|dostigus_modules|packages\/modules/)
+  expect(byId['platform-meta-http-get']).toContain('dostigus_http_get')
+  expect(byId['platform-meta-http-get']).toContain('truncated')
+  expect(byId['platform-meta-http-get']).not.toMatch(/dostigus_modules|packages\/modules/)
 })
 
 it('create insert-if-missing keeps an existing meta Skill and adds only the rest', () => {
@@ -88,7 +91,7 @@ it('create insert-if-missing keeps an existing meta Skill and adds only the rest
   expect(skillsJson(store, bot.id)).toBe(JSON.stringify(skills))
 })
 
-it('upgrade inserts the set only when none of the four ids are stored', () => {
+it('upgrade inserts the set only when none of the meta Skill ids are stored', () => {
   const store = memoryStore()
   const empty = createBot(store, { name: 'Empty' }).bot
   const partial = createBot(store, { name: 'Partial' }).bot
@@ -118,7 +121,7 @@ it('upgrade inserts the set only when none of the four ids are stored', () => {
   ])
 })
 
-it('host open upgrades a Bot with none of the four ids and leaves a partial set', () => {
+it('host open upgrades a Bot with none of the meta Skill ids and leaves a partial set', () => {
   const dir = mkdtempSync(join(tmpdir(), 'dostigus-meta-skills-'))
   const url = `file:${join(dir, 'cluster.sqlite')}`
   const store = openStore(url)

@@ -6,6 +6,14 @@ export {
   revokeBotGrant,
 } from './bot-grants'
 export {
+  getClusterHttpAllowlist,
+  httpAllowlistAllows,
+  normalizeHttpAllowlist,
+  parseHttpAllowlistHost,
+  parseHttpAllowlistJson,
+  setClusterHttpAllowlist,
+} from './http-allowlist'
+export {
   acceptInvite,
   type IssuedInvite,
   issueInvite,

@@ -184,6 +184,9 @@ it('calls chat completions with greeting history and the Manifest system prompt'
     'dostigus_schedules_delete',
     'dostigus_cluster_timezone_get',
     'dostigus_cluster_timezone_set',
+    'dostigus_http_get',
+    'dostigus_cluster_http_allowlist_get',
+    'dostigus_cluster_http_allowlist_set',
   ])
   expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_bots_delete')
   expect(JSON.stringify(body)).not.toContain('sk-test-secret-key')
@@ -265,12 +268,14 @@ it('loads Skill instructions and creator tools into a Member turn', async () => 
     'dostigus_schedules_resume',
     'dostigus_schedules_delete',
     'dostigus_cluster_timezone_get',
+    'dostigus_http_get',
     'dostigus_bots_update',
     'dostigus_skills_list',
     'dostigus_skills_upsert',
     'dostigus_skills_delete',
   ])
   expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_cluster_timezone_set')
+  expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_cluster_http_allowlist_set')
 })
 
 it('retries a configured HTTP 500 once, then stores the transient reply', async () => {

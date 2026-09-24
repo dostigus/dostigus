@@ -18,13 +18,16 @@ export function openChatTurn(input: {
 }): {
   cards: ChatCardTurn
   tools: () => OpenAiChatFunctionTool[]
-  invokeTool: (name: string, args: unknown) => ChatToolInvokeResult
+  invokeTool: (name: string, args: unknown) => ChatToolInvokeResult | Promise<ChatToolInvokeResult>
 } {
   const cards = new ChatCardTurn()
   const tools = () => chatMcpToolsAsOpenAi(input.role, {
     canEditManifest: input.canEditManifest,
   })
-  const invokeTool = (name: string, args: unknown): ChatToolInvokeResult => invokeChatMcpTool({
+  const invokeTool = (
+    name: string,
+    args: unknown,
+  ): ChatToolInvokeResult | Promise<ChatToolInvokeResult> => invokeChatMcpTool({
     name,
     args,
     store: input.store,

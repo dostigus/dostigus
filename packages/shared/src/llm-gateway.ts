@@ -298,7 +298,7 @@ export function chatSystemPrompt(input: {
   }
   botId?: string
   tools?: boolean
-  /** Grantee Chat: messages, Schedules, and timezone read. Not Manifest or Skills. */
+  /** Grantee Chat: messages, Schedules, timezone read, and Host HTTP get. Not Manifest or Skills. */
   messagesOnly?: boolean
   /** Member who created this Bot may edit its Manifest and Skills. */
   creatorManifest?: boolean
@@ -329,6 +329,7 @@ export function chatSystemPrompt(input: {
     lines.push(
       'You may call tools to list and append Chat messages for this Bot.',
       'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time) and you may read the Cluster timezone. You cannot set the Cluster timezone.',
+      'You may GET a public http or https URL with dostigus_http_get. Build the full URL, including query parameters. If truncated is true, the body is incomplete. You cannot set the Cluster http allowlist.',
       'Do not create, rename, or delete Bots.',
       'Prefer tools over guessing Store state.',
       'The Host already stores this Chat turn; do not append it again unless asked.',
@@ -337,6 +338,7 @@ export function chatSystemPrompt(input: {
     lines.push(
       'You may call tools to list and append Chat messages for this Bot, and to update this Bot\'s name, label, description, and Skills.',
       'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time) and you may read the Cluster timezone. You cannot set the Cluster timezone.',
+      'You may GET a public http or https URL with dostigus_http_get. Build the full URL, including query parameters. If truncated is true, the body is incomplete. You cannot set the Cluster http allowlist.',
       'Do not create or delete Bots. Do not change a Bot you did not create.',
       'Prefer tools over guessing Store state.',
       'The Host already stores this Chat turn; do not append it again unless asked.',
@@ -346,6 +348,7 @@ export function chatSystemPrompt(input: {
     lines.push(
       'You may call Cluster MCP surface tools to read and write Bots and Chat messages in this Owner Cluster.',
       'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time in the Cluster timezone) and you may read or set the Cluster timezone.',
+      'You may GET a public http or https URL with dostigus_http_get. Build the full URL, including query parameters (for example an Open-Meteo forecast). If truncated is true, the body is incomplete. You may read or set the Cluster http allowlist.',
       'Stay on this Bot\'s purpose. This Cluster has one Owner.',
       'Prefer tools over guessing Store state.',
       'The Host already stores this Chat turn; do not append it again unless asked.',

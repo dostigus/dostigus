@@ -59,7 +59,7 @@ What the running Cluster does today:
   who created it, used and revoked timestamps). User Chat lines store
   `personId` (the Owner id or Member id). Host opens and migrates the
   Store on start. That open may insert meta Skills on a Bot that has
-  none of the four ids. It does not overwrite a Bot that already has
+  none of the meta Skill ids. It does not overwrite a Bot that already has
   any of them.
 - Owner auth: `nuxt-auth-utils` sealed cookie session. Fresh Cluster →
   `/onboarding` (email or username + password). Later visits → `/login`.
@@ -68,9 +68,9 @@ What the running Cluster does today:
   [ADR 0010](adr/0010-owner-auth-session.md) and
   [ADR 0012](adr/0012-household-members.md).
 - Host UI: Bot list (empty state + `+` picker), Chat (timeline + composer,
-  unlabeled bubbles), Settings, and Members. Settings presents OpenRouter
+  unlabeled bubbles), Settings, and Members.   Settings presents OpenRouter
   as the default LLM path (API key + Model tier), the Cluster timezone,
-  and stays with the Owner.
+  the Cluster http allowlist, and stays with the Owner.
   A collapsed custom OpenAI-compatible URL remains for other gateways.
   The `+` replaces the Chat pane with a picker
   ([ADR 0019](adr/0019-bot-picker-and-chat-purpose.md)). Search there
@@ -251,9 +251,10 @@ What the running Cluster does today:
   tools and runs an in-process tool loop (same handlers as `/mcp`, no
   HTTP hop). Owner Chat tools: Bots list/get/create/update, Skills
   list/upsert/delete, messages list/create, Schedule tools, and Cluster
-  timezone get and set. Member Chat tools: messages list/create,
-  Schedule tools, and Cluster timezone get. Timezone set stays with the
-  Owner. A Member who created the Bot also receives
+  timezone get and set, Host HTTP get, and Cluster http allowlist get
+  and set. Member Chat tools: messages list/create, Schedule tools,
+  Cluster timezone get, and Host HTTP get. Timezone set and the
+  allowlist stay with the Owner. A Member who created the Bot also receives
   `dostigus_bots_update` and the Skills tools on that Bot. A grantee
   does not receive Manifest or Skills tools. Delete stays
   off Chat. Turn journal list and get stay on `/mcp` and off both Chat
@@ -262,9 +263,9 @@ What the running Cluster does today:
   monorepo ships no stock package
   ([ADR 0030](adr/0030-chat-cards-module-catalog.md)). Host HTTP get
   (`dostigus_http_get` on Chat and Wake, plus the Cluster http
-  allowlist) is [ADR 0031](adr/0031-host-http-get.md). The code PR
-  adds that tool. A Bot that needs a public forecast GETs an allowed
-  API; the Platform does not seed Weather. No key → quiet reply + banner (no tools). A configured call
+  allowlist) is [ADR 0031](adr/0031-host-http-get.md). A Bot that
+  needs a public forecast GETs an allowed API; the Platform does not
+  seed Weather. No key → quiet reply + banner (no tools). A configured call
   retries once on a transient gateway failure (timeout, abort, network,
   HTTP 429, or HTTP 5xx). HTTP 429 waits briefly first. Activity stays
   on thinking. HTTP 401, HTTP 403, other 4xx, and an empty assistant
@@ -394,9 +395,8 @@ them on the assistant line.
 
 ## Host HTTP get
 
-Decided in [ADR 0031](adr/0031-host-http-get.md). The code PR adds the
-tool, the Store field, and the Settings control. This section is the
-decision.
+Decided in [ADR 0031](adr/0031-host-http-get.md). This Host has the
+tool, the Store field, and the Settings control.
 
 - **`dostigus_http_get`.** GET only. Any Bot on its turn (Chat or
   Wake) may call it. The same in-process loop as the other Chat tools
@@ -409,7 +409,8 @@ decision.
   path, no wildcards). The Owner gets and sets it through MCP and
   Owner Settings. Members do not set it.
 - **SSRF.** Even on allow-all, the Host blocks loopback, private, and
-  link-local destinations.
+  link-local destinations. The Host aborts a hung GET after 8 seconds
+  (`HOST_HTTP_GET_TIMEOUT_MS`) so it cannot stall a turn.
 - **Not a weather package.** [ADR 0030](adr/0030-chat-cards-module-catalog.md)
   stays. A Bot that needs weather uses Host HTTP get against an
   allowed public API from a Skill or `wakeText`.
@@ -421,8 +422,9 @@ injects the platform rule on every Bot turn, exposes Skills tools, and
 gives a Member creator `dostigus_bots_update` and the Skills tools on
 that Bot. A grantee does not receive Manifest or Skills tools. The
 grantee prompt still says not to rename. Member Chat tools are messages
-list/create, Schedule tools, and `dostigus_cluster_timezone_get`
-([ADR 0027](adr/0027-bot-schedules.md)). The Host fires a Wake. A
+list/create, Schedule tools, `dostigus_cluster_timezone_get`
+([ADR 0027](adr/0027-bot-schedules.md)), and Host HTTP get
+([ADR 0031](adr/0031-host-http-get.md)). The Host fires a Wake. A
 missing capability uses Skills upsert, Schedule tools, and Bot
 self-settings already in Chat. The Platform does not seed a Weather
 Module or a stock Module package. On Bot create it may insert meta
@@ -573,14 +575,17 @@ Module.
   capability. Day-1 does not add `dostigus_modules_catalog`,
   `dostigus_modules_apply`, or a platform rule that must Apply a
   matching stock package. A Marketplace of packages is later.
-- **Meta Skills.** On Bot create the Host inserts four Skill rows
+- **Meta Skills.** On Bot create the Host inserts Skill rows
   when each id is absent: `platform-meta-schedules`,
-  `platform-meta-skills`, `platform-meta-self-settings`, and
-  `platform-meta-marketplace`. Instructions are Russian markdown in
+  `platform-meta-skills`, `platform-meta-self-settings`,
+  `platform-meta-marketplace`, and `platform-meta-http-get`.
+  Instructions are Russian markdown in
   the one `instructions` string. There is no English column. The text
   teaches Schedule tools (create, list, pause, edit), Skills upsert,
-  Bot self-settings, and that domain Module packages come later
-  through Marketplace. It does not invent weather tools. Image upgrade
+  Bot self-settings, that domain Module packages come later
+  through Marketplace, and Host HTTP get (`dostigus_http_get`,
+  including how to build a query URL). It does not invent weather
+  tools. Image upgrade
   may insert the set only on a Bot that has none of these ids. Stored
   instructions stay. The creator or the Owner may edit or delete them
   with the Skills tools. This seed is in this Host. It is

@@ -215,6 +215,53 @@
           </button>
         </div>
       </form>
+
+      <form
+        class="card tz"
+        @submit.prevent="saveAllowlist"
+      >
+        <p class="mark">
+          Cluster http allowlist
+        </p>
+        <p class="hint">
+          Hostnames Host HTTP get may reach. One hostname per line, exact match,
+          no wildcards. Empty allows every public host. Loopback and private
+          addresses stay blocked.
+        </p>
+        <p
+          v-if="allowlist && allowlist.length === 0"
+          class="note"
+        >
+          Empty — Bots may GET any public host.
+        </p>
+        <label class="field">
+          <span>Hostnames</span>
+          <textarea
+            v-model="allowlistInput"
+            name="http-allowlist"
+            rows="4"
+            placeholder="api.open-meteo.com"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </label>
+        <p
+          v-if="allowlistMessage"
+          class="flash"
+          :class="{ error: allowlistMessageError }"
+        >
+          {{ allowlistMessage }}
+        </p>
+        <div class="actions">
+          <button
+            type="submit"
+            class="solid"
+            :disabled="allowlistSaving"
+          >
+            {{ allowlistSaving ? 'Saving…' : 'Save allowlist' }}
+          </button>
+        </div>
+      </form>
     </main>
   </div>
 </template>
@@ -248,6 +295,10 @@ const { data: timezoneData, refresh: refreshTimezone } = await useFetch<{
   timezone: ClusterTimezoneSettings
 }>('/api/settings/timezone')
 
+const { data: allowlistData, refresh: refreshAllowlist } = await useFetch<{
+  hosts: string[]
+}>('/api/settings/http-allowlist')
+
 const gateway = computed(() => data.value?.llmGateway)
 const preset = ref<LlmGatewayPreset>('openrouter')
 const baseUrl = ref('')
@@ -263,6 +314,11 @@ const timezoneSaving = ref(false)
 const timezoneMessage = ref('')
 const timezoneMessageError = ref(false)
 const timezone = computed(() => timezoneData.value?.timezone)
+const allowlistInput = ref('')
+const allowlistSaving = ref(false)
+const allowlistMessage = ref('')
+const allowlistMessageError = ref(false)
+const allowlist = computed(() => allowlistData.value?.hosts)
 
 const busy = computed(() => saving.value || pinging.value)
 const hint = computed(() => {
@@ -307,6 +363,9 @@ function choosePreset(next: LlmGatewayPreset) {
 watch(gateway, (next) => applyGateway(next), { immediate: true })
 watch(timezone, (next) => {
   timezoneInput.value = next?.stored ?? ''
+}, { immediate: true })
+watch(allowlist, (next) => {
+  allowlistInput.value = next?.join('\n') ?? ''
 }, { immediate: true })
 
 function timezoneErrorText(error: unknown): string {
@@ -363,6 +422,43 @@ async function clearKey() {
     messageError.value = true
   } finally {
     saving.value = false
+  }
+}
+
+function allowlistErrorText(error: unknown): string {
+  if (error && typeof error === 'object' && 'statusMessage' in error) {
+    const statusMessage = error.statusMessage
+    if (typeof statusMessage === 'string' && statusMessage.trim()) {
+      return statusMessage
+    }
+  }
+  return 'HTTP allowlist entries are hostnames only.'
+}
+
+function hostsFromInput(text: string): string[] {
+  return text.split('\n').map((line) => line.trim()).filter(Boolean)
+}
+
+async function saveAllowlist() {
+  allowlistSaving.value = true
+  allowlistMessage.value = ''
+  allowlistMessageError.value = false
+  try {
+    const result = await $fetch<{ hosts: string[] }>('/api/settings/http-allowlist', {
+      method: 'PUT',
+      body: { hosts: hostsFromInput(allowlistInput.value) },
+    })
+    allowlistData.value = result
+    allowlistInput.value = result.hosts.join('\n')
+    allowlistMessage.value = result.hosts.length === 0
+      ? 'Allowlist cleared. Public hosts are allowed.'
+      : 'Allowlist saved.'
+  } catch (error) {
+    allowlistMessage.value = allowlistErrorText(error)
+    allowlistMessageError.value = true
+  } finally {
+    allowlistSaving.value = false
+    await refreshAllowlist()
   }
 }
 
@@ -542,7 +638,8 @@ async function ping() {
 }
 
 input,
-select {
+select,
+textarea {
   appearance: none;
   border: 1px solid var(--line);
   background: var(--bg);
@@ -551,8 +648,15 @@ select {
   padding: 0.75rem 0.9rem;
 }
 
+textarea {
+  resize: vertical;
+  min-height: 6.5rem;
+  font-family: inherit;
+}
+
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   outline: 1px solid var(--accent-dim);
 }
 

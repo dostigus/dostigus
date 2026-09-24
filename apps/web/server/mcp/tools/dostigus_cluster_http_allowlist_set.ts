@@ -1,0 +1,7 @@
+import { mcpToolsEnabled } from '../../utils/mcp-auth'
+import { registeredMcpToolOptions } from '../../utils/mcp-platform-tools'
+
+export default defineMcpTool({
+  ...registeredMcpToolOptions('dostigus_cluster_http_allowlist_set'),
+  enabled: mcpToolsEnabled,
+})
