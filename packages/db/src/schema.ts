@@ -143,6 +143,37 @@ export const kitchenRecipe = sqliteTable('kitchen_recipe', {
   updatedAt: integer('updated_at').notNull(),
 })
 
+/**
+ * When the Host wakes a Bot on one person's bot-thread. See ADR 0027.
+ * daysOfWeekJson is null for daily and a JSON weekday list for weekly.
+ */
+export const schedules = sqliteTable('schedules', {
+  id: text('id').primaryKey(),
+  botId: text('bot_id').notNull().references(() => bots.id, { onDelete: 'cascade' }),
+  personId: text('person_id').notNull(),
+  cadence: text('cadence').notNull(),
+  timeLocal: text('time_local').notNull(),
+  daysOfWeekJson: text('days_of_week_json'),
+  wakeText: text('wake_text').notNull(),
+  paused: integer('paused').notNull().default(0),
+  nextRunAt: integer('next_run_at').notNull(),
+  lastRunAt: integer('last_run_at'),
+  lastRunStatus: text('last_run_status'),
+  deferCount: integer('defer_count').notNull().default(0),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (table) => [
+  index('schedules_paused_next_run_at_idx').on(table.paused, table.nextRunAt),
+  index('schedules_bot_id_person_id_idx').on(table.botId, table.personId),
+])
+
+/** Cluster timezone singleton (`cluster`). Null timezone means unset. */
+export const clusterSettings = sqliteTable('cluster_settings', {
+  id: text('id').primaryKey(),
+  timezone: text('timezone'),
+  updatedAt: integer('updated_at').notNull(),
+})
+
 export type BotRow = typeof bots.$inferSelect
 export type BotGrantRow = typeof botGrants.$inferSelect
 export type MessageRow = typeof messages.$inferSelect
@@ -152,3 +183,5 @@ export type LlmGatewayRow = typeof llmGateway.$inferSelect
 export type OwnerRow = typeof owners.$inferSelect
 export type MemberRow = typeof members.$inferSelect
 export type InviteRow = typeof invites.$inferSelect
+export type ScheduleRow = typeof schedules.$inferSelect
+export type ClusterSettingsRow = typeof clusterSettings.$inferSelect

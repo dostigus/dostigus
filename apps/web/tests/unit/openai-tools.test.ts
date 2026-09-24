@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 import { chatMcpToolsAsOpenAi, listChatMcpToolSpecs } from '../../server/utils/mcp-platform-tools'
-import { CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
+import { CHAT_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
 import {
   mcpToolsToOpenAiFunctions,
   parseToolCallArguments,
@@ -11,8 +11,7 @@ it('maps MCP Zod tools to OpenAI function schemas', () => {
   const tools = chatMcpToolsAsOpenAi()
   expect(tools.map((tool) => tool.function.name)).toEqual([...CHAT_MCP_TOOLS])
   expect(chatMcpToolsAsOpenAi('member').map((tool) => tool.function.name)).toEqual([
-    'dostigus_messages_list',
-    'dostigus_messages_create',
+    ...MEMBER_CHAT_MCP_TOOLS,
   ])
   expect(tools.every((tool) => tool.type === 'function')).toBe(true)
 

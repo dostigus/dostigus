@@ -49,6 +49,7 @@ export default defineEventHandler(async (event) => {
       return { user: present(store, user), assistant: null, via: null }
     }
     activityBotId = mentioned.bot.id
+    setChatActivityPhase(threadId, activityBotId, 'thinking')
     const history = listThreadMessages(store, threadId).map((message) => {
       if (message.role !== 'user' || !message.personId) {
         return message
@@ -71,6 +72,7 @@ export default defineEventHandler(async (event) => {
         store,
         role,
         personId,
+        turnBotId: mentioned.bot.id,
       }),
       onActivity: (phase) => {
         setChatActivityPhase(threadId, mentioned.bot.id, phase)
