@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-21
 - Amended: 2026-09-24
+- Amended: 2026-09-24 — Chat tool allowlists are slim + keyword expand, plus `dostigus_skills_read`. The lists, Wake divergence, and expand keywords are [ADR 0032](0032-chat-llm-context-assembly.md). The in-process loop, cap, and retry stay this record.
 
 ## Decision
 
@@ -34,9 +35,12 @@ data.
 
 ## Consequences
 
-- Day-1 Chat tools: `dostigus_bots_list` / `get` / `create` / `update` and
-  `dostigus_messages_list` / `create`. Zod shapes map to OpenAI function
-  schemas.
+- Day-1 Chat tools start slim (messages, Schedule writes, timezone
+  get, Host HTTP get, Skills list and read). Manifest write, Skill
+  write, timezone set, and allowlist tools wait for keyword expand
+  on that user turn. The lists are
+  [ADR 0032](0032-chat-llm-context-assembly.md). Zod shapes map to
+  OpenAI function schemas.
 - Cap tool-call rounds (`CHAT_MCP_TOOL_MAX_ITERATIONS`, 6), then one
   text-only completion. Unknown tools (including delete) are skipped; the
   model receives error content. Logs are `Chat MCP tool <name> ok|fail|skip`
@@ -53,13 +57,15 @@ data.
   the Store.
 - `/mcp` Bearer auth is unchanged ([ADR 0009](0009-mcp-toolkit-endpoint.md),
   [ADR 0010](0010-owner-auth-session.md)).
-- Today a Member Chat session may call only `dostigus_messages_list`
-  and `dostigus_messages_create`. The Owner keeps the Chat tool list
-  above. See [ADR 0012](0012-household-members.md).
-  [ADR 0028](0028-bot-self-settings-via-chat.md) changes that
-  allowlist: the creator and the Owner, including a Member on a Bot
-  they created, receive `dostigus_bots_update` and Skills tools. A
-  grantee stays without those tools. Schedule tools stay
+- Member and Owner Chat allowlists are
+  [ADR 0032](0032-chat-llm-context-assembly.md). A grantee gets
+  messages, that person's Schedule tools, timezone get, Host HTTP
+  get, and Skills list/read — no expand to Manifest or Skill write.
+  A creator Member starts on the same slim as the Owner and expands
+  to `dostigus_bots_update` plus Skills upsert/delete. The Owner
+  expand also adds Bots list/get/create/update, timezone set, and
+  allowlist get/set. See [ADR 0012](0012-household-members.md) and
+  [ADR 0028](0028-bot-self-settings-via-chat.md). Schedule tools stay
   [ADR 0027](0027-bot-schedules.md). This loop does not gain a Module
   catalog tool, an Apply tool, or Weather tools. This monorepo ships
   no stock package ([ADR 0030](0030-chat-cards-module-catalog.md)).

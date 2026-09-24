@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0031, so the next ADR
-is **0032**. Name it `0032-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0032, so the next ADR
+is **0033**. Name it `0033-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one.
 
@@ -35,14 +35,14 @@ English.
 | [0001](0001-platform-git-vs-in-cluster-bot-packages.md) | Platform git vs in-cluster bot packages |
 | [0002](0002-host-ui-kit-and-sheets.md) | Host UI kit and Sheets |
 | [0003](0003-mcp-as-bot-store-contract.md) | MCP as the Bot ↔ store contract |
-| [0004](0004-llm-gateway-tiers.md) | LLM gateway and model tiers (amended 2026-09-24: one transient retry, Russian error copy) |
+| [0004](0004-llm-gateway-tiers.md) | LLM gateway and model tiers (amended 2026-09-24: one transient retry, Russian error copy; Chat assembly [0032](0032-chat-llm-context-assembly.md)) |
 | [0005](0005-self-host-first.md) | Self-host first |
 | [0006](0006-day-1-declarative-modules.md) | Day-1 declarative modules (before arbitrary sandbox) |
 | [0007](0007-platform-image-tags.md) | Platform image tags |
 | [0008](0008-host-store-routes.md) | Host Store routes for Bots and Chat |
 | [0009](0009-mcp-toolkit-endpoint.md) | MCP toolkit endpoint |
 | [0010](0010-owner-auth-session.md) | Owner auth and Host session |
-| [0011](0011-chat-mcp-tool-loop.md) | Chat ↔ MCP tool loop (amended 2026-09-24: retry one completion, not the tool loop) |
+| [0011](0011-chat-mcp-tool-loop.md) | Chat ↔ MCP tool loop (amended 2026-09-24: retry one completion, not the tool loop; slim + expand [0032](0032-chat-llm-context-assembly.md)) |
 | [0012](0012-household-members.md) | Household Members on the Host (Bot visibility: [0024](0024-threads-and-bot-visibility.md)) |
 | [0013](0013-kit-reka-ui-and-brand.md) | Kit on Reka UI, Sheet shell, and Brand |
 | [0014](0014-host-messenger-shell.md) | Host messenger shell |
@@ -58,8 +58,9 @@ English.
 | [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility (amended 2026-09-24: personal Bot + grants) |
 | [0025](0025-chat-bubble-parts.md) | Chat bubble parts (Bot visibility stays [0024](0024-threads-and-bot-visibility.md)) |
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
-| [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets) |
-| [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat (amended 2026-09-24: closet Schedule list stays [0027](0027-bot-schedules.md)) |
+| [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets; Wake tools [0032](0032-chat-llm-context-assembly.md)) |
+| [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat (amended 2026-09-24: closet Schedule list stays [0027](0027-bot-schedules.md); Skill `description` + catalog [0032](0032-chat-llm-context-assembly.md)) |
 | [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows) |
-| [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create; Card «Изменить» opens closet detail) |
-| [0031](0031-host-http-get.md) | Host HTTP get and Cluster http allowlist |
+| [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create; Card «Изменить» opens closet detail; meta Skills catalog + read [0032](0032-chat-llm-context-assembly.md)) |
+| [0031](0031-host-http-get.md) | Host HTTP get and Cluster http allowlist (amended 2026-09-24: allowlist Chat tools behind expand [0032](0032-chat-llm-context-assembly.md)) |
+| [0032](0032-chat-llm-context-assembly.md) | Chat LLM context assembly |

@@ -40,13 +40,20 @@ per-bot SPA.
 
 **Chat**:
 The lines a person reads and writes on a Thread in the Host.
-_Avoid_: messenger, inbox (unqualified).
+**Chat LLM context** is the system prompt, Skill catalog, history
+window, and Chat tool allowlist the Host sends on one Bot turn
+([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)).
+_Avoid_: messenger, inbox (unqualified), context window
+(unqualified), prompt dump.
 
 **Wake**:
 A visible system Chat line the Host writes on a bot-thread when a
 Schedule fires. The line carries the wake text the Bot supplied. The
-Host then runs the same Bot turn as a user message. Not an Activity
-row.
+Host then runs a Bot turn. The Skill catalog matches a user turn.
+Wake tools are narrower than user slim, and there is no keyword
+expand ([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)). The
+line is stored as `system` and sent to the LLM as `role: system`.
+Not an Activity row.
 _Avoid_: notification, push, ping, user line.
 
 **Activity**:
@@ -173,19 +180,25 @@ _Avoid_: cloud agent (bare), codegen bot, authoring agent.
 Policy and instructions a Bot follows. Not executable UI and not a
 Module package. A Skill id is letters, digits, `_`, or `-`. A dotted
 id is not a Skill id. `parseSkillId` in
-`packages/shared/src/skill.ts` checks that charset. A Skill is one
-`instructions` string. There is no locale column. Skills live in
-`bots.skills_json` as `{ id, instructions }`. The Manifest lists that
-Bot's Skills. Self-settings may list, upsert, and delete that text on
-the Bot ([ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md)). On
+`packages/shared/src/skill.ts` checks that charset. A Skill is
+`{ id, description, instructions }`. `description` is required on
+upsert (1–200). There is no locale column. Skills live in
+`bots.skills_json`. The Manifest lists that Bot's Skills. The system
+prompt is a catalog of `id` + `description`. Full `instructions`
+load through `dostigus_skills_read`. `dostigus_skills_list` returns
+`{ id, description }[]` only
+([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)).
+Self-settings may list, read, upsert, and delete that text on the
+Bot ([ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md)). On
 Bot create the Host inserts a fixed set of meta Skills when each id is
 missing (insert-if-missing, constructor how-to). That seed does not
 call `upsertBotSkill`. Those instructions are Russian markdown in that
-same string.
+same string. Meta Skills stay catalog + read, not always injected.
 The creator or the Owner may edit or delete them. An existing id is
 not overwritten on boot. See
 [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md). A Skill does
-not say when the Host wakes the Bot.
+not say when the Host wakes the Bot. A legacy Skill with no
+`description` catalogs as `Skill {id}` until upsert.
 _Avoid_: prompt (unqualified), tool, Module package, stock package.
 
 **Schedule**:
@@ -206,8 +219,12 @@ Routines.
 A person's request in Chat that the Bot change its own name, label,
 description, Skills, or Schedules. The Bot writes the Store through
 the MCP surface. A reply that claims the change without a successful
-tool result is not the write. The Host injects one short instruction
-on every Bot turn. That instruction is not a Manifest field. The
+tool result is not the write. The Host injects short always-on Host
+rules on every Bot turn (`CHAT_SELF_SETTINGS_RULE`,
+`CHAT_NO_PACKAGE_RULE`). Those rules are not Manifest fields and not
+Skills. Full Skill bodies are not always injected. Manifest and
+Skill write tools wait for keyword expand on that user turn
+([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)). The
 creator and the Owner may change the name, label, description, and
 Skills, including a Member who created the Bot. A grantee cannot.
 Schedules follow
@@ -371,8 +388,11 @@ _Avoid_: public share, invite (unqualified).
   bot-thread with that Bot, then runs the Bot turn. A room, a direct
   message, and a group do not get that fire. Closet Параметры lists
   this person's Schedules on this Bot. See
-  [ADR 0027](docs/adr/0027-bot-schedules.md). That turn may call Host
-  HTTP get. Destinations follow the Cluster http allowlist
+  [ADR 0027](docs/adr/0027-bot-schedules.md). That turn uses the same
+  Skill catalog as a user turn and a narrower tool list. It does not
+  expand to Manifest write
+  ([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)). It may
+  call Host HTTP get. Destinations follow the Cluster http allowlist
   ([ADR 0031](docs/adr/0031-host-http-get.md)).
 - When a person asks a Bot to change its name, label, description,
   Skills, or Schedules, that is Self-settings. The Bot calls MCP
@@ -383,9 +403,12 @@ _Avoid_: public share, invite (unqualified).
   [ADR 0027](docs/adr/0027-bot-schedules.md). See
   [ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md).
   A missing capability uses Skills upsert, Schedule tools, and Bot
-  self-settings already in Chat. On Bot create the Host inserts missing
-  meta Skills that teach those tools (insert-if-missing). That seed does
-  not call `upsertBotSkill`. They are plain Skills. A successful Skill
+  self-settings already in Chat. Manifest and Skill write tools wait
+  for keyword expand on that user turn
+  ([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)). On Bot
+  create the Host inserts missing meta Skills that teach those tools
+  (insert-if-missing). That seed does not call `upsertBotSkill`. They
+  are plain Skills (catalog + read, not always injected). A successful Skill
   upsert or delete, and a successful `dostigus_bots_update` of name,
   label, or description, appends one system Chat line on that
   bot-thread (plain string, no parts, same family as a Wake). It is

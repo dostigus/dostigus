@@ -4,6 +4,7 @@
 - Date: 2026-09-24
 - Amended: 2026-09-24 — Schedule Chat Cards are [ADR 0030](0030-chat-cards-module-catalog.md). Schedule rows and the ticker stay this record. Weather stays out of this monorepo. A Marketplace of packages is later.
 - Amended: 2026-09-24 — Host UI: closet «Расписания» list, create Sheet, and detail Sheet are day-1. Optional `name` on the row. Run history is Turn journal rows ([ADR 0029](0029-turn-journal.md)). Card «Изменить» opens the same detail Sheet ([ADR 0030](0030-chat-cards-module-catalog.md)).
+- Amended: 2026-09-24 — Wake Skill catalog matches a user turn; Wake tools are narrower and there is no keyword expand ([ADR 0032](0032-chat-llm-context-assembly.md)). The Wake line and the ticker stay this record.
 
 Chat turns stay [ADR 0011](0011-chat-mcp-tool-loop.md). Activity phases
 stay [ADR 0021](0021-chat-activity-status.md). Bot visibility and
@@ -40,11 +41,16 @@ Resume changes the paused flag and recomputes `next_run_at`.
 ### Fire
 
 When a Schedule is due, the Host writes one visible **Wake** on that
-bot-thread: a system Chat line whose text is `wakeText`. It then starts
-the same Bot turn pipeline as a user message
-([ADR 0011](0011-chat-mcp-tool-loop.md)). Activity phases apply for
-that turn ([ADR 0021](0021-chat-activity-status.md)). The Turn journal
-records that turn with trigger `wake` and this Schedule's id
+bot-thread: a system Chat line whose text is `wakeText`. It then
+starts the Bot turn pipeline
+([ADR 0011](0011-chat-mcp-tool-loop.md)). The Skill catalog matches a
+user turn. Wake tools are narrower than user slim (HTTP get, Skills
+list/read, Schedule list, messages list/create, timezone get). No
+Schedule writes, no `dostigus_bots_*`, no keyword expand
+([ADR 0032](0032-chat-llm-context-assembly.md)). The Wake line is
+stored as `system` and sent as `role: system`. Activity phases apply
+for that turn ([ADR 0021](0021-chat-activity-status.md)). The Turn
+journal records that turn with trigger `wake` and this Schedule's id
 ([ADR 0029](0029-turn-journal.md)).
 
 Day-1 fires on a bot-thread only. A room, a direct message, and a group
@@ -215,8 +221,9 @@ that record. This record is the schedule decision. Weather stays out.
 - The ticker runs in the Host process. A second process is not day-1.
 - A fire writes a system Wake, then the
   [ADR 0011](0011-chat-mcp-tool-loop.md) pipeline, with
-  [ADR 0021](0021-chat-activity-status.md) phases. That Turn stores
-  `scheduleId` ([ADR 0029](0029-turn-journal.md)).
+  [ADR 0021](0021-chat-activity-status.md) phases and the Wake
+  allowlist in [ADR 0032](0032-chat-llm-context-assembly.md). That
+  Turn stores `scheduleId` ([ADR 0029](0029-turn-journal.md)).
 - Member Chat gains the schedule tools and timezone get, scoped above.
   Other Member Chat tools stay
   [ADR 0011](0011-chat-mcp-tool-loop.md) and
