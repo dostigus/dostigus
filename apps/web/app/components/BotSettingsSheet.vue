@@ -80,20 +80,43 @@
           @blur="persistFields"
         />
       </label>
-      <label
-        v-if="isOwner"
+      <div
+        v-if="canEdit"
         class="field"
       >
-        <span>Видимость</span>
-        <select
-          v-model="visibility"
-          :disabled="visibilitySaving"
-          @change="persistVisibility"
+        <span>Кто видит</span>
+        <p class="hint">
+          Личный Bot. Отметьте участников. Новый Invite не получит доступ сам.
+        </p>
+        <p
+          v-if="sharePeople.length === 0"
+          class="hint"
         >
-          <option value="shared">Shared</option>
-          <option value="private">Private</option>
-        </select>
-      </label>
+          В Household пока нет других участников.
+        </p>
+        <label
+          v-for="person in sharePeople"
+          :key="person.id"
+          class="grant"
+        >
+          <input
+            type="checkbox"
+            :checked="grantedIds.has(person.id)"
+            :disabled="grantBusy"
+            @change="onGrantChange(person.id, $event)"
+          >
+          <span>{{ person.displayName }}</span>
+        </label>
+        <button
+          v-if="sharePeople.length > 0"
+          type="button"
+          class="grant-all"
+          :disabled="grantBusy"
+          @click="grantEveryone"
+        >
+          Всем текущим
+        </button>
+      </div>
       <p
         v-if="error"
         class="error"
@@ -186,7 +209,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Bot, BotAccentHex, BotAvatarShape, BotAvatarState, BotVisibility } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, BotAvatarState, HouseholdPerson } from '@dostigus/shared'
 import {
   BOT_ACCENT_TOKENS,
   BOT_AVATAR_SHAPE_LABELS,
@@ -222,9 +245,7 @@ const accents = BOT_ACCENT_TOKENS
 const name = ref('')
 const label = ref('')
 const description = ref('')
-const visibility = ref<BotVisibility>('shared')
 const saving = ref(false)
-const visibilitySaving = ref(false)
 const error = ref('')
 const appearanceOpen = ref(false)
 const draftShape = ref<BotAvatarShape>(DEFAULT_AVATAR_SHAPE)
@@ -234,13 +255,20 @@ const appearanceError = ref('')
 const heroGreet = ref(false)
 const picked = ref(false)
 
+type GrantRow = { personId: string, displayName: string }
+const sharePeople = ref<HouseholdPerson[]>([])
+const grantedIds = ref<Set<string>>(new Set())
+const grantBusy = ref(false)
+
 watch(() => props.bot?.id, () => {
   syncFromBot()
+  void loadGrants()
 })
 
 watch(open, (isOpen) => {
   if (isOpen) {
     syncFromBot()
+    void loadGrants()
     playHeroGreet()
     return
   }
@@ -265,8 +293,74 @@ function syncFromBot() {
   name.value = props.bot.name
   label.value = props.bot.manifest.label
   description.value = props.bot.manifest.description
-  visibility.value = props.bot.visibility
   error.value = ''
+}
+
+async function loadGrants() {
+  if (!props.bot || !canEdit.value) {
+    sharePeople.value = []
+    grantedIds.value = new Set()
+    return
+  }
+  try {
+    const [people, grants] = await Promise.all([
+      $fetch<{ people: HouseholdPerson[] }>('/api/people'),
+      $fetch<{ grants: GrantRow[] }>(`/api/bots/${props.bot.id}/grants`),
+    ])
+    const creatorId = props.bot.createdBy
+    sharePeople.value = people.people.filter((person) => person.role === 'member' && person.id !== creatorId)
+    grantedIds.value = new Set(grants.grants.map((grant) => grant.personId))
+  } catch {
+    error.value = 'Не получилось открыть доступ'
+  }
+}
+
+function onGrantChange(personId: string, event: Event) {
+  const checked = event.target instanceof HTMLInputElement && event.target.checked
+  void toggleGrant(personId, checked)
+}
+
+async function toggleGrant(personId: string, checked: boolean) {
+  if (!props.bot || grantBusy.value) {
+    return
+  }
+  grantBusy.value = true
+  error.value = ''
+  try {
+    if (checked) {
+      await $fetch(`/api/bots/${props.bot.id}/grants`, {
+        method: 'POST',
+        body: { personId },
+      })
+    } else {
+      await $fetch(`/api/bots/${props.bot.id}/grants/${personId}`, { method: 'DELETE' })
+    }
+    await loadGrants()
+  } catch {
+    error.value = 'Не получилось сохранить доступ'
+    await loadGrants()
+  } finally {
+    grantBusy.value = false
+  }
+}
+
+async function grantEveryone() {
+  if (!props.bot || grantBusy.value) {
+    return
+  }
+  grantBusy.value = true
+  error.value = ''
+  try {
+    await $fetch(`/api/bots/${props.bot.id}/grants`, {
+      method: 'POST',
+      body: { allCurrentMembers: true },
+    })
+    await loadGrants()
+  } catch {
+    error.value = 'Не получилось сохранить доступ'
+  } finally {
+    grantBusy.value = false
+  }
 }
 
 function shapeLabel(value: BotAvatarShape): string {
@@ -373,29 +467,6 @@ async function persistFields() {
     error.value = 'Не получилось сохранить'
   } finally {
     saving.value = false
-  }
-}
-
-async function persistVisibility() {
-  if (!props.bot || !isOwner.value || visibilitySaving.value) {
-    return
-  }
-  if (visibility.value === props.bot.visibility) {
-    return
-  }
-  visibilitySaving.value = true
-  error.value = ''
-  try {
-    await $fetch(`/api/bots/${props.bot.id}/visibility`, {
-      method: 'PATCH',
-      body: { visibility: visibility.value },
-    })
-    emit('saved')
-  } catch {
-    visibility.value = props.bot.visibility
-    error.value = 'Не получилось сохранить'
-  } finally {
-    visibilitySaving.value = false
   }
 }
 
@@ -518,8 +589,7 @@ onUnmounted(() => {
 }
 
 input,
-textarea,
-select {
+textarea {
   appearance: none;
   width: 100%;
   border: 1px solid var(--line);
@@ -546,16 +616,63 @@ textarea::placeholder {
 }
 
 input:focus,
-textarea:focus,
-select:focus {
+textarea:focus {
   outline: 1px solid var(--accent);
 }
 
 input:disabled,
-textarea:disabled,
-select:disabled {
+textarea:disabled {
   opacity: 1;
   cursor: default;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.grant {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.45rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.grant input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.grant-all {
+  appearance: none;
+  margin-top: 0.7rem;
+  align-self: flex-start;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  border-radius: 0.8rem;
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.grant-all:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.grant-all:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .error {

@@ -33,6 +33,9 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
     'bots/[id].delete.ts',
     'bots/[id]/messages.get.ts',
     'bots/[id]/messages.post.ts',
+    'bots/[id]/grants/index.get.ts',
+    'bots/[id]/grants/index.post.ts',
+    'bots/[id]/grants/[personId].delete.ts',
     'chat/ready.get.ts',
     'kitchen/index.get.ts',
     'kitchen/pantry.post.ts',
@@ -54,7 +57,6 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
 
 it('keeps Bot writes, Settings, and Members with the Owner', () => {
   const files = [
-    'bots/[id]/visibility.patch.ts',
     'settings/llm-gateway.get.ts',
     'settings/llm-gateway.put.ts',
     'settings/llm-gateway/ping.post.ts',

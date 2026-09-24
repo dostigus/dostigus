@@ -1,4 +1,11 @@
 export {
+  type BotGrant,
+  grantBot,
+  grantBotToCurrentMembers,
+  listBotGrants,
+  revokeBotGrant,
+} from './bot-grants'
+export {
   acceptInvite,
   type IssuedInvite,
   issueInvite,
@@ -32,7 +39,6 @@ export {
   toMember,
   toMessage,
   toOwner,
-  visibilityFromRow,
 } from './map'
 export {
   authorNameForPerson,
@@ -68,12 +74,12 @@ export {
   type MessageSearchHit,
   requireBot,
   searchMessages,
-  setBotVisibility,
   StoreError,
   updateBot,
   upsertLlmGatewaySettings,
+  viewerMaySeeBot,
 } from './queries'
-export { type BotRow, bots, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads } from './schema'
+export { type BotGrantRow, botGrants, type BotRow, bots, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads } from './schema'
 export { type OpenedStore, openStore } from './store'
 export {
   appendMessengerAssistantLine,

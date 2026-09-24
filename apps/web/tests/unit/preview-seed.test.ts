@@ -372,7 +372,9 @@ it('seeds a Member private Bot and separate shared bot-threads once', async () =
   expect(memberLines.some((line) => line.content.startsWith(PREVIEW_MEMBER_THREAD_PREFIX))).toBe(true)
   expect(memberLines.some((line) => line.content.startsWith(PREVIEW_OWNER_THREAD_PREFIX))).toBe(false)
   const privateLines = listBotThreadMessages(store, PREVIEW_PRIVATE_BOT_ID, seeded.user.id)
-  expect(privateLines.some((line) => line.content.startsWith(PREVIEW_PRIVATE_THREAD_PREFIX))).toBe(true)
+  expect(privateLines.some((line) => line.content.startsWith(PREVIEW_PRIVATE_THREAD_PREFIX))).toBe(false)
+  const memberPrivate = listBotThreadMessages(store, PREVIEW_PRIVATE_BOT_ID, seeded.member!.id)
+  expect(memberPrivate.some((line) => line.content.startsWith(PREVIEW_PRIVATE_THREAD_PREFIX))).toBe(true)
   const before = listMessages(store, PREVIEW_BOT_ID).length
   await ensurePreviewCluster(store, hashPassword, verifyPassword, { threads: true })
   expect(listMessages(store, PREVIEW_BOT_ID)).toHaveLength(before)

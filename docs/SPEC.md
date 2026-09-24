@@ -20,7 +20,7 @@ Settled now, even if this repo only scaffolds them:
 | Declarative modules | SQL + templated MCP before arbitrary sandbox. See [ADR 0006](adr/0006-day-1-declarative-modules.md). |
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
 | Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). |
-| Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. A Bot is personal to its creator. The Owner always sees it. Other people need an explicit grant (`bot_id` + `person_id`). Bot-threads, direct messages, groups, and rooms are in this Host. The running Host still stores visibility `shared` \| `private` until the grants milestone. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
+| Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. A Bot is personal to its creator. The Owner always sees it. Other people need an explicit grant (`bot_id` + `person_id`). Bot-threads, direct messages, groups, and rooms are in this Host. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -30,11 +30,9 @@ What the running Cluster does today:
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
   default `goose` (Bot mark), `avatarColor` default `#1F7AE5` /
   `--bot-accent-10`, optional `label` and `description` default empty,
-  empty skills/modules, `visibility` `shared` \| `private` default
-  `shared` (running access check; the target is a personal Bot plus
-  grants, and this Store has no grant rows yet,
-  [ADR 0024](adr/0024-threads-and-bot-visibility.md)),
-  `created_by` the Owner or Member who created it),
+  empty skills/modules, `created_by` the Owner or Member who created it),
+  `bot_grants` (`bot_id` + `person_id`; the creator and the Owner do not
+  need a row, [ADR 0024](adr/0024-threads-and-bot-visibility.md)),
   `threads` (kind `dm`, `group`, `bot`, or `room`; `title` on a group or room)
   and `thread_participants` (a person or a Bot),
   `messages` (`botId` on a Bot's lines, empty on a person line in a dm,
@@ -65,12 +63,11 @@ What the running Cluster does today:
   A collapsed custom OpenAI-compatible URL remains for other gateways.
   The `+` replaces the Chat pane with a picker
   ([ADR 0019](adr/0019-bot-picker-and-chat-purpose.md)). Search there
-  filters Bots by name. The Owner row **Create new Bot** stores a shared Bot named
-  **New Bot** with a random flock mark and accent, then opens that Chat.
-  A Member row **Create private Bot** stores only a private Bot. The Owner
-  sees every Bot, including a Member's private Bot, and the list marks
-  those rows **Private**. A Member sees shared Bots and their own private
-  Bot. Creating a Bot (or
+  filters Bots by name. The Owner and a Member both have a row **Create new Bot**.
+  It stores a Bot named **New Bot** with a random flock mark and accent,
+  personal to that creator, then opens that Chat. The Owner sees every Bot,
+  including a Member-created Bot, in the sidebar. A Member sees Bots they
+  created and Bots granted to them. Creating a Bot (or
   first open of that person's bot-thread) stores an assistant greeting. Until the first user message,
   Chat shows a purpose Card: Personal, Work, Learning, Other, or free text.
   That answer is a normal Chat line. Purpose is not a Manifest field.
@@ -80,10 +77,10 @@ What the running Cluster does today:
   Invite URL once so the Owner can copy it. The person opens
   `/invite/…` while logged out, sees that email, chooses a display name
   and password, and becomes a Member. The Host signs them in. A Member
-  uses Bot list and Chat. They may create, edit, and delete their own
-  private Bot. They do not open Members or Settings, and they do not
-  flip visibility. Turning off sign-in keeps their name on
-  the Chat line and leaves their private Bots for the Owner to see. Logged-out visitors cannot open those surfaces, except
+  uses Bot list and Chat. They may create a Bot. They may edit and delete
+  a Bot they created. They do not open Members or Settings. They do not
+  edit a Bot they were only granted. Turning off sign-in keeps their name on
+  the Chat line and leaves their Bots for the Owner to see. Grant rows stay. Logged-out visitors cannot open those surfaces, except
   an Invite link. Host font is
   Nunito; charcoal canvas + firm coral-orange tokens
   ([`docs/ui.md`](ui.md)). The Kit Sheet shell (`KitSheet` drawer,
@@ -94,8 +91,7 @@ What the running Cluster does today:
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
   is a resizable Threads inbox beside Chat. The sidebar can collapse to
   an icon rail. Each expanded row shows an avatar, the Thread title
-  (**Private** on a private Bot, **DM**, **Group**, or **Room** on those
-  kinds), and the latest line. A bot-thread row opens `/bots/:id`. A
+  (**DM**, **Group**, or **Room** on those kinds), and the latest line. A bot-thread row opens `/bots/:id`. A
   direct message, group, or room opens `/threads/:id`. On the icon rail
   each row’s hit target is a square.
   A loupe, a `+`, and a **New thread** bubble sit at the top of the
@@ -117,21 +113,20 @@ What the running Cluster does today:
   roomier than a tight crop.
   Hover or focus fades an arrow in on the trailing side and the pill grows
   to fit it, with padding still sitting past that arrow. The pill opens a
-  right Sheet titled Параметры (name, optional label, description, and a
-  large Bot mark). The Owner opens appearance by clicking that mark or
+  right Sheet titled Параметры (name, optional label, description, who
+  may open the Bot, and a large Bot mark). The creator and the Owner open
+  appearance by clicking that mark or
   the small pencil badge on its bottom-right corner. The badge stays
   visible. Appearance (flock and accent) opens in a modal, with Save.
   Flock tiles in that modal are square,
   including the selected frame. Accent swatches are smaller, and the
   palette is the same width as that flock grid.
   Model tier stays on Host
-  Settings. Delete is not on this Sheet. The Owner edits a shared Bot
-  and a Bot they created, and flips visibility (**Shared** / **Private**)
-  on this Sheet. A flip keeps the creator. A Member edits the Manifest
-  of their own private Bot and reads the rest. The **Private** mark
-  and the Shared / Private flip are the running `visibility` column.
-  Amended [ADR 0024](adr/0024-threads-and-bot-visibility.md) is the
-  target (personal Bot + grants). This Host has no grant rows yet.
+  Settings. Delete is not on this Sheet. The creator and the Owner edit
+  the Manifest on this Sheet and share the Bot with Household Members
+  (**Кто видит**, including **Всем текущим**). A grantee reads the Sheet
+  and chats. A later Invite does not receive those grants.
+  [ADR 0024](adr/0024-threads-and-bot-visibility.md).
   Bubbles stay unlabeled. Assistant bubbles render a safe Markdown subset
   (bold, italic, code, lists, and http(s) links) through `KitMarkdown`.
   An assistant line may also carry Kit parts under that body: a button
@@ -185,8 +180,11 @@ What the running Cluster does today:
   in SQLite via the same Store helpers as the MCP
   surface. Bot list, Bot read, Chat, and Kitchen accept an Owner or Member session.
   Bot create, Manifest update, and delete accept an Owner or Member session
-  and enforce visibility: a Member creates only a private Bot and edits or
-  deletes only that Bot. `PATCH /api/bots/:id/visibility` is Owner-only.
+  and enforce grants: a Member creates a personal Bot and edits or
+  deletes a Bot they created. The Owner may edit or delete any Bot.
+  `GET` and `POST /api/bots/:id/grants` and
+  `DELETE /api/bots/:id/grants/:personId` accept an Owner or the creator.
+  A grantee cannot share or edit the Manifest.
   Members (including Invite create, list, revoke,
   and rotate) and Settings require the Owner. Accepting an Invite is
   public while logged out. See
@@ -218,42 +216,40 @@ What the running Cluster does today:
   the Owner plus Members ([ADR 0012](adr/0012-household-members.md)),
   including Invites the Owner copies by hand
   ([ADR 0023](adr/0023-household-member-invites.md)).
-- Bot access on this Host is still visibility `shared` | `private`
-  ([ADR 0024](adr/0024-threads-and-bot-visibility.md), amended
-  2026-09-24). The target is a personal Bot. The creator can see it.
-  The Owner always can, including a Member-created Bot with no grant.
-  Anyone else needs an explicit grant (`bot_id` + `person_id`). There
-  is no flag shared with future Members. This Host has no grants table.
-  Until that milestone, the Cluster still does the following. A `shared`
-  Bot is not one Household-wide timeline. Chat reads and writes the
-  viewer's bot-thread on a `shared` Bot. The Owner opening a Member's
-  private Bot reads that Member's bot-thread. A private Bot cannot join
-  a room. The Owner and Members may create a `dm`, a `group`, or a
-  `room`. Adding a Bot requires every participant can see that Bot, so
-  only a `shared` Bot can join. In a `room`, a Bot replies only when the
-  line mentions it:
+- Bot access is a personal Bot plus grants
+  ([ADR 0024](adr/0024-threads-and-bot-visibility.md)). The creator can
+  see it. The Owner always can, including a Member-created Bot with no
+  grant. Anyone else needs an explicit grant (`bot_id` + `person_id`).
+  There is no flag shared with future Members. Chat reads and writes the
+  viewer's own bot-thread. The Owner opening a Bot they did not create
+  uses the Owner's bot-thread and does not copy another person's lines.
+  The Owner and Members may create a `dm`, a `group`, or a `room`.
+  Adding a Bot requires every person participant to already have access.
+  The add does not grant that access. In a `room`, a Bot replies only
+  when the line mentions it:
   `@` plus the Bot's name, case-insensitive, with a space or the start
   of the line before `@`, and a space, the end of the line, or
   `. , ! ? ; :` after the name. The earliest `@` wins. When two names
   start at that same `@`, the longer name wins. One Bot replies per
   line. A line with no mention is stored and does not call the LLM
   gateway. `listen=all` is not in this Host. Preview `?rooms=1` seeds
-  the preview Member, a direct message, and a room on Bot `preview`
-  (the room line mentions that Bot and stores one reply), then opens
-  the room. `?rooms=1&as=member` signs in the Member on that room.
-  HEAD ignores `?rooms=1`.
+  the preview Member, a grant for that Member on Bot `preview`, a direct
+  message, and a room on that Bot (the room line mentions that Bot and
+  stores one reply), then opens the room. `?rooms=1&as=member` signs in
+  the Member on that room. HEAD ignores `?rooms=1`.
   Bubble parts are in
   this Host ([ADR 0025](adr/0025-chat-bubble-parts.md)).
-  An Invite does not change visibility. Under the target model an Invite
-  also does not receive grants already made. The grants milestone does
-  not copy another person's bot-thread: a grantee's first open is empty
-  plus the normal Host greeting. Adding a Bot to a room does not
+  An Invite does not receive grants already made. A grantee's first open
+  is empty plus the normal Host greeting. Adding a Bot to a room does not
   auto-grant, and a later Invite does not auto-receive Bots. Existing
-  `messages` rows were placed on bot-threads when visibility landed: a
-  user row with `personId` keys that person's bot-thread; every other
-  row follows the nearest preceding keyed user row on that Bot, or the
-  Owner's bot-thread when none precedes it. This Host does not place
-  those rows again.
+  `messages` rows were placed on bot-threads when the old visibility
+  column landed: a user row with `personId` keys that person's bot-thread;
+  every other row follows the nearest preceding keyed user row on that
+  Bot, or the Owner's bot-thread when none precedes it. This Host does
+  not place those rows again. Migration `0013_bot_grants` turns former
+  `shared` Bots into one grant per Member who existed then (not the
+  creator) and drops `bots.visibility`. Former `private` Bots stay with
+  the creator and the Owner.
 
 `pnpm install` and `pnpm check` must stay green.
 

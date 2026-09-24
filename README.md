@@ -36,9 +36,10 @@ Host preview seed (Owner signed in, fixture Bot id `preview`, Chat open):
 (redirects to `/bots/preview`; `?tall=1` for a tall thread;
 `?parts=1` for a demo Sheet button; `?kitchen=1` for the Kitchen
 Sheet button; `?members=1` opens `/members`; `?threads=1` signs in the
-preview Owner at `/` with a shared Bot and a Member private Bot;
+preview Owner at `/` with Bot `preview` (granted to the preview Member)
+and a Member-created Bot;
 `?threads=1&as=member` signs in the preview Member on `/bots/preview`;
-`?rooms=1` opens a room with that Member and the shared Bot at
+`?rooms=1` opens a room with that Member and Bot `preview` at
 `/threads/preview-room` (`?rooms=1&as=member` signs in the Member there)
 with Nuxt devtools off). Renaming
 that Bot does not change the id. HEAD is answered on that route and on

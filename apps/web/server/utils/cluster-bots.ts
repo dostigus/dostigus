@@ -3,21 +3,23 @@ import type { BotViewer, MessageRole } from '@dostigus/shared'
 import {
   createBot,
   deleteBot,
+  grantBot,
+  grantBotToCurrentMembers,
   insertMessage,
+  listBotGrants,
   listBots,
   listBotThreadMessages,
   requireBot,
-  setBotVisibility,
+  revokeBotGrant,
   StoreError,
   updateBot,
+  viewerMaySeeBot,
 } from '@dostigus/db'
 import {
   botThreadPersonId,
   canDeleteBot,
   canEditBot,
-  canFlipBotVisibility,
-  canSeeBot,
-  isBotVisibility,
+  canGrantBot,
 } from '@dostigus/shared'
 
 export type ClusterBotInput = {
@@ -27,8 +29,6 @@ export type ClusterBotInput = {
   avatarColor?: string
   label?: string
   description?: string
-  /** Owner may pass `private`. A Member is forced to `private`. */
-  visibility?: string
 }
 
 export function viewerFromUser(user: { id: string, role?: string }): BotViewer {
@@ -55,8 +55,24 @@ export type ClusterMessageInput = {
 
 function assertVisible(store: OpenedStore, id: string, viewer: BotViewer) {
   const bot = requireBot(store, id)
-  if (!canSeeBot(bot, viewer)) {
+  if (!viewerMaySeeBot(store, bot, viewer)) {
     throw new StoreError('Bot not found', 404)
+  }
+  return bot
+}
+
+function assertCanChange(store: OpenedStore, id: string, viewer: BotViewer) {
+  const bot = assertVisible(store, id, viewer)
+  if (!canEditBot(bot, viewer)) {
+    throw new StoreError('Only the Owner can change this', 403)
+  }
+  return bot
+}
+
+function assertCanGrant(store: OpenedStore, id: string, viewer: BotViewer) {
+  const bot = assertVisible(store, id, viewer)
+  if (!canGrantBot(bot, viewer)) {
+    throw new StoreError('You cannot share this Bot', 403)
   }
   return bot
 }
@@ -67,30 +83,20 @@ export function listClusterBots(store: OpenedStore, viewer?: BotViewer) {
 
 export function getClusterBot(store: OpenedStore, id: string, viewer?: BotViewer) {
   const bot = requireBot(store, id)
-  if (viewer && !canSeeBot(bot, viewer)) {
+  if (viewer && !viewerMaySeeBot(store, bot, viewer)) {
     throw new StoreError('Bot not found', 404)
   }
   return { bot }
 }
 
+/** A new Bot is personal to its creator. No household-wide default. */
 export function createClusterBot(
   store: OpenedStore,
   input: ClusterBotInput = {},
   viewer?: BotViewer,
 ) {
-  if (viewer?.role === 'member') {
-    if (input.visibility != null && input.visibility !== '' && input.visibility !== 'private') {
-      throw new StoreError('A Member can create only a private Bot', 403)
-    }
-    return createBot(store, {
-      ...input,
-      visibility: 'private',
-      createdBy: viewer.id,
-    })
-  }
   return createBot(store, {
     ...input,
-    visibility: input.visibility,
     createdBy: viewer?.id,
   })
 }
@@ -102,10 +108,7 @@ export function updateClusterBot(
   viewer?: BotViewer,
 ) {
   if (viewer) {
-    const bot = assertVisible(store, id, viewer)
-    if (!canEditBot(bot, viewer)) {
-      throw new StoreError('Only the Owner can change this', 403)
-    }
+    assertCanChange(store, id, viewer)
   }
   return { bot: updateBot(store, id, input) }
 }
@@ -121,31 +124,51 @@ export function deleteClusterBot(store: OpenedStore, id: string, viewer?: BotVie
   return { ok: true as const }
 }
 
-/** Owner-only. A flip keeps the creator. */
-export function setClusterBotVisibility(
+export function listClusterBotGrants(store: OpenedStore, id: string, viewer: BotViewer) {
+  assertCanGrant(store, id, viewer)
+  return { grants: listBotGrants(store, id) }
+}
+
+export function grantClusterBot(
   store: OpenedStore,
   id: string,
-  visibility: string | undefined,
+  input: { personId?: string, personIds?: string[], allCurrentMembers?: boolean },
   viewer: BotViewer,
 ) {
-  if (!canFlipBotVisibility(viewer)) {
-    throw new StoreError('Only the Owner can change this', 403)
+  assertCanGrant(store, id, viewer)
+  if (input.allCurrentMembers) {
+    return { grants: grantBotToCurrentMembers(store, id) }
   }
-  assertVisible(store, id, viewer)
-  if (!visibility || !isBotVisibility(visibility)) {
-    throw new StoreError('Unknown Bot visibility', 400)
+  const ids = [
+    ...(input.personIds ?? []),
+    ...(input.personId ? [input.personId] : []),
+  ].map((personId) => personId.trim()).filter(Boolean)
+  if (ids.length === 0) {
+    throw new StoreError('Name a Member', 400)
   }
-  return { bot: setBotVisibility(store, id, visibility) }
+  for (const personId of ids) {
+    grantBot(store, id, personId)
+  }
+  return { grants: listBotGrants(store, id) }
+}
+
+export function revokeClusterBotGrant(
+  store: OpenedStore,
+  id: string,
+  personId: string,
+  viewer: BotViewer,
+) {
+  assertCanGrant(store, id, viewer)
+  revokeBotGrant(store, id, personId)
+  return { ok: true as const }
 }
 
 export function listClusterMessages(store: OpenedStore, botId: string, viewer?: BotViewer) {
   const bot = requireBot(store, botId)
-  if (viewer && !canSeeBot(bot, viewer)) {
+  if (viewer && !viewerMaySeeBot(store, bot, viewer)) {
     throw new StoreError('Bot not found', 404)
   }
-  const personId = viewer
-    ? botThreadPersonId(bot, viewer)
-    : (bot.visibility === 'private' ? bot.createdBy : null)
+  const personId = viewer ? botThreadPersonId(bot, viewer) : null
   return { messages: listBotThreadMessages(store, botId, personId) }
 }
 

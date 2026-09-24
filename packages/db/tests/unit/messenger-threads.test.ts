@@ -8,12 +8,13 @@ import {
   createMessengerThread,
   createOwner,
   getMessengerThread,
+  grantBot,
   insertThreadLine,
+  listBotGrants,
   listInboxThreads,
   listMessages,
   listThreadMessages,
   openStore,
-  setBotVisibility,
   STORE_MIGRATIONS,
   StoreError,
 } from '../../src/index'
@@ -72,7 +73,7 @@ it('keeps bot-thread lines and allows a person line with no Bot', () => {
   sqlite.close()
 })
 
-it('creates a dm once, a group, and a room only with a shared Bot', () => {
+it('creates a dm once, a group, and a room only when every person can open the Bot', () => {
   const store = memoryStore()
   const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
   const member = createMember(store, {
@@ -80,11 +81,10 @@ it('creates a dm once, a group, and a room only with a shared Bot', () => {
     username: 'grace',
     passwordHash: 'hash:grace',
   })
-  const shared = createBot(store, { name: 'Expi', createdBy: owner.id, visibility: 'shared' }).bot
+  const shared = createBot(store, { name: 'Expi', createdBy: owner.id }).bot
   const priv = createBot(store, {
     name: 'Notes',
     createdBy: member.id,
-    visibility: 'private',
   }).bot
 
   const dm = createMessengerThread(store, {
@@ -122,9 +122,11 @@ it('creates a dm once, a group, and a room only with a shared Bot', () => {
     title: 'Kitchen',
     actorId: owner.id,
     personIds: [member.id],
-    botIds: [priv.id],
-  })).toThrow(/private Bot/)
+    botIds: [shared.id],
+  })).toThrow(/already have access/)
+  expect(listBotGrants(store, shared.id)).toEqual([])
 
+  grantBot(store, shared.id, member.id)
   const room = createMessengerThread(store, {
     kind: 'room',
     title: 'Kitchen',
@@ -133,6 +135,7 @@ it('creates a dm once, a group, and a room only with a shared Bot', () => {
     botIds: [shared.id],
   })
   expect(room.participants.filter((person) => person.kind === 'bot').map((person) => person.id)).toEqual([shared.id])
+  expect(listBotGrants(store, shared.id).map((grant) => grant.personId)).toEqual([member.id])
   appendMessengerUserLine(store, {
     threadId: room.id,
     personId: member.id,
@@ -140,20 +143,22 @@ it('creates a dm once, a group, and a room only with a shared Bot', () => {
   })
   expect(listThreadMessages(store, room.id)).toHaveLength(1)
 
+  const memberRoom = createMessengerThread(store, {
+    kind: 'room',
+    title: 'Notes room',
+    actorId: owner.id,
+    personIds: [member.id],
+    botIds: [priv.id],
+  })
+  expect(memberRoom.participants.filter((person) => person.kind === 'bot').map((person) => person.id)).toEqual([priv.id])
+  expect(listBotGrants(store, priv.id)).toEqual([])
+
   expect(() => getMessengerThread(store, room.id, 'missing')).toThrow(StoreError)
   const inbox = listInboxThreads(store, { id: owner.id, role: 'owner' })
   expect(inbox.some((item) => item.id === dm.id)).toBe(true)
   expect(inbox.some((item) => item.id === room.id)).toBe(true)
   expect(inbox.some((item) => item.kind === 'bot' && item.botId === shared.id)).toBe(true)
-
-  setBotVisibility(store, shared.id, 'private')
-  expect(() => createMessengerThread(store, {
-    kind: 'room',
-    title: 'Later',
-    actorId: owner.id,
-    personIds: [member.id],
-    botIds: [shared.id],
-  })).toThrow(/private Bot/)
+  expect(inbox.some((item) => item.kind === 'bot' && item.botId === priv.id)).toBe(true)
 
   store.close()
 })

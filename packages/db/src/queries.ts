@@ -1,4 +1,4 @@
-import type { Bot, BotAccentHex, BotAvatarShape, BotLastMessage, BotListItem, BotViewer, BotVisibility, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, BotLastMessage, BotListItem, BotViewer, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
 import type { BotRecord, MessageRecord } from './map'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
@@ -12,7 +12,6 @@ import {
   DEFAULT_MODEL_TIER,
   emptyLlmGatewayStored,
   isBotAvatarShape,
-  isBotVisibility,
   isModelTier,
   MODEL_TIERS,
   normalizeBotAccentHex,
@@ -139,7 +138,7 @@ function normalizeContent(content: string | undefined): string {
   return trimmed
 }
 
-const BOT_SELECT = `id, name, model_tier, avatar_shape, avatar_color, label, description, skills_json, modules_json, created_at, visibility, created_by`
+const BOT_SELECT = `id, name, model_tier, avatar_shape, avatar_color, label, description, skills_json, modules_json, created_at, created_by`
 
 function selectBot(store: OpenedStore, id: string): BotRecord | undefined {
   return store.sqlite.prepare(`
@@ -194,16 +193,30 @@ export function listBots(store: OpenedStore, viewer?: BotViewer): BotListItem[] 
   }))
 }
 
+/** Owner, creator, or a grant row. */
+export function viewerMaySeeBot(store: OpenedStore, bot: Bot, viewer: BotViewer): boolean {
+  if (canSeeBot(bot, viewer)) {
+    return true
+  }
+  const row = store.sqlite.prepare(`
+    SELECT 1 AS ok FROM bot_grants WHERE bot_id = ? AND person_id = ?
+  `).get(bot.id, viewer.id) as { ok: number } | undefined
+  return Boolean(row)
+}
+
 /** Sidebar preview is the bot-thread this person would open, not another person's lines. */
 function listBotsForViewer(store: OpenedStore, viewer: BotViewer): BotListItem[] {
   const rows = store.sqlite.prepare(`
     SELECT ${BOT_SELECT}
     FROM bots
     WHERE ? = 'owner'
-      OR visibility = 'shared'
       OR created_by = ?
+      OR EXISTS (
+        SELECT 1 FROM bot_grants
+        WHERE bot_grants.bot_id = bots.id AND bot_grants.person_id = ?
+      )
     ORDER BY created_at DESC, rowid DESC
-  `).all(viewer.role, viewer.id) as BotRecord[]
+  `).all(viewer.role, viewer.id, viewer.id) as BotRecord[]
   return rows.map((row) => {
     const bot = toBot(row)
     const thread = findBotThread(store, bot.id, botThreadPersonId(bot, viewer))
@@ -268,11 +281,11 @@ function findBotThread(store: OpenedStore, botId: string, personId: string): Bot
 
 /**
  * One bot-thread per person and Bot. The id matches the milestone 2 cutover.
- * A private Bot has only the creator's bot-thread, whoever opens it.
+ * Opening never reuses another person's bot-thread.
  */
 function ensureBotThread(store: OpenedStore, botId: string, personId: string): BotThreadRef {
-  const bot = requireBot(store, botId)
-  const person = bot.visibility === 'private' && bot.createdBy ? bot.createdBy : personId
+  requireBot(store, botId)
+  const person = personId
   const existing = findBotThread(store, botId, person)
   if (existing) {
     return existing
@@ -345,9 +358,6 @@ function resolveMessageThreadId(
   if (input.viewer) {
     return ensureBotThread(store, bot.id, botThreadPersonId(bot, input.viewer)).id
   }
-  if (bot.visibility === 'private' && bot.createdBy) {
-    return ensureBotThread(store, bot.id, bot.createdBy).id
-  }
   if (input.role === 'user' && input.personId) {
     return ensureBotThread(store, bot.id, input.personId).id
   }
@@ -404,7 +414,7 @@ export function insertMessage(
   },
 ): Message {
   const bot = requireBot(store, input.botId)
-  if (input.viewer && !canSeeBot(bot, input.viewer)) {
+  if (input.viewer && !viewerMaySeeBot(store, bot, input.viewer)) {
     throw new StoreError('Bot not found', 404)
   }
   const threadId = resolveMessageThreadId(store, bot, {
@@ -637,16 +647,6 @@ export function ensureGreeting(store: OpenedStore, botId: string, personId?: str
   })
 }
 
-function normalizeVisibility(value: string | undefined): BotVisibility {
-  if (value == null || value === '') {
-    return 'shared'
-  }
-  if (!isBotVisibility(value)) {
-    throw new StoreError('Unknown Bot visibility', 400)
-  }
-  return value
-}
-
 function resolveCreatedBy(store: OpenedStore, explicit: string | undefined): string | null {
   const trimmed = explicit?.trim()
   if (trimmed) {
@@ -666,8 +666,6 @@ export function createBot(
     avatarColor?: string
     label?: string
     description?: string
-    /** Owner-created Bots default to shared. */
-    visibility?: string
     /** Owner or Member id. Defaults to the Cluster Owner when one exists. */
     createdBy?: string
   } = {},
@@ -678,7 +676,6 @@ export function createBot(
   const avatarColor = normalizeAvatarColor(input.avatarColor)
   const label = normalizeCapped(input.label, BOT_LABEL_MAX, 'Label')
   const description = normalizeCapped(input.description, BOT_DESCRIPTION_MAX, 'Description')
-  const visibility = normalizeVisibility(input.visibility)
   const createdBy = resolveCreatedBy(store, input.createdBy)
   const createdAt = nowMs()
   const id = resolveBotId(input.id)
@@ -689,10 +686,10 @@ export function createBot(
   store.sqlite.prepare(`
     INSERT INTO bots (
       id, name, model_tier, avatar_shape, avatar_color, label, description,
-      skills_json, modules_json, created_at, visibility, created_by
+      skills_json, modules_json, created_at, created_by
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, '[]', '[]', ?, ?, ?)
-  `).run(id, name, modelTier, avatarShape, avatarColor, label, description, createdAt, visibility, createdBy)
+    VALUES (?, ?, ?, ?, ?, ?, ?, '[]', '[]', ?, ?)
+  `).run(id, name, modelTier, avatarShape, avatarColor, label, description, createdAt, createdBy)
 
   const threadId = createdBy
     ? ensureBotThread(store, id, createdBy).id
@@ -705,20 +702,6 @@ export function createBot(
   })
 
   return { bot: requireBot(store, id), greeting }
-}
-
-/** Flip visibility. Does not change created_by. */
-export function setBotVisibility(store: OpenedStore, id: string, visibility: string): Bot {
-  if (!isBotVisibility(visibility)) {
-    throw new StoreError('Unknown Bot visibility', 400)
-  }
-  requireBot(store, id)
-  store.sqlite.prepare(`
-    UPDATE bots
-    SET visibility = ?
-    WHERE id = ?
-  `).run(visibility, id)
-  return requireBot(store, id)
 }
 
 export function updateBot(
