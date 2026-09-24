@@ -62,6 +62,6 @@ English.
 | [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat (amended 2026-09-24: closet Schedule list stays [0027](0027-bot-schedules.md); Skill `description` + catalog [0032](0032-chat-llm-context-assembly.md)) |
 | [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows) |
 | [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create; Card «Изменить» opens closet detail; meta Skills catalog + read [0032](0032-chat-llm-context-assembly.md)) |
-| [0031](0031-host-http-get.md) | Host HTTP get and Cluster http allowlist (amended 2026-09-24: allowlist Chat tools behind expand [0032](0032-chat-llm-context-assembly.md); Bot HTTP egress [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)) |
+| [0031](0031-host-http-get.md) | Host HTTP get and Cluster http allowlist (amended 2026-09-24: allowlist Chat tools behind expand [0032](0032-chat-llm-context-assembly.md); Bot HTTP egress [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md); soft retry / pursue-result in tool text + `platform-meta-http-get`) |
 | [0032](0032-chat-llm-context-assembly.md) | Chat LLM context assembly |
-| [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md) | Cluster outbound: LLM proxy vs Bot HTTP proxy |
+| [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md) | Cluster outbound: LLM proxy vs Bot HTTP proxy (amended 2026-09-24: domain failover lists stay out of scope; soft policy is [0031](0031-host-http-get.md)) |

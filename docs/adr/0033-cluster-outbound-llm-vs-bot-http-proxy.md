@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-24
+- Amended: 2026-09-24 — Domain or provider failover lists stay out of scope. Generic soft retry for Host HTTP get is [ADR 0031](0031-host-http-get.md).
 
 The LLM gateway stays [ADR 0004](0004-llm-gateway-tiers.md). Host HTTP
 get and the Cluster http allowlist stay
@@ -115,8 +116,10 @@ the handle, env-only config, fail-closed invalid Bot proxy URLs,
 destination-only SSRF, no Bot `NO_PROXY` on day-1, and one startup
 warn when `NODE_USE_ENV_PROXY` is set.
 
-Weather URL failover and platform-meta copy stay later. They are
-not this record.
+A domain or provider failover list stays out of scope. The generic
+soft retry / pursue-result policy for Host HTTP get is
+[ADR 0031](0031-host-http-get.md). That policy is tool text, not a
+Host retry loop.
 
 ## Consequences
 
@@ -149,8 +152,8 @@ not this record.
   destination, not the proxy host.
 - A later Host→internet tool that is not the LLM client uses Bot
   HTTP egress (`DOSTIGUS_HTTP_PROXY`), not `HTTPS_PROXY`.
-- Weather URL failover and platform-meta text stay later. They are
-  not this record.
+- A domain or provider failover list stays out of scope. Soft retry
+  copy for Host HTTP get is [ADR 0031](0031-host-http-get.md).
 
 ### Out of scope
 
@@ -162,7 +165,8 @@ not this record.
 - `NODE_USE_ENV_PROXY` / `EnvHttpProxyAgent` as the Host fetch
   mechanism.
 - SOCKS proxies.
-- Weather URL failover and platform-meta copy.
+- A domain or provider failover list. Soft retry text is
+  [ADR 0031](0031-host-http-get.md).
 - Marketplace, Module Apply, and a stock Weather Module
   ([ADR 0030](0030-chat-cards-module-catalog.md)).
 

@@ -28,7 +28,7 @@ export const META_SKILL_DESCRIPTIONS: Record<MetaSkillId, string> = {
   'platform-meta-skills': 'List, read, upsert, and delete Skill text on this Bot.',
   'platform-meta-self-settings': 'Change this Bot name, label, and description through dostigus_bots_update.',
   'platform-meta-marketplace': 'There is no Module catalog yet. Do not invent weather tools or packages.',
-  'platform-meta-http-get': 'GET a public URL with dostigus_http_get. truncated means the body is incomplete.',
+  'platform-meta-http-get': 'GET a public URL with dostigus_http_get. On a non-ok or unusable body, GET another public URL. truncated means the body is incomplete.',
 }
 
 const META_SKILL_INSTRUCTIONS: Record<MetaSkillId, string> = {
@@ -76,16 +76,16 @@ Skill на этом Bot — объект \`{ id, description, instructions }\`. 
 
 Доменные Module package появятся через Marketplace. Сейчас их нет.
 
-Не выдумывай инструменты погоды, Skill про погоду и Module package. Каталога и Apply нет. Не сей Weather Skill и не Apply пакет погоды. Публичный HTTP читается через \`dostigus_http_get\` (например Open-Meteo). Пробел закрывают уже существующие Skill (\`dostigus_skills_upsert\`), Schedule и свои настройки (\`dostigus_bots_update\`). Пакет пишет Builder, не этот Bot.
+Не выдумывай инструменты погоды, Skill про погоду и Module package. Каталога и Apply нет. Не сей Weather Skill и не Apply пакет погоды. Публичный HTTP читается через \`dostigus_http_get\`. Пробел закрывают уже существующие Skill (\`dostigus_skills_upsert\`), Schedule и свои настройки (\`dostigus_bots_update\`). Пакет пишет Builder, не этот Bot.
 `.trim(),
   'platform-meta-http-get': `
 # Host HTTP get
 
 Публичный URL читается через \`dostigus_http_get\`. Это GET, не POST и не инструмент погоды.
 
-- Передай \`url\` — полную ссылку, включая query. Собери её сам: схема, хост, путь, параметры.
-- Пример прогноза: \`https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,apparent_temperature&timezone=auto\`. Подставь \`latitude\`, \`longitude\` и \`timezone\`. Не выдумывай weather tool и не пиши Skill про погоду.
-- Ответ: \`status\`, \`body\`, \`truncated\`. Если \`truncated\` true — тело неполное, не утверждай полный разбор JSON.
+- Передай \`url\` — полную ссылку, включая query. Собери её сам: схема, хост, путь, параметры. Не выдумывай weather tool и не пиши Skill про погоду.
+- Ответ: \`status\`, \`body\`, \`truncated\`. Не-2xx всё ещё возвращает status и body, если Host смог сделать GET. Если \`truncated\` true — тело неполное, не утверждай полный разбор JSON.
+- Если status не ok или тело непригодно — вызови \`dostigus_http_get\` снова с другим публичным URL того же рода данных. Host сам другие URL не перебирает. Не выдумывай факты из памяти. Если в этом ходе нет пригодного GET — скажи честно.
 - Ошибка инструмента — не fetch. Сообщи ошибку.
 
 Allowlist задаёт Owner в Settings. Пустой список — любые публичные хосты. Loopback и частные адреса Host всегда блокирует.
