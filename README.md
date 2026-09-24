@@ -44,7 +44,10 @@ and a Member-created Bot;
 with Nuxt devtools off). Renaming
 that Bot does not change the id. HEAD is answered on that route and on
 `/health` (HEAD ignores `?members=1`). `pnpm smoke:preview` checks that
-HEAD, the fixture Bot, the tall thread, and the Members landing. See
+HEAD, the fixture Bot, the tall thread, and the Members landing.
+`NUXT_AGENT_TOKEN=preview-agent pnpm preview:host`, then
+`pnpm smoke:turns`, checks the Turn journal write path and
+`dostigus_turns_list` / `dostigus_turns_get` without a screenshot. See
 [`AGENTS.md`](AGENTS.md).
 
 A fresh Cluster opens **Create your Owner** (email or username + password).

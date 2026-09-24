@@ -301,6 +301,26 @@ and that room. HEAD ignores `?rooms=1`.
 Optional
 `PREVIEW_SMOKE_URL` (default `http://localhost:3000`).
 
+Turn journal harness (no screenshots). The preview Host and the smoke
+share one MCP bearer. The fixed preview token is `preview-agent`:
+
+```
+NUXT_AGENT_TOKEN=preview-agent pnpm preview:host
+NUXT_AGENT_TOKEN=preview-agent pnpm smoke:turns
+```
+
+`DOSTIGUS_MCP_TOKEN` is the alias when `NUXT_AGENT_TOKEN` is unset, on
+both processes. When the smoke env is unset it sends Bearer
+`preview-agent`. The Host process must have that same token. An empty
+token leaves `/mcp` tools disabled. A call with no bearer fails the
+same way while the token is set. The smoke signs in through
+`/preview-seed`, posts one Chat line on Bot `preview` (quiet reply, no
+LLM gateway key, no `?hold=1`), then calls `dostigus_turns_list` and
+`dostigus_turns_get`. The quiet path writes `trigger` `user` and
+`outcome` `ok`, one `thinking` phase, and no tools. Optional
+`PREVIEW_SMOKE_URL` (default `http://localhost:3000`). See
+[ADR 0029](docs/adr/0029-turn-journal.md).
+
 Preview Owner: username `preview`, password `preview-owner`. Preview
 Member (only after `?threads=1`): username `preview-member`, password
 `preview-member`. A
@@ -318,9 +338,11 @@ before hit-testing those controls.
 
 MCP surface
 is `/mcp` — set `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`) to enable
-HTTP tools; empty token leaves them disabled. That token is not the Owner
-session (`NUXT_SESSION_PASSWORD`). Configured Chat invokes the same tool
-handlers in-process (no HTTP `/mcp`; delete is not a Chat tool).
+HTTP tools; empty token leaves them disabled. The Turn journal smoke
+uses the preview token `preview-agent` on that same bearer. That token
+is not the Owner session (`NUXT_SESSION_PASSWORD`). Configured Chat
+invokes the same tool handlers in-process (no HTTP `/mcp`; delete is
+not a Chat tool). Turn journal list and get stay on `/mcp`.
 
 Schedules are Store rows. Chat tools are `dostigus_schedules_list`,
 `dostigus_schedules_create`, `dostigus_schedules_update`,
