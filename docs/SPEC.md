@@ -24,6 +24,7 @@ Settled now, even if this repo only scaffolds them:
 | Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. The Host fires a Wake. See [ADR 0027](adr/0027-bot-schedules.md). |
 | Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
 | Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
+| Host HTTP get | MCP surface tool `dostigus_http_get` on Chat and Wake. Cluster http allowlist in Store settings. See [ADR 0031](adr/0031-host-http-get.md). |
 | Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, appends one system Chat line (plain string, no parts). This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 
 ## This Host (create Bot + Chat)
@@ -259,7 +260,11 @@ What the running Cluster does today:
   lists ([ADR 0029](adr/0029-turn-journal.md)). This loop does not
   gain a Module catalog tool, an Apply tool, or Weather tools. This
   monorepo ships no stock package
-  ([ADR 0030](adr/0030-chat-cards-module-catalog.md)). No key → quiet reply + banner (no tools). A configured call
+  ([ADR 0030](adr/0030-chat-cards-module-catalog.md)). Host HTTP get
+  (`dostigus_http_get` on Chat and Wake, plus the Cluster http
+  allowlist) is [ADR 0031](adr/0031-host-http-get.md). The code PR
+  adds that tool. A Bot that needs a public forecast GETs an allowed
+  API; the Platform does not seed Weather. No key → quiet reply + banner (no tools). A configured call
   retries once on a transient gateway failure (timeout, abort, network,
   HTTP 429, or HTTP 5xx). HTTP 429 waits briefly first. Activity stays
   on thinking. HTTP 401, HTTP 403, other 4xx, and an empty assistant
@@ -386,6 +391,28 @@ them on the assistant line.
   `dostigus_cluster_timezone_set`. A Member may call
   `dostigus_cluster_timezone_get` and may not set it. The Owner
   settings page has the field.
+
+## Host HTTP get
+
+Decided in [ADR 0031](adr/0031-host-http-get.md). The code PR adds the
+tool, the Store field, and the Settings control. This section is the
+decision.
+
+- **`dostigus_http_get`.** GET only. Any Bot on its turn (Chat or
+  Wake) may call it. The same in-process loop as the other Chat tools
+  ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)). The Host returns HTTP
+  status and a body capped at 64 KiB. A longer body is truncated and
+  marked `truncated`.
+- **Cluster http allowlist.** `cluster_settings.http_allowlist`, the
+  same settings family as timezone. Empty means allow all public
+  hosts. A non-empty list is exact hostname match (host only, no
+  path, no wildcards). The Owner gets and sets it through MCP and
+  Owner Settings. Members do not set it.
+- **SSRF.** Even on allow-all, the Host blocks loopback, private, and
+  link-local destinations.
+- **Not a weather package.** [ADR 0030](adr/0030-chat-cards-module-catalog.md)
+  stays. A Bot that needs weather uses Host HTTP get against an
+  allowed public API from a Skill or `wakeText`.
 
 ## Self-settings
 
@@ -628,7 +655,10 @@ and [`docs/deploy.md`](deploy.md)).
   [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are in this Host.
   Meta Skills on Bot create are in this Host. They are plain Skill
   text, not a stock Module package. A Schedule still only writes a Wake
-  ([ADR 0027](adr/0027-bot-schedules.md)).
+  ([ADR 0027](adr/0027-bot-schedules.md)). Host HTTP get is
+  [ADR 0031](adr/0031-host-http-get.md): a Bot may GET an allowed
+  public API. That is not a Weather seed. POST, caller-supplied
+  headers, auth passthrough, and streaming stay out.
 - Appearance via Chat, Model tier via Chat self-settings, and delete of
   a Bot or of Chat via Chat. The Host parsing a sentence into a
   Manifest, Skill, or Schedule write. Pushing a raw `/mcp` write into

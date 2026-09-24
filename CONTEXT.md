@@ -283,6 +283,28 @@ Host converts that clock for the next fire. The default is the
 Member may read it.
 _Avoid_: user timezone, per-Bot timezone, locale, offset.
 
+**Host HTTP get**:
+The MCP surface tool `dostigus_http_get` the Host runs on a Bot turn
+so the Bot can GET a public URL. GET only. Chat and Wake use the same
+tool loop ([ADR 0011](docs/adr/0011-chat-mcp-tool-loop.md)). The Host
+returns HTTP status and a body capped at 64 KiB (truncate, with
+`truncated`). Not a Module package and not a weather seed
+([ADR 0031](docs/adr/0031-host-http-get.md),
+[ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)).
+_Avoid_: HTTP client (unqualified), fetch tool, weather tool, POST.
+
+**Cluster http allowlist**:
+The Owner-configured list of hostnames in Cluster Store settings
+(`cluster_settings.http_allowlist`) that gates Host HTTP get
+destinations. Empty means allow all public hosts. A non-empty list is
+exact hostname match. The Host always blocks loopback, private, and
+link-local destinations. The Owner gets and sets it through MCP
+(`dostigus_cluster_http_allowlist_get`,
+`dostigus_cluster_http_allowlist_set`) and Owner Settings. Members do
+not set it. See [ADR 0031](docs/adr/0031-host-http-get.md).
+_Avoid_: URL allowlist (unqualified), CORS, proxy list, per-Bot
+allowlist.
+
 **Model tier**:
 `cheap` | `strong` | `code` (and `toy` for unreliable free). MCP Bots pin
 strong/mid.
@@ -349,7 +371,9 @@ _Avoid_: public share, invite (unqualified).
   bot-thread with that Bot, then runs the Bot turn. A room, a direct
   message, and a group do not get that fire. Closet Параметры lists
   this person's Schedules on this Bot. See
-  [ADR 0027](docs/adr/0027-bot-schedules.md).
+  [ADR 0027](docs/adr/0027-bot-schedules.md). That turn may call Host
+  HTTP get. Destinations follow the Cluster http allowlist
+  ([ADR 0031](docs/adr/0031-host-http-get.md)).
 - When a person asks a Bot to change its name, label, description,
   Skills, or Schedules, that is Self-settings. The Bot calls MCP
   surface tools and does not claim success without a successful tool
@@ -366,7 +390,10 @@ _Avoid_: public share, invite (unqualified).
   label, or description, appends one system Chat line on that
   bot-thread (plain string, no parts, same family as a Wake). It is
   not a Chat Card. This monorepo does not ship a stock Module package
-  ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)).
+  ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). A Bot that
+  needs a public HTTP resource uses Host HTTP get
+  ([ADR 0031](docs/adr/0031-host-http-get.md)). That is not a
+  Weather seed.
 - Module package data lives in the Cluster Store. Bot visibility does not
   give a Bot its own Store. A personal Bot uses the same MCP surface
   under that person's permissions.
