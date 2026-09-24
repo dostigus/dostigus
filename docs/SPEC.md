@@ -21,6 +21,7 @@ Settled now, even if this repo only scaffolds them:
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
 | Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). |
 | Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. A Bot is personal to its creator. The Owner always sees it. Other people need an explicit grant (`bot_id` + `person_id`). Bot-threads, direct messages, groups, and rooms are in this Host. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
+| Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. Not running in this Host yet. See [ADR 0027](adr/0027-bot-schedules.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -274,6 +275,51 @@ What the running Cluster does today:
 
 `pnpm install` and `pnpm check` must stay green.
 
+## Schedules
+
+Decided in [ADR 0027](adr/0027-bot-schedules.md). This Host does not
+store or fire Schedules yet. The code PR implements this section. A
+Schedule is not a Skill and not a Manifest field. The Platform does not
+seed a Weather Module, a weather Skill, or a weather API.
+
+- A Schedule is a Store row keyed by `(botId, personId)`: that person's
+  bot-thread with that Bot. Many rows per person and Bot are allowed.
+  Cadence is `daily` or `weekly`. `timeLocal` is `HH:MM` wall clock in
+  the Cluster timezone. `daysOfWeek` is omitted for `daily` and lists
+  the weekdays for `weekly`. `wakeText` is the string the Bot supplies.
+  The row is paused or enabled. The Host owns `next_run_at` and
+  last-run metadata, and recomputes `next_run_at` after create, update,
+  and fire.
+- **Fire.** The Host writes a visible system Wake on that bot-thread
+  with `wakeText`, then starts the same Bot turn as a user message
+  ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)). Activity phases apply
+  ([ADR 0021](adr/0021-chat-activity-status.md)). Day-1 fires on a
+  bot-thread only.
+- **Catch-up.** If the Host was down or late, it fires once when
+  lateness is less than 30 minutes from the planned time. Otherwise it
+  skips to the next occurrence.
+- **Busy.** If a reply for the same `(threadId, botId)` is already in
+  flight, the Host defers this fire by one minute, at most five times,
+  then skips. It does not run a parallel turn.
+- **Ticker.** One Host process polls SQLite `next_run_at` about every
+  30 seconds. Day-1 is a single node. There is no external cron worker.
+- **MCP.** The Bot creates, lists, updates, pauses, resumes, and deletes
+  with `dostigus_schedules_list`, `dostigus_schedules_create`,
+  `dostigus_schedules_update`, `dostigus_schedules_pause`,
+  `dostigus_schedules_resume`, and `dostigus_schedules_delete`. Text
+  such as «каждое утро в 8:00…» is the Bot calling those tools. The
+  Host does not parse it. That person manages rows for their bot-thread
+  in their turn. The Owner can always manage. A revoked grant leaves
+  the row; fires do not run until access is restored. A Schedule list
+  Sheet is later.
+- **Cluster timezone.** One IANA name in `cluster_settings.timezone`.
+  The Schedule stores wall clock; the Host converts it for
+  `next_run_at`. The default is `DOSTIGUS_TZ` when set, otherwise
+  `UTC`. The Owner sets it in Host settings and with
+  `dostigus_cluster_timezone_set`. A Member may call
+  `dostigus_cluster_timezone_get` and may not set it. The settings
+  field is this decision; the code PR adds the control.
+
 ## Self-host (compose)
 
 `docker compose -f docker/compose.yml up --build` serves the Host on port 3000
@@ -314,7 +360,15 @@ and [`docs/deploy.md`](deploy.md)).
   arguments on the activity row, model-supplied status lines, and a
   durable Store row for an Activity phase
   ([ADR 0021](adr/0021-chat-activity-status.md), amended 2026-09-24).
-  Weather Module, Host schedules, and Skills packages stay out.
+  Skills packages stay out.
+- Schedule list Sheet; full crontab; an interval of every N minutes;
+  one-shot fires; wakes on a room, a direct message, or a group; an SSE
+  ticker; a multi-node lease
+  ([ADR 0027](adr/0027-bot-schedules.md)). The Schedule behavior above
+  is in scope. This Host does not run it yet.
+- A Weather Module, a weather Skill, a weather API, and a Kitchen-style
+  weather seed. They are not in this Platform. A Schedule only writes a
+  Wake ([ADR 0027](adr/0027-bot-schedules.md)).
 - Managed/cloud hosting (optional later; not the default)
 
 ## Success for later MVPs (not this PR)

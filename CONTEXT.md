@@ -42,6 +42,13 @@ per-bot SPA.
 The lines a person reads and writes on a Thread in the Host.
 _Avoid_: messenger, inbox (unqualified).
 
+**Wake**:
+A visible system Chat line the Host writes on a bot-thread when a
+Schedule fires. The line carries the wake text the Bot supplied. The
+Host then runs the same Bot turn as a user message. Not an Activity
+row.
+_Avoid_: notification, push, ping, user line.
+
 **Activity**:
 Ephemeral Chat status for an in-flight Bot reply on a Thread. One row
 in the thread: a glyph and a short line. Not a Chat line. Not stored.
@@ -134,6 +141,15 @@ _Avoid_: cloud agent (bare), codegen bot, authoring agent.
 Policy/instructions a Bot follows. Not executable UI.
 _Avoid_: prompt (unqualified), tool, Module package.
 
+**Schedule**:
+A Cluster Store row on the Host that says when the Host wakes a Bot.
+Not a Manifest field and not a Skill. A Skill says what; a Schedule
+says when. Many Schedules may belong to one person and one Bot, on
+that person's bot-thread (`botId`, `personId`). The Bot supplies the
+cadence (`daily` or `weekly`), the local `HH:MM`, optional weekdays
+when weekly, and the wake text. The Host owns the next fire instant.
+_Avoid_: cron, crontab, alarm, reminder, Skill, Manifest field.
+
 **Manifest**:
 Bot definition: persona, Skills, bound Module packages, Model tier,
 avatar shape, avatar color (Bot accent palette), an optional label,
@@ -176,6 +192,14 @@ _Avoid_: deploy, merge, ship (unqualified).
 **LLM gateway**:
 Cluster config mapping Model tiers to providers.
 _Avoid_: provider, model picker (the gateway owns tiers).
+
+**Cluster timezone**:
+The one IANA timezone for the Cluster, stored as
+`cluster_settings.timezone`. A Schedule keeps a local wall clock; the
+Host converts that clock for the next fire. The default is the
+`DOSTIGUS_TZ` env when set, otherwise `UTC`. The Owner sets it. A
+Member may read it.
+_Avoid_: user timezone, per-Bot timezone, locale, offset.
 
 **Model tier**:
 `cheap` | `strong` | `code` (and `toy` for unreliable free). MCP Bots pin
@@ -233,6 +257,10 @@ _Avoid_: public share, invite (unqualified).
   The Activity phase is ephemeral. The Owner and a Member see the same
   row. See
   [ADR 0021](docs/adr/0021-chat-activity-status.md) (amended 2026-09-24).
+- When a Schedule is due, the Host writes a Wake on that person's
+  bot-thread with that Bot, then runs the Bot turn. A room, a direct
+  message, and a group do not get that fire. See
+  [ADR 0027](docs/adr/0027-bot-schedules.md).
 - Module package data lives in the Cluster Store. Bot visibility does not
   give a Bot its own Store. A personal Bot uses the same MCP surface
   under that person's permissions.
