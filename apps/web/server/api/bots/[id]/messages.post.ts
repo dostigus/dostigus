@@ -1,6 +1,6 @@
 import process from 'node:process'
 import { getLlmGatewaySettings, listBotSkills } from '@dostigus/db'
-import { canEditBot } from '@dostigus/shared'
+import { canEditBot, chatExpandKeywordHit } from '@dostigus/shared'
 import { previewQuietHoldMs, waitPreviewQuietHold } from '../../../../app/utils/preview-hold'
 import {
   clearChatActivityPhase,
@@ -51,12 +51,14 @@ export default defineEventHandler(async (event) => {
     setChatActivityPhase(activityThreadId, bot.id, 'thinking')
     const { messages: history } = listClusterMessages(store, botId, viewer)
     const canEditManifest = canEditBot(bot, viewer)
+    const expand = chatExpandKeywordHit(user.content)
     const turn = openChatTurn({
       store,
       role,
       canEditManifest,
       personId,
       turnBotId: bot.id,
+      expand,
     })
     const reply = await completeAssistantReply({
       botName: bot.name,
@@ -68,6 +70,7 @@ export default defineEventHandler(async (event) => {
       stored: getLlmGatewaySettings(store),
       audience: role,
       canEditManifest,
+      expand,
       tools: turn.tools(),
       invokeTool: turn.invokeTool,
       onActivity: (phase) => {

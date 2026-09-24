@@ -59,7 +59,10 @@ export {
   type MemberSecret,
 } from './members'
 export {
+  backfillMetaSkillDescriptions,
+  insertMissingHttpGetMetaSkill,
   insertMissingMetaSkills,
+  META_SKILL_DESCRIPTIONS,
   META_SKILL_IDS,
   type MetaSkillId,
   upgradeBotMetaSkills,
@@ -136,6 +139,7 @@ export {
 export { type BotGrantRow, botGrants, type BotRow, bots, clusterSettings, type ClusterSettingsRow, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ScheduleRow, schedules, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads, type TurnRow, turns } from './schema'
 export {
   deleteBotSkill,
+  getBotSkill,
   listBotSkills,
   upsertBotSkill,
 } from './skills'

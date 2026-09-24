@@ -18,6 +18,7 @@ import {
   listClusterBots,
   listClusterMessages,
   listClusterSkills,
+  readClusterSkill,
   updateClusterBot,
   upsertClusterSkill,
   withClusterStore,
@@ -138,7 +139,7 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_skills_list: {
     name: 'dostigus_skills_list',
-    description: 'List Skills on a Bot (id and instructions). The creator and the Owner may list them. A grantee cannot.',
+    description: 'List Skills on a Bot as a catalog of id and description only. Anyone who can open that Bot may list them. Full instructions load through dostigus_skills_read.',
     annotations: { readOnlyHint: true },
     chat: true,
     inputSchema: {
@@ -146,17 +147,30 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
     },
     run: (input, store, viewer) => listClusterSkills(store, String(input.botId), viewer),
   },
-  dostigus_skills_upsert: {
-    name: 'dostigus_skills_upsert',
-    description: 'Create or replace one Skill on a Bot. id is a stable slug (letters, digits, _, -). The same id replaces instructions and does not mint a new id. instructions are required. The creator and the Owner may write. A grantee cannot.',
+  dostigus_skills_read: {
+    name: 'dostigus_skills_read',
+    description: 'Read one Skill on a Bot by id, including instructions. Anyone who can open that Bot may read it. Use this after dostigus_skills_list when you need the body.',
+    annotations: { readOnlyHint: true },
     chat: true,
     inputSchema: {
       botId: z.string().min(1),
       id: z.string().min(1),
+    },
+    run: (input, store, viewer) => readClusterSkill(store, String(input.botId), input.id, viewer),
+  },
+  dostigus_skills_upsert: {
+    name: 'dostigus_skills_upsert',
+    description: 'Create or replace one Skill on a Bot. id is a stable slug (letters, digits, _, -). description (1–200) and instructions are required. The same id replaces the Skill and does not mint a new id. The creator and the Owner may write. A grantee cannot.',
+    chat: true,
+    inputSchema: {
+      botId: z.string().min(1),
+      id: z.string().min(1),
+      description: z.string().min(1),
       instructions: z.string().min(1),
     },
     run: (input, store, viewer) => upsertClusterSkill(store, String(input.botId), {
       id: input.id,
+      description: input.description,
       instructions: input.instructions,
     }, viewer),
   },
@@ -411,9 +425,14 @@ export function listChatMcpToolSpecs(): PlatformToolSpec[] {
 
 export function chatMcpToolsAsOpenAi(
   role: 'owner' | 'member' = 'owner',
-  options?: { canEditManifest?: boolean },
+  options?: { canEditManifest?: boolean, expand?: boolean, wake?: boolean },
 ): OpenAiChatFunctionTool[] {
-  const names = chatToolNamesForTurn(role, options?.canEditManifest === true)
+  const names = chatToolNamesForTurn({
+    role,
+    canEditManifest: options?.canEditManifest === true,
+    expand: options?.expand === true,
+    wake: options?.wake === true,
+  })
   return mcpToolsToOpenAiFunctions(names.map((name) => PLATFORM_TOOL_SPECS[name]))
 }
 
@@ -442,10 +461,20 @@ export function invokeChatMcpTool(input: {
   turnBotId?: string
   /** Host-injected Chat Cards for this turn. */
   cards?: ChatCardTurn
+  /** This turn's Chat allowlist. Omit to use the role union (handler tests). */
+  allowedTools?: readonly string[]
   fetchImpl?: typeof fetch
   lookup?: ScheduleToolContext['lookup']
 }): ChatToolInvokeResult | Promise<ChatToolInvokeResult> {
   const name = input.name
+  if (input.allowedTools && !input.allowedTools.includes(name)) {
+    logChatTool(name, 'skip')
+    return {
+      ok: false,
+      name,
+      content: toolResultError('unknown or unavailable tool'),
+    }
+  }
   if (input.role === 'member') {
     if (!isMemberChatMcpTool(name) && !isCreatorMemberChatMcpTool(name)) {
       logChatTool(name, 'skip')

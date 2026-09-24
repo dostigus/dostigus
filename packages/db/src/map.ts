@@ -44,9 +44,11 @@ export type MemberRecord = {
 }
 
 /**
- * `bots.skills_json` is a JSON array of Skill objects `{ id, instructions }`.
- * A legacy array of id strings still reads as ids with empty instructions.
- * `Manifest.skillIds` is those ids. See ADR 0028.
+ * `bots.skills_json` is a JSON array of Skill objects
+ * `{ id, description, instructions }`. A legacy array of id strings still
+ * reads as ids with empty description and instructions. A missing
+ * description stays empty; the catalog falls back to `Skill {id}`.
+ * `Manifest.skillIds` is those ids. See ADR 0028 and ADR 0032.
  */
 export function skillsFromJson(raw: string): Skill[] {
   let value: unknown
@@ -67,20 +69,21 @@ export function skillsFromJson(raw: string): Skill[] {
         continue
       }
       seen.add(id)
-      skills.push({ id, instructions: '' })
+      skills.push({ id, description: '', instructions: '' })
       continue
     }
     if (!item || typeof item !== 'object') {
       continue
     }
-    const record = item as { id?: unknown, instructions?: unknown }
+    const record = item as { id?: unknown, description?: unknown, instructions?: unknown }
     const id = typeof record.id === 'string' ? record.id.trim() : ''
     if (!id || seen.has(id)) {
       continue
     }
+    const description = typeof record.description === 'string' ? record.description.trim() : ''
     const instructions = typeof record.instructions === 'string' ? record.instructions : ''
     seen.add(id)
-    skills.push({ id, instructions })
+    skills.push({ id, description, instructions })
   }
   return skills
 }

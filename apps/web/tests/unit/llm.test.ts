@@ -147,7 +147,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
     messages: [
       {
         role: 'system',
-        content: expect.stringContaining('You are new. Ask and learn what this Bot is for.'),
+        content: expect.stringContaining('Stay on the Manifest. Reply briefly.'),
       },
       {
         role: 'assistant',
@@ -163,17 +163,12 @@ it('calls chat completions with greeting history and the Manifest system prompt'
     messages: Array<{ content: string }>
     tools: Array<{ function: { name: string } }>
   }
-  expect(payload.messages[0]?.content).toContain('You may call Cluster MCP surface tools')
+  expect(payload.messages[0]?.content).toContain('list and append Chat messages')
+  expect(payload.messages[0]?.content).not.toContain('You may call Cluster MCP surface tools')
   expect(payload.messages[0]?.content).toContain('Do not claim success without a successful tool result')
   expect(payload.messages[0]?.content).toContain('Self-settings')
+  expect(payload.messages[0]?.content).not.toContain('You are new. Ask and learn what this Bot is for.')
   expect(payload.tools.map((tool) => tool.function.name)).toEqual([
-    'dostigus_bots_list',
-    'dostigus_bots_get',
-    'dostigus_bots_create',
-    'dostigus_bots_update',
-    'dostigus_skills_list',
-    'dostigus_skills_upsert',
-    'dostigus_skills_delete',
     'dostigus_messages_list',
     'dostigus_messages_create',
     'dostigus_schedules_list',
@@ -183,12 +178,13 @@ it('calls chat completions with greeting history and the Manifest system prompt'
     'dostigus_schedules_resume',
     'dostigus_schedules_delete',
     'dostigus_cluster_timezone_get',
-    'dostigus_cluster_timezone_set',
     'dostigus_http_get',
-    'dostigus_cluster_http_allowlist_get',
-    'dostigus_cluster_http_allowlist_set',
+    'dostigus_skills_list',
+    'dostigus_skills_read',
   ])
   expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_bots_delete')
+  expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_bots_update')
+  expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_skills_upsert')
   expect(JSON.stringify(body)).not.toContain('sk-test-secret-key')
 })
 
@@ -223,11 +219,11 @@ it('sends a system Wake to the model as the line to answer', async () => {
   })
 
   const payload = body as { messages: Array<{ role: string, content: string }> }
-  expect(payload.messages.map((message) => message.role)).toEqual(['system', 'user'])
+  expect(payload.messages.map((message) => message.role)).toEqual(['system', 'system'])
   expect(payload.messages[1]?.content).toBe('Morning briefing')
 })
 
-it('loads Skill instructions and creator tools into a Member turn', async () => {
+it('loads a Skill catalog and slims a creator Member turn until expand', async () => {
   let body: unknown
   const fetchImpl = (async (_url: string, init?: RequestInit) => {
     body = JSON.parse(String(init?.body))
@@ -243,7 +239,11 @@ it('loads Skill instructions and creator tools into a Member turn', async () => 
     history: [],
     audience: 'member',
     canEditManifest: true,
-    skills: [{ id: 'notes', instructions: 'Keep short notes.' }],
+    skills: [{
+      id: 'notes',
+      description: 'Keep short notes.',
+      instructions: 'Write everything down.',
+    }],
     env: {
       OPENAI_COMPATIBLE_BASE_URL: 'https://example.test/v1',
       LLM_API_KEY: 'sk-test',
@@ -256,8 +256,9 @@ it('loads Skill instructions and creator tools into a Member turn', async () => 
     tools: Array<{ function: { name: string } }>
   }
   expect(payload.messages[0]?.content).toContain('Skill notes: Keep short notes.')
+  expect(payload.messages[0]?.content).not.toContain('Write everything down.')
   expect(payload.messages[0]?.content).toContain('Do not claim success without a successful tool result')
-  expect(payload.messages[0]?.content).not.toContain('Do not create, rename, or delete Bots')
+  expect(payload.messages[0]?.content).toContain('Do not create, rename, or delete Bots')
   expect(payload.tools.map((tool) => tool.function.name)).toEqual([
     'dostigus_messages_list',
     'dostigus_messages_create',
@@ -269,11 +270,11 @@ it('loads Skill instructions and creator tools into a Member turn', async () => 
     'dostigus_schedules_delete',
     'dostigus_cluster_timezone_get',
     'dostigus_http_get',
-    'dostigus_bots_update',
     'dostigus_skills_list',
-    'dostigus_skills_upsert',
-    'dostigus_skills_delete',
+    'dostigus_skills_read',
   ])
+  expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_bots_update')
+  expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_skills_upsert')
   expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_cluster_timezone_set')
   expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_cluster_http_allowlist_set')
 })
@@ -393,6 +394,7 @@ it('feeds tool errors back to the model and stores a final assistant reply', asy
     botId: 'b1',
     modelTier: 'strong',
     history: [],
+    expand: true,
     env: {
       OPENAI_COMPATIBLE_BASE_URL: 'https://example.test/v1',
       LLM_API_KEY: 'sk-test',
@@ -461,6 +463,7 @@ it('stops the Chat MCP tool loop after the iteration cap', async () => {
     botName: 'New Bot',
     modelTier: 'strong',
     history: [],
+    expand: true,
     env: {
       OPENAI_COMPATIBLE_BASE_URL: 'https://example.test/v1',
       LLM_API_KEY: 'sk-test',
@@ -790,7 +793,7 @@ it('retries one completion inside a tool loop without repeating the tool', async
             tool_calls: [{
               id: 'call_1',
               type: 'function',
-              function: { name: 'dostigus_bots_list', arguments: '{}' },
+              function: { name: 'dostigus_messages_list', arguments: '{"botId":"b1"}' },
             }],
           },
         }],
@@ -818,7 +821,179 @@ it('retries one completion inside a tool loop without repeating the tool', async
   })
 
   expect(result).toEqual({ via: 'llm+tools', content: 'Listed.' })
-  expect(invoked).toEqual(['dostigus_bots_list'])
+  expect(invoked).toEqual(['dostigus_messages_list'])
   expect(calls).toBe(3)
   expect(phases).toEqual(['thinking', 'tool', 'thinking', 'typing'])
+})
+
+it('expands Owner builder tools on a keyword hit and keeps a miss slim', async () => {
+  const bodies: Array<{ tools: Array<{ function: { name: string } }> }> = []
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    bodies.push(JSON.parse(String(init?.body)) as typeof bodies[number])
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'Ok.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    history: [],
+    expand: true,
+    env: GATEWAY_ENV,
+    fetchImpl,
+  })
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    fetchImpl,
+  })
+
+  expect(bodies[0]?.tools.map((tool) => tool.function.name)).toContain('dostigus_bots_update')
+  expect(bodies[0]?.tools.map((tool) => tool.function.name)).toContain('dostigus_skills_upsert')
+  expect(bodies[0]?.tools.map((tool) => tool.function.name)).toContain('dostigus_cluster_timezone_set')
+  expect(bodies[1]?.tools.map((tool) => tool.function.name)).not.toContain('dostigus_bots_update')
+  expect(bodies[1]?.tools.map((tool) => tool.function.name)).toContain('dostigus_skills_read')
+})
+
+it('expands a creator Member with update and Skill write only', async () => {
+  let body: unknown
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body))
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'Ok.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    history: [],
+    audience: 'member',
+    canEditManifest: true,
+    expand: true,
+    env: GATEWAY_ENV,
+    fetchImpl,
+  })
+  const names = (body as { tools: Array<{ function: { name: string } }> }).tools.map((tool) => tool.function.name)
+  expect(names).toContain('dostigus_bots_update')
+  expect(names).toContain('dostigus_skills_upsert')
+  expect(names).toContain('dostigus_skills_delete')
+  expect(names).not.toContain('dostigus_bots_create')
+  expect(names).not.toContain('dostigus_cluster_timezone_set')
+  expect(names).not.toContain('dostigus_cluster_http_allowlist_set')
+})
+
+it('does not expand a grantee even when the line hits a keyword', async () => {
+  let body: unknown
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body))
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'Ok.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    history: [],
+    audience: 'member',
+    canEditManifest: false,
+    expand: true,
+    env: GATEWAY_ENV,
+    fetchImpl,
+  })
+  const names = (body as { tools: Array<{ function: { name: string } }> }).tools.map((tool) => tool.function.name)
+  expect(names).toContain('dostigus_skills_read')
+  expect(names).not.toContain('dostigus_bots_update')
+  expect(names).not.toContain('dostigus_skills_upsert')
+})
+
+it('sends Wake tools plus the Skill catalog and keeps the Wake as system', async () => {
+  let body: unknown
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body))
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'Here is the morning note.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    wake: true,
+    skills: [{
+      id: 'notes',
+      description: 'Keep short notes.',
+      instructions: 'Write everything down.',
+    }],
+    history: [
+      {
+        id: 'wake',
+        botId: 'b1',
+        role: 'system',
+        content: 'Morning briefing',
+        createdAt: new Date().toISOString(),
+        personId: null,
+        parts: [],
+      },
+    ],
+    env: GATEWAY_ENV,
+    fetchImpl,
+  })
+
+  const payload = body as {
+    messages: Array<{ role: string, content: string }>
+    tools: Array<{ function: { name: string } }>
+  }
+  expect(payload.messages.map((message) => message.role)).toEqual(['system', 'system'])
+  expect(payload.messages[0]?.content).toContain('Skill notes: Keep short notes.')
+  expect(payload.messages[0]?.content).not.toContain('Write everything down.')
+  expect(payload.messages[0]?.content).toContain('You cannot create, update, pause, resume, or delete Schedules')
+  expect(payload.tools.map((tool) => tool.function.name)).toEqual([
+    'dostigus_http_get',
+    'dostigus_skills_list',
+    'dostigus_skills_read',
+    'dostigus_schedules_list',
+    'dostigus_messages_list',
+    'dostigus_messages_create',
+    'dostigus_cluster_timezone_get',
+  ])
+})
+
+it('windows history to the last 40 Chat lines including the trigger', async () => {
+  let body: unknown
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body))
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'Ok.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  const history = Array.from({ length: 41 }, (_, index) => ({
+    id: `m${index + 1}`,
+    botId: 'b1',
+    role: index === 0 ? 'system' as const : 'user' as const,
+    content: index === 0 ? 'Morning briefing' : `line ${index + 1}`,
+    createdAt: new Date().toISOString(),
+    personId: null,
+    parts: [],
+  }))
+
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    history,
+    env: GATEWAY_ENV,
+    fetchImpl,
+  })
+
+  const payload = body as { messages: Array<{ role: string, content: string }> }
+  expect(payload.messages).toHaveLength(41)
+  expect(payload.messages[0]?.role).toBe('system')
+  expect(payload.messages[1]?.role).toBe('user')
+  expect(payload.messages[1]?.content).toBe('line 2')
+  expect(payload.messages.at(-1)?.content).toBe('line 41')
 })

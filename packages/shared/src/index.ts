@@ -35,6 +35,12 @@ export {
   canSeeBot,
 } from './bot-visibility'
 export {
+  CHAT_LLM_HISTORY_LIMIT,
+  chatExpandKeywordHit,
+  chatLlmHistory,
+  type ChatLlmHistoryMessage,
+} from './chat-context'
+export {
   CHAT_CARD_KINDS,
   CHAT_PART_LABEL_MAX,
   CHAT_PART_STATUS_TONES,
@@ -76,10 +82,13 @@ export {
   ASSISTANT_REPLY_VIAS,
   type AssistantReplyVia,
   baseUrlForLlmGatewayPreset,
+  CHAT_HTTP_GET_HINT,
   CHAT_MCP_TOOL_MAX_ITERATIONS,
   CHAT_NO_PACKAGE_RULE,
   CHAT_SELF_SETTINGS_RULE,
   chatSystemPrompt,
+  type ChatToolSurface,
+  chatToolSurface,
   DEFAULT_TIER_MODELS,
   emptyLlmGatewayStored,
   isLlmGatewayConfigured,
@@ -134,10 +143,14 @@ export {
   parseOwnerPassword,
 } from './owner'
 export {
+  parseSkillDescription,
   parseSkillId,
   parseSkillInstructions,
+  SKILL_DESCRIPTION_MAX,
   SKILL_ID_MAX,
   SKILL_INSTRUCTIONS_MAX,
+  skillCatalogDescription,
+  skillCatalogEntry,
   SkillInputError,
 } from './skill'
 export {

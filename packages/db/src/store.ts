@@ -34,7 +34,9 @@ export function openStore(databaseUrl: string = DEFAULT_STORE_URL): OpenedStore 
     },
   }
   // Image upgrade, not Apply. A Bot that already has any meta Skill id
-  // is left alone. See ADR 0030.
+  // is not re-seeded as a set. Host open still lazy-fills meta
+  // descriptions and insert-if-missing platform-meta-http-get. See
+  // ADR 0030 and ADR 0032.
   upgradeClusterMetaSkills(opened)
   return opened
 }

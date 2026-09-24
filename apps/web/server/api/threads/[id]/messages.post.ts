@@ -10,7 +10,7 @@ import {
   listMessengerBots,
   listThreadMessages,
 } from '@dostigus/db'
-import { canEditBot, mentionedRoomBot } from '@dostigus/shared'
+import { canEditBot, chatExpandKeywordHit, mentionedRoomBot } from '@dostigus/shared'
 import {
   clearChatActivityPhase,
   setChatActivityPhase,
@@ -75,12 +75,14 @@ export default defineEventHandler(async (event) => {
     })
     const viewer = viewerFromUser({ id: personId, role })
     const canEditManifest = canEditBot(mentioned.bot, viewer)
+    const expand = chatExpandKeywordHit(user.content)
     const turn = openChatTurn({
       store,
       role,
       canEditManifest,
       personId,
       turnBotId: mentioned.bot.id,
+      expand,
     })
     const reply = await completeAssistantReply({
       botName: mentioned.bot.name,
@@ -92,6 +94,7 @@ export default defineEventHandler(async (event) => {
       stored: getLlmGatewaySettings(store),
       audience: role,
       canEditManifest,
+      expand,
       tools: turn.tools(),
       invokeTool: turn.invokeTool,
       onActivity: (phase) => {

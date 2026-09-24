@@ -4,6 +4,7 @@ import {
   createBot,
   deleteBot,
   deleteBotSkill,
+  getBotSkill,
   grantBot,
   grantBotToCurrentMembers,
   insertMessage,
@@ -23,6 +24,8 @@ import {
   canDeleteBot,
   canEditBot,
   canGrantBot,
+  skillCatalogDescription,
+  skillCatalogEntry,
 } from '@dostigus/shared'
 
 export type ClusterBotInput = {
@@ -124,19 +127,43 @@ function assertSkillActor(store: OpenedStore, botId: string, viewer?: BotViewer)
   requireBot(store, botId)
 }
 
+function assertSkillReader(store: OpenedStore, botId: string, viewer?: BotViewer) {
+  if (viewer) {
+    assertVisible(store, botId, viewer)
+    return
+  }
+  requireBot(store, botId)
+}
+
 export function listClusterSkills(
   store: OpenedStore,
   botId: string,
   viewer?: BotViewer,
 ) {
-  assertSkillActor(store, botId, viewer)
-  return { skills: listBotSkills(store, botId) }
+  assertSkillReader(store, botId, viewer)
+  return { skills: listBotSkills(store, botId).map(skillCatalogEntry) }
+}
+
+export function readClusterSkill(
+  store: OpenedStore,
+  botId: string,
+  skillId: unknown,
+  viewer?: BotViewer,
+) {
+  assertSkillReader(store, botId, viewer)
+  const skill = getBotSkill(store, botId, skillId)
+  return {
+    skill: {
+      ...skill,
+      description: skillCatalogDescription(skill),
+    },
+  }
 }
 
 export function upsertClusterSkill(
   store: OpenedStore,
   botId: string,
-  input: { id: unknown, instructions: unknown },
+  input: { id: unknown, description: unknown, instructions: unknown },
   viewer?: BotViewer,
 ) {
   assertSkillActor(store, botId, viewer)

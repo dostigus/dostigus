@@ -5,6 +5,7 @@ import {
   getBot,
   getLlmGatewaySettings,
   insertMessage,
+  listBotSkills,
   listBotThreadMessages,
   listDueSchedules,
   listThreadMessages,
@@ -217,6 +218,7 @@ async function finishWake(
     canEditManifest: false,
     personId: input.personId,
     turnBotId: input.botId,
+    wake: true,
   })
   let content: string
   let settle = settleFromReply({ via: 'error' })
@@ -227,9 +229,11 @@ async function finishWake(
       modelTier: bot.manifest.modelTier,
       history: listThreadMessages(input.store, input.threadId),
       manifest: bot.manifest,
+      skills: listBotSkills(input.store, bot.id),
       env: input.env,
       stored: getLlmGatewaySettings(input.store),
       audience: role,
+      wake: true,
       tools: turn.tools(),
       invokeTool: turn.invokeTool,
       onActivity: (phase) => {
