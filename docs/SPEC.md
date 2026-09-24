@@ -24,7 +24,7 @@ Settled now, even if this repo only scaffolds them:
 | Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. The Host fires a Wake. See [ADR 0027](adr/0027-bot-schedules.md). |
 | Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
 | Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
-| Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. This monorepo ships no stock Module packages and no Weather seed. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
+| Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host may upsert meta Skills (constructor how-to). See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -369,8 +369,9 @@ list/create, Schedule tools, and `dostigus_cluster_timezone_get`
 ([ADR 0027](adr/0027-bot-schedules.md)). The Host fires a Wake. A
 missing capability uses Skills upsert, Schedule tools, and Bot
 self-settings already in Chat. The Platform does not seed a Weather
-Module or a stock Module package
-([ADR 0030](adr/0030-chat-cards-module-catalog.md)).
+Module or a stock Module package. On Bot create it may insert meta
+Skills as plain Skill text. Both are
+[ADR 0030](adr/0030-chat-cards-module-catalog.md).
 
 - **Write.** When a person asks the Bot to change itself (name, label,
   description, Skills, or Schedules), the Bot writes the Store through
@@ -396,7 +397,10 @@ Module or a stock Module package
   not the Builder. Storage is `bots.skills_json`: a JSON array of
   `{ id, instructions }`. `Manifest.skillIds` is those ids. A legacy
   array of id strings still reads as ids with empty instructions.
-  Upsert rewrites the column as objects. No new table.
+  Upsert rewrites the column as objects. No new table. Meta Skill ids
+  and insert-if-absent are
+  [ADR 0030](adr/0030-chat-cards-module-catalog.md). They are not in
+  this Host until that code PR.
 - **Schedules.** A request to create or change a Schedule is
   Self-settings, and the Bot calls the
   [ADR 0027](adr/0027-bot-schedules.md) tools. This section does not
@@ -486,6 +490,19 @@ This monorepo does not ship a stock Module package, a
   capability. Day-1 does not add `dostigus_modules_catalog`,
   `dostigus_modules_apply`, or a platform rule that must Apply a
   matching stock package. A Marketplace of packages is later.
+- **Meta Skills.** On Bot create the Host may upsert four Skill rows
+  when each id is absent: `platform-meta-schedules`,
+  `platform-meta-skills`, `platform-meta-self-settings`, and
+  `platform-meta-marketplace`. Instructions are Russian markdown in
+  the one `instructions` string. There is no English column. The text
+  teaches Schedule tools (create, list, pause, edit), Skills upsert,
+  Bot self-settings, and that domain Module packages come later
+  through Marketplace. It does not invent weather tools. Image upgrade
+  may insert the set only on a Bot that has none of these ids. Stored
+  instructions stay. The creator or the Owner may edit or delete them
+  with the Skills tools. This seed is not in this Host until the code
+  PR. It is not a Module package, not an MCP tool, and not
+  `packages/modules/`. Chat Cards above are unchanged.
 
 ## Self-host (compose)
 
@@ -545,9 +562,10 @@ and [`docs/deploy.md`](deploy.md)).
   seed, Host-bundled Apply of platform packages, baking packages into
   the Host image, and a Weather seed (including Open-Meteo). A
   Marketplace of packages is later (cloud product). Builder Jobs stay
-  out. Chat Cards for Schedule changes are
-  [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are not in this
-  Host yet. A Schedule still only writes a Wake
+  out. Chat Cards for Schedule changes, and meta Skills on Bot create,
+  are [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are not in
+  this Host yet. Meta Skills are plain Skill text, not a stock Module
+  package. A Schedule still only writes a Wake
   ([ADR 0027](adr/0027-bot-schedules.md)).
 - Appearance via Chat, Model tier via Chat self-settings, and delete of
   a Bot or of Chat via Chat. The Host parsing a sentence into a

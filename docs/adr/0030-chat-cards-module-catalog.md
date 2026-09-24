@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-24
 - Amended: 2026-09-24 — Nick reverse decision. This monorepo ships no stock Module packages and no Weather seed. Schedule Chat Cards stay. A Marketplace of packages is later.
+- Amended: 2026-09-24 — Nick: on Bot create the Host may upsert meta Skills (constructor how-to). Chat Cards are unchanged. Still no stock Module packages and no Weather seed.
 
 Assistant parts stay [ADR 0025](0025-chat-bubble-parts.md). Schedules
 and the Wake stay [ADR 0027](0027-bot-schedules.md). The platform
@@ -33,7 +34,10 @@ out of this record's day-1.
 A missing capability uses the constructor tools already in Chat: Skills
 upsert, Schedule tools, and Bot self-settings
 ([ADR 0028](0028-bot-self-settings-via-chat.md)). Those tools are not a
-stock package.
+stock package. On Bot create the Host may also upsert meta Skills that
+teach those tools. The rows are plain Skill text. The ids and the
+insert rule are under Consequences. Chat Cards in this record stay as
+written here.
 
 ### Chat Cards
 
@@ -157,8 +161,11 @@ Platform git. Nick reversed that on 2026-09-24. This monorepo does not
 ship ready packages. Skills upsert, Schedule tools, and Bot
 self-settings already in Chat
 ([ADR 0028](0028-bot-self-settings-via-chat.md)) are how day-1 closes
-a capability gap. A Marketplace of packages is later, as a cloud
-product. Builder remains the later path that writes a Module package
+a capability gap. The same day, Nick allowed a Host seed of meta
+Skills on Bot create: constructor how-to as plain Skill text, so a new
+Bot can read how those tools work. That seed is not a package. A
+Marketplace of packages is later, as a cloud product. Builder remains
+the later path that writes a Module package
 ([ADR 0006](0006-day-1-declarative-modules.md)).
 
 [ADR 0025](0025-chat-bubble-parts.md) stores button and status parts
@@ -194,8 +201,50 @@ Kitchen remains a Host seed with no package row
 - Sheet id `schedule` is a Kit Sheet for one row. Kitchen's Sheet id
   is unchanged ([ADR 0026](0026-kitchen-module-day-1.md)).
 - The runtime image does not gain a Module catalog seed. Host boot
-  does not Apply a platform package.
+  does not Apply a platform package. Boot does not rewrite meta Skill
+  text.
 - The Kitchen Module is still not an applied Module package.
+- **Meta Skills.** On Bot create the Host upserts a fixed set of Skill
+  rows on that Bot. They are constructor how-to: plain Skill text in
+  `bots.skills_json` (`{ id, instructions }`, as
+  [ADR 0028](0028-bot-self-settings-via-chat.md)). They are not Module
+  packages, not MCP tools, not Apply, and not files under
+  `packages/modules/`. No new column and no new tool.
+- The Store Skill is one `instructions` string. There is no locale
+  column and no English twin. This codebase does not dual-locale
+  Skills, so the seed text is Russian markdown only, inside the
+  existing instructions cap.
+- Stable ids. A Skill id is letters, digits, `_`, or `-`. A dotted id
+  such as `platform.meta.schedules` is not a Skill id. The set is
+  closed:
+
+| Id | The Russian instructions teach |
+| --- | --- |
+| `platform-meta-schedules` | Schedule tools: create, list, pause, and edit (`dostigus_schedules_create`, `dostigus_schedules_list`, `dostigus_schedules_pause`, `dostigus_schedules_update`, plus resume and delete from [ADR 0027](0027-bot-schedules.md)). |
+| `platform-meta-skills` | Skills tools: list, upsert, and delete Skill text on this Bot. |
+| `platform-meta-self-settings` | Bot self-settings: name, label, and description through `dostigus_bots_update`. A successful tool result is still required ([ADR 0028](0028-bot-self-settings-via-chat.md)). |
+| `platform-meta-marketplace` | Domain Module packages come later through Marketplace. Do not invent weather tools, a Weather Skill, or a Module package. |
+
+- Insert when that id is absent. An id that is already stored keeps
+  its instructions. Create is idempotent: a later pass does not
+  rewrite text the creator or the Owner already changed. The seed does
+  not call `dostigus_skills_upsert`. That tool replaces instructions
+  for the same id. The seed writes a missing id only.
+- Image upgrade is not Apply. It does not rewrite these rows on an
+  existing Bot that already has any of these ids. The exception is a
+  Bot that has none of these ids (created before the seed, or emptied
+  of them): the Host may insert the set once. A partial delete stays
+  deleted. An edit stays. Host boot does not force-overwrite.
+- The creator of that Bot, or the Owner, may edit or delete any of
+  these rows with `dostigus_skills_list`, `dostigus_skills_upsert`, and
+  `dostigus_skills_delete`. A grantee cannot. Those tools stay
+  [ADR 0028](0028-bot-self-settings-via-chat.md).
+- The platform instruction stays on every turn. It is not one of these
+  Skills. Rename, Schedule changes, and other self-edits stay a
+  platform duty if a meta Skill is deleted.
+- Chat Cards in this record are unchanged. The code PR that upserts
+  these rows is separate from this docs change. It still does not add
+  `packages/modules/`, catalog or Apply tools, or a Weather seed.
 - [`docs/deploy.md`](../deploy.md) does not require Open-Meteo hosts
   in `NO_PROXY` for a Module.
 
@@ -215,6 +264,13 @@ Kitchen remains a Host seed with no package row
 - Tables, forms, and other Card kinds in the bubble.
 - A Kitchen package in a catalog.
 - The Host parsing a sentence into a Schedule or a package id.
+- Force-overwrite of meta Skill instructions on Host boot, or on image
+  upgrade when any of the four ids is already stored.
+- Restoring one deleted meta Skill while another of the four remains.
+- An English copy of these Skills, or a locale column on a Skill.
+- A dotted Skill id (`platform.meta.schedules` and the same shape).
+- Shipping the how-to as a Module package, an MCP tool, or
+  `packages/modules/**`.
 
 ## Alternatives
 
@@ -245,3 +301,14 @@ Kitchen remains a Host seed with no package row
   Card only with `intent: set` when an enabled equivalent exists.
   Create against that row injects the same Card and does not duplicate
   it in the turn.
+- Dotted meta Skill ids (`platform.meta.schedules`) — rejected. A Skill
+  id is letters, digits, `_`, or `-`.
+- Overwrite meta Skills on every boot — rejected. The creator or the
+  Owner may edit or delete them. Insert runs when the id is absent.
+  An existing Bot is filled only when it has none of the four ids.
+- Put the how-to in a Module package, an MCP tool, or
+  `packages/modules/**` — rejected. The rows are plain Skills.
+- Russian and English instruction columns — rejected. The Store Skill
+  is one `instructions` string. This codebase has no dual-locale
+  Skills, so the seed is Russian only.
+- A weather how-to Skill — rejected with the Weather seed.
