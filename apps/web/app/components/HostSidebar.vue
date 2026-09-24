@@ -26,32 +26,7 @@
             <path d="M16 16.5L20 20.5" />
           </svg>
         </button>
-        <button
-          type="button"
-          class="chrome"
-          :aria-label="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
-          @click="onCreateBot"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path d="M12 5.5v13M5.5 12h13" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          class="chrome"
-          aria-label="New thread"
-          @click="onNewThread"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path d="M7 17.5V8.5A3.5 3.5 0 0 1 10.5 5h3A3.5 3.5 0 0 1 17 8.5v4A3.5 3.5 0 0 1 13.5 16H10l-3 2.5z" />
-          </svg>
-        </button>
+        <HostPlusMenu :rail="rail" />
       </div>
 
       <nav
@@ -177,10 +152,11 @@
 import type { ThreadListItem } from '@dostigus/shared'
 
 const route = useRoute()
-const { isOwner } = useHostAccount()
 const { open, narrow, close } = useHostNav()
-const { openCreate, closeCreate } = useHostCreate()
-const { openThreadCreate, closeThreadCreate } = useHostThreadCreate()
+const { closeCreate } = useHostCreate()
+const { closeThreadCreate } = useHostThreadCreate()
+const { closeMemberAdd } = useHostMemberAdd()
+const { closePlusMenu } = useHostPlusMenu()
 const { openSearch } = useHostSearch()
 const { threads, pending, error } = await useHostThreads()
 const { width, collapsed, resizeTo, toggleCollapsed } = useHostSidebar()
@@ -224,21 +200,13 @@ function threadAria(thread: ThreadListItem, live: boolean) {
   return live ? `${thread.title}${kind}, online` : `${thread.title}${kind}`
 }
 
-function onCreateBot() {
-  closeThreadCreate()
-  openCreate()
-}
-
-function onNewThread() {
-  closeCreate()
-  openThreadCreate()
-}
-
 function onRow(href: string) {
+  closePlusMenu()
   close()
   if (route.path === href) {
     closeCreate()
     closeThreadCreate()
+    closeMemberAdd()
   }
 }
 
@@ -325,6 +293,8 @@ onUnmounted(() => {
 }
 
 .side-head {
+  position: relative;
+  z-index: 4;
   display: flex;
   align-items: center;
   gap: 0.45rem;

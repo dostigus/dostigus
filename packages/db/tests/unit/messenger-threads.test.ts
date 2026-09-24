@@ -13,6 +13,7 @@ import {
   listBotGrants,
   listInboxThreads,
   listMessages,
+  listRoomBotAudience,
   listThreadMessages,
   openStore,
   STORE_MIGRATIONS,
@@ -152,6 +153,19 @@ it('creates a dm once, a group, and a room only when every person can open the B
   })
   expect(memberRoom.participants.filter((person) => person.kind === 'bot').map((person) => person.id)).toEqual([priv.id])
   expect(listBotGrants(store, priv.id)).toEqual([])
+
+  const ownerOnly = createBot(store, { name: 'Owner desk', createdBy: owner.id }).bot
+  const beforeGrants = listBotGrants(store, shared.id).map((grant) => grant.personId)
+  const ownerAudience = listRoomBotAudience(store, { id: owner.id, role: 'owner' })
+  expect(ownerAudience.find((row) => row.botId === shared.id)?.personIds).toEqual([owner.id, member.id])
+  expect(ownerAudience.find((row) => row.botId === priv.id)?.personIds).toEqual([owner.id, member.id])
+  expect(ownerAudience.find((row) => row.botId === ownerOnly.id)?.personIds).toEqual([owner.id])
+  const memberAudience = listRoomBotAudience(store, { id: member.id, role: 'member' })
+  expect(memberAudience.map((row) => row.botId)).toContain(priv.id)
+  expect(memberAudience.map((row) => row.botId)).toContain(shared.id)
+  expect(memberAudience.map((row) => row.botId)).not.toContain(ownerOnly.id)
+  expect(listBotGrants(store, shared.id).map((grant) => grant.personId)).toEqual(beforeGrants)
+  expect(listBotGrants(store, ownerOnly.id)).toEqual([])
 
   expect(() => getMessengerThread(store, room.id, 'missing')).toThrow(StoreError)
   const inbox = listInboxThreads(store, { id: owner.id, role: 'owner' })

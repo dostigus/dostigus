@@ -1,12 +1,16 @@
+import type { MessengerThreadKind } from '@dostigus/shared'
+
 export function useHostThreadCreate() {
   const open = useState('host-thread-create-open', () => false)
+  const kind = useState<MessengerThreadKind>('host-thread-create-kind', () => 'dm')
   const returnTo = useState<string | null>('host-thread-create-return', () => null)
   const route = useRoute()
 
-  function openThreadCreate() {
+  function openThreadCreate(next: MessengerThreadKind) {
     if (!open.value) {
       returnTo.value = route.fullPath
     }
+    kind.value = next
     useHostNav().close()
     open.value = true
   }
@@ -25,5 +29,5 @@ export function useHostThreadCreate() {
     }
   }
 
-  return { open, openThreadCreate, closeThreadCreate, dismissThreadCreate }
+  return { open, kind, openThreadCreate, closeThreadCreate, dismissThreadCreate }
 }

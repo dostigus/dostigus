@@ -89,4 +89,6 @@ export {
   listHouseholdPeople,
   listInboxThreads,
   listMessengerBots,
+  listRoomBotAudience,
+  type RoomBotAudience,
 } from './threads'

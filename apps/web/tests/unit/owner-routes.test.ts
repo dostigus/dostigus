@@ -44,6 +44,7 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
     'people/index.get.ts',
     'threads/index.get.ts',
     'threads/index.post.ts',
+    'threads/room-access.get.ts',
     'threads/[id].get.ts',
     'threads/[id]/messages.post.ts',
   ]

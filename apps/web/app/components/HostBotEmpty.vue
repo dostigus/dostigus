@@ -29,9 +29,9 @@
       <KitButton
         type="button"
         variant="ghost"
-        @click="openThreadCreate"
+        @click="openThreadCreate('room')"
       >
-        New thread
+        Создать групповой чат
       </KitButton>
     </div>
   </div>
