@@ -72,7 +72,23 @@ withDefaults(defineProps<{
 }
 
 .label {
-  color: var(--text-muted);
+  display: inline-block;
+  color: transparent;
+  background-image: linear-gradient(
+    100deg,
+    var(--text-muted) 0%,
+    var(--text-muted) 36%,
+    color-mix(in srgb, var(--text) 86%, var(--text-muted)) 50%,
+    var(--text-muted) 64%,
+    var(--text-muted) 100%
+  );
+  background-size: 280% 100%;
+  background-repeat: no-repeat;
+  background-position: 100% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: activity-label-shimmer 2.1s linear infinite;
 }
 
 .wave,
@@ -201,6 +217,27 @@ withDefaults(defineProps<{
   }
 }
 
+@keyframes activity-label-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes activity-label-pulse {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wave span,
   .cluster span,
@@ -212,6 +249,15 @@ withDefaults(defineProps<{
   .cluster span {
     opacity: 0.9;
     transform: none;
+  }
+
+  .label {
+    animation: activity-label-pulse 2.6s ease-in-out infinite;
+    background-image: none;
+    background-clip: border-box;
+    -webkit-background-clip: border-box;
+    color: var(--text-muted);
+    -webkit-text-fill-color: currentcolor;
   }
 }
 </style>

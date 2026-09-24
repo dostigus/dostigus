@@ -9,6 +9,8 @@ Production drives **thinking**, **tool**, and **typing** from the live
 reply. **Connect** stays a preview row. The message route still returns
 one finished assistant line
 ([ADR 0011](0011-chat-mcp-tool-loop.md)). Phases are a side channel.
+The same amendment gives the status line a soft gradient sweep so a
+wait reads as still in progress. The glyph is unchanged.
 
 ## Decision
 
@@ -38,8 +40,12 @@ on the row.
 The Chat pill flock stays in `think` for the whole in-flight reply. The
 **row** is the source of truth for the phase. The green live dot on the
 Chat pill and the matching sidebar row is unchanged. Model tier and
-delete stay where they are. `prefers-reduced-motion` holds the glyph
-still.
+delete stay where they are.
+
+The status line on every phase of this row, including preview connect,
+uses a soft gradient sweep across the Russian copy. The glyph stays as
+it is. `prefers-reduced-motion` holds the glyph still and replaces the
+sweep with a subtle opacity pulse on that same line.
 
 With no LLM key, the thread keeps the flock mark in `think` and shows
 no status line. It never says «Печатает…». Idle, including composer
@@ -98,6 +104,8 @@ the model is still waiting to run, or while a tool call is running, and
 - `chatActivityStatus` chooses the row. `ChatActivityRow` draws it.
   Thinking, tool, and typing are that row’s phases.
 - The quiet path keeps the pending flock mark and does not claim generation.
+- The status copy shimmers on every phase of the row. Reduced motion
+  pulses that line’s opacity and holds the glyph still.
 - The pill stays in `think` for the whole in-flight reply. The row carries
   the phase. The live dot stays.
 - Phase state is ephemeral process memory. The poll is the transport.
@@ -115,6 +123,8 @@ the model is still waiting to run, or while a tool call is running, and
 ## Alternatives
 
 - One spinner for every wait — rejected. The glyph follows the phase.
+- A stronger motion on the flock mark — rejected. The mark already
+  thinks. The wait signal is the status line.
 - Put the line in the header pill — rejected. The row stays in the thread.
   The pill flock stays in `think` and does not spell the phase.
 - A second status UI beside this row — rejected. Phases are the same row.

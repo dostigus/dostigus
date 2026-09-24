@@ -158,7 +158,9 @@ What the running Cluster does today:
   is a drawer. Sending a line shows it at once. While the LLM gateway is
   configured and the viewer’s own reply is in flight, the thread shows one
   activity row under the latest line: a glyph and a short Russian Nunito
-  line. Phases on that same row: thinking (flock mark in `think`,
+  line. That line uses a soft gradient sweep so the wait reads as in
+  progress. `prefers-reduced-motion` holds the glyph still and replaces
+  the sweep with a subtle opacity pulse. Phases on that same row: thinking (flock mark in `think`,
   «Думает…») while waiting on the LLM before or between tool rounds; tool
   (orange cluster pulse, «Выполняет команду…») while a Cluster MCP tool
   call is running; typing (green three-dot wave, «Печатает…») while the

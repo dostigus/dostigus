@@ -52,7 +52,7 @@ English.
 | [0018](0018-bot-mark-flock.md) | Bot marks — an eight-bird flock with named parts |
 | [0019](0019-bot-picker-and-chat-purpose.md) | Bot picker and Chat purpose |
 | [0020](0020-bot-closet.md) | Bot closet |
-| [0021](0021-chat-activity-status.md) | Chat activity status row (amended 2026-09-24: thinking, tool, typing) |
+| [0021](0021-chat-activity-status.md) | Chat activity status row (amended 2026-09-24: thinking, tool, typing; status-line sweep) |
 | [0022](0022-chat-assistant-markdown.md) | Chat assistant Markdown body |
 | [0023](0023-household-member-invites.md) | Household Member Invites (an Invite does not grant Bots; [0024](0024-threads-and-bot-visibility.md)) |
 | [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility (amended 2026-09-24: personal Bot + grants) |
