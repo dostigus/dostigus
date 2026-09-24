@@ -70,7 +70,21 @@
           </p>
         </li>
         <li
-          v-if="replying"
+          v-if="threadActivity"
+          class="activity"
+          aria-live="polite"
+        >
+          <ChatActivityRow
+            :kind="threadActivity.kind"
+            :label="threadActivity.label"
+            :name="activityBot?.name ?? 'Bot'"
+            :seed="activityBot?.id ?? ''"
+            :shape="activityBot?.avatarShape ?? ''"
+            :avatar-color="activityBot?.avatarColor"
+          />
+        </li>
+        <li
+          v-else-if="replying"
           class="pending-mark"
           aria-live="polite"
           aria-label="Replying"
@@ -85,7 +99,7 @@
           />
         </li>
         <li
-          v-if="timeline.length === 0 && !replying && !loadError"
+          v-if="timeline.length === 0 && !replying && !threadActivity && !loadError"
           class="empty-chat"
         >
           <p class="empty-title">
@@ -182,12 +196,42 @@ const thread = computed(() => data.value?.thread ?? null)
 const timeline = computed(() => data.value?.messages ?? [])
 const loadError = computed(() => Boolean(error.value))
 const gatewayUnset = computed(() => readyData.value?.configured === false)
+const forcedActivity = computed(() => (
+  import.meta.dev ? parseChatActivityKind(route.query.activity) : null
+))
+const replyBotId = computed(() => replyBot.value?.id ?? null)
+const activityLive = computed(() => (
+  replying.value
+  && readyData.value?.configured === true
+  && thread.value?.kind === 'room'
+  && !forcedActivity.value
+))
+const { phase: liveActivityPhase } = useChatActivityPhase({
+  active: activityLive,
+  threadId,
+  botId: replyBotId,
+})
+const threadActivity = computed(() => chatActivityStatus({
+  pending: replying.value && thread.value?.kind === 'room',
+  gatewayConfigured: readyData.value?.configured === true,
+  phase: liveActivityPhase.value,
+  forced: forcedActivity.value,
+  connectTarget: import.meta.dev && typeof route.query.target === 'string'
+    ? route.query.target
+    : null,
+}))
+const activityBot = computed(() => {
+  if (replyBot.value) {
+    return replyBot.value
+  }
+  return thread.value?.participants.find((person) => person.kind === 'bot') ?? null
+})
 
 useHead({
   title: computed(() => thread.value ? `Dostigus · ${thread.value.title}` : 'Dostigus'),
 })
 
-watch(timeline, async () => {
+watch([timeline, threadActivity, replying], async () => {
   await nextTick()
   const el = threadEl.value
   if (el) {
@@ -371,8 +415,15 @@ async function send() {
 }
 
 .pending-mark,
+.activity,
 .empty-chat {
   align-self: flex-start;
+}
+
+.pending-mark,
+.activity {
+  display: flex;
+  padding: 0.15rem 0.1rem 0.35rem;
 }
 
 .empty-chat {

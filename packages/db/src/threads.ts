@@ -9,7 +9,7 @@ import {
 } from '@dostigus/shared'
 import { authorNameForPerson, getMember, listMembers } from './members'
 import { getOwner } from './owners'
-import { getBot, insertThreadLine, listBots, requireBot, StoreError, viewerMaySeeBot } from './queries'
+import { botThreadIdFor, getBot, insertThreadLine, listBots, requireBot, StoreError, viewerMaySeeBot } from './queries'
 
 const PEOPLE_MAX = 50
 const BOTS_MAX = 20
@@ -527,7 +527,7 @@ function activityMs(item: ThreadListItem): number {
 /** A Bot this person can open before their bot-thread exists. First open writes the greeting. */
 function botInboxRow(store: OpenedStore, bot: Bot, viewerId: string): ThreadListItem {
   return {
-    id: `bt:${bot.id}:${viewerId}`,
+    id: botThreadIdFor(bot.id, viewerId),
     kind: 'bot',
     title: bot.name,
     botId: bot.id,

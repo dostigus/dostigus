@@ -263,7 +263,7 @@ type TimelineLine = ChatMessage & {
 const route = useRoute()
 const { user, isOwner } = useHostAccount()
 const { refresh: refreshBots } = await useHostBots()
-const { refresh: refreshThreads } = await useHostThreads()
+const { threads, refresh: refreshThreads } = await useHostThreads()
 const botId = computed(() => String(route.params.id ?? ''))
 
 const { data: botData, error: botError, refresh: refreshBot } = await useFetch<{ bot: Bot }>(
@@ -325,13 +325,31 @@ const botLive = computed(() => botIsLive({
   failed: markFailed.value,
 }))
 /**
- * In-thread status. A configured reply in flight is typing. No key keeps
- * the think mark below. `?activity=` is a local nuxt dev preview force.
+ * In-thread status. A configured reply follows the polled Activity phase.
+ * No key keeps the think mark below. `?activity=` is a local nuxt dev
+ * preview force and wins over the live phase.
  */
+const forcedActivity = computed(() => (
+  import.meta.dev ? parseChatActivityKind(route.query.activity) : null
+))
+const botThreadId = computed(() => (
+  threads.value.find((item) => item.kind === 'bot' && item.botId === botId.value)?.id ?? null
+))
+const activityLive = computed(() => (
+  botPending.value
+  && readyData.value?.configured === true
+  && !forcedActivity.value
+))
+const { phase: liveActivityPhase } = useChatActivityPhase({
+  active: activityLive,
+  threadId: botThreadId,
+  botId,
+})
 const threadActivity = computed(() => chatActivityStatus({
   pending: botPending.value,
   gatewayConfigured: readyData.value?.configured === true,
-  forced: import.meta.dev ? parseChatActivityKind(route.query.activity) : null,
+  phase: liveActivityPhase.value,
+  forced: forcedActivity.value,
   connectTarget: import.meta.dev && typeof route.query.target === 'string'
     ? route.query.target
     : null,

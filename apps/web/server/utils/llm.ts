@@ -6,6 +6,7 @@ import type {
   ModelTier,
   ResolvedLlmGateway,
 } from '@dostigus/shared'
+import type { ChatActivityPhase } from '../../app/utils/chat-activity'
 import type { ChatToolInvokeResult } from './mcp-platform-tools'
 import type { OpenAiChatFunctionTool, OpenAiChatMessage, OpenAiToolCall } from './openai-tools'
 import process from 'node:process'
@@ -71,6 +72,8 @@ export async function completeAssistantReply(input: {
   invokeTool?: ChatToolInvoker
   tools?: OpenAiChatFunctionTool[]
   audience?: 'owner' | 'member'
+  /** Live Activity phase. Quiet (no key) replies do not call this. */
+  onActivity?: (phase: ChatActivityPhase) => void
 }): Promise<{ content: string, via: AssistantReplyVia }> {
   const audience = input.audience === 'member' ? 'member' : 'owner'
   const resolved = resolveClusterLlmGateway({
@@ -103,6 +106,7 @@ export async function completeAssistantReply(input: {
       tools,
       invokeTool,
       messagesOnly: audience === 'member',
+      onActivity: input.onActivity,
     })
     const trimmed = result.content.trim()
     if (!trimmed) {
@@ -188,6 +192,7 @@ async function callOpenAiCompatible(input: {
   tools: OpenAiChatFunctionTool[]
   invokeTool: ChatToolInvoker
   messagesOnly?: boolean
+  onActivity?: (phase: ChatActivityPhase) => void
 }): Promise<{ content: string, usedTools: boolean }> {
   const messages: OpenAiChatMessage[] = [
     {
@@ -216,6 +221,7 @@ async function callOpenAiCompatible(input: {
   let usedTools = false
 
   for (let iteration = 0; iteration < CHAT_MCP_TOOL_MAX_ITERATIONS; iteration += 1) {
+    input.onActivity?.('thinking')
     const message = await postChatCompletion({
       resolved: input.resolved,
       modelTier: input.modelTier,
@@ -225,6 +231,7 @@ async function callOpenAiCompatible(input: {
     })
     const toolCalls = collectToolCalls(message)
     if (toolCalls.length === 0) {
+      input.onActivity?.('typing')
       return { content: message.content ?? '', usedTools }
     }
 
@@ -234,6 +241,7 @@ async function callOpenAiCompatible(input: {
       content: message.content ?? null,
       tool_calls: toolCalls,
     })
+    input.onActivity?.('tool')
     await appendToolResults({
       toolCalls,
       messages,
@@ -241,6 +249,7 @@ async function callOpenAiCompatible(input: {
     })
   }
 
+  input.onActivity?.('typing')
   const finalMessage = await postChatCompletion({
     resolved: input.resolved,
     modelTier: input.modelTier,

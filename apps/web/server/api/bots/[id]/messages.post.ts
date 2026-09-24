@@ -1,6 +1,11 @@
 import process from 'node:process'
 import { getLlmGatewaySettings } from '@dostigus/db'
 import { previewQuietHoldMs, waitPreviewQuietHold } from '../../../../app/utils/preview-hold'
+import {
+  clearChatActivityPhase,
+  messageThreadId,
+  setChatActivityPhase,
+} from '../../../utils/chat-activity-phase'
 import { getClusterBot, viewerFromUser } from '../../../utils/cluster-bots'
 import { invokeChatMcpTool } from '../../../utils/mcp-platform-tools'
 
@@ -15,6 +20,7 @@ export default defineEventHandler(async (event) => {
   const botId = getRouterParam(event, 'id') ?? ''
   const body = await readBody<PostBody>(event).catch(() => ({} as PostBody))
 
+  let activityThreadId = ''
   try {
     const store = useStore()
     const viewer = viewerFromUser(session.user)
@@ -26,6 +32,7 @@ export default defineEventHandler(async (event) => {
       personId,
       viewer,
     })
+    activityThreadId = messageThreadId(store, user.id)
     const { messages: history } = listClusterMessages(store, botId, viewer)
     const reply = await completeAssistantReply({
       botName: bot.name,
@@ -43,6 +50,9 @@ export default defineEventHandler(async (event) => {
         role,
         personId,
       }),
+      onActivity: (phase) => {
+        setChatActivityPhase(activityThreadId, bot.id, phase)
+      },
     })
     await waitPreviewQuietHold(previewQuietHoldMs({
       allowed: previewSeedAllowed({
@@ -61,5 +71,9 @@ export default defineEventHandler(async (event) => {
     return { user, assistant, via: reply.via }
   } catch (error) {
     throwStoreError(error)
+  } finally {
+    if (activityThreadId) {
+      clearChatActivityPhase(activityThreadId, botId)
+    }
   }
 })

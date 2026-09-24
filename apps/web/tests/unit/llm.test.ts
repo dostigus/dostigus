@@ -52,6 +52,7 @@ it('returns a stub reply when the LLM gateway has no key', async () => {
     throw new Error('LLM gateway must not be called without a key')
   }) as typeof fetch
 
+  const phases: string[] = []
   const result = await completeAssistantReply({
     botName: 'New Bot',
     modelTier: 'strong',
@@ -62,10 +63,14 @@ it('returns a stub reply when the LLM gateway has no key', async () => {
       invoked.push(name)
       return { ok: false, name, content: '{}' }
     },
+    onActivity: (phase) => {
+      phases.push(phase)
+    },
   })
   expect(result.via).toBe('stub')
   expect(result.content).toBe(stubAssistantReply())
   expect(invoked).toEqual([])
+  expect(phases).toEqual([])
 })
 
 it('calls chat completions with greeting history and the Manifest system prompt', async () => {
@@ -77,6 +82,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
     }), { status: 200 })
   }) as typeof fetch
 
+  const phases: string[] = []
   const result = await completeAssistantReply({
     botName: 'Notes later',
     botId: 'b1',
@@ -116,12 +122,16 @@ it('calls chat completions with greeting history and the Manifest system prompt'
       LLM_API_KEY: 'sk-test-secret-key',
     },
     fetchImpl,
+    onActivity: (phase) => {
+      phases.push(phase)
+    },
   })
 
   expect(result).toEqual({
     via: 'llm',
     content: 'I can be a notes Bot later.',
   })
+  expect(phases).toEqual(['thinking', 'typing'])
   expect(body).toMatchObject({
     model: 'openai/gpt-4o',
     messages: [
@@ -261,6 +271,7 @@ it('feeds tool errors back to the model and stores a final assistant reply', asy
     }), { status: 200 })
   }) as typeof fetch
 
+  const phases: string[] = []
   const result = await completeAssistantReply({
     botName: 'New Bot',
     botId: 'b1',
@@ -276,12 +287,16 @@ it('feeds tool errors back to the model and stores a final assistant reply', asy
       name,
       content: JSON.stringify({ error: 'Bot not found' }),
     }),
+    onActivity: (phase) => {
+      phases.push(phase)
+    },
   })
 
   expect(result).toEqual({
     via: 'llm+tools',
     content: 'That Bot is not in the Store.',
   })
+  expect(phases).toEqual(['thinking', 'tool', 'thinking', 'typing'])
   const followUp = bodies[1] as {
     messages: Array<{ role: string, content?: string }>
   }
