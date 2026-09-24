@@ -397,8 +397,11 @@ Skills as plain Skill text. Both are
   not the Builder. Storage is `bots.skills_json`: a JSON array of
   `{ id, instructions }`. `Manifest.skillIds` is those ids. A legacy
   array of id strings still reads as ids with empty instructions.
-  Upsert rewrites the column as objects. No new table. Meta Skill ids
-  and insert-if-absent are
+  Upsert rewrites the column as objects. No new table. A Skill id is
+  letters, digits, `_`, or `-`. A dotted id is not a Skill id.
+  `parseSkillId` in `packages/shared/src/skill.ts` checks that charset.
+  A Skill is one `instructions` string. There is no locale column.
+  Meta Skill ids and insert-if-absent are
   [ADR 0030](adr/0030-chat-cards-module-catalog.md). They are not in
   this Host until that code PR.
 - **Schedules.** A request to create or change a Schedule is

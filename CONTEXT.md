@@ -163,15 +163,20 @@ Platform git agent.
 _Avoid_: cloud agent (bare), codegen bot, authoring agent.
 
 **Skill**:
-Policy and instructions a Bot follows (an id and instructions). Not
-executable UI and not a Module package. The Manifest lists that Bot's
-Skills. Self-settings may list, upsert, and delete that text on the
-Bot ([ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md)). On Bot
-create the Host may upsert a fixed set of meta Skills (constructor
-how-to). Instructions are one Russian string. The creator or the Owner
-may edit or delete them. An existing id is not overwritten on boot.
-See [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md). A Skill
-does not say when the Host wakes the Bot.
+Policy and instructions a Bot follows. Not executable UI and not a
+Module package. A Skill id is letters, digits, `_`, or `-`. A dotted
+id is not a Skill id. `parseSkillId` in
+`packages/shared/src/skill.ts` checks that charset. A Skill is one
+`instructions` string. There is no locale column. Skills live in
+`bots.skills_json` as `{ id, instructions }`. The Manifest lists that
+Bot's Skills. Self-settings may list, upsert, and delete that text on
+the Bot ([ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md)). On
+Bot create the Host may upsert a fixed set of meta Skills (constructor
+how-to). Those instructions are Russian markdown in that same string.
+The creator or the Owner may edit or delete them. An existing id is
+not overwritten on boot. See
+[ADR 0030](docs/adr/0030-chat-cards-module-catalog.md). A Skill does
+not say when the Host wakes the Bot.
 _Avoid_: prompt (unqualified), tool, Module package, stock package.
 
 **Schedule**:
