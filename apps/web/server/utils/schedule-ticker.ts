@@ -18,6 +18,7 @@ import {
   SCHEDULE_TICK_MS,
   viewerForPerson,
 } from '@dostigus/db'
+import { annotateHistoryWithArtifacts, attachTurnArtifacts, gcArtifacts } from './artifacts'
 import {
   clearChatActivityPhase,
   readChatActivityPhase,
@@ -79,6 +80,11 @@ export function runScheduleTick(input: {
     const now = input.now ?? Date.now()
     const env = input.env ?? process.env
     const completeReply = input.completeReply ?? completeAssistantReply
+    try {
+      gcArtifacts(store, { now })
+    } catch (error) {
+      console.warn('Artifact GC failed', error)
+    }
     for (const schedule of listDueSchedules(store, now)) {
       try {
         dispatchSchedule({
@@ -227,7 +233,7 @@ async function finishWake(
       botName: bot.name,
       botId: bot.id,
       modelTier: bot.manifest.modelTier,
-      history: listThreadMessages(input.store, input.threadId),
+      history: annotateHistoryWithArtifacts(listThreadMessages(input.store, input.threadId)),
       manifest: bot.manifest,
       skills: listBotSkills(input.store, bot.id),
       env: input.env,
@@ -251,7 +257,7 @@ async function finishWake(
     settle = settleFromReply({ error })
   }
   try {
-    insertMessage(input.store, {
+    const assistant = insertMessage(input.store, {
       botId: input.botId,
       role: 'assistant',
       content,
@@ -259,6 +265,9 @@ async function finishWake(
       threadId: input.threadId,
       viewer,
     })
+    if (turn.artifacts.ids.length > 0) {
+      attachTurnArtifacts(input.store, assistant.id, turn.artifacts.ids)
+    }
     settleChatTurn(input.store, turnId, settle)
   } catch (error) {
     settleChatTurn(input.store, turnId, settleFromReply({ error }))

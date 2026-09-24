@@ -18,6 +18,7 @@ import {
   serializeChatParts,
   trimOrUndefined,
 } from '@dostigus/shared'
+import { attachArtifactsToMessages } from './artifacts'
 import { toBot, toMessage } from './map'
 import { insertMissingMetaSkills } from './meta-skills'
 import { StoreError } from './store-error'
@@ -131,9 +132,12 @@ function normalizeAvatarColor(value: string | undefined): BotAccentHex {
   return hex
 }
 
-function normalizeContent(content: string | undefined): string {
+function normalizeContent(content: string | undefined, allowEmpty = false): string {
   const trimmed = content?.trim() ?? ''
   if (trimmed.length === 0) {
+    if (allowEmpty) {
+      return ''
+    }
     throw new StoreError('Message content is required', 400)
   }
   if (trimmed.length > MESSAGE_MAX) {
@@ -259,6 +263,10 @@ export function requireBot(store: OpenedStore, id: string): Bot {
     throw new StoreError('Bot not found', 404)
   }
   return bot
+}
+
+export function getClusterOwnerId(store: OpenedStore): string | null {
+  return clusterOwnerId(store)
 }
 
 function clusterOwnerId(store: OpenedStore): string | null {
@@ -425,6 +433,8 @@ export function insertMessage(
     /** Places the line on this person's open bot-thread. */
     viewer?: BotViewer
     threadId?: string
+    /** Empty content is allowed when this line joins Artifacts. */
+    allowEmpty?: boolean
   },
 ): Message {
   const bot = requireBot(store, input.botId)
@@ -440,7 +450,7 @@ export function insertMessage(
   return insertMessageRow(store, {
     botId: input.botId,
     role: input.role,
-    content: normalizeContent(input.content),
+    content: normalizeContent(input.content, input.allowEmpty === true),
     personId: input.personId ?? null,
     parts: input.parts,
     threadId,
@@ -457,6 +467,7 @@ export function insertThreadLine(
     personId?: string | null
     botId?: string | null
     parts?: unknown
+    allowEmpty?: boolean
   },
 ): Message {
   const thread = store.sqlite.prepare('SELECT id FROM threads WHERE id = ?').get(input.threadId) as { id: string } | undefined
@@ -469,7 +480,7 @@ export function insertThreadLine(
   return insertMessageRow(store, {
     botId: input.botId ?? null,
     role: input.role,
-    content: normalizeContent(input.content),
+    content: normalizeContent(input.content, input.allowEmpty === true),
     personId: input.personId ?? null,
     parts: input.parts,
     threadId: input.threadId,
@@ -486,7 +497,7 @@ export function listMessages(store: OpenedStore, botId: string): Message[] {
     WHERE bot_id = ?
     ORDER BY created_at ASC, rowid ASC
   `).all(botId) as MessageRecord[]
-  return rows.map(toMessage)
+  return attachArtifactsToMessages(store, rows.map((row) => toMessage(row)))
 }
 
 /**
@@ -515,7 +526,7 @@ export function listThreadMessages(store: OpenedStore, threadId: string): Messag
     WHERE thread_id = ?
     ORDER BY created_at ASC, rowid ASC
   `).all(threadId) as MessageRecord[]
-  return rows.map(toMessage)
+  return attachArtifactsToMessages(store, rows.map((row) => toMessage(row)))
 }
 
 export type MessageSearchHit = {
@@ -597,6 +608,11 @@ function searchThreadLabel(kind: string | null): string {
     return 'Room'
   }
   return 'Chat'
+}
+
+/** Thread ids this person may open: their bot-threads and Threads they have joined. */
+export function listAccessibleThreadIds(store: OpenedStore, viewer: BotViewer): string[] {
+  return viewerThreadClause(store, viewer)?.ids ?? []
 }
 
 /** Thread ids this person may search: their bot-threads and Threads they have joined. */

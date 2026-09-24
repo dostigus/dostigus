@@ -1,6 +1,7 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { ChatToolInvokeResult } from './mcp-platform-tools'
 import type { OpenAiChatFunctionTool } from './openai-tools'
+import { ArtifactTurn } from './artifacts'
 import { ChatCardTurn } from './chat-cards'
 import { chatMcpToolsAsOpenAi, invokeChatMcpTool } from './mcp-platform-tools'
 import { chatToolNamesForTurn } from './mcp-surface'
@@ -20,10 +21,12 @@ export function openChatTurn(input: {
   wake?: boolean
 }): {
   cards: ChatCardTurn
+  artifacts: ArtifactTurn
   tools: () => OpenAiChatFunctionTool[]
   invokeTool: (name: string, args: unknown) => ChatToolInvokeResult | Promise<ChatToolInvokeResult>
 } {
   const cards = new ChatCardTurn()
+  const artifacts = new ArtifactTurn()
   const allowedTools = chatToolNamesForTurn({
     role: input.role,
     canEditManifest: input.canEditManifest,
@@ -46,7 +49,9 @@ export function openChatTurn(input: {
     personId: input.personId,
     turnBotId: input.turnBotId,
     cards,
+    artifacts,
+    wake: input.wake,
     allowedTools,
   })
-  return { cards, tools, invokeTool }
+  return { cards, artifacts, tools, invokeTool }
 }

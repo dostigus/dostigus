@@ -1,6 +1,7 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { BotViewer } from '@dostigus/shared'
 import type { ZodRawShape } from 'zod'
+import type { ArtifactTurn } from './artifacts'
 import type { ChatCardTurn } from './chat-cards'
 import type { PlatformMcpTool } from './mcp-surface'
 import type { OpenAiChatFunctionTool } from './openai-tools'
@@ -8,6 +9,7 @@ import type { ScheduleToolContext } from './schedule-tools'
 import { StoreError } from '@dostigus/db'
 import { BOT_ACCENT_HEXES, BOT_AVATAR_SHAPES, MESSAGE_ROLES, MODEL_TIERS } from '@dostigus/shared'
 import { z } from 'zod'
+import { artifactActorForTurn, putArtifactFromTool } from './artifacts'
 import { noteToolCard } from './chat-cards'
 import {
   appendClusterMessage,
@@ -386,6 +388,34 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
     },
     run: (input, store, viewer) => clusterHttpAllowlistSet(store, input, viewer),
   },
+  dostigus_artifacts_put: {
+    name: 'dostigus_artifacts_put',
+    description: 'Store an Artifact on the Cluster volume and attach it to this assistant reply. Give filename, mime, and either bytesBase64 (at most 1 MiB) or sourceUrl. sourceUrl uses the same SSRF, Cluster http allowlist, and Bot HTTP egress as dostigus_http_get. The Host sniffs magic bytes and allowlists image/*, application/pdf, text/plain, and text/markdown. There is no get tool and no vision.',
+    chat: true,
+    inputSchema: {
+      filename: z.string().min(1),
+      mime: z.string().min(1),
+      bytesBase64: z.string().optional(),
+      sourceUrl: z.string().optional(),
+    },
+    run: async (input, store, viewer, ctx) => {
+      const artifact = await putArtifactFromTool(store, {
+        filename: input.filename,
+        mime: input.mime,
+        bytesBase64: input.bytesBase64,
+        sourceUrl: input.sourceUrl,
+        actorPersonId: artifactActorForTurn(store, {
+          personId: viewer?.id ?? ctx?.personId,
+          wake: ctx?.wake === true,
+        }),
+        fetchImpl: ctx?.fetchImpl,
+        lookup: ctx?.lookup,
+        env: ctx?.env,
+      })
+      ctx?.artifacts?.note(artifact.id)
+      return { artifact }
+    },
+  },
   dostigus_turns_list: {
     name: 'dostigus_turns_list',
     description: 'List Host Bot turns in this Cluster, newest first. Optional filters: botId, threadId, since (ISO-8601 or epoch milliseconds), and limit (default 50, cap 100). Each turn has id, threadId, botId, personId, trigger (user, wake, or mention), outcome (running, ok, error, or abort), startedAt, endedAt, scheduleId, errorCode, phases (thinking, tool, or typing, with at), and tools (name, ok, ms). No message bodies, tool arguments, or tool results. The ops token sees every turn. This tool is not a Chat tool.',
@@ -461,6 +491,8 @@ export function invokeChatMcpTool(input: {
   turnBotId?: string
   /** Host-injected Chat Cards for this turn. */
   cards?: ChatCardTurn
+  artifacts?: ArtifactTurn
+  wake?: boolean
   /** This turn's Chat allowlist. Omit to use the role union (handler tests). */
   allowedTools?: readonly string[]
   fetchImpl?: typeof fetch
@@ -514,6 +546,9 @@ export function invokeChatMcpTool(input: {
       fetchImpl: input.fetchImpl,
       lookup: input.lookup,
       env: input.env,
+      personId: input.personId,
+      wake: input.wake,
+      artifacts: input.artifacts,
     }
     const result = spec.run(parsed, input.store, viewer, ctx)
     if (isPromise(result)) {

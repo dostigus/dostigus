@@ -42,6 +42,12 @@ export type HostHttpGetResult = {
   truncated: boolean
 }
 
+export type HostHttpGetBytesResult = {
+  status: number
+  bytes: Uint8Array
+  truncated: boolean
+}
+
 export type HostHttpLookup = (
   hostname: string,
   options: LookupOptions,
@@ -154,13 +160,12 @@ function concatBytes(chunks: Uint8Array[], total: number): Uint8Array {
   return bytes
 }
 
-async function readCappedBody(response: Response): Promise<{ body: string, truncated: boolean }> {
-  const max = HOST_HTTP_GET_BODY_MAX_BYTES
+async function readCappedBytes(response: Response, max: number): Promise<{ bytes: Uint8Array, truncated: boolean }> {
   if (!response.body) {
     const raw = new Uint8Array(await response.arrayBuffer())
     const truncated = raw.byteLength > max
     return {
-      body: new TextDecoder('utf-8').decode(truncated ? raw.subarray(0, max) : raw),
+      bytes: truncated ? raw.subarray(0, max) : raw,
       truncated,
     }
   }
@@ -188,7 +193,15 @@ async function readCappedBody(response: Response): Promise<{ body: string, trunc
     total += value.byteLength
   }
   return {
-    body: new TextDecoder('utf-8').decode(concatBytes(chunks, total)),
+    bytes: concatBytes(chunks, total),
+    truncated,
+  }
+}
+
+async function readCappedBody(response: Response): Promise<{ body: string, truncated: boolean }> {
+  const { bytes, truncated } = await readCappedBytes(response, HOST_HTTP_GET_BODY_MAX_BYTES)
+  return {
+    body: new TextDecoder('utf-8').decode(bytes),
     truncated,
   }
 }
@@ -259,6 +272,79 @@ export async function hostHttpGet(
       }
       const { body, truncated } = await readCappedBody(response)
       return { status: response.status, body, truncated }
+    }
+    throw new StoreError('Host HTTP get hit too many redirects', 400)
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/**
+ * Same SSRF, allowlist, and Bot HTTP egress as hostHttpGet, but returns bytes.
+ * Used by dostigus_artifacts_put sourceUrl. See ADR 0034.
+ */
+export async function hostHttpGetBytes(
+  urlValue: unknown,
+  options: HostHttpGetOptions & { maxBytes: number } = { maxBytes: HOST_HTTP_GET_BODY_MAX_BYTES },
+): Promise<HostHttpGetBytesResult> {
+  const allowlist = options.allowlist ?? []
+  const env = options.env ?? process.env
+  const proxy = resolveBotHttpOutboundProxy(env)
+  if (proxy.kind === 'invalid') {
+    throw new StoreError('Bot HTTP proxy URL is invalid', 400)
+  }
+  const fetchImpl = attachOutboundDispatcher(
+    options.fetchImpl ?? undiciOutboundFetch,
+    createOutboundDispatcher(proxy.kind === 'proxy' ? proxy.href : null),
+  )
+  const lookupFn = options.lookup ?? dnsLookup
+  const timeoutMs = options.timeoutMs ?? HOST_HTTP_GET_TIMEOUT_MS
+  const started = (options.now ?? Date.now)()
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  let current = parseHostHttpGetUrl(urlValue)
+  try {
+    for (let hop = 0; hop <= HOST_HTTP_GET_MAX_REDIRECTS; hop += 1) {
+      const elapsed = (options.now ?? Date.now)() - started
+      if (elapsed >= timeoutMs) {
+        throw new StoreError('Host HTTP get timed out', 504)
+      }
+      await assertHostHttpGetDestination(current, allowlist, lookupFn)
+      let response: Response
+      try {
+        response = await fetchImpl(current.href, {
+          method: 'GET',
+          redirect: 'manual',
+          signal: controller.signal,
+          headers: { 'User-Agent': HOST_USER_AGENT },
+        })
+      } catch (error) {
+        if (controller.signal.aborted || (error instanceof Error && error.name === 'AbortError')) {
+          throw new StoreError('Host HTTP get timed out', 504)
+        }
+        throw new StoreError('Host HTTP get failed', 502)
+      }
+      if (isRedirectStatus(response.status)) {
+        const location = response.headers.get('location')
+        if (!location) {
+          const { bytes, truncated } = await readCappedBytes(response, options.maxBytes)
+          return { status: response.status, bytes, truncated }
+        }
+        if (hop === HOST_HTTP_GET_MAX_REDIRECTS) {
+          throw new StoreError('Host HTTP get hit too many redirects', 400)
+        }
+        try {
+          current = new URL(location, current)
+        } catch {
+          throw new StoreError('Host HTTP get url is invalid', 400)
+        }
+        if (current.protocol !== 'http:' && current.protocol !== 'https:') {
+          throw new StoreError('Host HTTP get allows http and https only', 400)
+        }
+        continue
+      }
+      const { bytes, truncated } = await readCappedBytes(response, options.maxBytes)
+      return { status: response.status, bytes, truncated }
     }
     throw new StoreError('Host HTTP get hit too many redirects', 400)
   } finally {

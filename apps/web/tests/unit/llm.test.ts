@@ -180,6 +180,7 @@ it('calls chat completions with greeting history and the Manifest system prompt'
     'dostigus_schedules_delete',
     'dostigus_cluster_timezone_get',
     'dostigus_http_get',
+    'dostigus_artifacts_put',
     'dostigus_skills_list',
     'dostigus_skills_read',
   ])
@@ -271,6 +272,7 @@ it('loads a Skill catalog and slims a creator Member turn until expand', async (
     'dostigus_schedules_delete',
     'dostigus_cluster_timezone_get',
     'dostigus_http_get',
+    'dostigus_artifacts_put',
     'dostigus_skills_list',
     'dostigus_skills_read',
   ])
@@ -955,6 +957,7 @@ it('sends Wake tools plus the Skill catalog and keeps the Wake as system', async
   expect(payload.messages[0]?.content).toContain('You cannot create, update, pause, resume, or delete Schedules')
   expect(payload.tools.map((tool) => tool.function.name)).toEqual([
     'dostigus_http_get',
+    'dostigus_artifacts_put',
     'dostigus_skills_list',
     'dostigus_skills_read',
     'dostigus_schedules_list',

@@ -127,6 +127,13 @@
       "when": 1759644000000,
       "tag": "0017_http_allowlist",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1759730400000,
+      "tag": "0018_artifacts",
+      "breakpoints": true
     }
   ]
 }
