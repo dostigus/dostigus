@@ -41,6 +41,18 @@ skip rules. Do not treat that run as the check. Land a clean tree before
 - Never `--no-verify` unless the user explicitly asks.
 - Docs-only commits still need a clean working tree if app code changed.
 
+Unit tests run from the **repo root**. Root `vitest.config.ts` includes
+`packages/**/tests/unit/**` and `apps/**/tests/unit/**` relative to that
+root, not a package directory. One file:
+
+```
+pnpm exec vitest run packages/shared/tests/unit/llm-gateway.test.ts
+```
+
+`apps/web/tests/unit/…` is the same pattern. Do not use
+`pnpm --filter @dostigus/<pkg> exec vitest` for one-file runs. That cwd
+is the package, the root globs miss, and vitest reports no tests.
+
 ## Workspace dependencies
 
 Put a new dependency in the `catalog` map in
@@ -222,7 +234,8 @@ not call the LLM gateway. See
 For Members and Invite screenshots, open
 **http://localhost:3000/preview-seed?members=1**. That GET signs in the
 same preview Owner and redirects to `/members` (a Member session cannot
-open that page). `?hold=1` is ignored when `members=1` is set. **HEAD**
+open that page). `?hold=1` and `?activity=` are ignored when `members=1`
+is set. **HEAD**
 ignores `?members=1` and still answers **204** or **302** to
 `/bots/preview` with no session cookie.
 
@@ -247,6 +260,15 @@ reply: `/bots/preview?activity=thinking`, `?activity=tool`,
 `?activity=connect&target=Expi`. `command` uses the tool glyph and copy
 («Выполняет команду…»). A production Host ignores `activity`.
 See [ADR 0021](docs/adr/0021-chat-activity-status.md).
+
+`GET /preview-seed?activity=typing` signs in and redirects to
+`/bots/preview?activity=typing`. The same allowlist is forwarded:
+`thinking`, `tool`, `typing`, `command`, and `connect`. Connect keeps
+`target` (`GET /preview-seed?activity=connect&target=Expi`). `hold` can
+ride along: `GET /preview-seed?activity=typing&hold=1` lands on
+`/bots/preview?hold=1&activity=typing`. `?members=1` still wins and
+ignores `activity` and `hold`. Threads and rooms redirects do not keep
+`activity`. **HEAD** ignores `activity`.
 
 A configured reply keeps an in-memory Activity phase on
 `(threadId, botId)`: **thinking** while waiting on the LLM,
@@ -298,6 +320,8 @@ Owner while `?threads=1&as=member` opens a different bot-thread on Bot
 `preview`. HEAD ignores `?threads=1`.
 `?rooms=1` opens `/threads/preview-room` after seeding a direct message
 and that room. HEAD ignores `?rooms=1`.
+GET `?activity=typing` lands on `/bots/preview?activity=typing` while
+HEAD ignores that query and does not set a session cookie.
 Optional
 `PREVIEW_SMOKE_URL` (default `http://localhost:3000`).
 

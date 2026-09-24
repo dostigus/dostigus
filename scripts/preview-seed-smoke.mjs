@@ -15,6 +15,8 @@
  * GET `?threads=1` lists Bot `preview` and the Member's Bot for the Owner.
  * GET `?threads=1&as=member` opens the Member bot-thread on Bot `preview`.
  * HEAD ignores `?threads=1`.
+ * GET `?activity=typing` must 302 to `/bots/<id>?activity=typing`.
+ * HEAD ignores `?activity=` and does not set a session cookie.
  *
  *   pnpm preview:host
  *   pnpm smoke:preview
@@ -433,6 +435,17 @@ async function main() {
     fail(`GET /api/members as preview Owner expected 200, got ${membersApi.response.status} ${membersApi.text.slice(0, 200)}`)
   }
   note('GET /preview-seed?members=1 302 /members; HEAD ignored the query')
+
+  const activityHead = assertPreviewHead(await request('/preview-seed?activity=typing', { method: 'HEAD' }))
+  if (activityHead.status !== 302 || activityHead.location !== `/bots/${botId}`) {
+    fail(`HEAD /preview-seed?activity=typing expected 302 /bots/${botId}, got ${activityHead.status} ${activityHead.location ?? ''}`)
+  }
+  const activity = await request('/preview-seed?activity=typing')
+  const activityPath = locationPath(activity.response.headers.get('location'))
+  if (activity.response.status !== 302 || activityPath !== `/bots/${botId}?activity=typing`) {
+    fail(`GET /preview-seed?activity=typing expected 302 /bots/${botId}?activity=typing, got ${activity.response.status} ${activityPath ?? activity.text.slice(0, 200)}`)
+  }
+  note(`GET /preview-seed?activity=typing 302 /bots/${botId}?activity=typing; HEAD ignored the query`)
 
   const partsHead = assertPreviewHead(await request('/preview-seed?parts=1', { method: 'HEAD' }))
   if (partsHead.status !== 302 || partsHead.location !== `/bots/${botId}`) {
