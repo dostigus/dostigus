@@ -1,7 +1,8 @@
 /**
  * Decide whether CI should build the Host image.
  *
- * A docs-only diff (`docs/**` and any `*.md`) skips the image.
+ * A docs-only diff (`docs/**` and any `*.md`) skips the image when the
+ * diff lists at least one file. An empty diff is unknown and still builds.
  * A tag, a missing base, or a git failure still builds.
  *
  *   node scripts/ci-host-image.mjs
@@ -21,14 +22,20 @@ export function isDocsOnlyPath(file) {
   return path.startsWith('docs/') || path.endsWith('.md')
 }
 
-/** True when any changed path can affect the Host image. */
+/**
+ * True when any changed path can affect the Host image.
+ * An empty list was a successful diff with no names — unknown, so build.
+ */
 export function hostImageNeeded(files) {
+  if (files.length === 0) {
+    return true
+  }
   return files.some((file) => !isDocsOnlyPath(file))
 }
 
 /**
- * Tags and an unknown base always build. Pull requests and branch pushes
- * build only when the diff is not docs-only.
+ * Tags, an unknown base, and an empty diff always build. Pull requests
+ * and branch pushes skip only a docs-only diff that lists files.
  */
 export function decideHostImage(input) {
   if (input.eventName !== 'pull_request' && input.eventName !== 'push') {
@@ -39,6 +46,10 @@ export function decideHostImage(input) {
   }
   const base = input.baseSha ?? ''
   if (!base || base === ZERO_SHA) {
+    return true
+  }
+  if (input.files.length === 0) {
+    console.error(`ci-host-image: empty-diff→build base=${base}`)
     return true
   }
   return hostImageNeeded(input.files)

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { decideHostImage, hostImageNeeded, isDocsOnlyPath } from './ci-host-image.mjs'
 
 const repoRoot = join(import.meta.dirname, '..')
@@ -18,8 +18,26 @@ it('treats docs and markdown as docs-only paths', () => {
   expect(isDocsOnlyPath('package.json')).toBe(false)
 })
 
+it('builds the Host image when a successful diff lists no files', () => {
+  const lines: string[] = []
+  const spy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+    lines.push(args.map((part) => String(part)).join(' '))
+  })
+  try {
+    expect(hostImageNeeded([])).toBe(true)
+    expect(decideHostImage({
+      eventName: 'push',
+      ref: 'refs/heads/main',
+      baseSha: '34147877',
+      files: [],
+    })).toBe(true)
+    expect(lines.some((line) => line.includes('empty-diff→build') && line.includes('34147877'))).toBe(true)
+  } finally {
+    spy.mockRestore()
+  }
+})
+
 it('skips the Host image only when every changed path is docs or markdown', () => {
-  expect(hostImageNeeded([])).toBe(false)
   expect(hostImageNeeded([
     'docs/adr/0030-chat-cards-module-catalog.md',
     'CONTEXT.md',
