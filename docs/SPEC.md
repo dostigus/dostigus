@@ -153,17 +153,31 @@ What the running Cluster does today:
   the bottom. A circular control, centered above the composer, scrolls
   there when the thread is above the bottom. On a narrow screen the sidebar
   is a drawer. Sending a line shows it at once. While the LLM gateway is
-  configured and the reply is in flight, the thread shows one activity row
-  under the latest line: a green three-dot wave and «Печатает…». The row
-  hides when the assistant line lands. With no key, that wait keeps the
-  flock mark in `think` and does not say «Печатает…». The same row can show
-  an orange cluster and «Ожидает завершения команды», or a small Bot mark
-  and «Подключается…» («Подключается к {name}» when a short target is
-  known). The message route does not report tool-loop phases, so those two
-  rows are forced only in local `nuxt dev` (`?activity=command`,
-  `?activity=connect`, optional `&target=`). Composer focus stays on the
-  pill and does not add a thread row. The Chat pill still thinks, speaks,
-  and cheers. A green live dot
+  configured and the viewer’s own reply is in flight, the thread shows one
+  activity row under the latest line: a glyph and a short Russian Nunito
+  line. Phases on that same row: thinking (flock mark in `think`,
+  «Думает…») while waiting on the LLM before or between tool rounds; tool
+  (orange cluster pulse, «Выполняет команду…») while a Cluster MCP tool
+  call is running; typing (green three-dot wave, «Печатает…») while the
+  model produces the final assistant text. The row does not name the tool
+  or show a model-authored status. It hides when the assistant line lands,
+  and on error or abort (the error stays in the assistant bubble). With no
+  key, that wait keeps the flock mark in `think`, shows no status line, and
+  never says «Печатает…». Connect is a preview row only
+  (`?activity=connect`, optional `&target=`). Production does not drive
+  connect from the live path. Local `nuxt dev` may also force
+  `?activity=thinking`, `?activity=tool`, `?activity=typing`, or
+  `?activity=command` (`command` uses the tool glyph and copy). A
+  production Host ignores `activity`. The open Thread polls a cheap
+  session-gated activity endpoint about every 400ms while that reply is
+  pending, and stops on land, error, or leaving Chat. The client may hold
+  a phase about 300ms so the row does not flicker. Phase state is
+  in-memory on the Host, keyed by Thread and Bot, for bot-threads and
+  rooms. The message route still returns one finished assistant line.
+  The Chat pill flock stays in `think` for the whole in-flight reply; the
+  row is the phase. Composer focus stays on the pill and does not add a
+  thread row. The pill still speaks and cheers when the line lands. A
+  green live dot
   marks the busy Bot on the Chat pill and the matching sidebar row. With no Bots, the main pane offers **Create a Bot**
   and the sidebar stays a short centered line. That button, and **Найти или создать Bot** in the `+` menu, open
   the picker as the Chat pane. **×** returns to the pane that was open.
@@ -296,6 +310,11 @@ and [`docs/deploy.md`](deploy.md)).
   status chip on an assistant bubble are
   [ADR 0025](adr/0025-chat-bubble-parts.md). Assistant Markdown stays
   [ADR 0022](adr/0022-chat-assistant-markdown.md)
+- Streaming the assistant bubble token-by-token, MCP tool names or
+  arguments on the activity row, model-supplied status lines, and a
+  durable Store row for an Activity phase
+  ([ADR 0021](adr/0021-chat-activity-status.md), amended 2026-09-24).
+  Weather Module, Host schedules, and Skills packages stay out.
 - Managed/cloud hosting (optional later; not the default)
 
 ## Success for later MVPs (not this PR)
