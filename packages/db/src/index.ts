@@ -60,6 +60,7 @@ export {
 } from './owners'
 export { COMPOSE_STORE_URL, DEFAULT_STORE_URL, storeFilePath } from './path'
 export {
+  botThreadIdFor,
   createBot,
   deleteBot,
   ensureGreeting,

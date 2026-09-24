@@ -37,6 +37,7 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
     'bots/[id]/grants/index.post.ts',
     'bots/[id]/grants/[personId].delete.ts',
     'chat/ready.get.ts',
+    'chat/activity.get.ts',
     'kitchen/index.get.ts',
     'kitchen/pantry.post.ts',
     'kitchen/cooked.post.ts',
@@ -124,6 +125,8 @@ it('replies in a room only after an @Name mention', () => {
   expect(src).toContain('requireHostSession')
   expect(src.indexOf('mentionedRoomBot')).toBeLessThan(src.indexOf('completeAssistantReply'))
   expect(src).toContain('appendMessengerUserLine')
+  expect(src).toContain('setChatActivityPhase')
+  expect(src).toContain('clearChatActivityPhase')
 })
 
 it('invokes Chat MCP tools in-process from the Host message route', () => {
@@ -133,6 +136,8 @@ it('invokes Chat MCP tools in-process from the Host message route', () => {
   expect(src).toContain('personId')
   expect(src).not.toMatch(/fetch\([^)]*\/mcp/)
   expect(src).toContain('requireHostSession')
+  expect(src).toContain('setChatActivityPhase')
+  expect(src).toContain('clearChatActivityPhase')
 })
 
 it('keeps Invite links reachable while logged out', () => {

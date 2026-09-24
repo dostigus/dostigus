@@ -10,7 +10,7 @@
       <span />
     </span>
     <span
-      v-else-if="kind === 'command'"
+      v-else-if="kind === 'tool'"
       class="cluster"
       aria-hidden="true"
     >
@@ -23,6 +23,7 @@
     <span
       v-else
       class="mark"
+      :class="kind === 'thinking' ? 'think' : 'connect'"
       aria-hidden="true"
     >
       <HostBotAvatar
@@ -30,7 +31,7 @@
         :seed="seed"
         :shape="shape"
         :avatar-color="avatarColor"
-        state="idle"
+        :state="kind === 'thinking' ? 'think' : 'idle'"
         size="sm"
       />
     </span>
@@ -40,10 +41,10 @@
 
 <script setup lang="ts">
 import type { BotAvatarShape } from '@dostigus/shared'
-import type { ChatActivityKind } from '../utils/chat-activity'
+import type { ChatActivityKindShown } from '../utils/chat-activity'
 
 withDefaults(defineProps<{
-  kind: ChatActivityKind
+  kind: ChatActivityKindShown
   label: string
   name?: string
   seed?: string
@@ -156,7 +157,7 @@ withDefaults(defineProps<{
   animation-delay: 0.48s;
 }
 
-.mark {
+.mark.connect {
   animation: connect 1.6s ease-in-out infinite;
 }
 
@@ -203,7 +204,7 @@ withDefaults(defineProps<{
 @media (prefers-reduced-motion: reduce) {
   .wave span,
   .cluster span,
-  .mark {
+  .mark.connect {
     animation: none;
   }
 

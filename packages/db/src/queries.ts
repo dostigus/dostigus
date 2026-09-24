@@ -279,6 +279,11 @@ function findBotThread(store: OpenedStore, botId: string, personId: string): Bot
   `).get(personId, botId) as BotThreadRef | undefined
 }
 
+/** Stable id for one person's bot-thread with one Bot. */
+export function botThreadIdFor(botId: string, personId: string): string {
+  return `bt:${botId}:${personId}`
+}
+
 /**
  * One bot-thread per person and Bot. The id matches the milestone 2 cutover.
  * Opening never reuses another person's bot-thread.
@@ -290,7 +295,7 @@ function ensureBotThread(store: OpenedStore, botId: string, personId: string): B
   if (existing) {
     return existing
   }
-  const id = `bt:${botId}:${person}`
+  const id = botThreadIdFor(botId, person)
   try {
     store.sqlite.prepare(`
       INSERT INTO threads (id, kind, bot_id, created_at) VALUES (?, 'bot', ?, ?)

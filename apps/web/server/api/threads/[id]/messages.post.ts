@@ -10,6 +10,10 @@ import {
   listThreadMessages,
 } from '@dostigus/db'
 import { mentionedRoomBot } from '@dostigus/shared'
+import {
+  clearChatActivityPhase,
+  setChatActivityPhase,
+} from '../../../utils/chat-activity-phase'
 import { invokeChatMcpTool } from '../../../utils/mcp-platform-tools'
 
 type PostBody = {
@@ -23,6 +27,7 @@ export default defineEventHandler(async (event) => {
   const threadId = getRouterParam(event, 'id') ?? ''
   const body = await readBody<PostBody>(event).catch(() => ({} as PostBody))
 
+  let activityBotId = ''
   try {
     const store = useStore()
     const thread = getMessengerThread(store, threadId, personId)
@@ -43,6 +48,7 @@ export default defineEventHandler(async (event) => {
     if (!mentioned) {
       return { user: present(store, user), assistant: null, via: null }
     }
+    activityBotId = mentioned.bot.id
     const history = listThreadMessages(store, threadId).map((message) => {
       if (message.role !== 'user' || !message.personId) {
         return message
@@ -66,6 +72,9 @@ export default defineEventHandler(async (event) => {
         role,
         personId,
       }),
+      onActivity: (phase) => {
+        setChatActivityPhase(threadId, mentioned.bot.id, phase)
+      },
     })
     const assistant = appendMessengerAssistantLine(store, {
       threadId,
@@ -75,6 +84,10 @@ export default defineEventHandler(async (event) => {
     return { user: present(store, user), assistant: present(store, assistant), via: reply.via }
   } catch (error) {
     throwStoreError(error)
+  } finally {
+    if (activityBotId) {
+      clearChatActivityPhase(threadId, activityBotId)
+    }
   }
 })
 

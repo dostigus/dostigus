@@ -242,9 +242,22 @@ bot-thread. A second visit does not append those lines. **HEAD** ignores
 `?threads=1`. `?members=1` still wins when both are set.
 
 On `nuxt dev`, the Chat thread can force the activity row without a live
-reply: `/bots/preview?activity=typing`, `?activity=command`, or
-`?activity=connect&target=Expi`. A production Host ignores `activity`.
+reply: `/bots/preview?activity=thinking`, `?activity=tool`,
+`?activity=typing`, `?activity=command`, or
+`?activity=connect&target=Expi`. `command` uses the tool glyph and copy
+(«Выполняет команду…»). A production Host ignores `activity`.
 See [ADR 0021](docs/adr/0021-chat-activity-status.md).
+
+A configured reply keeps an in-memory Activity phase on
+`(threadId, botId)`: **thinking** while waiting on the LLM,
+**tool** while a Cluster MCP tool handler runs, then **typing** for
+the final assistant text. The phase clears when the assistant line
+lands or the reply errors. The open Thread polls
+`GET /api/chat/activity` about every 400ms while that reply is pending
+and stops on land, error, or leaving Chat. With no key, the thread
+keeps the flock mark in `think` and shows no status line. It never
+says «Печатает…». Production does not drive **connect** from the live
+path.
 
 To screenshot the real in-flight mark, open the Chat with `?hold=1` and
 send a line. `GET /preview-seed?hold=1` signs in and redirects to
