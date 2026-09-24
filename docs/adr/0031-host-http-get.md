@@ -4,6 +4,7 @@
 - Date: 2026-09-24
 - Amended: 2026-09-24 — `dostigus_http_get` stays on user slim and on Wake. Owner Chat allowlist get/set, and timezone set, wait for keyword expand ([ADR 0032](0032-chat-llm-context-assembly.md)). GET, allowlist, and SSRF stay this record.
 - Amended: 2026-09-24 — Bot GET uses Bot HTTP egress env (`DOSTIGUS_HTTP_PROXY`; empty = direct). LLM proxy is [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md). Host HTTP get does not use `EnvHttpProxyAgent`.
+- Amended: 2026-09-24 — Soft retry / pursue-result policy lives in the `dostigus_http_get` tool description and `platform-meta-http-get`. Host stays one GET per call. No provider list. No Host URL failover.
 
 The Chat tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). The
 MCP surface stays [ADR 0009](0009-mcp-toolkit-endpoint.md). Cluster
@@ -139,9 +140,29 @@ seed. This tool is not Marketplace, not a Module package, and not an
 Open-Meteo seed.
 
 A Bot that needs a public forecast uses `dostigus_http_get` against
-an allowed public API (for example Open-Meteo) from a Skill or from
-`wakeText`. The Platform does not invent weather tools and does not
-Apply a weather package.
+an allowed public API from a Skill or from `wakeText`. The Platform
+does not invent weather tools and does not Apply a weather package.
+
+### Soft retry / pursue a usable result
+
+The Platform stays static and LLM-agnostic. “The person must get a
+result” (a weekly digest, a live page, a JSON API) is tooling plus
+soft guidance. It is not a list of sites and not a Host retry loop.
+
+When `dostigus_http_get` returns a non-ok status or an unusable body,
+the model should call the same tool again with a **different public
+URL** it chooses for the same kind of public data. It must not invent
+facts from memory. If the turn has no usable GET, it says so honestly.
+
+That policy lives in the tool description and in
+`platform-meta-http-get`. The Host still performs **one GET per
+call**. It does not retry alternate URLs. It does not ship a domain
+or provider list. A later domain Skill may name destinations; the
+Platform does not.
+
+A non-2xx status with a body is still a tool result when the Host
+could GET the URL (status plus body, this record). The model uses
+that result to decide whether to GET another public URL.
 
 ## Context
 
@@ -184,7 +205,7 @@ not a platform seed.
   does not error only because the body was long. The Bot must not
   treat a truncated JSON or HTML body as complete.
 - An empty `http_allowlist` allows every public host. A locked-down
-  Cluster sets an explicit list (for example `api.open-meteo.com`).
+  Cluster sets an explicit list of hostnames.
 - SSRF checks always run. Allow-all is not allow-loopback. The
   check is the destination, not the Bot HTTP egress proxy host
   ([ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
@@ -196,8 +217,15 @@ not a platform seed.
 - The Turn journal records the tool name only
   ([ADR 0029](0029-turn-journal.md)).
 - Meta Skills stay [ADR 0030](0030-chat-cards-module-catalog.md).
-  This record does not add a weather how-to Skill and does not
-  rewrite `platform-meta-marketplace`.
+  This record does not add a weather how-to Skill.
+  `platform-meta-marketplace` still says public HTTP uses
+  `dostigus_http_get` and does not name a host. Soft retry copy
+  lives in `platform-meta-http-get` (new Bots / insert-if-missing).
+  Existing Bots keep stored Skill text. The tool description
+  applies to every Bot on the next turn.
+- The Host does not auto-retry a second URL. Domain and provider
+  failover lists stay out of scope
+  ([ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
 
 ### Out of scope
 
@@ -214,6 +242,8 @@ not a platform seed.
   Bot GET proxy env is [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md).
 - Marketplace, Module Apply, and a stock Weather Module or seed
   ([ADR 0030](0030-chat-cards-module-catalog.md)).
+- Host URL failover and a domain or provider list. Soft retry is
+  tool text plus `platform-meta-http-get` only.
 
 ## Alternatives
 
@@ -231,6 +261,8 @@ not a platform seed.
 - A stock Weather Module, weather Skill, or Open-Meteo seed —
   rejected. [ADR 0030](0030-chat-cards-module-catalog.md) stays. The
   Bot GETs an allowed public API from a Skill or `wakeText`.
+- Host auto-retry of alternate URLs, or a Platform provider list —
+  rejected. Soft text only. The model chooses another public URL.
 - A Module package tool instead of a Platform MCP surface tool —
   rejected. This is a Host tool on the existing loop
   ([ADR 0011](0011-chat-mcp-tool-loop.md)).

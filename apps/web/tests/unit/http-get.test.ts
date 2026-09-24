@@ -33,14 +33,15 @@ function lookup(map: Record<string, string[]>) {
   })) ?? Promise.reject(new Error('ENOTFOUND'))
 }
 
-it('describes how to build an Open-Meteo forecast URL', () => {
+it('describes GET, truncation, and a soft retry without naming hosts', () => {
   const description = platformToolSpec('dostigus_http_get').description
-  expect(description).toContain('api.open-meteo.com')
-  expect(description).toContain('latitude')
-  expect(description).toContain('longitude')
-  expect(description).toContain('temperature_2m')
-  expect(description).toContain('apparent_temperature')
-  expect(description).toContain('timezone')
+  expect(description).toContain('GET one public')
+  expect(description).toContain('truncated')
+  expect(description).toContain('different public URL')
+  expect(description).toContain('Do not invent facts from memory')
+  expect(description).toContain('The Host does not retry other URLs')
+  expect(description).toContain('say so honestly')
+  expect(description).not.toMatch(/open-meteo|wttr|openweather/i)
   expect(description).not.toMatch(/dostigus_modules|Weather Skill seed/)
 })
 

@@ -432,6 +432,11 @@ tool, the Store field, and the Settings control.
 - **Not a weather package.** [ADR 0030](adr/0030-chat-cards-module-catalog.md)
   stays. A Bot that needs weather uses Host HTTP get against an
   allowed public API from a Skill or `wakeText`.
+- **Pursue a usable result.** Soft text only. On a non-ok or unusable
+  body the model calls `dostigus_http_get` again with a different
+  public URL it chooses. It does not invent facts. If the turn has
+  no usable GET, it says so. The Host does not retry other URLs and
+  does not ship a provider list. See [ADR 0031](adr/0031-host-http-get.md).
 
 ## Cluster outbound
 
@@ -677,9 +682,10 @@ Module.
   `wakeText` should call `dostigus_http_get` and not invent numbers),
   Skills upsert, Bot self-settings, that domain Module packages come
   later through Marketplace (public HTTP still uses
-  `dostigus_http_get`, for example Open-Meteo; still no Weather
+  `dostigus_http_get`; still no Weather
   Module or weather Skill seed), and Host HTTP get
-  (`dostigus_http_get`, including how to build a query URL). It does
+  (`dostigus_http_get`: build the URL yourself; a non-ok or
+  unusable body means another public URL, not invented facts). It does
   not invent weather tools. Image upgrade
   may insert the set only on a Bot that has none of these ids. Stored
   instructions stay. The creator or the Owner may edit or delete them
