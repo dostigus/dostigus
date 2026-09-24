@@ -13,12 +13,22 @@ import { isChatActivityPhase } from '../../app/utils/chat-activity'
 
 /**
  * Ephemeral Activity phase for an in-flight reply. Keyed by Thread and
- * Bot. Not a Store row. See ADR 0021.
+ * Bot. The poll reads this map, not the Turn journal. See ADR 0021 and
+ * ADR 0029.
  */
 const phases = new Map<string, ChatActivityPhase>()
 
+type PhaseListener = (threadId: string, botId: string, phase: ChatActivityPhase) => void
+
+let phaseListener: PhaseListener | undefined
+
 function phaseKey(threadId: string, botId: string): string {
   return `${threadId}\0${botId}`
+}
+
+/** Dual-write hook. The Turn journal registers this. The poll does not. */
+export function setChatActivityPhaseListener(listener: PhaseListener | undefined): void {
+  phaseListener = listener
 }
 
 export function setChatActivityPhase(
@@ -30,6 +40,7 @@ export function setChatActivityPhase(
     return
   }
   phases.set(phaseKey(threadId, botId), phase)
+  phaseListener?.(threadId, botId, phase)
 }
 
 export function clearChatActivityPhase(threadId: string, botId: string): void {

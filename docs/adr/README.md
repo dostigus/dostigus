@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0028, so the next ADR
-is **0029**. Name it `0029-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0029, so the next ADR
+is **0030**. Name it `0030-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one.
 
@@ -60,3 +60,4 @@ English.
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
 | [0027](0027-bot-schedules.md) | Host Bot Schedules |
 | [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat |
+| [0029](0029-turn-journal.md) | Turn journal |

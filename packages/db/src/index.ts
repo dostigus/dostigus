@@ -118,7 +118,7 @@ export {
   updateSchedule,
   viewerForPerson,
 } from './schedules'
-export { type BotGrantRow, botGrants, type BotRow, bots, clusterSettings, type ClusterSettingsRow, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ScheduleRow, schedules, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads } from './schema'
+export { type BotGrantRow, botGrants, type BotRow, bots, clusterSettings, type ClusterSettingsRow, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ScheduleRow, schedules, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads, type TurnRow, turns } from './schema'
 export {
   deleteBotSkill,
   listBotSkills,
@@ -136,3 +136,27 @@ export {
   listRoomBotAudience,
   type RoomBotAudience,
 } from './threads'
+export {
+  appendTurnPhase,
+  appendTurnTool,
+  finishTurn,
+  getTurn,
+  listTurns,
+  parseTurnSince,
+  startTurn,
+  type Turn,
+  TURN_LIST_DEFAULT,
+  TURN_LIST_MAX,
+  TURN_OUTCOMES,
+  TURN_PHASES,
+  TURN_RETENTION_MS,
+  TURN_TRIGGERS,
+  type TurnFinish,
+  type TurnListFilter,
+  type TurnOutcome,
+  type TurnPhase,
+  type TurnPhaseName,
+  type TurnTool,
+  turnToolName,
+  type TurnTrigger,
+} from './turns'

@@ -17,6 +17,13 @@ import {
 } from '../../../utils/chat-activity-phase'
 import { viewerFromUser } from '../../../utils/cluster-bots'
 import { invokeChatMcpTool } from '../../../utils/mcp-platform-tools'
+import {
+  beginChatTurn,
+  recordChatTurnTool,
+  requestAborted,
+  settleChatTurn,
+  settleFromReply,
+} from '../../../utils/turn-journal'
 
 type PostBody = {
   content?: string
@@ -30,6 +37,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<PostBody>(event).catch(() => ({} as PostBody))
 
   let activityBotId = ''
+  let turnId = ''
   try {
     const store = useStore()
     const thread = getMessengerThread(store, threadId, personId)
@@ -51,6 +59,12 @@ export default defineEventHandler(async (event) => {
       return { user: present(store, user), assistant: null, via: null }
     }
     activityBotId = mentioned.bot.id
+    turnId = beginChatTurn(store, {
+      threadId,
+      botId: activityBotId,
+      personId,
+      trigger: 'mention',
+    })
     setChatActivityPhase(threadId, activityBotId, 'thinking')
     const history = listThreadMessages(store, threadId).map((message) => {
       if (message.role !== 'user' || !message.personId) {
@@ -83,16 +97,34 @@ export default defineEventHandler(async (event) => {
       onActivity: (phase) => {
         setChatActivityPhase(threadId, mentioned.bot.id, phase)
       },
+      onTool: (entry) => {
+        recordChatTurnTool(threadId, mentioned.bot.id, entry)
+      },
     })
     const assistant = appendMessengerAssistantLine(store, {
       threadId,
       botId: mentioned.bot.id,
       content: reply.content,
     })
+    settleChatTurn(store, turnId, settleFromReply({
+      via: reply.via,
+      aborted: requestAborted(event),
+    }))
+    turnId = ''
     return { user: present(store, user), assistant: present(store, assistant), via: reply.via }
   } catch (error) {
+    if (turnId) {
+      settleChatTurn(useStore(), turnId, settleFromReply({
+        error,
+        aborted: requestAborted(event),
+      }))
+      turnId = ''
+    }
     throwStoreError(error)
   } finally {
+    if (turnId) {
+      settleChatTurn(useStore(), turnId, { outcome: 'abort' })
+    }
     if (activityBotId) {
       clearChatActivityPhase(threadId, activityBotId)
     }

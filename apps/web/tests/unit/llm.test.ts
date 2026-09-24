@@ -382,6 +382,7 @@ it('feeds tool errors back to the model and stores a final assistant reply', asy
   }) as typeof fetch
 
   const phases: string[] = []
+  const tools: Array<{ name: string, ok: boolean, ms: number }> = []
   const result = await completeAssistantReply({
     botName: 'New Bot',
     botId: 'b1',
@@ -400,6 +401,9 @@ it('feeds tool errors back to the model and stores a final assistant reply', asy
     onActivity: (phase) => {
       phases.push(phase)
     },
+    onTool: (entry) => {
+      tools.push(entry)
+    },
   })
 
   expect(result).toEqual({
@@ -407,6 +411,11 @@ it('feeds tool errors back to the model and stores a final assistant reply', asy
     content: 'That Bot is not in the Store.',
   })
   expect(phases).toEqual(['thinking', 'tool', 'thinking', 'typing'])
+  expect(tools).toEqual([
+    expect.objectContaining({ name: 'dostigus_bots_get', ok: false }),
+  ])
+  expect(tools[0] && Object.keys(tools[0]).sort()).toEqual(['ms', 'name', 'ok'])
+  expect(tools[0]?.ms).toBeGreaterThanOrEqual(0)
   const followUp = bodies[1] as {
     messages: Array<{ role: string, content?: string }>
   }
@@ -494,6 +503,7 @@ it('skips unknown tools and does not invoke delete from Chat', async () => {
     }), { status: 200 })
   }) as typeof fetch
 
+  const tools: Array<{ name: string, ok: boolean, ms: number }> = []
   const result = await completeAssistantReply({
     botName: 'New Bot',
     modelTier: 'strong',
@@ -507,9 +517,14 @@ it('skips unknown tools and does not invoke delete from Chat', async () => {
       invoked.push(name)
       return { ok: true, name, content: '{}' }
     },
+    onTool: (entry) => {
+      tools.push(entry)
+    },
   })
   expect(result.via).toBe('llm+tools')
   expect(invoked).toEqual([])
+  expect(tools).toEqual([{ name: 'dostigus_bots_delete', ok: false, ms: 0 }])
+  expect(JSON.stringify(tools)).not.toContain('b1')
 })
 
 const GATEWAY_ENV = {

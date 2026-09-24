@@ -83,6 +83,8 @@ export async function completeAssistantReply(input: {
   skills?: Skill[]
   /** Live Activity phase. Quiet (no key) replies do not call this. */
   onActivity?: (phase: ChatActivityPhase) => void
+  /** Tool name, ok, and duration only. Arguments and results stay off this hook. */
+  onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
 }): Promise<{ content: string, via: AssistantReplyVia }> {
   const audience = input.audience === 'member' ? 'member' : 'owner'
   const creatorManifest = audience === 'member' && input.canEditManifest === true
@@ -121,6 +123,7 @@ export async function completeAssistantReply(input: {
       creatorManifest,
       skills: input.skills,
       onActivity: input.onActivity,
+      onTool: input.onTool,
     })
     const trimmed = result.content.trim()
     if (!trimmed) {
@@ -214,6 +217,7 @@ async function callOpenAiCompatible(input: {
   creatorManifest?: boolean
   skills?: Skill[]
   onActivity?: (phase: ChatActivityPhase) => void
+  onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
 }): Promise<{ content: string, usedTools: boolean }> {
   const messages: OpenAiChatMessage[] = [
     {
@@ -268,6 +272,7 @@ async function callOpenAiCompatible(input: {
       toolCalls,
       messages,
       invokeTool: input.invokeTool,
+      onTool: input.onTool,
     })
   }
 
@@ -285,12 +290,14 @@ async function appendToolResults(input: {
   toolCalls: OpenAiToolCall[]
   messages: OpenAiChatMessage[]
   invokeTool: ChatToolInvoker
+  onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
 }): Promise<void> {
   for (const call of input.toolCalls) {
     const name = call.function?.name ?? ''
     const toolCallId = call.id
     if (!isChatMcpTool(name)) {
       logChatTool(name || 'unknown', 'skip')
+      input.onTool?.({ name, ok: false, ms: 0 })
       input.messages.push({
         role: 'tool',
         tool_call_id: toolCallId,
@@ -299,8 +306,10 @@ async function appendToolResults(input: {
       continue
     }
 
+    const started = performance.now()
     try {
       const result = await input.invokeTool(name, call.function?.arguments ?? '{}')
+      input.onTool?.({ name, ok: result.ok, ms: elapsedMs(started) })
       input.messages.push({
         role: 'tool',
         tool_call_id: toolCallId,
@@ -308,6 +317,7 @@ async function appendToolResults(input: {
       })
     } catch {
       logChatTool(name, 'fail')
+      input.onTool?.({ name, ok: false, ms: elapsedMs(started) })
       input.messages.push({
         role: 'tool',
         tool_call_id: toolCallId,
@@ -315,6 +325,10 @@ async function appendToolResults(input: {
       })
     }
   }
+}
+
+function elapsedMs(started: number): number {
+  return Math.max(0, Math.round(performance.now() - started))
 }
 
 /** One automatic retry, and only for a transient failure of this request. */

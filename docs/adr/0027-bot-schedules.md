@@ -39,7 +39,9 @@ When a Schedule is due, the Host writes one visible **Wake** on that
 bot-thread: a system Chat line whose text is `wakeText`. It then starts
 the same Bot turn pipeline as a user message
 ([ADR 0011](0011-chat-mcp-tool-loop.md)). Activity phases apply for
-that turn ([ADR 0021](0021-chat-activity-status.md)).
+that turn ([ADR 0021](0021-chat-activity-status.md)). The Turn journal
+records that turn with trigger `wake` and this Schedule's id
+([ADR 0029](0029-turn-journal.md)).
 
 Day-1 fires on a bot-thread only. A room, a direct message, and a group
 are not fire targets.
@@ -143,7 +145,8 @@ that record. This record is the schedule decision. Weather stays out.
 - The ticker runs in the Host process. A second process is not day-1.
 - A fire writes a system Wake, then the
   [ADR 0011](0011-chat-mcp-tool-loop.md) pipeline, with
-  [ADR 0021](0021-chat-activity-status.md) phases.
+  [ADR 0021](0021-chat-activity-status.md) phases. That Turn stores
+  `scheduleId` ([ADR 0029](0029-turn-journal.md)).
 - Member Chat gains the schedule tools and timezone get, scoped above.
   Other Member Chat tools stay
   [ADR 0011](0011-chat-mcp-tool-loop.md) and

@@ -23,6 +23,7 @@ Settled now, even if this repo only scaffolds them:
 | Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. A Bot is personal to its creator. The Owner always sees it. Other people need an explicit grant (`bot_id` + `person_id`). Bot-threads, direct messages, groups, and rooms are in this Host. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
 | Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. The Host fires a Wake. See [ADR 0027](adr/0027-bot-schedules.md). |
 | Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
+| Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -178,7 +179,9 @@ What the running Cluster does today:
   pending, and stops on land, error, or leaving Chat. The client may hold
   a phase about 300ms so the row does not flicker. Phase state is
   in-memory on the Host, keyed by Thread and Bot, for bot-threads and
-  rooms. The message route still returns one finished assistant line.
+  rooms. That set also appends the phase onto the open Turn
+  ([ADR 0029](adr/0029-turn-journal.md)). The poll does not read the
+  Turn journal. The message route still returns one finished assistant line.
   The Chat pill flock stays in `think` for the whole in-flight reply; the
   row is the phase. Composer focus stays on the pill and does not add a
   thread row. The pill still speaks and cheers when the line lands. A
@@ -218,6 +221,9 @@ What the running Cluster does today:
   tools under `apps/web/server/mcp/tools/` wrap Bots, Chat messages, and
   the Kitchen Module (pantry list/add, mark cooked, recipe get/save).
   Kitchen tools are not in the Chat LLM loop.
+  Turn journal tools `dostigus_turns_list` and `dostigus_turns_get` use
+  the same bearer. They are not in the Chat LLM loop. See
+  [ADR 0029](adr/0029-turn-journal.md).
   Bearer `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`); empty token → tools
   stay disabled. Soft auth (no 401). The MCP token is **not** the Host
   Owner session. See
@@ -235,7 +241,8 @@ What the running Cluster does today:
   Owner. A Member who created the Bot also receives
   `dostigus_bots_update` and the Skills tools on that Bot. A grantee
   does not receive Manifest or Skills tools. Delete stays
-  off Chat. No key → quiet reply + banner (no tools). A configured call
+  off Chat. Turn journal list and get stay on `/mcp` and off both Chat
+  lists ([ADR 0029](adr/0029-turn-journal.md)). No key → quiet reply + banner (no tools). A configured call
   retries once on a transient gateway failure (timeout, abort, network,
   HTTP 429, or HTTP 5xx). HTTP 429 waits briefly first. Activity stays
   on thinking. HTTP 401, HTTP 403, other 4xx, and an empty assistant
@@ -404,6 +411,38 @@ Platform does not seed a Weather Module or a weather Skill.
   flight. A raw `/mcp` write may leave an already-open Chat stale
   until the next refresh. That edge is acceptable for day-1.
 
+## Turn journal
+
+Decided in [ADR 0029](adr/0029-turn-journal.md). This Host records one
+Turn per Host Bot Chat turn and exposes it on the MCP surface. Owner
+Chat tools and Member Chat tools stay the lists in the LLM gateway
+section above. Turn tools are not on those lists.
+
+- A Turn is one Bot LLM tool loop, the same span as one Activity
+  session. Trigger is `user` (a bot-thread line), `wake` (a Schedule
+  fire, with `scheduleId`), or `mention` (a room line that names one
+  Bot). A raw `/mcp` call does not create a Turn. A room line with no
+  mention does not create a Turn.
+- The row stores `threadId`, `botId`, `personId` (the viewer, and on a
+  Wake the Schedule's person), `outcome` (`running`, then `ok`,
+  `error`, or `abort`), `startedAt`, `endedAt`, optional `scheduleId`,
+  optional `errorCode`, `phases_json`, and `tools_json`. `errorCode` is
+  a short class such as `llm_error`, `tool_error`, or `aborted`. It is
+  never model text and never a stack. Phases are `thinking`, `tool`,
+  and `typing` with a time. Tools are `{ name, ok, ms }` in call order.
+  The journal does not store message bodies, tool arguments, tool
+  results, or prompts.
+- The row is inserted at start (`running`), patched as phases and tools
+  happen, and finalized with `endedAt` and the outcome. Finalize
+  deletes Turns whose start is older than 7 days.
+- Activity stays the in-memory poll
+  ([ADR 0021](adr/0021-chat-activity-status.md)). Setting a phase also
+  appends it on the open Turn. The poll does not read `turns`.
+- MCP tools `dostigus_turns_list` and `dostigus_turns_get` use the same
+  bearer as the other Host tools. Day-1 the token sees every Cluster
+  Turn. List filters are `botId`, `threadId`, `since`, and `limit`
+  (default 50, cap 100), newest first. Get is by id.
+
 ## Self-host (compose)
 
 `docker compose -f docker/compose.yml up --build` serves the Host on port 3000
@@ -441,10 +480,16 @@ and [`docs/deploy.md`](deploy.md)).
   [ADR 0025](adr/0025-chat-bubble-parts.md). Assistant Markdown stays
   [ADR 0022](adr/0022-chat-assistant-markdown.md)
 - Streaming the assistant bubble token-by-token, MCP tool names or
-  arguments on the activity row, model-supplied status lines, and a
-  durable Store row for an Activity phase
+  arguments on the activity row, and model-supplied status lines.
+  The Activity poll stays in-memory
   ([ADR 0021](adr/0021-chat-activity-status.md), amended 2026-09-24).
-  Skills packages stay out.
+  Turn journal phase meta is
+  [ADR 0029](adr/0029-turn-journal.md). Skills packages stay out.
+- A Turn journal Sheet, a harness smoke script, evals, storing message
+  bodies or tool arguments or results or prompts on a Turn, reading
+  Activity from the Turn journal, and Schedule ticker debug tools
+  ([ADR 0029](adr/0029-turn-journal.md)). The Turn journal above is in
+  this Host.
 - Schedule list Sheet; full crontab; an interval of every N minutes;
   one-shot fires; wakes on a room, a direct message, or a group; an SSE
   ticker; a multi-node lease

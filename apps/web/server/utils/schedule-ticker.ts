@@ -24,6 +24,12 @@ import {
 } from './chat-activity-phase'
 import { completeAssistantReply, gatewayErrorReply } from './llm'
 import { chatMcpToolsAsOpenAi, invokeChatMcpTool } from './mcp-platform-tools'
+import {
+  beginChatTurn,
+  recordChatTurnTool,
+  settleChatTurn,
+  settleFromReply,
+} from './turn-journal'
 
 type ReplyFn = typeof completeAssistantReply
 
@@ -169,9 +175,16 @@ function beginWake(input: {
     viewer,
   })
   recordScheduleFire(input.store, input.scheduleId, { now: input.now, env: input.env })
+  const turnId = beginChatTurn(input.store, {
+    threadId: input.threadId,
+    botId: input.botId,
+    personId: input.personId,
+    trigger: 'wake',
+    scheduleId: input.scheduleId,
+  })
   setChatActivityPhase(input.threadId, input.botId, 'thinking')
   console.warn(`Schedule ${input.scheduleId} fired`)
-  const task = finishWake(input, viewer.role).finally(() => {
+  const task = finishWake(input, viewer.role, turnId).finally(() => {
     clearChatActivityPhase(input.threadId, input.botId)
   })
   wakes.add(task)
@@ -190,13 +203,16 @@ async function finishWake(
     threadId: string
   },
   role: 'owner' | 'member',
+  turnId: string,
 ): Promise<void> {
   const bot = getBot(input.store, input.botId)
   if (!bot) {
+    settleChatTurn(input.store, turnId, { outcome: 'error', errorCode: null })
     return
   }
   const viewer = viewerForPerson(input.store, input.personId)
   let content: string
+  let settle = settleFromReply({ via: 'error' })
   try {
     const reply = await input.completeReply({
       botName: bot.name,
@@ -219,17 +235,28 @@ async function finishWake(
       onActivity: (phase) => {
         setChatActivityPhase(input.threadId, input.botId, phase)
       },
+      onTool: (entry) => {
+        recordChatTurnTool(input.threadId, input.botId, entry)
+      },
     })
     content = reply.content
+    settle = settleFromReply({ via: reply.via })
   } catch (error) {
-    console.warn(`Schedule wake failed for Bot ${input.botId}`, error)
+    console.warn(`Schedule wake failed for Bot ${input.botId}`)
     content = gatewayErrorReply(role)
+    settle = settleFromReply({ error })
   }
-  insertMessage(input.store, {
-    botId: input.botId,
-    role: 'assistant',
-    content,
-    threadId: input.threadId,
-    viewer,
-  })
+  try {
+    insertMessage(input.store, {
+      botId: input.botId,
+      role: 'assistant',
+      content,
+      threadId: input.threadId,
+      viewer,
+    })
+    settleChatTurn(input.store, turnId, settle)
+  } catch (error) {
+    settleChatTurn(input.store, turnId, settleFromReply({ error }))
+    throw error
+  }
 }
