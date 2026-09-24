@@ -235,6 +235,14 @@ button opens the Kitchen Sheet. Another visit does not append that line
 again. **HEAD** ignores `?kitchen=1`. See
 [ADR 0026](docs/adr/0026-kitchen-module-day-1.md).
 
+For centered Skill / self-settings system lines, open
+**http://localhost:3000/preview-seed?system=1**. That GET adds three
+system Chat lines once on the Owner's bot-thread for Bot `preview`:
+`Skill · notes · Keep short notes.`, `Skill · notes · Удалено`, and
+`Бот · Field notes · учёба`. Plain content, no parts, same family as a
+Wake. Compose with `?hold=1`, `?activity=`, and `?parts=1`. Another visit
+does not append those lines again. **HEAD** ignores `?system=1`.
+
 For a direct message and a room, open
 **http://localhost:3000/preview-seed?rooms=1**. That GET signs in the
 preview Owner, seeds the preview Member (same rows as `?threads=1`),
@@ -332,7 +340,8 @@ Bot, that `?tall=1` adds the tall thread once, that GET
 `?members=1` lands on `/members` while HEAD ignores that query, and that
 `?parts=1` adds one assistant line with a button once while HEAD ignores
 that query, that `?kitchen=1` adds one Kitchen button once while
-HEAD ignores that query, and that `?threads=1` lists Bot `preview` and the Member's Bot for the
+HEAD ignores that query, that `?system=1` adds three system Skill /
+self-settings lines once while HEAD ignores that query, and that `?threads=1` lists Bot `preview` and the Member's Bot for the
 Owner while `?threads=1&as=member` opens a different bot-thread on Bot
 `preview`. HEAD ignores `?threads=1`.
 `?rooms=1` opens `/threads/preview-room` after seeding a direct message

@@ -12,6 +12,8 @@
  * HEAD ignores `?parts=1`.
  * GET `?kitchen=1` adds one Kitchen button once and fills empty Kitchen tables.
  * HEAD ignores `?kitchen=1`.
+ * GET `?system=1` adds three Skill / self-settings system lines once.
+ * HEAD ignores `?system=1`.
  * GET `?threads=1` lists Bot `preview` and the Member's Bot for the Owner.
  * GET `?threads=1&as=member` opens the Member bot-thread on Bot `preview`.
  * HEAD ignores `?threads=1`.
@@ -38,6 +40,11 @@ const TALL_PREFIX = 'Preview layout line '
 const TALL_COUNT = 32
 const PARTS_PREFIX = 'Preview Kit parts.'
 const KITCHEN_PREFIX = 'Kitchen is open.'
+const SYSTEM_LINES = [
+  'Skill · notes · Keep short notes.',
+  'Skill · notes · Удалено',
+  'Бот · Field notes · учёба',
+]
 const PRIVATE_BOT_ID = 'preview-private'
 const PRIVATE_THREAD_PREFIX = 'Member thread on the private Bot.'
 const OWNER_THREAD_PREFIX = 'Owner thread on the shared Bot.'
@@ -543,6 +550,49 @@ async function main() {
     fail(`second ?kitchen=1 changed Chat length (${withKitchenMessages.length} → ${keptKitchen?.messages?.length ?? 'none'})`)
   }
   note('?kitchen=1 has one Kitchen button; pantry and XP are in the Store')
+
+  const systemHead = assertPreviewHead(await request('/preview-seed?system=1', { method: 'HEAD' }))
+  if (systemHead.status !== 302 || systemHead.location !== `/bots/${botId}`) {
+    fail(`HEAD /preview-seed?system=1 expected 302 /bots/${botId}, got ${systemHead.status} ${systemHead.location ?? ''}`)
+  }
+  const beforeSystem = await readJson(`/api/bots/${botId}/messages`, session)
+  const beforeSystemMessages = beforeSystem?.messages
+  if (!Array.isArray(beforeSystemMessages) || beforeSystemMessages.length !== withKitchenMessages.length) {
+    fail('HEAD /preview-seed?system=1 inserted Chat lines')
+  }
+  const hadSystem = SYSTEM_LINES.every((line) => beforeSystemMessages.some((message) => message.content === line))
+  const systemSeed = await request('/preview-seed?system=1', { cookie: session })
+  const systemPath = locationPath(systemSeed.response.headers.get('location'))
+  if (systemSeed.response.status !== 302 || systemPath !== `/bots/${botId}`) {
+    fail(`GET /preview-seed?system=1 expected 302 /bots/${botId}, got ${systemSeed.response.status} ${systemPath ?? ''}`)
+  }
+  const withSystem = await readJson(`/api/bots/${botId}/messages`, session)
+  const withSystemMessages = withSystem?.messages
+  if (!Array.isArray(withSystemMessages)) {
+    fail('Chat messages missing after ?system=1')
+  }
+  const systemLines = withSystemMessages.filter((message) => SYSTEM_LINES.includes(message.content))
+  if (systemLines.length !== SYSTEM_LINES.length || systemLines.some((message) => message.role !== 'system')) {
+    fail(`expected ${SYSTEM_LINES.length} system Chat lines, found ${systemLines.length}`)
+  }
+  if (systemLines.some((message) => Array.isArray(message.parts) && message.parts.length > 0)) {
+    fail('?system=1 lines must have no parts')
+  }
+  if (hadSystem && withSystemMessages.length !== beforeSystemMessages.length) {
+    fail(`?system=1 appended again (${beforeSystemMessages.length} → ${withSystemMessages.length})`)
+  }
+  if (!hadSystem && withSystemMessages.length !== beforeSystemMessages.length + SYSTEM_LINES.length) {
+    fail(`?system=1 expected ${SYSTEM_LINES.length} new lines (${beforeSystemMessages.length} → ${withSystemMessages.length})`)
+  }
+  const systemAgain = await request('/preview-seed?system=1', { cookie: session })
+  if (systemAgain.response.status !== 302 || locationPath(systemAgain.response.headers.get('location')) !== `/bots/${botId}`) {
+    fail('second GET /preview-seed?system=1 did not return to the same Chat')
+  }
+  const keptSystem = await readJson(`/api/bots/${botId}/messages`, session)
+  if (!Array.isArray(keptSystem?.messages) || keptSystem.messages.length !== withSystemMessages.length) {
+    fail(`second ?system=1 changed Chat length (${withSystemMessages.length} → ${keptSystem?.messages?.length ?? 'none'})`)
+  }
+  note('?system=1 has three system Skill / self-settings lines; second GET did not append')
 
   const threadsHead = assertPreviewHead(await request('/preview-seed?threads=1', { method: 'HEAD' }))
   if (threadsHead.status !== 302 || threadsHead.location !== `/bots/${botId}`) {

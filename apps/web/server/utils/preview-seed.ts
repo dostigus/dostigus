@@ -82,6 +82,17 @@ export const PREVIEW_PARTS_PREFIX = 'Preview Kit parts.'
 export const PREVIEW_KITCHEN_PREFIX = 'Kitchen is open.'
 
 /**
+ * System lines inserted by `?system=1` on the Owner's bot-thread.
+ * Skill upsert, Skill delete, and Bot self-settings. Exact content marks
+ * a thread already filled.
+ */
+export const PREVIEW_SYSTEM_LINES = [
+  'Skill · notes · Keep short notes.',
+  'Skill · notes · Удалено',
+  'Бот · Field notes · учёба',
+] as const
+
+/**
  * On only for `nuxt dev` with `DOSTIGUS_PREVIEW_SEED=1`.
  * A production Host stays closed (404).
  */
@@ -115,6 +126,14 @@ export function previewPartsRequested(value: unknown): boolean {
  * HEAD ignores this query.
  */
 export function previewKitchenRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
+/**
+ * `?system=1` on GET. Inserts the three Skill / self-settings system lines
+ * on the Owner's bot-thread for Bot `preview`. HEAD ignores this query.
+ */
+export function previewSystemRequested(value: unknown): boolean {
   return previewQueryOn(value)
 }
 
@@ -220,6 +239,8 @@ export function readPreviewSeedHead(store: OpenedStore): PreviewSeedHeadResult {
  * so that line stays at the bottom of the Chat.
  * `kitchen` fills empty Kitchen tables and appends one Kitchen button line once,
  * after the parts line.
+ * `system` appends the three Skill / self-settings system lines once, after
+ * the kitchen line, on the Owner's bot-thread.
  * `threads` adds a preview Member, that Member's Bot, a grant for the
  * Member on Bot `preview`, and separate bot-threads.
  * `rooms` does that and adds a direct message plus a room with the shared Bot.
@@ -229,7 +250,7 @@ export async function ensurePreviewCluster(
   store: OpenedStore,
   hashPassword: (password: string) => Promise<string>,
   verifyPassword: (hash: string, password: string) => Promise<boolean>,
-  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, threads?: boolean, rooms?: boolean } = {},
+  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, system?: boolean, threads?: boolean, rooms?: boolean } = {},
 ): Promise<{ user: HostSessionUser, botId: string, member: HostSessionUser | null, roomId: string | null }> {
   const user = await ensurePreviewOwner(store, hashPassword, verifyPassword)
   const botId = stablePreviewBotId(listBots(store))
@@ -246,6 +267,9 @@ export async function ensurePreviewCluster(
   }
   if (options.kitchen) {
     ensurePreviewKitchen(store, botId, user.id)
+  }
+  if (options.system) {
+    ensurePreviewSystemLines(store, botId, user.id)
   }
   const member = options.threads || options.rooms
     ? await ensurePreviewThreads(store, hashPassword, user.id, botId)
@@ -344,6 +368,37 @@ export function ensurePreviewKitchen(store: OpenedStore, botId: string, personId
     parts: previewKitchenParts(),
   })
   store.sqlite.prepare('UPDATE messages SET created_at = ? WHERE id = ?').run(at + 1, message.id)
+}
+
+/**
+ * Append the three Skill / self-settings system lines once.
+ * Plain content, no parts. Timestamps step after the latest line.
+ */
+export function ensurePreviewSystemLines(store: OpenedStore, botId: string, personId: string): void {
+  const existing = listMessages(store, botId)
+  const have = new Set(existing.map((message) => message.content))
+  const missing = PREVIEW_SYSTEM_LINES.filter((line) => !have.has(line))
+  if (missing.length === 0) {
+    return
+  }
+  let at = 0
+  for (const message of existing) {
+    const ms = Date.parse(message.createdAt)
+    if (ms > at) {
+      at = ms
+    }
+  }
+  const stamp = store.sqlite.prepare('UPDATE messages SET created_at = ? WHERE id = ?')
+  for (const content of missing) {
+    at += 1
+    const message = insertMessage(store, {
+      botId,
+      role: 'system',
+      content,
+      viewer: { id: personId, role: 'owner' },
+    })
+    stamp.run(at, message.id)
+  }
 }
 
 export function previewTallContent(index: number): string {

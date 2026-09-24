@@ -35,7 +35,8 @@ Host preview seed (Owner signed in, fixture Bot id `preview`, Chat open):
 `pnpm preview:host`, then GET `http://localhost:3000/preview-seed`
 (redirects to `/bots/preview`; `?tall=1` for a tall thread;
 `?parts=1` for a demo Sheet button; `?kitchen=1` for the Kitchen
-Sheet button; `?members=1` opens `/members`; `?threads=1` signs in the
+Sheet button; `?system=1` for three Skill / self-settings system lines;
+`?members=1` opens `/members`; `?threads=1` signs in the
 preview Owner at `/` with Bot `preview` (granted to the preview Member)
 and a Member-created Bot;
 `?threads=1&as=member` signs in the preview Member on `/bots/preview`;
