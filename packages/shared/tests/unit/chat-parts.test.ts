@@ -72,6 +72,33 @@ it('keeps a Schedule Card and drops other card kinds', () => {
   expect(chatPartsForRole('assistant', [card])).toEqual([card])
 })
 
+it('keeps Skill and self-settings Cards', () => {
+  const skill = {
+    kind: 'card' as const,
+    card: 'skill' as const,
+    title: 'notes',
+    body: 'записан',
+    tone: 'ok' as const,
+    targetId: 'notes',
+    actions: [
+      { label: 'Изменить', action: { type: 'openSheet' as const, sheetId: 'skill' } },
+    ],
+  }
+  const bot = {
+    kind: 'card' as const,
+    card: 'bot' as const,
+    title: 'Notes',
+    body: 'обновлено',
+    tone: 'ok' as const,
+    targetId: 'bot-1',
+    actions: [
+      { label: 'Изменить', action: { type: 'openSheet' as const, sheetId: 'bot' } },
+    ],
+  }
+  expect(parseChatParts([skill, bot, { ...skill, card: 'module' }])).toEqual([skill, bot])
+  expect(chatPartsForRole('assistant', [skill, bot])).toEqual([skill, bot])
+})
+
 it('caps the list and ignores parts on user and system lines', () => {
   const many = Array.from({ length: CHAT_PARTS_MAX + 3 }, () => status)
   expect(parseChatParts(many)).toHaveLength(CHAT_PARTS_MAX)

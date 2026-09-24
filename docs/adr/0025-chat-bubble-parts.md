@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-23
-- Amended: 2026-09-24 — Schedule Chat Cards extend this parts family ([ADR 0030](0030-chat-cards-module-catalog.md)). Tables and forms still wait. A Card after Apply is not in this record.
+- Amended: 2026-09-24 — Schedule, Skill, and self-settings Chat Cards extend this parts family ([ADR 0030](0030-chat-cards-module-catalog.md)). Tables and forms still wait. A Card after Apply is not in this record.
 
 Assistant Markdown stays [ADR 0022](0022-chat-assistant-markdown.md).
 Bubbles stay unlabeled

@@ -91,18 +91,24 @@ _Avoid_: user, attendee.
 Inline structured UI in the Chat (button, table, status). Day-1 renders
 a button and a status as Kit parts on an assistant bubble
 ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). A **Chat Card** is the
-Host-injected Card for a Schedule change
+Host-injected Card for a Schedule change, a Skill upsert or delete, or
+a Bot self-settings update of name, label, or description
 ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). A table and
-other Card kinds stay later.
+forms stay later.
 _Avoid_: widget, embed, attachment (unqualified).
 
 **Chat Card**:
 A Kit Card the Host injects in the thread after a successful Schedule
-change. Stored as one assistant message part (`kind: card`) so reload
-keeps it. Not a system line and not a closet control. Pause and
-Изменить open a Sheet for that Schedule. Delete confirms in the Sheet.
-The model does not emit the part. Day-1 does not inject a Card after
-Apply.
+change, a successful Skill upsert or delete, or a successful
+`dostigus_bots_update` of name, label, or description. Stored as one
+assistant message part (`kind: card`) so reload keeps it. Card kinds
+are `schedule`, `skill`, and `bot`. Kind `bot` is the self-settings
+Card. Not a system line and not a closet control. Изменить opens the
+Sheet for that row: Sheet id `schedule`, Sheet id `skill`, or Sheet id
+`bot` (the existing Bot Параметры closet). Delete confirms in the
+Schedule Sheet or the Skill Sheet. The model does not emit the part.
+Day-1 does not inject a Card after Apply, and does not inject a Card
+for a bare list or get.
 _Avoid_: widget, toast, system line, embed.
 
 **Sheet**:
@@ -368,7 +374,8 @@ _Avoid_: public share, invite (unqualified).
   ([ADR 0022](docs/adr/0022-chat-assistant-markdown.md)) and may carry Kit
   parts: a button that opens a Sheet, a status
   ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)), and a Chat Card the
-  Host injects after a Schedule change
+  Host injects after a Schedule change, a Skill upsert or delete, or a
+  Bot self-settings update
   ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). User and
   system lines have no parts. Bot-threads, `dm`, `group`, and `room` are in the Host.
   Grant rows are in the Host

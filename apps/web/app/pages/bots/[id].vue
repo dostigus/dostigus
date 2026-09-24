@@ -88,7 +88,7 @@
           <KitChatParts
             v-if="assistantBubbleUsesMarkdown(message.role) && hostChatParts(message.parts).length"
             :parts="hostChatParts(message.parts)"
-            @open-sheet="onOpenSheet"
+            @open-sheet="(sheetId, targetId) => onOpenSheet(sheetId, targetId, message.botId)"
           />
         </li>
         <li
@@ -240,6 +240,11 @@
         v-else-if="openSheet?.kind === 'schedule'"
         :schedule-id="sheetTargetId"
       />
+      <SkillSheet
+        v-else-if="openSheet?.kind === 'skill'"
+        :bot-id="sheetBotId"
+        :skill-id="sheetTargetId"
+      />
       <p
         v-else
         class="sheet-copy"
@@ -310,6 +315,7 @@ const settingsOpen = ref(false)
 const sheetOpen = ref(false)
 const openSheet = ref<HostSheetEntry | null>(null)
 const sheetTargetId = ref('')
+const sheetBotId = ref('')
 const openSheetTitle = computed(() => openSheet.value?.title ?? 'Sheet')
 const openSheetBody = computed(() => openSheet.value?.body ?? '')
 const threadEl = ref<HTMLOListElement | null>(null)
@@ -318,7 +324,7 @@ const pillEl = ref<HTMLButtonElement | null>(null)
 /** Shown while the thread is scrolled above the latest line. */
 const showLatestJump = ref(false)
 let threadScrollEl: HTMLElement | null = null
-const { pendingId: pendingSheetId } = useHostBotSheet()
+const { pendingId: pendingSheetId, requestOpen } = useHostBotSheet()
 
 const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
 const showPurpose = computed(() => showsBotPurposeCard(timeline.value))
@@ -682,12 +688,26 @@ watch([timeline, botPending, showPurpose, threadActivity], () => {
   pinAfterLayout()
 }, { flush: 'post', immediate: true })
 
-function onOpenSheet(sheetId: string, targetId?: string) {
+function onOpenSheet(sheetId: string, targetId?: string, lineBotId?: string | null) {
   const sheet = hostSheetById(sheetId)
   if (!sheet) {
     return
   }
+  if (sheet.kind === 'bot') {
+    const id = targetId || lineBotId || botId.value
+    sheetOpen.value = false
+    if (id === botId.value) {
+      settingsOpen.value = true
+      return
+    }
+    if (id) {
+      requestOpen(id)
+      void navigateTo(`/bots/${id}`)
+    }
+    return
+  }
   sheetTargetId.value = targetId ?? ''
+  sheetBotId.value = lineBotId || botId.value
   openSheet.value = sheet
   sheetOpen.value = true
 }

@@ -31,8 +31,12 @@ export type ChatPartStatus = {
   tone: ChatPartStatusTone
 }
 
-/** Host-built Schedule Chat Card. The model does not emit this. See ADR 0030. */
-export const CHAT_CARD_KINDS = ['schedule'] as const
+/**
+ * Host-built Chat Card. The model does not emit this. See ADR 0030.
+ * `schedule` is a Schedule change. `skill` is a Skill upsert or delete.
+ * `bot` is the self-settings Card after name, label, or description.
+ */
+export const CHAT_CARD_KINDS = ['schedule', 'skill', 'bot'] as const
 
 export type ChatCardKind = (typeof CHAT_CARD_KINDS)[number]
 
@@ -47,7 +51,7 @@ export type ChatPartCard = {
   title: string
   body: string
   tone: ChatPartStatusTone
-  /** Schedule id. */
+  /** Schedule id, Skill id, or Bot id. */
   targetId: string
   actions: ChatPartCardAction[]
 }

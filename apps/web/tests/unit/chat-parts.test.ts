@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
-import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID, HOST_SCHEDULE_SHEET_ID, hostChatParts, hostSheetById } from '../../app/utils/host-sheets'
+import { HOST_BOT_SHEET_ID, HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID, HOST_SCHEDULE_SHEET_ID, HOST_SKILL_SHEET_ID, hostChatParts, hostSheetById } from '../../app/utils/host-sheets'
 
 const chat = readFileSync(join(import.meta.dirname, '../../app/pages/bots/[id].vue'), 'utf8')
 
@@ -11,7 +11,7 @@ it('renders Kit parts on the assistant bubble and opens a Kit Sheet', () => {
   const bubble = chat.slice(bubbleStart, bubbleEnd)
   expect(bubble).toContain('KitChatParts')
   expect(bubble).toContain('hostChatParts(message.parts)')
-  expect(bubble).toContain('@open-sheet="onOpenSheet"')
+  expect(bubble).toContain('@open-sheet="(sheetId, targetId) => onOpenSheet(sheetId, targetId, message.botId)"')
   expect(bubble).not.toContain('<button')
   expect(chat).toContain('<KitSheet')
   expect(chat).toContain('v-model:open="sheetOpen"')
@@ -19,10 +19,18 @@ it('renders Kit parts on the assistant bubble and opens a Kit Sheet', () => {
   expect(chat).toContain('openSheet?.kind === \'kitchen\'')
   expect(chat).toContain('<ScheduleSheet')
   expect(chat).toContain('openSheet?.kind === \'schedule\'')
+  expect(chat).toContain('<SkillSheet')
+  expect(chat).toContain('openSheet?.kind === \'skill\'')
+  expect(chat).toContain('sheet.kind === \'bot\'')
+  expect(chat).toContain('settingsOpen.value = true')
   const room = readFileSync(join(import.meta.dirname, '../../app/pages/threads/[id].vue'), 'utf8')
   expect(room).toContain('KitChatParts')
   expect(room).toContain('<ScheduleSheet')
   expect(room).toContain('openSheet?.kind === \'schedule\'')
+  expect(room).toContain('<SkillSheet')
+  expect(room).toContain('openSheet?.kind === \'skill\'')
+  expect(room).toContain('sheet.kind === \'bot\'')
+  expect(room).toContain('<BotSettingsSheet')
 })
 
 it('keeps a button only when the Host registry knows the Sheet', () => {
@@ -45,6 +53,9 @@ it('keeps a button only when the Host registry knows the Sheet', () => {
     { kind: 'button', label: 'Open Kitchen', action: { type: 'openSheet', sheetId: 'kitchen' } },
   ])
   expect(hostSheetById(HOST_SCHEDULE_SHEET_ID)?.kind).toBe('schedule')
+  expect(hostSheetById(HOST_SKILL_SHEET_ID)?.kind).toBe('skill')
+  expect(hostSheetById(HOST_BOT_SHEET_ID)?.kind).toBe('bot')
+  expect(hostSheetById(HOST_BOT_SHEET_ID)?.title).toBe('Параметры')
   expect(hostChatParts([
     {
       kind: 'card',

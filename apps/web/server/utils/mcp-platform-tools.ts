@@ -410,7 +410,7 @@ export function invokeChatMcpTool(input: {
   personId?: string
   /** Schedule tools stay on the Bot for this Chat turn. */
   turnBotId?: string
-  /** Host-injected Schedule Chat Cards for this turn. */
+  /** Host-injected Chat Cards for this turn. */
   cards?: ChatCardTurn
 }): ChatToolInvokeResult {
   const name = input.name
@@ -450,7 +450,7 @@ export function invokeChatMcpTool(input: {
     const ctx: ScheduleToolContext = { turnBotId: input.turnBotId }
     const result = spec.run(parsed, input.store, viewer, ctx)
     if (input.cards) {
-      noteToolCard(input.cards, spec.name, result)
+      noteToolCard(input.cards, spec.name, result, parsed)
     }
     logChatTool(spec.name, 'ok')
     return { ok: true, name: spec.name, content: mcpJson(result) }

@@ -71,7 +71,7 @@
           <KitChatParts
             v-if="assistantBubbleUsesMarkdown(message.role) && hostChatParts(message.parts).length"
             :parts="hostChatParts(message.parts)"
-            @open-sheet="onOpenSheet"
+            @open-sheet="(sheetId, targetId) => onOpenSheet(sheetId, targetId, message.botId)"
           />
         </li>
         <li
@@ -163,6 +163,12 @@
         </div>
       </form>
     </div>
+    <BotSettingsSheet
+      v-if="settingsBot"
+      v-model:open="settingsOpen"
+      :bot="settingsBot"
+      @saved="onBotSaved"
+    />
     <KitSheet
       v-model:open="sheetOpen"
       :title="openSheet?.title ?? 'Sheet'"
@@ -171,6 +177,11 @@
       <ScheduleSheet
         v-else-if="openSheet?.kind === 'schedule'"
         :schedule-id="sheetTargetId"
+      />
+      <SkillSheet
+        v-else-if="openSheet?.kind === 'skill'"
+        :bot-id="sheetBotId"
+        :skill-id="sheetTargetId"
       />
       <p
         v-else
@@ -183,7 +194,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Message, ThreadListItem, ThreadParticipantView } from '@dostigus/shared'
+import type { Bot, Message, ThreadListItem, ThreadParticipantView } from '@dostigus/shared'
 import type { HostSheetEntry } from '../../utils/host-sheets'
 import { mentionedRoomBot } from '@dostigus/shared'
 import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet } from '@dostigus/ui-kit'
@@ -201,6 +212,7 @@ type Payload = {
 const route = useRoute()
 const { user, isOwner } = useHostAccount()
 const { refresh: refreshThreads } = await useHostThreads()
+const { refresh: refreshBots } = await useHostBots()
 const threadId = computed(() => String(route.params.id ?? ''))
 
 const { data, error, refresh } = await useFetch<Payload>(
@@ -215,15 +227,38 @@ const replying = ref(false)
 const sheetOpen = ref(false)
 const openSheet = ref<HostSheetEntry | null>(null)
 const sheetTargetId = ref('')
+const sheetBotId = ref('')
+const settingsOpen = ref(false)
+const settingsBot = ref<Bot | null>(null)
 
-function onOpenSheet(sheetId: string, targetId?: string) {
+async function onOpenSheet(sheetId: string, targetId?: string, lineBotId?: string | null) {
   const sheet = hostSheetById(sheetId)
   if (!sheet) {
     return
   }
+  if (sheet.kind === 'bot') {
+    const id = targetId || lineBotId || ''
+    sheetOpen.value = false
+    if (!id) {
+      return
+    }
+    try {
+      const body = await $fetch<{ bot: Bot }>(`/api/bots/${id}`)
+      settingsBot.value = body.bot
+      settingsOpen.value = true
+    } catch {
+      settingsBot.value = null
+    }
+    return
+  }
   sheetTargetId.value = targetId ?? ''
+  sheetBotId.value = lineBotId ?? ''
   openSheet.value = sheet
   sheetOpen.value = true
+}
+
+async function onBotSaved() {
+  await Promise.all([refreshBots(), refreshThreads()])
 }
 const replyBot = ref<ThreadParticipantView | null>(null)
 const threadEl = ref<HTMLElement | null>(null)
