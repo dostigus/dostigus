@@ -61,4 +61,4 @@ English.
 | [0027](0027-bot-schedules.md) | Host Bot Schedules |
 | [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat |
 | [0029](0029-turn-journal.md) | Turn journal |
-| [0030](0030-chat-cards-module-catalog.md) | Chat Cards, Module catalog Apply, and stock Weather |
+| [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages, no Weather seed) |

@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-23
-- Amended: 2026-09-24 — catalog Apply is [ADR 0030](0030-chat-cards-module-catalog.md). Kitchen stays this Host seed and is not that package.
+- Amended: 2026-09-24 — Kitchen stays this Host seed. [ADR 0030](0030-chat-cards-module-catalog.md) does not add a Module catalog or Apply of a stock package.
 
 Bubble parts stay [ADR 0025](0025-chat-bubble-parts.md). Sheets stay Kit
 drawers ([ADR 0002](0002-host-ui-kit-and-sheets.md)). Declarative Module

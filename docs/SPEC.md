@@ -24,9 +24,7 @@ Settled now, even if this repo only scaffolds them:
 | Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. The Host fires a Wake. See [ADR 0027](adr/0027-bot-schedules.md). |
 | Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
 | Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
-| Chat Cards | The Host injects a Kit Card in the thread after a Schedule change or a Module Apply, stored as assistant message parts. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
-| Module catalog | Stock Module packages in Platform git. Apply copies a hashed seed into the Cluster Store and binds it on one Bot. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
-| Stock Weather | One catalog seed: Open-Meteo current and forecast, a jacket Skill, no Sheet. The Host image does not enable it on every Bot. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
+| Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. This monorepo ships no stock Module packages and no Weather seed. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -147,7 +145,7 @@ What the running Cluster does today:
   and system bubbles stay plain pre-wrap text and have no parts. See
   [ADR 0022](adr/0022-chat-assistant-markdown.md) and
   [ADR 0025](adr/0025-chat-bubble-parts.md). A Chat Card (`kind: card`)
-  for a Schedule or a Module Apply is decided in
+  for a Schedule change is decided in
   [ADR 0030](adr/0030-chat-cards-module-catalog.md) and is not stored
   in this Host yet. Sheet id `kitchen` opens the
   Kitchen Module: pantry, one recipe, and a cooked log with an XP
@@ -248,8 +246,9 @@ What the running Cluster does today:
   `dostigus_bots_update` and the Skills tools on that Bot. A grantee
   does not receive Manifest or Skills tools. Delete stays
   off Chat. Turn journal list and get stay on `/mcp` and off both Chat
-  lists ([ADR 0029](adr/0029-turn-journal.md)). Module catalog, Apply,
-  and stock Weather tools are not on this loop yet
+  lists ([ADR 0029](adr/0029-turn-journal.md)). This loop does not
+  gain a Module catalog tool, an Apply tool, or Weather tools. This
+  monorepo ships no stock package
   ([ADR 0030](adr/0030-chat-cards-module-catalog.md)). No key → quiet reply + banner (no tools). A configured call
   retries once on a transient gateway failure (timeout, abort, network,
   HTTP 429, or HTTP 5xx). HTTP 429 waits briefly first. Activity stays
@@ -316,9 +315,10 @@ What the running Cluster does today:
 Decided in [ADR 0027](adr/0027-bot-schedules.md). This Host stores
 Schedules and fires a Wake on that person's bot-thread. A
 Schedule is not a Skill and not a Manifest field. A Schedule still
-only provides the Wake. The stock Weather package is
-[ADR 0030](adr/0030-chat-cards-module-catalog.md). It is not part of
-this Schedule behavior, and this Host does not ship it yet.
+only provides the Wake. The Platform does not seed a Weather Module,
+a weather Skill, or a weather API. Chat Cards after a Schedule change
+are [ADR 0030](adr/0030-chat-cards-module-catalog.md). They are not in
+this Host yet.
 
 - A Schedule is a Store row keyed by `(botId, personId)`: that person's
   bot-thread with that Bot. Many rows per person and Bot are allowed.
@@ -367,10 +367,10 @@ that Bot. A grantee does not receive Manifest or Skills tools. The
 grantee prompt still says not to rename. Member Chat tools are messages
 list/create, Schedule tools, and `dostigus_cluster_timezone_get`
 ([ADR 0027](adr/0027-bot-schedules.md)). The Host fires a Wake. A
-missing Skill or Module package follows
-[ADR 0030](adr/0030-chat-cards-module-catalog.md): the Bot Applies a
-stock catalog package, or the Host shows a Chat Card that none
-matches. This Host does not Apply yet.
+missing capability uses Skills upsert, Schedule tools, and Bot
+self-settings already in Chat. The Platform does not seed a Weather
+Module or a stock Module package
+([ADR 0030](adr/0030-chat-cards-module-catalog.md)).
 
 - **Write.** When a person asks the Bot to change itself (name, label,
   description, Skills, or Schedules), the Bot writes the Store through
@@ -462,11 +462,12 @@ section above. Turn tools are not on those lists.
   Bot `preview` (no LLM gateway key) and reads that Turn through the
   two tools. See [`AGENTS.md`](../AGENTS.md).
 
-## Chat Cards and the Module catalog
+## Chat Cards
 
 Decided in [ADR 0030](adr/0030-chat-cards-module-catalog.md). Not in
-this Host until the code PR. This Host does not inject Chat Cards, does
-not Apply a Module package, and does not call Open-Meteo.
+this Host until the code PR. This Host does not inject Chat Cards.
+This monorepo does not ship a stock Module package, a
+`packages/modules/` seed, Host-bundled Apply, or an Open-Meteo Module.
 
 - **Chat Card.** A Kit Card in the thread, one assistant part of kind
   `card` on `messages.parts_json`. The Host injects it after a
@@ -478,43 +479,13 @@ not Apply a Module package, and does not call Open-Meteo.
   row does not insert another. The Card body is «уже стоит». One turn
   keeps one Card per Schedule id. Pause and Изменить open Sheet id
   `schedule` for that row. Delete confirms inside the Sheet. The model
-  does not emit the part.
-- **Module catalog.** Stock seeds live at `packages/modules/<id>/`
-  (`module.json` and `SKILL.md`). That path is not a pnpm workspace
-  package. Apply copies a SHA-256 of the seed into `module_packages`,
-  appends the id on `Manifest.modulePackageIds`, upserts a Skill with
-  the same id, and stores per-Bot params on `bot_module_params`. The
-  Host image bundles the seed and does not bind it on boot or on
-  image upgrade.
-- **Chat tools.** `dostigus_modules_catalog` and
-  `dostigus_modules_apply` are on the Chat allowlist for the creator
-  of that Bot, or the Owner. A grantee does not receive them. A
-  `query` that matches nothing, or an unknown seed id, injects a
-  Chat Card «Нет такого пакета» and does not write the Store. A
-  successful Apply injects «Weather подключён» for the Weather seed.
-  A Schedule created or confirmed in that same turn adds the Schedule
-  Card after it. Quiet Apply: no confirm tap before Open-Meteo
-  Weather.
-- **Platform rule.** The Host injects one more instruction on every
-  Bot turn, beside Self-settings. When the turn may Apply, the Bot
-  Applies a matching stock package instead of ending on prose that
-  only says it has no Skill or module. A repeated weather or jacket
-  ask also creates or confirms a Schedule. The Bot does not author a
-  Module package. Builder stays later.
-- **Weather.** Seed id `weather` at `packages/modules/weather/`.
-  Tools `dostigus_weather_current` and `dostigus_weather_forecast`
-  return `temp`, `feelsLike`, `wind`, and `precip`. `SKILL.md` teaches
-  jacket advice. No Weather Sheet. Location is the Module param the
-  first ask sets (the Дождевик example is Svetlogorsk, Kaliningrad
-  oblast). `wakeText` can name another place for that fire. The tools
-  join that Bot's Chat loop, including a Wake, only after Apply.
-  Fetch is direct HTTPS to `api.open-meteo.com` and
-  `geocoding-api.open-meteo.com`, not the Cluster LLM gateway. See
-  [`docs/deploy.md`](deploy.md).
-- **Upgrade.** Move a running Cluster onto the image only after that
-  image is green. Existing Bots do not gain Weather. Existing
-  Schedule rows stay. The next ask from the creator or the Owner
-  Applies and shows the Chat Cards.
+  does not emit the part. There is no Card after Apply.
+- **Capability gaps.** Skills upsert, Schedule tools, and Bot
+  self-settings already in Chat
+  ([ADR 0028](adr/0028-bot-self-settings-via-chat.md)) close a missing
+  capability. Day-1 does not add `dostigus_modules_catalog`,
+  `dostigus_modules_apply`, or a platform rule that must Apply a
+  matching stock package. A Marketplace of packages is later.
 
 ## Self-host (compose)
 
@@ -550,9 +521,9 @@ and [`docs/deploy.md`](deploy.md)).
 - Arbitrary in-cluster sandbox code
 - Full Card catalog inside a bubble (tables, forms). A button and a
   status chip on an assistant bubble are
-  [ADR 0025](adr/0025-chat-bubble-parts.md). The Schedule and Module
-  Chat Card is [ADR 0030](adr/0030-chat-cards-module-catalog.md) and is
-  not in this Host yet. Assistant Markdown stays
+  [ADR 0025](adr/0025-chat-bubble-parts.md). The Schedule Chat Card is
+  [ADR 0030](adr/0030-chat-cards-module-catalog.md) and is not in this
+  Host yet. Assistant Markdown stays
   [ADR 0022](adr/0022-chat-assistant-markdown.md)
 - Streaming the assistant bubble token-by-token, MCP tool names or
   arguments on the activity row, and model-supplied status lines.
@@ -570,11 +541,11 @@ and [`docs/deploy.md`](deploy.md)).
   ticker; a multi-node lease
   ([ADR 0027](adr/0027-bot-schedules.md)). The Schedule behavior above
   is in this Host.
-- Builder Jobs, a cluster coding sandbox, and enabling the stock
-  Weather package on every Bot. OpenWeather, an API key, and weather
-  numbers invented by the model. A Weather Sheet, and a Schedule list
-  as the primary UI. Apply on image upgrade or on boot. The stock
-  Weather catalog seed, Chat Cards, and quiet Apply are decided in
+- Stock Module packages in this monorepo, a `packages/modules/` catalog
+  seed, Host-bundled Apply of platform packages, baking packages into
+  the Host image, and a Weather seed (including Open-Meteo). A
+  Marketplace of packages is later (cloud product). Builder Jobs stay
+  out. Chat Cards for Schedule changes are
   [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are not in this
   Host yet. A Schedule still only writes a Wake
   ([ADR 0027](adr/0027-bot-schedules.md)).

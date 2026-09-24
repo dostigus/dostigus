@@ -23,9 +23,10 @@ and the Host before the MCP surface is real.
 - MCP tools are declared and templated against SQL, not generated from random
   scripts.
 - Builder “write me a module” Jobs are also out of scope (see SPEC).
-- A stock catalog seed the Host copies on Apply is
-  [ADR 0030](0030-chat-cards-module-catalog.md). That seed is Platform
-  data plus Host handlers. It is not a sandbox and not a Builder Job.
+- This monorepo does not ship stock Module package seeds. Schedule
+  Chat Cards are [ADR 0030](0030-chat-cards-module-catalog.md). A
+  Marketplace of packages is later. That is not a sandbox and not a
+  Builder Job.
 - Revisit sandbox only after declarative install/export and Host Sheets work.
 
 ## Alternatives

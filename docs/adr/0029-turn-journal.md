@@ -88,9 +88,9 @@ call them.
 - Storing message bodies, tool arguments, tool results, or prompts
 - Replacing the Activity poll with a Store read
 - Schedule ticker debug tools
-- Weather payloads. Stock Weather tool names are
-  [ADR 0030](0030-chat-cards-module-catalog.md). The journal still
-  stores `{ name, ok, ms }` only.
+- Weather payloads. This monorepo has no stock Weather tools
+  ([ADR 0030](0030-chat-cards-module-catalog.md)). The journal stores
+  `{ name, ok, ms }` only.
 
 ## Context
 

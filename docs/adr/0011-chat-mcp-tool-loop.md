@@ -60,10 +60,9 @@ data.
   allowlist: the creator and the Owner, including a Member on a Bot
   they created, receive `dostigus_bots_update` and Skills tools. A
   grantee stays without those tools. Schedule tools stay
-  [ADR 0027](0027-bot-schedules.md). Module catalog and Apply tools,
-  and Weather tools after Apply, are
-  [ADR 0030](0030-chat-cards-module-catalog.md). They are not on this
-  loop until that code PR.
+  [ADR 0027](0027-bot-schedules.md). This loop does not gain a Module
+  catalog tool, an Apply tool, or Weather tools. This monorepo ships
+  no stock package ([ADR 0030](0030-chat-cards-module-catalog.md)).
 
 ## Alternatives
 
