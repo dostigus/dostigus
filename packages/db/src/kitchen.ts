@@ -10,7 +10,7 @@ import {
   parseKitchenQty,
   parseKitchenRecipeName,
 } from '@dostigus/shared'
-import { StoreError } from './queries'
+import { StoreError } from './store-error'
 
 /** One recipe row for the Cluster. Not a second recipe table. */
 const RECIPE_ID = 'recipe'

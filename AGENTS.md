@@ -22,14 +22,31 @@
 
 ## Before every commit
 
-From the repo root, run and wait for a green:
+Install dependencies first. A cloud agent VM often has no `node_modules`
+and no async install log. `CI=1 pnpm check` does not install them. From
+the repo root:
+
+```
+pnpm install --frozen-lockfile
+```
+
+Then run and wait for a green:
 
 ```
 CI=1 pnpm check
 ```
 
+`pnpm check` starts with `scripts/ensure-installed.mjs`. When
+`node_modules/.bin/eslint` is missing it exits immediately and prints
+`pnpm install --frozen-lockfile`. It does not run lint until that binary
+exists.
+
 Pure-markdown commits (`docs/adr/`, CONTEXT, SPEC-only) do not need
-`CI=1 pnpm check` when the working tree has no app/code changes.
+`CI=1 pnpm check` when the working tree has no app/code changes. GitHub
+Actions still runs `pnpm check` on those PRs. A docs-only diff
+(`docs/**` and any `*.md`) skips the Host image job in
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml). Host-affecting
+paths still build the image.
 
 That is `lint` → typecheck → vitest → build. `CI=1` is the run that matches
 GitHub Actions (Actions sets `CI` around `pnpm check` in
@@ -324,6 +341,12 @@ GET `?activity=typing` lands on `/bots/preview?activity=typing` while
 HEAD ignores that query and does not set a session cookie.
 Optional
 `PREVIEW_SMOKE_URL` (default `http://localhost:3000`).
+
+`pnpm check` runs those redirect decisions without `nuxt dev`:
+`previewSeedRedirect` in
+[`apps/web/tests/unit/preview-seed.test.ts`](apps/web/tests/unit/preview-seed.test.ts).
+A preview redirect regression fails CI there. `pnpm smoke:preview`
+stays the live HTTP check against a running preview Host.
 
 Turn journal harness (no screenshots). The preview Host and the smoke
 share one MCP bearer. The fixed preview token is `preview-agent`:

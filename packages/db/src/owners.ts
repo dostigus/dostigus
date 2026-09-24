@@ -9,7 +9,7 @@ import {
   parseOwnerIdentifier,
 } from '@dostigus/shared'
 import { toOwner } from './map'
-import { StoreError } from './queries'
+import { StoreError } from './store-error'
 
 export type OwnerSecret = Owner & {
   passwordHash: string

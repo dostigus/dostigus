@@ -82,7 +82,8 @@ that Bot. The ids, the Russian instructions, and the rule that an
 existing id is not overwritten are
 [ADR 0030](0030-chat-cards-module-catalog.md). The creator or the Owner
 edits or deletes them with the tools in this section. The seed does
-not call `dostigus_skills_upsert` (that call replaces instructions).
+not call `upsertBotSkill` or `dostigus_skills_upsert` (those replace
+instructions).
 The rows are not a new tool, not a Module package, and not the
 platform instruction above. Deleting one does not remove the platform
 duty.

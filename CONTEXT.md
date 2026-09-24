@@ -171,8 +171,10 @@ id is not a Skill id. `parseSkillId` in
 `bots.skills_json` as `{ id, instructions }`. The Manifest lists that
 Bot's Skills. Self-settings may list, upsert, and delete that text on
 the Bot ([ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md)). On
-Bot create the Host may upsert a fixed set of meta Skills (constructor
-how-to). Those instructions are Russian markdown in that same string.
+Bot create the Host inserts a fixed set of meta Skills when each id is
+missing (insert-if-missing, constructor how-to). That seed does not
+call `upsertBotSkill`. Those instructions are Russian markdown in that
+same string.
 The creator or the Owner may edit or delete them. An existing id is
 not overwritten on boot. See
 [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md). A Skill does
@@ -344,8 +346,9 @@ _Avoid_: public share, invite (unqualified).
   [ADR 0027](docs/adr/0027-bot-schedules.md). See
   [ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md).
   A missing capability uses Skills upsert, Schedule tools, and Bot
-  self-settings already in Chat. On Bot create the Host may upsert
-  meta Skills that teach those tools. They are plain Skills. This
+  self-settings already in Chat. On Bot create the Host inserts missing
+  meta Skills that teach those tools (insert-if-missing). That seed does
+  not call `upsertBotSkill`. They are plain Skills. This
   monorepo does not ship a stock Module package
   ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)).
 - Module package data lives in the Cluster Store. Bot visibility does not

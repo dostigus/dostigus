@@ -1,5 +1,4 @@
 import process from 'node:process'
-import { previewChatLocation } from '../../app/utils/preview-hold'
 
 /**
  * Local Host preview entry. GET signs in the preview Owner, ensures the
@@ -48,14 +47,17 @@ export default defineEventHandler(async (event) => {
       previewThreadsRequested(query.threads) || previewRoomsRequested(query.rooms)
     ) && previewThreadAsMember(query.as)
     await startOwnerSession(event, asMember && seeded.member ? seeded.member : seeded.user)
-    const location = previewMembersRequested(query.members)
-      ? '/members'
-      : previewRoomsRequested(query.rooms) && seeded.roomId
-        ? `/threads/${seeded.roomId}`
-        : previewThreadsRequested(query.threads)
-          ? (asMember ? `/bots/${seeded.botId}` : '/')
-          : previewChatLocation(seeded.botId, query.hold, query.activity, query.target)
-    return sendRedirect(event, location, 302)
+    return sendRedirect(event, previewSeedRedirect({
+      botId: seeded.botId,
+      roomId: seeded.roomId,
+      members: query.members,
+      threads: query.threads,
+      rooms: query.rooms,
+      as: query.as,
+      hold: query.hold,
+      activity: query.activity,
+      target: query.target,
+    }), 302)
   } catch (error) {
     if (error instanceof OwnerAuthError && error.statusCode === 401) {
       throw createError({

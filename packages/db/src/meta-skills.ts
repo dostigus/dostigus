@@ -2,7 +2,7 @@ import type { Skill } from '@dostigus/shared'
 import type { OpenedStore } from './store'
 import { parseSkillId, parseSkillInstructions } from '@dostigus/shared'
 import { skillsFromJson } from './map'
-import { StoreError } from './queries'
+import { StoreError } from './store-error'
 
 /**
  * Meta Skills are constructor how-to on a Bot. Plain `{ id, instructions }`

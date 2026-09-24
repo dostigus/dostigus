@@ -164,9 +164,12 @@ Image name: `ghcr.io/dostigus/dostigus`.
 Pin a Cluster you care about to `vX.Y.Z`, not `latest`. See
 [ADR 0007](adr/0007-platform-image-tags.md).
 
-CI (`.github/workflows/ci.yml`) runs `pnpm check` on every PR and push. PRs
-build the Host image and do not push. Pushes to `main` and tags `v*` push to
-GHCR with `GITHUB_TOKEN` (`packages: write`).
+CI (`.github/workflows/ci.yml`) runs `pnpm check` on every PR and push. The
+Host image job runs when the diff is not docs-only (`docs/**` and any
+`*.md`). A docs-only PR skips that image build and still runs `pnpm check`.
+PRs that build the image do not push. Pushes to `main` and tags `v*` that
+build the image push to GHCR with `GITHUB_TOKEN` (`packages: write`). A tag
+always builds the image.
 
 ## Package visibility (Nick)
 

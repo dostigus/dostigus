@@ -9,7 +9,7 @@ import {
 } from '@dostigus/shared'
 import { toMember } from './map'
 import { getOwner, ownerExists } from './owners'
-import { StoreError } from './queries'
+import { StoreError } from './store-error'
 
 export type MemberSecret = Member & {
   passwordHash: string

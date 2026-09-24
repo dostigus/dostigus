@@ -1,7 +1,8 @@
 import type { OpenedStore } from './store'
 import { getMember } from './members'
 import { getOwner } from './owners'
-import { requireBot, StoreError } from './queries'
+import { requireBot } from './queries'
+import { StoreError } from './store-error'
 
 export type BotGrant = {
   botId: string

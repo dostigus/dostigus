@@ -9,7 +9,8 @@ import {
 } from '@dostigus/shared'
 import { authorNameForPerson, getMember, listMembers } from './members'
 import { getOwner } from './owners'
-import { botThreadIdFor, getBot, insertThreadLine, listBots, requireBot, StoreError, viewerMaySeeBot } from './queries'
+import { botThreadIdFor, getBot, insertThreadLine, listBots, requireBot, viewerMaySeeBot } from './queries'
+import { StoreError } from './store-error'
 
 const PEOPLE_MAX = 50
 const BOTS_MAX = 20

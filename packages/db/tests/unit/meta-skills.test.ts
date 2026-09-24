@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { parseSkillInstructions, SKILL_INSTRUCTIONS_MAX } from '@dostigus/shared'
@@ -138,4 +138,15 @@ it('host open upgrades a Bot with none of the four ids and leaves a partial set'
   expect(listBotSkills(reopened, fresh.id)).toEqual(seeded)
   expect(skillsJson(reopened, edited.id)).toBe(editedRaw)
   rmSync(dir, { recursive: true, force: true })
+})
+
+it('keeps StoreError out of the meta-skills and queries cycle', () => {
+  const meta = readFileSync(join(import.meta.dirname, '../../src/meta-skills.ts'), 'utf8')
+  const queries = readFileSync(join(import.meta.dirname, '../../src/queries.ts'), 'utf8')
+  expect(meta).toContain('from \'./store-error\'')
+  expect(meta).not.toContain('./queries')
+  expect(queries).toContain('from \'./store-error\'')
+  expect(queries).toContain('insertMissingMetaSkills')
+  expect(queries).not.toContain('class StoreError')
+  expect(queries).not.toContain('upsertBotSkill')
 })

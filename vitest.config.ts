@@ -6,6 +6,7 @@ export default defineConfig({
       'packages/**/tests/unit/**/*.{test,spec}.ts',
       'packages/**/tests/**/*.unit.{test,spec}.ts',
       'apps/**/tests/unit/**/*.{test,spec}.ts',
+      'scripts/**/*.test.ts',
     ],
     name: 'unit',
     environment: 'node',

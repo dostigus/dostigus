@@ -84,7 +84,6 @@ export {
   openBotThread,
   requireBot,
   searchMessages,
-  StoreError,
   updateBot,
   upsertLlmGatewaySettings,
   viewerMaySeeBot,
@@ -133,6 +132,7 @@ export {
   upsertBotSkill,
 } from './skills'
 export { type OpenedStore, openStore } from './store'
+export { StoreError } from './store-error'
 export {
   appendMessengerAssistantLine,
   appendMessengerUserLine,

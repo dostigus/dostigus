@@ -4,6 +4,7 @@ import type { HostSessionUser } from './owner-auth'
 import { addKitchenPantry, createBot, createMember, createMessengerThread, findMemberSecretByLogin, findOwnerSecretByLogin, getBot, getKitchenRecipe, grantBot, insertMessage, insertThreadLine, listBots, listKitchenCooked, listKitchenPantry, listMessages, listThreadMessages, markKitchenCooked, ownerExists, saveKitchenRecipe } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID } from '../../app/utils/host-sheets'
+import { previewChatLocation } from '../../app/utils/preview-hold'
 import { appendClusterMessage } from './cluster-bots'
 import {
   loginHostAccount,
@@ -141,6 +142,36 @@ export function previewThreadAsMember(value: unknown): boolean {
     return value.includes('member')
   }
   return value === 'member'
+}
+
+/**
+ * GET /preview-seed redirect.
+ * `members=1` opens Members. A room opens that Thread. Threads open
+ * `/` for the Owner and `/bots/<id>` for the Member. Otherwise Chat,
+ * including `hold` and `activity`. Members, threads, and rooms do not
+ * keep `activity`.
+ */
+export function previewSeedRedirect(input: {
+  botId: string
+  roomId?: string | null
+  members?: unknown
+  threads?: unknown
+  rooms?: unknown
+  as?: unknown
+  hold?: unknown
+  activity?: unknown
+  target?: unknown
+}): string {
+  if (previewMembersRequested(input.members)) {
+    return '/members'
+  }
+  if (previewRoomsRequested(input.rooms) && input.roomId) {
+    return `/threads/${input.roomId}`
+  }
+  if (previewThreadsRequested(input.threads)) {
+    return previewThreadAsMember(input.as) ? `/bots/${input.botId}` : '/'
+  }
+  return previewChatLocation(input.botId, input.hold, input.activity, input.target)
 }
 
 /** Shared by preview query flags. h3 may parse `1` as a string or a number. */
