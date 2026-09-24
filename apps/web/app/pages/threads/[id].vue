@@ -68,6 +68,11 @@
           >
             {{ message.content }}
           </p>
+          <KitChatParts
+            v-if="assistantBubbleUsesMarkdown(message.role) && hostChatParts(message.parts).length"
+            :parts="hostChatParts(message.parts)"
+            @open-sheet="onOpenSheet"
+          />
         </li>
         <li
           v-if="threadActivity"
@@ -158,13 +163,31 @@
         </div>
       </form>
     </div>
+    <KitSheet
+      v-model:open="sheetOpen"
+      :title="openSheet?.title ?? 'Sheet'"
+    >
+      <KitchenSheet v-if="openSheet?.kind === 'kitchen'" />
+      <ScheduleSheet
+        v-else-if="openSheet?.kind === 'schedule'"
+        :schedule-id="sheetTargetId"
+      />
+      <p
+        v-else
+        class="sheet-copy"
+      >
+        {{ openSheet?.body }}
+      </p>
+    </KitSheet>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Message, ThreadListItem, ThreadParticipantView } from '@dostigus/shared'
+import type { HostSheetEntry } from '../../utils/host-sheets'
 import { mentionedRoomBot } from '@dostigus/shared'
-import { assistantBubbleUsesMarkdown, KitMarkdown } from '@dostigus/ui-kit'
+import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet } from '@dostigus/ui-kit'
+import { hostChatParts, hostSheetById } from '../../utils/host-sheets'
 
 definePageMeta({ layout: 'host' })
 
@@ -189,6 +212,19 @@ const draft = ref('')
 const sending = ref(false)
 const sendError = ref('')
 const replying = ref(false)
+const sheetOpen = ref(false)
+const openSheet = ref<HostSheetEntry | null>(null)
+const sheetTargetId = ref('')
+
+function onOpenSheet(sheetId: string, targetId?: string) {
+  const sheet = hostSheetById(sheetId)
+  if (!sheet) {
+    return
+  }
+  sheetTargetId.value = targetId ?? ''
+  openSheet.value = sheet
+  sheetOpen.value = true
+}
 const replyBot = ref<ThreadParticipantView | null>(null)
 const threadEl = ref<HTMLElement | null>(null)
 

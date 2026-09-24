@@ -101,6 +101,7 @@ export {
   deleteSchedule,
   type DueSchedule,
   effectiveClusterTimeZone,
+  findEnabledEquivalentSchedule,
   getSchedule,
   listDueSchedules,
   listSchedules,

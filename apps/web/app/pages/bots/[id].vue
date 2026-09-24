@@ -236,6 +236,10 @@
       :description="openSheet?.kind === 'kitchen' ? 'Pantry, one recipe, and a cooked log.' : undefined"
     >
       <KitchenSheet v-if="openSheet?.kind === 'kitchen'" />
+      <ScheduleSheet
+        v-else-if="openSheet?.kind === 'schedule'"
+        :schedule-id="sheetTargetId"
+      />
       <p
         v-else
         class="sheet-copy"
@@ -305,6 +309,7 @@ const markFailed = ref(false)
 const settingsOpen = ref(false)
 const sheetOpen = ref(false)
 const openSheet = ref<HostSheetEntry | null>(null)
+const sheetTargetId = ref('')
 const openSheetTitle = computed(() => openSheet.value?.title ?? 'Sheet')
 const openSheetBody = computed(() => openSheet.value?.body ?? '')
 const threadEl = ref<HTMLOListElement | null>(null)
@@ -677,11 +682,12 @@ watch([timeline, botPending, showPurpose, threadActivity], () => {
   pinAfterLayout()
 }, { flush: 'post', immediate: true })
 
-function onOpenSheet(sheetId: string) {
+function onOpenSheet(sheetId: string, targetId?: string) {
   const sheet = hostSheetById(sheetId)
   if (!sheet) {
     return
   }
+  sheetTargetId.value = targetId ?? ''
   openSheet.value = sheet
   sheetOpen.value = true
 }

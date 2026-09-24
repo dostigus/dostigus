@@ -22,6 +22,32 @@
       >
         {{ part.label }}
       </KitButton>
+      <article
+        v-else-if="part.kind === 'card'"
+        class="kit-card"
+        :class="`kit-card--${part.tone}`"
+      >
+        <p class="kit-card-title">
+          {{ part.title }}
+        </p>
+        <p class="kit-card-body">
+          {{ part.body }}
+        </p>
+        <div
+          v-if="part.actions.length"
+          class="kit-card-actions"
+        >
+          <KitButton
+            v-for="(action, actionIndex) in part.actions"
+            :key="`${action.label}-${actionIndex}`"
+            type="button"
+            size="sm"
+            @click="emit('openSheet', action.action.sheetId, part.targetId)"
+          >
+            {{ action.label }}
+          </KitButton>
+        </div>
+      </article>
     </template>
   </div>
 </template>
@@ -35,7 +61,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  openSheet: [sheetId: string]
+  openSheet: [sheetId: string, targetId?: string]
 }>()
 </script>
 
