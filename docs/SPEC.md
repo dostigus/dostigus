@@ -26,6 +26,7 @@ Settled now, even if this repo only scaffolds them:
 | Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
 | Host HTTP get | MCP surface tool `dostigus_http_get` on Chat and Wake. Cluster http allowlist in Store settings. See [ADR 0031](adr/0031-host-http-get.md). |
 | Cluster outbound | Two Cluster env paths: LLM uses `HTTPS_PROXY` / `HTTP_PROXY` when set; Bot HTTP egress uses `DOSTIGUS_HTTP_PROXY` (empty = direct). See [ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md). |
+| Artifacts | Persisted Cluster file objects: volume bytes + Store meta + message join. Composer **+** uploads; send takes `artifactIds[]`. Chat slim and Wake gain `dostigus_artifacts_put`. No get tool, no vision. See [ADR 0034](adr/0034-artifacts.md). |
 | Chat LLM context | System prompt is Manifest (including label and description) plus a Skill catalog (`id` + `description`). History is the last 40 lines. Chat tools start slim; keyword expand adds builder tools on that user turn only. Wake is narrower and has no expand. See [ADR 0032](adr/0032-chat-llm-context-assembly.md). |
 | Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, appends one system Chat line (plain string, no parts). This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 
@@ -156,7 +157,10 @@ What the running Cluster does today:
   that opens a registered Sheet (`KitSheet`), and a status chip. User
   and system bubbles stay plain pre-wrap text and have no parts. See
   [ADR 0022](adr/0022-chat-assistant-markdown.md) and
-  [ADR 0025](adr/0025-chat-bubble-parts.md). A Chat Card (`kind: card`)
+  [ADR 0025](adr/0025-chat-bubble-parts.md). A line may join Artifacts
+  (image thumb via session GET; PDF / text chip). Those refs are the
+  Store join, not `parts_json`. Raw `<img>` and Markdown images stay
+  forbidden ([ADR 0034](adr/0034-artifacts.md)). A Chat Card (`kind: card`)
   for a Schedule change is stored on that assistant line. A Skill
   upsert or delete, and a Bot self-settings update of name, label, or
   description, append a system Chat line (plain string, no parts). See
@@ -167,9 +171,11 @@ What the running Cluster does today:
   rows and the Chat pill show the Manifest Bot mark (`KitBotAvatar`
   idle); the pill greets on open, listens at the composer, thinks while a
   reply is in flight, speaks and cheers it when it lands, tilts on a failed
-  send, and sleeps while no key is set. The composer has a disabled
-  attachments control and
-  shows a send arrow when there is text. The thread keeps about 5rem
+  send, and sleeps while no key is set. The composer **+** attaches
+  Artifacts ([ADR 0034](adr/0034-artifacts.md)): pick, window
+  drag-drop, or paste → upload → pending chips → Send with
+  `artifactIds`. A send arrow shows when there is text or a pending
+  Artifact. The thread keeps about 5rem
   (~80px) of clear space under the latest line when it is scrolled to
   the bottom. A circular control, centered above the composer, scrolls
   there when the thread is above the bottom. On a narrow screen the sidebar
@@ -257,12 +263,14 @@ What the running Cluster does today:
   sends Cluster MCP surface tools and runs an in-process tool loop
   (same handlers as `/mcp`, no HTTP hop). Owner and creator-Member
   slim: messages list/create, all six Schedule tools, timezone get,
-  Host HTTP get, Skills list and read. Keyword expand on that user
+  Host HTTP get, `dostigus_artifacts_put`, Skills list and read.
+  Keyword expand on that user
   line adds builder tools for the turn only (Owner: Bots
   list/get/create/update, Skills upsert/delete, timezone set,
   allowlist get/set; creator Member: `dostigus_bots_update` and
   Skills upsert/delete). Member grantee: messages, Schedule tools,
-  timezone get, Host HTTP get, Skills list/read; no expand. Delete
+  timezone get, Host HTTP get, `dostigus_artifacts_put`, Skills
+  list/read; no expand. Delete
   stays off Chat. Turn journal list and get stay on `/mcp` and off
   both Chat lists ([ADR 0029](adr/0029-turn-journal.md)). This loop
   does not gain a Module catalog tool, an Apply tool, or Weather
@@ -355,8 +363,9 @@ them on the assistant line.
   with `wakeText`, then starts a Bot turn
   ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)). The Skill catalog
   matches a user turn. Wake tools are narrower than user slim (HTTP
-  get, Skills list/read, Schedule list, messages list/create,
-  timezone get). No Schedule writes, no `dostigus_bots_*`, no
+  get, `dostigus_artifacts_put`, Skills list/read, Schedule list,
+  messages list/create, timezone get). No Schedule writes, no
+  `dostigus_bots_*`, no
   keyword expand ([ADR 0032](adr/0032-chat-llm-context-assembly.md)).
   The line is stored as `system` and sent as `role: system`.
   Activity phases apply
@@ -457,6 +466,42 @@ This Host uses two explicit outbound paths.
 - **Fail closed.** An invalid `DOSTIGUS_HTTP_PROXY` is a tool error,
   not a silent direct GET. No Bot `NO_PROXY` on day-1.
 
+## Artifacts
+
+Decided in [ADR 0034](adr/0034-artifacts.md). This section is the
+contract. The impl PR lands the Host and Store change.
+
+- **Artifact.** A persisted Cluster file object: Store meta plus
+  bytes on volume `cluster-data` at
+  `/var/lib/dostigus/artifacts/<uuid>`. An attachment is that
+  Artifact on a Chat message (the join), not a second Store type.
+  Refs are not `parts_json` ([ADR 0025](adr/0025-chat-bubble-parts.md)).
+- **Limits.** UI upload ≤ 10 MiB; ≤ 3 Artifacts per message. Sniff
+  allowlist: `image/*`, `application/pdf`, `text/plain`,
+  `text/markdown`. Bot `put` base64 ≤ 1 MiB. Text extract ≤ 32 KiB.
+  Cluster quota 512 MiB → HTTP 507. Pending (never joined) GC 24h.
+  Incomplete multipart GC ~1h. Orphan bytes after unlink: lazy /
+  cron GC. No silent LRU of joined blobs.
+- **API.** `POST /api/artifacts` (session, multipart; optional
+  `uploadId` + hash for idempotent retry). Send accepts
+  `artifactIds[]`. `GET /api/artifacts/:id` needs session plus
+  message capability (Thread ACL
+  [ADR 0024](adr/0024-threads-and-bot-visibility.md) + join). Path
+  jail on serve. No public or signed URLs.
+- **Tools.** `dostigus_artifacts_put` on Chat slim and Wake
+  (`filename`, `mime`, `bytesBase64` or `sourceUrl`). `sourceUrl`
+  uses Host HTTP get SSRF / allowlist / Bot HTTP egress
+  ([ADR 0031](adr/0031-host-http-get.md),
+  [ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
+  Host auto-attaches to the current assistant message. No
+  `dostigus_artifacts_get`. No vision. Current-turn text/* (and
+  extractable PDF / text) injects ≤ 32 KiB or else meta.
+- **UI.** Composer **+** / drag-drop / paste → pending chips →
+  Send. Window drop uses depth tracking. Empty `FileList` must not
+  steal a text paste. Long paste → chip. `image/*` thumb via
+  session GET; PDF / text chip. Optimistic local object URL while
+  upload runs.
+
 ## Chat LLM context
 
 Decided in [ADR 0032](adr/0032-chat-llm-context-assembly.md). This
@@ -481,10 +526,11 @@ then the running Host still injects full Skill bodies, remaps stored
   rules stay (`CHAT_SELF_SETTINGS_RULE`, `CHAT_NO_PACKAGE_RULE`, a
   one-line HTTP hint if needed). Meta Skills stay catalog + read.
 - **Slim.** Owner and creator-Member: messages list/create, six
-  Schedule tools, timezone get, Host HTTP get, Skills list/read.
+  Schedule tools, timezone get, Host HTTP get,
+  `dostigus_artifacts_put`, Skills list/read.
   Grantee: messages list/create, six Schedule tools, timezone get,
-  Host HTTP get, Skills list/read. No Manifest write. No Skill
-  write.
+  Host HTTP get, `dostigus_artifacts_put`, Skills list/read. No
+  Manifest write. No Skill write.
 - **Expand.** Case-insensitive substring match on the current user
   line only (name / название / имя / rename, label / метка,
   description / описание, Skill / навык / skills, allowlist,
@@ -495,11 +541,12 @@ then the running Host still injects full Skill bodies, remaps stored
   upsert/delete. Grantee does not expand. Wake does not expand.
   A miss means the person rephrases or uses the Closet / Sheet.
 - **Wake.** Same catalog and `dostigus_skills_read`. Tools:
-  `dostigus_http_get`, Skills list/read, `dostigus_schedules_list`,
-  messages list/create, timezone get. No Schedule writes. No
-  `dostigus_bots_*`.
+  `dostigus_http_get`, `dostigus_artifacts_put`, Skills list/read,
+  `dostigus_schedules_list`, messages list/create, timezone get. No
+  Schedule writes. No `dostigus_bots_*`.
 - **Still never in Chat.** `dostigus_bots_delete`, Kitchen tools,
-  Turn journal tools.
+  Turn journal tools. There is no `dostigus_artifacts_get`
+  ([ADR 0034](adr/0034-artifacts.md)).
 
 ## Self-settings
 
@@ -699,7 +746,9 @@ Module.
 ## Self-host (compose)
 
 `docker compose -f docker/compose.yml up --build` serves the Host on port 3000
-and mounts volume `cluster-data` for the Store. Image publishing is
+and mounts volume `cluster-data` for the Store and Artifact bytes
+(`/var/lib/dostigus/artifacts/<uuid>`,
+[ADR 0034](adr/0034-artifacts.md)). Image publishing is
 `ghcr.io/dostigus/dostigus` (see [ADR 0007](adr/0007-platform-image-tags.md)
 and [`docs/deploy.md`](deploy.md)).
 
@@ -734,7 +783,9 @@ and [`docs/deploy.md`](deploy.md)).
   [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are in this Host.
   Skill and self-settings success is a system Chat line in that record.
   Assistant Markdown stays
-  [ADR 0022](adr/0022-chat-assistant-markdown.md)
+  [ADR 0022](adr/0022-chat-assistant-markdown.md). Artifact thumbs
+  are session GET, not Markdown images
+  ([ADR 0034](adr/0034-artifacts.md))
 - Streaming the assistant bubble token-by-token, MCP tool names or
   arguments on the activity row, and model-supplied status lines.
   The Activity poll stays in-memory
@@ -777,6 +828,13 @@ and [`docs/deploy.md`](deploy.md)).
   an already-open Chat page. The Self-settings write above is in this
   Host ([ADR 0028](adr/0028-bot-self-settings-via-chat.md)).
 - Managed/cloud hosting (optional later; not the default)
+- Artifact S3 / remote blob store, signed or public download URLs,
+  gallery / lightbox, virus scan, vision, `dostigus_artifacts_get`,
+  sandbox materialize / path-attach, content-addressed blob layout,
+  a Member file-share UI separate from the Thread, Office / audio
+  mime, and forever retention without quota
+  ([ADR 0034](adr/0034-artifacts.md)). Artifacts above are the
+  contract. The impl PR lands the Host change.
 
 ## Success for later MVPs (not this PR)
 

@@ -2,6 +2,9 @@
 
 - Status: accepted
 - Date: 2026-09-23
+- Amended: 2026-09-24 — Artifact image preview via Kit / session GET is
+  [ADR 0034](0034-artifacts.md). Raw `<img>` and Markdown images
+  (`![]()`) stay forbidden.
 
 ## Decision
 
@@ -30,7 +33,9 @@ paragraph. Inside a fence, newlines stay literal.
 Raw HTML, tables, images (`![]()`), headings (`#`), task-list checkboxes,
 blockquotes, and strikethrough do not become UI. Allowed parts of the same
 line still render. The disallowed markup stays visible text. Raw HTML is
-escaped, not executed.
+escaped, not executed. An Artifact image preview in the bubble (session
+GET, Kit) is [ADR 0034](0034-artifacts.md). That is not Markdown `![]()`
+and not a raw `<img>` in `content`.
 
 Bubbles stay unlabeled
 ([ADR 0015](0015-host-desktop-shell.md)).
@@ -63,6 +68,9 @@ finished assistant line
 - Interactive Kit parts on an assistant line are
   [ADR 0025](0025-chat-bubble-parts.md). The content column stays the
   Markdown string. Buttons are not Markdown.
+- Artifact thumbs and file chips are
+  [ADR 0034](0034-artifacts.md). They are not Markdown images and not
+  `parts_json`.
 
 ## Alternatives
 
