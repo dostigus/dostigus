@@ -305,10 +305,22 @@ The MCP surface tool `dostigus_http_get` the Host runs on a Bot turn
 so the Bot can GET a public URL. GET only. Chat and Wake use the same
 tool loop ([ADR 0011](docs/adr/0011-chat-mcp-tool-loop.md)). The Host
 returns HTTP status and a body capped at 64 KiB (truncate, with
-`truncated`). Not a Module package and not a weather seed
+`truncated`). The GET uses Bot HTTP egress
+(`DOSTIGUS_HTTP_PROXY`; empty = direct). LLM proxy is a separate
+Cluster env ([ADR 0033](docs/adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
+Not a Module package and not a weather seed
 ([ADR 0031](docs/adr/0031-host-http-get.md),
 [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)).
 _Avoid_: HTTP client (unqualified), fetch tool, weather tool, POST.
+
+**Bot HTTP egress**:
+Cluster capability for Host→internet tool traffic that is not the
+LLM gateway. Day-1 env is `DOSTIGUS_HTTP_PROXY` (one URL for `http`
+and `https` targets). Unset or empty is direct. Never falls back to
+`HTTPS_PROXY`. Day-1 consumer is Host HTTP get. See
+[ADR 0033](docs/adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md).
+_Avoid_: HTTP_PROXY (unqualified), LLM proxy, EnvHttpProxyAgent,
+per-host NO_PROXY.
 
 **Cluster http allowlist**:
 The Owner-configured list of hostnames in Cluster Store settings

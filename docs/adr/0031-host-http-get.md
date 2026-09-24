@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-24
 - Amended: 2026-09-24 — `dostigus_http_get` stays on user slim and on Wake. Owner Chat allowlist get/set, and timezone set, wait for keyword expand ([ADR 0032](0032-chat-llm-context-assembly.md)). GET, allowlist, and SSRF stay this record.
+- Amended: 2026-09-24 — Bot GET uses Bot HTTP egress env (`DOSTIGUS_HTTP_PROXY`; empty = direct). LLM proxy is [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md). Host HTTP get does not use `EnvHttpProxyAgent`.
 
 The Chat tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). The
 MCP surface stays [ADR 0009](0009-mcp-toolkit-endpoint.md). Cluster
@@ -115,6 +116,21 @@ host missing from a non-empty allowlist is a tool error. The Bot
 reports that error and does not claim a fetch
 ([ADR 0028](0028-bot-self-settings-via-chat.md)).
 
+SSRF is the **destination** hostname. The Bot HTTP egress proxy
+endpoint may be loopback or private. Do not treat that proxy host as
+the destination
+([ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
+
+### Bot HTTP egress
+
+`dostigus_http_get` is the day-1 consumer of **Bot HTTP egress**.
+That path reads `DOSTIGUS_HTTP_PROXY` (one URL for `http` and
+`https` targets). Unset or empty is **direct**. It never falls back
+to `HTTPS_PROXY` or the LLM proxy. Host HTTP get does not use
+`NODE_USE_ENV_PROXY` or undici `EnvHttpProxyAgent`. An invalid
+`DOSTIGUS_HTTP_PROXY` is a tool error, not a silent direct GET.
+See [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md).
+
 ### Not a weather package
 
 [ADR 0030](0030-chat-cards-module-catalog.md) stays. This monorepo
@@ -169,7 +185,12 @@ not a platform seed.
   treat a truncated JSON or HTML body as complete.
 - An empty `http_allowlist` allows every public host. A locked-down
   Cluster sets an explicit list (for example `api.open-meteo.com`).
-- SSRF checks always run. Allow-all is not allow-loopback.
+- SSRF checks always run. Allow-all is not allow-loopback. The
+  check is the destination, not the Bot HTTP egress proxy host
+  ([ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
+- Bot GET uses `DOSTIGUS_HTTP_PROXY` when set; empty is direct.
+  Host HTTP get does not use `EnvHttpProxyAgent`
+  ([ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
 - The Host owns a short timeout so a hung GET cannot stall a turn
   indefinitely. The code PR picks the value.
 - The Turn journal records the tool name only
@@ -189,6 +210,8 @@ not a platform seed.
 - Streaming the upstream body.
 - Wildcards, suffix match, and registrable-domain rollup.
 - A per-Bot allowlist.
+- `NODE_USE_ENV_PROXY` / `EnvHttpProxyAgent` for Host HTTP get.
+  Bot GET proxy env is [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md).
 - Marketplace, Module Apply, and a stock Weather Module or seed
   ([ADR 0030](0030-chat-cards-module-catalog.md)).
 
