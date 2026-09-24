@@ -24,7 +24,7 @@ Settled now, even if this repo only scaffolds them:
 | Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. The Host fires a Wake. See [ADR 0027](adr/0027-bot-schedules.md). |
 | Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
 | Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
-| Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host may upsert meta Skills (constructor how-to). See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
+| Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -404,10 +404,10 @@ Skills as plain Skill text. Both are
   letters, digits, `_`, or `-`. A dotted id is not a Skill id.
   `parseSkillId` in `packages/shared/src/skill.ts` checks that charset.
   A Skill is one `instructions` string. There is no locale column.
-  Meta Skill ids and insert-if-absent are
+  Meta Skill ids and insert-if-missing are
   [ADR 0030](adr/0030-chat-cards-module-catalog.md). That seed is in
   this Host. It writes a missing id only and does not call
-  `dostigus_skills_upsert`.
+  `upsertBotSkill` or `dostigus_skills_upsert`.
 - **Schedules.** A request to create or change a Schedule is
   Self-settings, and the Bot calls the
   [ADR 0027](adr/0027-bot-schedules.md) tools. This section does not

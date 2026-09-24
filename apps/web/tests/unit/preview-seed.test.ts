@@ -31,6 +31,7 @@ import {
   previewPartsRequested,
   previewRoomsRequested,
   previewSeedAllowed,
+  previewSeedRedirect,
   previewTallRequested,
   previewThreadAsMember,
   previewThreadsRequested,
@@ -104,14 +105,13 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   )
   expect(src).toContain('previewSeedAllowed')
   expect(src).toContain('previewTallRequested')
-  expect(src).toContain('previewMembersRequested')
+  expect(src).toContain('members: query.members')
   expect(src).toContain('previewPartsRequested')
   expect(src).toContain('previewKitchenRequested')
   expect(src).toContain('previewThreadsRequested')
   expect(src).toContain('previewRoomsRequested')
   expect(src).toContain('previewThreadAsMember')
-  expect(src).toContain('\'/members\'')
-  expect(src).toContain('previewChatLocation(seeded.botId, query.hold, query.activity, query.target)')
+  expect(src).toContain('previewSeedRedirect({')
   expect(src).toContain('statusCode: 404')
   expect(src).toContain('startOwnerSession')
   expect(src).toContain('sendRedirect')
@@ -134,6 +134,7 @@ it('answers HEAD without signing in or writing the Store', () => {
   expect(src).not.toContain('startOwnerSession')
   expect(src).not.toContain('ensurePreviewCluster')
   expect(src).not.toContain('previewChatLocation')
+  expect(src).not.toContain('previewSeedRedirect')
   expect(src).not.toContain('previewMembersRequested')
   expect(src).not.toContain('previewKitchenRequested')
   expect(src).not.toContain('previewThreadsRequested')
@@ -379,6 +380,20 @@ it('seeds a Member private Bot and separate shared bot-threads once', async () =
   await ensurePreviewCluster(store, hashPassword, verifyPassword, { threads: true })
   expect(listMessages(store, PREVIEW_BOT_ID)).toHaveLength(before)
   expect(listBots(store)).toHaveLength(2)
+})
+
+it('redirects preview seed the way the live smoke checks', () => {
+  const chat = { botId: PREVIEW_BOT_ID, roomId: PREVIEW_ROOM_THREAD_ID }
+  expect(previewSeedRedirect(chat)).toBe(`/bots/${PREVIEW_BOT_ID}`)
+  expect(previewSeedRedirect({ ...chat, members: '1', activity: 'typing', hold: '1' })).toBe('/members')
+  expect(previewSeedRedirect({ ...chat, members: 1, rooms: '1', threads: '1' })).toBe('/members')
+  expect(previewSeedRedirect({ ...chat, rooms: '1', as: 'member', activity: 'typing' })).toBe(`/threads/${PREVIEW_ROOM_THREAD_ID}`)
+  expect(previewSeedRedirect({ ...chat, rooms: '1', roomId: null })).toBe(`/bots/${PREVIEW_BOT_ID}`)
+  expect(previewSeedRedirect({ ...chat, threads: '1' })).toBe('/')
+  expect(previewSeedRedirect({ ...chat, threads: '1', as: 'member', activity: 'typing', hold: '1' })).toBe(`/bots/${PREVIEW_BOT_ID}`)
+  expect(previewSeedRedirect({ ...chat, activity: 'typing' })).toBe(`/bots/${PREVIEW_BOT_ID}?activity=typing`)
+  expect(previewSeedRedirect({ ...chat, hold: '1', activity: 'typing' })).toBe(`/bots/${PREVIEW_BOT_ID}?hold=1&activity=typing`)
+  expect(previewSeedRedirect({ ...chat, activity: 'connect', target: 'Expi' })).toBe(`/bots/${PREVIEW_BOT_ID}?activity=connect&target=Expi`)
 })
 
 it('treats rooms=1 as the messenger demo', () => {

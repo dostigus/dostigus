@@ -1,6 +1,6 @@
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
-import { StoreError } from './queries'
+import { StoreError } from './store-error'
 
 /** Rows older than this are deleted when a Turn is finalized. See ADR 0029. */
 export const TURN_RETENTION_MS = 7 * 24 * 60 * 60 * 1000

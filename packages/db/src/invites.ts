@@ -6,7 +6,7 @@ import { INVITE_TTL_MS, parseInviteEmail, parseMemberDisplayName } from '@dostig
 import { toInvite } from './map'
 import { createMember } from './members'
 import { getOwner } from './owners'
-import { StoreError } from './queries'
+import { StoreError } from './store-error'
 
 const INVALID_INVITE = 'This link is invalid'
 

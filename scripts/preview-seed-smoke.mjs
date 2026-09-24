@@ -21,6 +21,11 @@
  *   pnpm preview:host
  *   pnpm smoke:preview
  *
+ * CI does not boot `nuxt dev`. `pnpm check` runs the same redirect
+ * decisions in `apps/web/tests/unit/preview-seed.test.ts`
+ * (`previewSeedRedirect`) so a preview redirect regression fails CI.
+ * This script stays the live HTTP check.
+ *
  * PREVIEW_SMOKE_URL (default http://localhost:3000).
  * PREVIEW_SMOKE_WAIT_MS (default 120000) while nuxt dev is still starting.
  */

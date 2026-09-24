@@ -20,6 +20,7 @@ import {
 } from '@dostigus/shared'
 import { toBot, toMessage } from './map'
 import { insertMissingMetaSkills } from './meta-skills'
+import { StoreError } from './store-error'
 
 const BOT_NAME_MAX = 120
 const BOT_LABEL_MAX = 160
@@ -52,16 +53,6 @@ function searchSnippet(content: string, needle: string): string {
     slice = `${slice}…`
   }
   return slice
-}
-
-export class StoreError extends Error {
-  constructor(
-    message: string,
-    readonly statusCode: number,
-  ) {
-    super(message)
-    this.name = 'StoreError'
-  }
 }
 
 function nowMs(): number {

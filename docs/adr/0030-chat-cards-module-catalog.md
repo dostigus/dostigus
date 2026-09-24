@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-09-24
 - Amended: 2026-09-24 — Nick reverse decision. This monorepo ships no stock Module packages and no Weather seed. Schedule Chat Cards stay. A Marketplace of packages is later.
-- Amended: 2026-09-24 — Nick: on Bot create the Host may upsert meta Skills (constructor how-to). Chat Cards are unchanged. Still no stock Module packages and no Weather seed.
+- Amended: 2026-09-24 — Nick: on Bot create the Host inserts missing meta Skills (constructor how-to). The seed is insert-if-missing and does not call `upsertBotSkill`. Chat Cards are unchanged. Still no stock Module packages and no Weather seed.
 
 Assistant parts stay [ADR 0025](0025-chat-bubble-parts.md). Schedules
 and the Wake stay [ADR 0027](0027-bot-schedules.md). The platform
@@ -34,10 +34,10 @@ out of this record's day-1.
 A missing capability uses the constructor tools already in Chat: Skills
 upsert, Schedule tools, and Bot self-settings
 ([ADR 0028](0028-bot-self-settings-via-chat.md)). Those tools are not a
-stock package. On Bot create the Host may also upsert meta Skills that
-teach those tools. The rows are plain Skill text. The ids and the
-insert rule are under Consequences. Chat Cards in this record stay as
-written here.
+stock package. On Bot create the Host also inserts missing meta Skills
+that teach those tools. The rows are plain Skill text. The ids and the
+insert-if-missing rule are under Consequences. Chat Cards in this record
+stay as written here.
 
 ### Chat Cards
 
@@ -204,8 +204,9 @@ Kitchen remains a Host seed with no package row
   does not Apply a platform package. Boot does not rewrite meta Skill
   text.
 - The Kitchen Module is still not an applied Module package.
-- **Meta Skills.** On Bot create the Host upserts a fixed set of Skill
-  rows on that Bot. They are constructor how-to: plain Skill text in
+- **Meta Skills.** On Bot create the Host inserts a fixed set of Skill
+  rows on that Bot when each id is absent (insert-if-missing). They are
+  constructor how-to: plain Skill text in
   `bots.skills_json` (`{ id, instructions }`, as
   [ADR 0028](0028-bot-self-settings-via-chat.md)). They are not Module
   packages, not MCP tools, not Apply, and not files under
@@ -225,11 +226,12 @@ Kitchen remains a Host seed with no package row
 | `platform-meta-self-settings` | Bot self-settings: name, label, and description through `dostigus_bots_update`. A successful tool result is still required ([ADR 0028](0028-bot-self-settings-via-chat.md)). |
 | `platform-meta-marketplace` | Domain Module packages come later through Marketplace. Do not invent weather tools, a Weather Skill, or a Module package. |
 
-- Insert when that id is absent. An id that is already stored keeps
-  its instructions. Create is idempotent: a later pass does not
-  rewrite text the creator or the Owner already changed. The seed does
-  not call `dostigus_skills_upsert`. That tool replaces instructions
-  for the same id. The seed writes a missing id only.
+- Insert when that id is absent (insert-if-missing). An id that is
+  already stored keeps its instructions. Create is idempotent: a later
+  pass does not rewrite text the creator or the Owner already changed.
+  The seed does not call `upsertBotSkill` or `dostigus_skills_upsert`.
+  `upsertBotSkill` replaces instructions for the same id. The seed
+  writes a missing id only.
 - Image upgrade is not Apply. It does not rewrite these rows on an
   existing Bot that already has any of these ids. The exception is a
   Bot that has none of these ids (created before the seed, or emptied
@@ -242,9 +244,8 @@ Kitchen remains a Host seed with no package row
 - The platform instruction stays on every turn. It is not one of these
   Skills. Rename, Schedule changes, and other self-edits stay a
   platform duty if a meta Skill is deleted.
-- Chat Cards in this record are unchanged. The code PR that upserts
-  these rows is separate from this docs change. It still does not add
-  `packages/modules/`, catalog or Apply tools, or a Weather seed.
+- Chat Cards in this record are unchanged. Inserting these rows does
+  not add `packages/modules/`, catalog or Apply tools, or a Weather seed.
 - [`docs/deploy.md`](../deploy.md) does not require Open-Meteo hosts
   in `NO_PROXY` for a Module.
 

@@ -2,7 +2,8 @@ import type { Skill } from '@dostigus/shared'
 import type { OpenedStore } from './store'
 import { parseSkillId, parseSkillInstructions, SkillInputError } from '@dostigus/shared'
 import { skillsFromJson } from './map'
-import { requireBot, StoreError } from './queries'
+import { requireBot } from './queries'
+import { StoreError } from './store-error'
 
 /**
  * Skill text lives in `bots.skills_json` as `{ id, instructions }` objects.

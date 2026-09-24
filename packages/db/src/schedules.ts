@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto'
 import process from 'node:process'
 import { getMember } from './members'
 import { getOwner } from './owners'
-import { getBot, StoreError, viewerMaySeeBot } from './queries'
+import { getBot, viewerMaySeeBot } from './queries'
 import {
   isScheduleWeekday,
   isValidIanaTimeZone,
@@ -16,6 +16,7 @@ import {
   SCHEDULE_DEFER_MS,
   SCHEDULE_WEEKDAYS,
 } from './schedule-time'
+import { StoreError } from './store-error'
 
 const CLUSTER_SETTINGS_ID = 'cluster'
 const WAKE_TEXT_MAX = 2_000
