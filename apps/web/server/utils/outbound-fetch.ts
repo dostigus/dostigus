@@ -82,7 +82,7 @@ export const undiciOutboundFetch = ((input, init) =>
   undiciFetch(
     input as Parameters<typeof undiciFetch>[0],
     init as Parameters<typeof undiciFetch>[1],
-  ) as Promise<Response>) as typeof fetch
+  ) as unknown as Promise<Response>) as typeof fetch
 
 export function attachOutboundDispatcher(
   fetchImpl: typeof fetch,
