@@ -129,7 +129,8 @@ does not add a Sheet and does not put the tools on the Chat allowlist.
 - An Owner Sheet for turns — rejected for day-1. Ops read MCP.
 - A harness script in the journal change — rejected for that PR. The
   later smoke is `pnpm smoke:turns`
-  ([`scripts/turn-journal-smoke.mjs`](../../scripts/turn-journal-smoke.mjs)).
+  ([`scripts/turn-journal-smoke.mjs`](../../scripts/turn-journal-smoke.mjs),
+  [#85](https://github.com/dostigus/dostigus/pull/85)).
 - Store the message body, the tool arguments, or the tool result —
   rejected. That copies prompts and secrets into the journal.
 - Read Activity from `turns` — rejected. The poll stays the in-memory
