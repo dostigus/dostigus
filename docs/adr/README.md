@@ -51,14 +51,14 @@ English.
 | [0017](0017-goose-mark-avatar.md) | Goose mark avatar + hue-ordered palette (superseded by [0018](0018-bot-mark-flock.md)) |
 | [0018](0018-bot-mark-flock.md) | Bot marks — an eight-bird flock with named parts |
 | [0019](0019-bot-picker-and-chat-purpose.md) | Bot picker and Chat purpose |
-| [0020](0020-bot-closet.md) | Bot closet |
+| [0020](0020-bot-closet.md) | Bot closet (amended 2026-09-24: «Расписания» block) |
 | [0021](0021-chat-activity-status.md) | Chat activity status row (amended 2026-09-24: thinking, tool, typing; status-line sweep) |
 | [0022](0022-chat-assistant-markdown.md) | Chat assistant Markdown body |
 | [0023](0023-household-member-invites.md) | Household Member Invites (an Invite does not grant Bots; [0024](0024-threads-and-bot-visibility.md)) |
 | [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility (amended 2026-09-24: personal Bot + grants) |
 | [0025](0025-chat-bubble-parts.md) | Chat bubble parts (Bot visibility stays [0024](0024-threads-and-bot-visibility.md)) |
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
-| [0027](0027-bot-schedules.md) | Host Bot Schedules |
-| [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat |
-| [0029](0029-turn-journal.md) | Turn journal |
-| [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create) |
+| [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets) |
+| [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat (amended 2026-09-24: closet Schedule list stays [0027](0027-bot-schedules.md)) |
+| [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows) |
+| [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create; Card «Изменить» opens closet detail) |

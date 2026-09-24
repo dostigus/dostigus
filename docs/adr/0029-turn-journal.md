@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-24
 - Amended: 2026-09-24 — harness smoke `pnpm smoke:turns`
+- Amended: 2026-09-24 — Schedule detail lists wake Turns for that `scheduleId` ([ADR 0027](0027-bot-schedules.md)). That is not an Owner journal Sheet. No new runs table.
 
 Activity phases stay [ADR 0021](0021-chat-activity-status.md). The Chat
 tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). A Wake stays
@@ -81,9 +82,16 @@ These tools are not in the Owner Chat allowlist and not in the Member
 Chat allowlist ([ADR 0011](0011-chat-mcp-tool-loop.md)). Chat does not
 call them.
 
+Schedule detail ([ADR 0027](0027-bot-schedules.md)) lists journal rows
+with `trigger` `wake` and that `scheduleId`. Empty copy: «Пока не было
+запусков». That is not an Owner journal Sheet. Day-1 does not add a
+runs table. Ops still list and get through MCP.
+
 ### Out of scope
 
-- An Owner UI Sheet for the journal
+- An Owner UI Sheet for the journal. Schedule run history is the
+  detail Sheet in [ADR 0027](0027-bot-schedules.md), not a journal
+  browser.
 - Evals
 - Storing message bodies, tool arguments, tool results, or prompts
 - Replacing the Activity poll with a Store read
@@ -103,7 +111,9 @@ a Schedule Wake, or a stuck tool round then needs a screenshot.
 
 The grill on 2026-09-24 keeps the journal as ops meta on the Host, dual
 written from the loop that already exists, and read through MCP. It
-does not add a Sheet and does not put the tools on the Chat allowlist.
+does not add a journal Sheet and does not put the tools on the Chat
+allowlist. Schedule detail may list wake Turns for one `scheduleId`
+([ADR 0027](0027-bot-schedules.md)).
 
 ## Consequences
 
@@ -125,10 +135,13 @@ does not add a Sheet and does not put the tools on the Chat allowlist.
 - `pnpm smoke:turns` checks the quiet Chat write path and
   `dostigus_turns_list` / `dostigus_turns_get` on a running preview
   Host. It is not an Owner Sheet.
+- Schedule detail reads those same journal rows for one Wake
+  ([ADR 0027](0027-bot-schedules.md)). It does not add a runs table.
 
 ## Alternatives
 
 - An Owner Sheet for turns — rejected for day-1. Ops read MCP.
+  Schedule run history is not that Sheet.
 - A harness script in the journal change — rejected for that PR. The
   later smoke is `pnpm smoke:turns`
   ([`scripts/turn-journal-smoke.mjs`](../../scripts/turn-journal-smoke.mjs),
