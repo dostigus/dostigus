@@ -34,7 +34,9 @@ What the running Cluster does today:
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
   default `goose` (Bot mark), `avatarColor` default `#1F7AE5` /
   `--bot-accent-10`, optional `label` and `description` default empty,
-  empty skills/modules, `created_by` the Owner or Member who created it),
+  modules empty, meta Skills inserted on create when each id is absent
+  ([ADR 0030](adr/0030-chat-cards-module-catalog.md)), `created_by` the
+  Owner or Member who created it),
   `bot_grants` (`bot_id` + `person_id`; the creator and the Owner do not
   need a row, [ADR 0024](adr/0024-threads-and-bot-visibility.md)),
   `threads` (kind `dm`, `group`, `bot`, or `room`; `title` on a group or room)
@@ -54,7 +56,9 @@ What the running Cluster does today:
   (Household Invite: token hash only, reserved email, expiry, the Owner
   who created it, used and revoked timestamps). User Chat lines store
   `personId` (the Owner id or Member id). Host opens and migrates the
-  Store on start.
+  Store on start. That open may insert meta Skills on a Bot that has
+  none of the four ids. It does not overwrite a Bot that already has
+  any of them.
 - Owner auth: `nuxt-auth-utils` sealed cookie session. Fresh Cluster →
   `/onboarding` (email or username + password). Later visits → `/login`.
   Register is disabled once an Owner exists. Login accepts the Owner or a
@@ -401,8 +405,9 @@ Skills as plain Skill text. Both are
   `parseSkillId` in `packages/shared/src/skill.ts` checks that charset.
   A Skill is one `instructions` string. There is no locale column.
   Meta Skill ids and insert-if-absent are
-  [ADR 0030](adr/0030-chat-cards-module-catalog.md). They are not in
-  this Host until that code PR.
+  [ADR 0030](adr/0030-chat-cards-module-catalog.md). That seed is in
+  this Host. It writes a missing id only and does not call
+  `dostigus_skills_upsert`.
 - **Schedules.** A request to create or change a Schedule is
   Self-settings, and the Bot calls the
   [ADR 0027](adr/0027-bot-schedules.md) tools. This section does not
@@ -492,7 +497,7 @@ Module.
   capability. Day-1 does not add `dostigus_modules_catalog`,
   `dostigus_modules_apply`, or a platform rule that must Apply a
   matching stock package. A Marketplace of packages is later.
-- **Meta Skills.** On Bot create the Host may upsert four Skill rows
+- **Meta Skills.** On Bot create the Host inserts four Skill rows
   when each id is absent: `platform-meta-schedules`,
   `platform-meta-skills`, `platform-meta-self-settings`, and
   `platform-meta-marketplace`. Instructions are Russian markdown in
@@ -502,9 +507,9 @@ Module.
   through Marketplace. It does not invent weather tools. Image upgrade
   may insert the set only on a Bot that has none of these ids. Stored
   instructions stay. The creator or the Owner may edit or delete them
-  with the Skills tools. This seed is not in this Host until the code
-  PR. It is not a Module package, not an MCP tool, and not
-  `packages/modules/`. Chat Cards above are unchanged.
+  with the Skills tools. This seed is in this Host. It does not call
+  `dostigus_skills_upsert`. It is not a Module package, not an MCP
+  tool, and not `packages/modules/`. Chat Cards above are unchanged.
 
 ## Self-host (compose)
 
@@ -566,9 +571,8 @@ and [`docs/deploy.md`](deploy.md)).
   Marketplace of packages is later (cloud product). Builder Jobs stay
   out. Chat Cards for Schedule changes are
   [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are in this Host.
-  Meta Skills on Bot create are the same record and are not in this
-  Host yet. Meta Skills are plain Skill text, not a stock Module
-  package. A Schedule still only writes a Wake
+  Meta Skills on Bot create are in this Host. They are plain Skill
+  text, not a stock Module package. A Schedule still only writes a Wake
   ([ADR 0027](adr/0027-bot-schedules.md)).
 - Appearance via Chat, Model tier via Chat self-settings, and delete of
   a Bot or of Chat via Chat. The Host parsing a sentence into a

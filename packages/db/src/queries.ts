@@ -19,6 +19,7 @@ import {
   trimOrUndefined,
 } from '@dostigus/shared'
 import { toBot, toMessage } from './map'
+import { insertMissingMetaSkills } from './meta-skills'
 
 const BOT_NAME_MAX = 120
 const BOT_LABEL_MAX = 160
@@ -722,6 +723,8 @@ export function createBot(
     content: botGreetingContent(name),
     threadId,
   })
+
+  insertMissingMetaSkills(store, id)
 
   return { bot: requireBot(store, id), greeting }
 }

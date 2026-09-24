@@ -11,6 +11,7 @@ import {
   insertMessage,
   listBots,
   listMessages,
+  META_SKILL_IDS,
   openStore,
   searchMessages,
   StoreError,
@@ -52,7 +53,7 @@ it('creates a Bot with default name, strong Model tier, and greeting', () => {
     avatarColor: '#1F7AE5',
     label: '',
     description: '',
-    skillIds: [],
+    skillIds: [...META_SKILL_IDS],
     modulePackageIds: [],
   })
   expect(greeting.role).toBe('assistant')

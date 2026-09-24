@@ -50,6 +50,13 @@ export {
   listMembers,
   type MemberSecret,
 } from './members'
+export {
+  insertMissingMetaSkills,
+  META_SKILL_IDS,
+  type MetaSkillId,
+  upgradeBotMetaSkills,
+  upgradeClusterMetaSkills,
+} from './meta-skills'
 export { applyStoreMigrations, STORE_MIGRATIONS } from './migrations'
 export {
   countOwners,
