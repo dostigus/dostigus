@@ -8,7 +8,9 @@ import { previewChatLocation } from '../../app/utils/preview-hold'
  * assistant line with a Kit button and a status once. `?kitchen=1` adds one
  * assistant line with a Kitchen button once and fills empty Kitchen tables.
  * `?hold=1` stays on the Chat URL so the next quiet reply waits for a
- * screenshot. `?members=1`
+ * screenshot. An allowlisted `?activity=` (`thinking`, `tool`, `typing`,
+ * `command`, `connect`) stays on that same Chat URL. `connect` also keeps
+ * `target`. `?members=1`
  * opens Members instead of Chat. `?threads=1` seeds a preview Member,
  * that Member's Bot, a grant for the Member on Bot `preview`, and
  * separate Owner and Member bot-threads on Bot `preview`, then opens
@@ -52,7 +54,7 @@ export default defineEventHandler(async (event) => {
         ? `/threads/${seeded.roomId}`
         : previewThreadsRequested(query.threads)
           ? (asMember ? `/bots/${seeded.botId}` : '/')
-          : previewChatLocation(seeded.botId, query.hold)
+          : previewChatLocation(seeded.botId, query.hold, query.activity, query.target)
     return sendRedirect(event, location, 302)
   } catch (error) {
     if (error instanceof OwnerAuthError && error.statusCode === 401) {

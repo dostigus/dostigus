@@ -111,7 +111,7 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   expect(src).toContain('previewRoomsRequested')
   expect(src).toContain('previewThreadAsMember')
   expect(src).toContain('\'/members\'')
-  expect(src).toContain('previewChatLocation')
+  expect(src).toContain('previewChatLocation(seeded.botId, query.hold, query.activity, query.target)')
   expect(src).toContain('statusCode: 404')
   expect(src).toContain('startOwnerSession')
   expect(src).toContain('sendRedirect')

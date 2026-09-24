@@ -5,8 +5,9 @@ import process from 'node:process'
  * creating the Owner, signing in, creating a Bot, or inserting Chat lines.
  * 204 when the gate is open and fixture Bot `preview` does not exist yet
  * (GET would create it). 302 to `/bots/preview` when that Bot exists.
- * `?members=1`, `?parts=1`, and `?kitchen=1` are ignored. HEAD never opens
- * the Members page or the Kitchen Sheet.
+ * `?members=1`, `?parts=1`, `?kitchen=1`, and `?activity=` are ignored.
+ * HEAD never opens the Members page, the Kitchen Sheet, or a forced
+ * activity row.
  */
 export default defineEventHandler((event) => {
   if (!previewSeedAllowed({
