@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 import { chatMcpToolsAsOpenAi, listChatMcpToolSpecs } from '../../server/utils/mcp-platform-tools'
-import { CHAT_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
+import { CHAT_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
 import {
   mcpToolsToOpenAiFunctions,
   parseToolCallArguments,
@@ -13,6 +13,10 @@ it('maps MCP Zod tools to OpenAI function schemas', () => {
   expect(chatMcpToolsAsOpenAi('member').map((tool) => tool.function.name)).toEqual([
     ...MEMBER_CHAT_MCP_TOOLS,
   ])
+  expect(chatMcpToolsAsOpenAi('member', { canEditManifest: true }).map((tool) => tool.function.name))
+    .toEqual([...CREATOR_MEMBER_CHAT_MCP_TOOLS])
+  expect(chatMcpToolsAsOpenAi('owner', { canEditManifest: true }).map((tool) => tool.function.name))
+    .toEqual([...CHAT_MCP_TOOLS])
   expect(tools.every((tool) => tool.type === 'function')).toBe(true)
 
   const update = tools.find((tool) => tool.function.name === 'dostigus_bots_update')

@@ -25,12 +25,21 @@ export const SCHEDULE_MCP_TOOLS = [
 ] as const
 
 /** Platform MCP surface tool names (Host + Cluster Store). */
+export const SKILL_MCP_TOOLS = [
+  'dostigus_skills_list',
+  'dostigus_skills_upsert',
+  'dostigus_skills_delete',
+] as const
+
+export type SkillMcpTool = typeof SKILL_MCP_TOOLS[number]
+
 export const PLATFORM_MCP_TOOLS = [
   'dostigus_bots_list',
   'dostigus_bots_get',
   'dostigus_bots_create',
   'dostigus_bots_update',
   'dostigus_bots_delete',
+  ...SKILL_MCP_TOOLS,
   'dostigus_messages_list',
   'dostigus_messages_create',
   ...SCHEDULE_MCP_TOOLS,
@@ -50,9 +59,10 @@ export const CHAT_MCP_TOOLS = PLATFORM_MCP_TOOLS.filter(
 export type ChatMcpTool = typeof CHAT_MCP_TOOLS[number]
 
 /**
- * Member Chat may read and append messages, manage that person's
- * Schedules on the Bot in the turn, and read the Cluster timezone.
- * Setting the timezone stays with the Owner.
+ * Every Member Chat turn, including a grantee. Messages, that person's
+ * Schedules on the Bot in the turn, and Cluster timezone read.
+ * Setting the timezone stays with the Owner. Manifest and Skills stay
+ * off this list.
  */
 export const MEMBER_CHAT_MCP_TOOLS = [
   'dostigus_messages_list',
@@ -68,10 +78,39 @@ export const MEMBER_CHAT_MCP_TOOLS = [
 
 export type MemberChatMcpTool = typeof MEMBER_CHAT_MCP_TOOLS[number]
 
+/**
+ * A Member who created this Bot. Same actors as the closet.
+ * Not bots_create, bots_delete, or appearance-only tools.
+ */
+export const CREATOR_MEMBER_CHAT_MCP_TOOLS = [
+  ...MEMBER_CHAT_MCP_TOOLS,
+  'dostigus_bots_update',
+  ...SKILL_MCP_TOOLS,
+] as const satisfies readonly ChatMcpTool[]
+
+export type CreatorMemberChatMcpTool = typeof CREATOR_MEMBER_CHAT_MCP_TOOLS[number]
+
 export function isChatMcpTool(name: string): name is ChatMcpTool {
   return (CHAT_MCP_TOOLS as readonly string[]).includes(name)
 }
 
 export function isMemberChatMcpTool(name: string): name is MemberChatMcpTool {
   return (MEMBER_CHAT_MCP_TOOLS as readonly string[]).includes(name)
+}
+
+export function isCreatorMemberChatMcpTool(name: string): name is CreatorMemberChatMcpTool {
+  return (CREATOR_MEMBER_CHAT_MCP_TOOLS as readonly string[]).includes(name)
+}
+
+export function chatToolNamesForTurn(
+  role: 'owner' | 'member',
+  canEditManifest: boolean,
+): readonly ChatMcpTool[] {
+  if (role === 'owner') {
+    return CHAT_MCP_TOOLS
+  }
+  if (canEditManifest) {
+    return CREATOR_MEMBER_CHAT_MCP_TOOLS
+  }
+  return MEMBER_CHAT_MCP_TOOLS
 }

@@ -5,6 +5,7 @@ import type {
   Message,
   ModelTier,
   ResolvedLlmGateway,
+  Skill,
 } from '@dostigus/shared'
 import type { ChatActivityPhase } from '../../app/utils/chat-activity'
 import type { ChatToolInvokeResult } from './mcp-platform-tools'
@@ -72,10 +73,15 @@ export async function completeAssistantReply(input: {
   invokeTool?: ChatToolInvoker
   tools?: OpenAiChatFunctionTool[]
   audience?: 'owner' | 'member'
+  /** Creator or Owner of the Bot on this turn. */
+  canEditManifest?: boolean
+  /** Skill instructions loaded into the system prompt. */
+  skills?: Skill[]
   /** Live Activity phase. Quiet (no key) replies do not call this. */
   onActivity?: (phase: ChatActivityPhase) => void
 }): Promise<{ content: string, via: AssistantReplyVia }> {
   const audience = input.audience === 'member' ? 'member' : 'owner'
+  const creatorManifest = audience === 'member' && input.canEditManifest === true
   const resolved = resolveClusterLlmGateway({
     env: input.env,
     stored: input.stored,
@@ -84,7 +90,9 @@ export async function completeAssistantReply(input: {
     return { content: stubAssistantReply(audience), via: 'stub' }
   }
 
-  const tools = input.tools ?? chatMcpToolsAsOpenAi(audience)
+  const tools = input.tools ?? chatMcpToolsAsOpenAi(audience, {
+    canEditManifest: creatorManifest,
+  })
   const invokeTool = input.invokeTool ?? (async (name) => {
     logChatTool(name, 'skip')
     return {
@@ -105,7 +113,9 @@ export async function completeAssistantReply(input: {
       fetchImpl: input.fetchImpl ?? fetch,
       tools,
       invokeTool,
-      messagesOnly: audience === 'member',
+      messagesOnly: audience === 'member' && !creatorManifest,
+      creatorManifest,
+      skills: input.skills,
       onActivity: input.onActivity,
     })
     const trimmed = result.content.trim()
@@ -192,6 +202,8 @@ async function callOpenAiCompatible(input: {
   tools: OpenAiChatFunctionTool[]
   invokeTool: ChatToolInvoker
   messagesOnly?: boolean
+  creatorManifest?: boolean
+  skills?: Skill[]
   onActivity?: (phase: ChatActivityPhase) => void
 }): Promise<{ content: string, usedTools: boolean }> {
   const messages: OpenAiChatMessage[] = [
@@ -202,6 +214,8 @@ async function callOpenAiCompatible(input: {
         botId: input.botId,
         tools: input.tools.length > 0,
         messagesOnly: input.messagesOnly,
+        creatorManifest: input.creatorManifest,
+        skills: input.skills,
         manifest: input.manifest ?? {
           name: input.botName,
           modelTier: input.modelTier,

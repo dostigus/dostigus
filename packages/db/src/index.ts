@@ -34,6 +34,7 @@ export {
   type MessageRecord,
   modelTierFromRow,
   type OwnerRecord,
+  skillsFromJson,
   toBot,
   toInvite,
   toMember,
@@ -118,6 +119,11 @@ export {
   viewerForPerson,
 } from './schedules'
 export { type BotGrantRow, botGrants, type BotRow, bots, clusterSettings, type ClusterSettingsRow, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageRow, messages, type OwnerRow, owners, type ScheduleRow, schedules, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads } from './schema'
+export {
+  deleteBotSkill,
+  listBotSkills,
+  upsertBotSkill,
+} from './skills'
 export { type OpenedStore, openStore } from './store'
 export {
   appendMessengerAssistantLine,

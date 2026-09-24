@@ -193,6 +193,10 @@ it('updates name, Model tier, and avatar fields, and cascade-deletes messages', 
   expect(labeled.manifest.description).toBe('Keeps notes for the week')
   expect(labeled.manifest.modelTier).toBe('code')
   expect(updateBot(store, bot.id, { label: '  ', description: '' }).manifest.label).toBe('')
+  expect(() => updateBot(store, bot.id, { name: '   ' })).toThrow(/Bot name is required/)
+  expect(listBots(store)[0]?.name).toBe('Renamed')
+  const trimmed = updateBot(store, bot.id, { name: '  Raincoat  ' })
+  expect(trimmed.name).toBe('Raincoat')
 
   deleteBot(store, bot.id)
   expect(listBots(store)).toEqual([])

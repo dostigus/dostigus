@@ -88,6 +88,18 @@ function normalizeName(name: string | undefined): string {
   return value
 }
 
+/** Closet and Chat reject an empty rename. Create still defaults to New Bot. */
+function normalizeUpdateName(name: string): string {
+  const trimmed = name.trim()
+  if (!trimmed) {
+    throw new StoreError('Bot name is required', 400)
+  }
+  if (trimmed.length > BOT_NAME_MAX) {
+    throw new StoreError(`Bot name must be ${BOT_NAME_MAX} characters or fewer`, 400)
+  }
+  return trimmed
+}
+
 function normalizeCapped(value: string | undefined, max: number, label: string): string {
   const trimmed = value?.trim() ?? ''
   if (trimmed.length > max) {
@@ -731,7 +743,7 @@ export function updateBot(
   const params: Array<string | number> = []
   if (input.name !== undefined) {
     sets.push('name = ?')
-    params.push(normalizeName(input.name))
+    params.push(normalizeUpdateName(input.name))
   }
   if (input.modelTier !== undefined) {
     sets.push('model_tier = ?')

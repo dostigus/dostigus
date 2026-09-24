@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { authorizeMcpAgent, mcpToolsEnabled, readAuthorizationHeader } from '../../server/utils/mcp-auth'
-import { CHAT_MCP_TOOLS, KITCHEN_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS, SCHEDULE_MCP_TOOLS } from '../../server/utils/mcp-surface'
+import { CHAT_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, KITCHEN_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS, SCHEDULE_MCP_TOOLS, SKILL_MCP_TOOLS } from '../../server/utils/mcp-surface'
 
 function event() {
   return { context: {} as { agentOk?: boolean } }
@@ -58,6 +58,7 @@ it('lists the Platform MCP surface tools', () => {
     'dostigus_bots_create',
     'dostigus_bots_update',
     'dostigus_bots_delete',
+    ...SKILL_MCP_TOOLS,
     'dostigus_messages_list',
     'dostigus_messages_create',
     ...SCHEDULE_MCP_TOOLS,
@@ -71,6 +72,7 @@ it('keeps delete off the Chat MCP tool list', () => {
     'dostigus_bots_get',
     'dostigus_bots_create',
     'dostigus_bots_update',
+    ...SKILL_MCP_TOOLS,
     'dostigus_messages_list',
     'dostigus_messages_create',
     ...SCHEDULE_MCP_TOOLS,
@@ -101,6 +103,25 @@ it('lets Member Chat manage Schedules and read the Cluster timezone', () => {
   expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_bots_delete')
   expect(MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_cluster_timezone_set')
   expect(CHAT_MCP_TOOLS).toContain('dostigus_cluster_timezone_set')
+  for (const name of SKILL_MCP_TOOLS) {
+    expect(MEMBER_CHAT_MCP_TOOLS).not.toContain(name)
+  }
+})
+
+it('gives a creator Member update and Skills tools on top of Member Chat', () => {
+  expect(CREATOR_MEMBER_CHAT_MCP_TOOLS).toEqual([
+    ...MEMBER_CHAT_MCP_TOOLS,
+    'dostigus_bots_update',
+    ...SKILL_MCP_TOOLS,
+  ])
+  expect(CREATOR_MEMBER_CHAT_MCP_TOOLS).toContain('dostigus_schedules_create')
+  expect(CREATOR_MEMBER_CHAT_MCP_TOOLS).toContain('dostigus_cluster_timezone_get')
+  expect(CREATOR_MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_cluster_timezone_set')
+  expect(CREATOR_MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_bots_delete')
+  expect(CREATOR_MEMBER_CHAT_MCP_TOOLS).not.toContain('dostigus_bots_create')
+  for (const name of CREATOR_MEMBER_CHAT_MCP_TOOLS) {
+    expect(CHAT_MCP_TOOLS).toContain(name)
+  }
 })
 
 it('gates every file-based MCP tool with mcpToolsEnabled', () => {
