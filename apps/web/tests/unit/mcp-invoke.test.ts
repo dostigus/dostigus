@@ -1,4 +1,4 @@
-import { createMember, createOwner, grantBot, openStore } from '@dostigus/db'
+import { createMember, createOwner, grantBot, META_SKILL_IDS, openStore } from '@dostigus/db'
 import { afterEach, expect, it } from 'vitest'
 import { invokeChatMcpTool } from '../../server/utils/mcp-platform-tools'
 
@@ -224,8 +224,9 @@ it('lets the creator Member update and edit Skills, and refuses a grantee', () =
     personId: creator.id,
   })
   expect(upserted.ok).toBe(true)
-  expect(JSON.parse(upserted.content)).toMatchObject({
-    skills: [{ id: 'notes', instructions: 'Keep short notes.' }],
+  expect(JSON.parse(upserted.content).skills).toContainEqual({
+    id: 'notes',
+    instructions: 'Keep short notes.',
   })
 
   const listed = invokeChatMcpTool({
@@ -264,7 +265,9 @@ it('lets the creator Member update and edit Skills, and refuses a grantee', () =
     personId: owner.id,
   })
   expect(removed.ok).toBe(true)
-  expect(JSON.parse(removed.content)).toMatchObject({ skills: [] })
+  expect(JSON.parse(removed.content).skills.map((skill: { id: string }) => skill.id)).toEqual([
+    ...META_SKILL_IDS,
+  ])
 
   const still = invokeChatMcpTool({
     name: 'dostigus_bots_get',
