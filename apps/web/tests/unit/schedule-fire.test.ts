@@ -21,6 +21,7 @@ import {
   setChatActivityPhase,
 } from '../../server/utils/chat-activity-phase'
 import { flushScheduleWakes, runScheduleTick } from '../../server/utils/schedule-ticker'
+import { resetChatTurnJournal } from '../../server/utils/turn-journal'
 
 const opened: Array<ReturnType<typeof openStore>> = []
 
@@ -39,6 +40,7 @@ function dueAt(store: ReturnType<typeof openStore>, id: string, at: number, defe
 afterEach(async () => {
   clearChatActivityPhases()
   await flushScheduleWakes()
+  resetChatTurnJournal()
   while (opened.length > 0) {
     opened.pop()?.close()
   }

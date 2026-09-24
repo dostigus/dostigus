@@ -19,7 +19,9 @@ session receives only the message tools
 ([ADR 0012](0012-household-members.md)).
 
 `dostigus_bots_delete` stays on `/mcp` and the Host Delete control. It is
-not exposed to Chat.
+not exposed to Chat. `dostigus_turns_list` and `dostigus_turns_get` stay
+on `/mcp` as well. They are not Chat tools
+([ADR 0029](0029-turn-journal.md)).
 
 ## Context
 
@@ -38,7 +40,9 @@ data.
 - Cap tool-call rounds (`CHAT_MCP_TOOL_MAX_ITERATIONS`, 6), then one
   text-only completion. Unknown tools (including delete) are skipped; the
   model receives error content. Logs are `Chat MCP tool <name> ok|fail|skip`
-  with no secrets or arguments.
+  with no secrets or arguments. The same loop appends `{ name, ok, ms }`
+  onto the open Turn ([ADR 0029](0029-turn-journal.md)). It does not
+  append arguments or results.
 - No key: stub reply, no tools, same as ADR 0004.
 - Configured but failed: persist a clear error, not a stub. A transient
   failure retries that one completion, not the tool loop, so a tool

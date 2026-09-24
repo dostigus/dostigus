@@ -33,6 +33,17 @@ export const SKILL_MCP_TOOLS = [
 
 export type SkillMcpTool = typeof SKILL_MCP_TOOLS[number]
 
+/**
+ * Turn journal tools. On `/mcp` for an ops token.
+ * Not in the Owner or Member Chat LLM loop. See ADR 0029.
+ */
+export const TURN_MCP_TOOLS = [
+  'dostigus_turns_list',
+  'dostigus_turns_get',
+] as const
+
+export type TurnMcpTool = typeof TURN_MCP_TOOLS[number]
+
 export const PLATFORM_MCP_TOOLS = [
   'dostigus_bots_list',
   'dostigus_bots_get',
@@ -43,17 +54,20 @@ export const PLATFORM_MCP_TOOLS = [
   'dostigus_messages_list',
   'dostigus_messages_create',
   ...SCHEDULE_MCP_TOOLS,
+  ...TURN_MCP_TOOLS,
   ...KITCHEN_MCP_TOOLS,
 ] as const
 
 export type PlatformMcpTool = typeof PLATFORM_MCP_TOOLS[number]
 
-type ChatExcludedMcpTool = 'dostigus_bots_delete' | KitchenMcpTool
+type ChatExcludedMcpTool = 'dostigus_bots_delete' | KitchenMcpTool | TurnMcpTool
 
-/** Owner Chat LLM tool loop. Delete and Kitchen stay on `/mcp` and the Host. */
+/** Owner Chat LLM tool loop. Delete, Kitchen, and Turn journal stay on `/mcp`. */
 export const CHAT_MCP_TOOLS = PLATFORM_MCP_TOOLS.filter(
   (name): name is Exclude<PlatformMcpTool, ChatExcludedMcpTool> =>
-    name !== 'dostigus_bots_delete' && !(KITCHEN_MCP_TOOLS as readonly string[]).includes(name),
+    name !== 'dostigus_bots_delete'
+    && !(KITCHEN_MCP_TOOLS as readonly string[]).includes(name)
+    && !(TURN_MCP_TOOLS as readonly string[]).includes(name),
 )
 
 export type ChatMcpTool = typeof CHAT_MCP_TOOLS[number]
@@ -61,8 +75,8 @@ export type ChatMcpTool = typeof CHAT_MCP_TOOLS[number]
 /**
  * Every Member Chat turn, including a grantee. Messages, that person's
  * Schedules on the Bot in the turn, and Cluster timezone read.
- * Setting the timezone stays with the Owner. Manifest and Skills stay
- * off this list.
+ * Setting the timezone stays with the Owner. Manifest, Skills, and
+ * Turn journal tools stay off this list.
  */
 export const MEMBER_CHAT_MCP_TOOLS = [
   'dostigus_messages_list',

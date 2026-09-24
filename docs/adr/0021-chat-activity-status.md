@@ -79,7 +79,11 @@ every 400ms while that Thread has the viewer’s own reply pending. This
 ADR does not use SSE or a chunked response.
 
 Phase state is in-memory on the Host process, keyed by `(threadId, botId)`.
-One protocol covers a bot-thread and a room (a mention-reply). The
+One protocol covers a bot-thread and a room (a mention-reply). Setting
+that phase also appends `{ phase, at }` on the open Turn when this
+reply is a Host Bot turn
+([ADR 0029](0029-turn-journal.md)). Clearing the phase does not append.
+The poll does not read `turns`. The
 client may keep a phase on screen for about 300ms so the row does not
 flicker. It stops polling when the assistant line lands, when the
 request errors or aborts, or when the viewer leaves Chat.
@@ -109,7 +113,10 @@ the model is still waiting to run, or while a tool call is running, and
 - The pill stays in `think` for the whole in-flight reply. The row carries
   the phase. The live dot stays.
 - Phase state is ephemeral process memory. The poll is the transport.
-  Preview `?hold=1` only delays the quiet stub.
+  Preview `?hold=1` only delays the quiet stub. The same set appends
+  `{ phase, at }` on the open Turn
+  ([ADR 0029](0029-turn-journal.md)). Clearing the phase does not
+  delete that Turn. The poll does not read `turns`.
 - The message route is unchanged: one finished assistant line.
 
 ### Out of scope
@@ -117,7 +124,10 @@ the model is still waiting to run, or while a tool call is running, and
 - Streaming the assistant bubble body token-by-token.
 - Showing MCP tool names or arguments in the status row.
 - Model-supplied free-text status lines.
-- Durable Store rows for a phase. The phase is ephemeral.
+- The Activity poll reading a Store row. The phase the row shows stays
+  ephemeral process memory. A Turn may copy the same phase names and
+  times for ops ([ADR 0029](0029-turn-journal.md)). Chat does not read
+  that journal.
 - Weather Module, Host schedules, and Skills packages.
 
 ## Alternatives
@@ -139,4 +149,6 @@ the model is still waiting to run, or while a tool call is running, and
 - Put the phase on the message response — rejected.
   [ADR 0011](0011-chat-mcp-tool-loop.md) still returns one finished line.
 - Show the tool name, or a model-written status — rejected for day-1.
-- Store the phase — rejected. It is ephemeral.
+- Store the phase as the Activity source — rejected. The poll stays
+  ephemeral. [ADR 0029](0029-turn-journal.md) dual-writes the same
+  phases onto a Turn for ops and does not feed the row.

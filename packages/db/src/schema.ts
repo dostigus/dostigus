@@ -167,6 +167,29 @@ export const schedules = sqliteTable('schedules', {
   index('schedules_bot_id_person_id_idx').on(table.botId, table.personId),
 ])
 
+/**
+ * One Host Bot Chat turn. Ops meta only: no message body, tool arguments,
+ * or tool results. See ADR 0029.
+ */
+export const turns = sqliteTable('turns', {
+  id: text('id').primaryKey(),
+  threadId: text('thread_id').notNull(),
+  botId: text('bot_id').notNull().references(() => bots.id, { onDelete: 'cascade' }),
+  personId: text('person_id').notNull(),
+  trigger: text('trigger').notNull(),
+  outcome: text('outcome').notNull(),
+  startedAt: integer('started_at').notNull(),
+  endedAt: integer('ended_at'),
+  scheduleId: text('schedule_id'),
+  errorCode: text('error_code'),
+  phasesJson: text('phases_json').notNull().default('[]'),
+  toolsJson: text('tools_json').notNull().default('[]'),
+}, (table) => [
+  index('turns_started_at_idx').on(table.startedAt),
+  index('turns_bot_started_idx').on(table.botId, table.startedAt),
+  index('turns_thread_started_idx').on(table.threadId, table.startedAt),
+])
+
 /** Cluster timezone singleton (`cluster`). Null timezone means unset. */
 export const clusterSettings = sqliteTable('cluster_settings', {
   id: text('id').primaryKey(),
@@ -184,4 +207,5 @@ export type OwnerRow = typeof owners.$inferSelect
 export type MemberRow = typeof members.$inferSelect
 export type InviteRow = typeof invites.$inferSelect
 export type ScheduleRow = typeof schedules.$inferSelect
+export type TurnRow = typeof turns.$inferSelect
 export type ClusterSettingsRow = typeof clusterSettings.$inferSelect

@@ -39,6 +39,7 @@ import {
   schedulesResume,
   schedulesUpdate,
 } from './schedule-tools'
+import { turnsGet, turnsList } from './turn-tools'
 
 export type PlatformToolSpec = {
   name: PlatformMcpTool
@@ -334,6 +335,29 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
       timezone: z.string().min(1).max(64),
     },
     run: (input, store, viewer) => clusterTimezoneSet(store, input, viewer),
+  },
+  dostigus_turns_list: {
+    name: 'dostigus_turns_list',
+    description: 'List Host Bot turns in this Cluster, newest first. Optional filters: botId, threadId, since (ISO-8601 or epoch milliseconds), and limit (default 50, cap 100). Each turn has id, threadId, botId, personId, trigger (user, wake, or mention), outcome (running, ok, error, or abort), startedAt, endedAt, scheduleId, errorCode, phases (thinking, tool, or typing, with at), and tools (name, ok, ms). No message bodies, tool arguments, or tool results. The ops token sees every turn. This tool is not a Chat tool.',
+    annotations: { readOnlyHint: true },
+    chat: false,
+    inputSchema: {
+      botId: z.string().optional(),
+      threadId: z.string().optional(),
+      since: z.string().optional(),
+      limit: z.union([z.number().int(), z.string().regex(/^\d+$/)]).optional(),
+    },
+    run: (input, store) => turnsList(store, input),
+  },
+  dostigus_turns_get: {
+    name: 'dostigus_turns_get',
+    description: 'Get one Host Bot turn by id. Same fields as dostigus_turns_list. No message body, tool arguments, or tool results. The ops token sees every turn. This tool is not a Chat tool.',
+    annotations: { readOnlyHint: true },
+    chat: false,
+    inputSchema: {
+      id: z.string().min(1),
+    },
+    run: (input, store) => turnsGet(store, input),
   },
 }
 

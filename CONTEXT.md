@@ -59,6 +59,20 @@ Which Activity that row shows while the reply is in flight: `thinking`,
 `tool`, or `typing`. `connect` is a local preview row only.
 _Avoid_: tool name, status string, Store row.
 
+**Turn**:
+One Host Bot Chat turn: one Bot LLM tool loop, the same span as one
+Activity session. Trigger is `user`, `wake`, or `mention`. The row is
+ops meta (outcome, phase times, tool names). It is not a Chat line and
+not an Activity row.
+_Avoid_: trace, span, log (unqualified), transcript.
+
+**Turn journal**:
+The Store table and MCP surface tools an ops agent uses to read Turns
+on a live Host (`dostigus_turns_list`, `dostigus_turns_get`). Not an
+Owner Sheet. Not part of the Chat LLM allowlist. See
+[ADR 0029](docs/adr/0029-turn-journal.md).
+_Avoid_: trace store, debug log, Activity poll.
+
 **Thread**:
 One conversation in the Cluster. It has participants and Chat lines.
 Kinds are labels, not separate products: `dm` (person and person),
@@ -277,6 +291,12 @@ _Avoid_: public share, invite (unqualified).
   The Activity phase is ephemeral. The Owner and a Member see the same
   row. See
   [ADR 0021](docs/adr/0021-chat-activity-status.md) (amended 2026-09-24).
+  The same phase set is copied onto the open Turn. The Activity poll
+  does not read that Turn.
+- A Host Bot Chat turn is a Turn in the Turn journal. A Wake sets
+  `scheduleId`. A room line with no mention is not a Turn. Ops read
+  the journal through the MCP surface. Chat does not receive those
+  tools. See [ADR 0029](docs/adr/0029-turn-journal.md).
 - When a Schedule is due, the Host writes a Wake on that person's
   bot-thread with that Bot, then runs the Bot turn. A room, a direct
   message, and a group do not get that fire. See

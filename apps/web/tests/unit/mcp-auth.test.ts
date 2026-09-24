@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { authorizeMcpAgent, mcpToolsEnabled, readAuthorizationHeader } from '../../server/utils/mcp-auth'
-import { CHAT_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, KITCHEN_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS, SCHEDULE_MCP_TOOLS, SKILL_MCP_TOOLS } from '../../server/utils/mcp-surface'
+import { CHAT_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, KITCHEN_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS, SCHEDULE_MCP_TOOLS, SKILL_MCP_TOOLS, TURN_MCP_TOOLS } from '../../server/utils/mcp-surface'
 
 function event() {
   return { context: {} as { agentOk?: boolean } }
@@ -62,6 +62,7 @@ it('lists the Platform MCP surface tools', () => {
     'dostigus_messages_list',
     'dostigus_messages_create',
     ...SCHEDULE_MCP_TOOLS,
+    ...TURN_MCP_TOOLS,
     ...KITCHEN_MCP_TOOLS,
   ])
 })
@@ -80,6 +81,11 @@ it('keeps delete off the Chat MCP tool list', () => {
   expect(CHAT_MCP_TOOLS).not.toContain('dostigus_bots_delete')
   for (const name of KITCHEN_MCP_TOOLS) {
     expect(CHAT_MCP_TOOLS).not.toContain(name)
+  }
+  for (const name of TURN_MCP_TOOLS) {
+    expect(CHAT_MCP_TOOLS).not.toContain(name)
+    expect(MEMBER_CHAT_MCP_TOOLS).not.toContain(name)
+    expect(CREATOR_MEMBER_CHAT_MCP_TOOLS).not.toContain(name)
   }
 })
 
