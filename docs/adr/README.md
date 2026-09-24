@@ -55,6 +55,6 @@ English.
 | [0021](0021-chat-activity-status.md) | Chat activity status row |
 | [0022](0022-chat-assistant-markdown.md) | Chat assistant Markdown body |
 | [0023](0023-household-member-invites.md) | Household Member Invites |
-| [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility |
+| [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility (amended 2026-09-24: personal Bot + grants) |
 | [0025](0025-chat-bubble-parts.md) | Chat bubble parts |
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |

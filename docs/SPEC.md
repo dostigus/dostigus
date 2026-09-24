@@ -20,7 +20,7 @@ Settled now, even if this repo only scaffolds them:
 | Declarative modules | SQL + templated MCP before arbitrary sandbox. See [ADR 0006](adr/0006-day-1-declarative-modules.md). |
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
 | Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). |
-| Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. Bot visibility `shared` \| `private`. Bot-threads, direct messages, groups, and rooms are in this Host. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
+| Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. A Bot is personal to its creator. The Owner always sees it. Other people need an explicit grant (`bot_id` + `person_id`). Bot-threads, direct messages, groups, and rooms are in this Host. The running Host still stores visibility `shared` \| `private` until the grants milestone. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -31,7 +31,10 @@ What the running Cluster does today:
   default `goose` (Bot mark), `avatarColor` default `#1F7AE5` /
   `--bot-accent-10`, optional `label` and `description` default empty,
   empty skills/modules, `visibility` `shared` \| `private` default
-  `shared`, `created_by` the Owner or Member who created it),
+  `shared` (running access check; the target is a personal Bot plus
+  grants, and this Store has no grant rows yet,
+  [ADR 0024](adr/0024-threads-and-bot-visibility.md)),
+  `created_by` the Owner or Member who created it),
   `threads` (kind `dm`, `group`, `bot`, or `room`; `title` on a group or room)
   and `thread_participants` (a person or a Bot),
   `messages` (`botId` on a Bot's lines, empty on a person line in a dm,
@@ -125,7 +128,10 @@ What the running Cluster does today:
   Settings. Delete is not on this Sheet. The Owner edits a shared Bot
   and a Bot they created, and flips visibility (**Shared** / **Private**)
   on this Sheet. A flip keeps the creator. A Member edits the Manifest
-  of their own private Bot and reads the rest.
+  of their own private Bot and reads the rest. The **Private** mark
+  and the Shared / Private flip are the running `visibility` column.
+  Amended [ADR 0024](adr/0024-threads-and-bot-visibility.md) is the
+  target (personal Bot + grants). This Host has no grant rows yet.
   Bubbles stay unlabeled. Assistant bubbles render a safe Markdown subset
   (bold, italic, code, lists, and http(s) links) through `KitMarkdown`.
   An assistant line may also carry Kit parts under that body: a button
@@ -212,14 +218,20 @@ What the running Cluster does today:
   the Owner plus Members ([ADR 0012](adr/0012-household-members.md)),
   including Invites the Owner copies by hand
   ([ADR 0023](adr/0023-household-member-invites.md)).
-- Bot visibility (`shared` | `private`) and per-person bot-threads are in
-  this Host ([ADR 0024](adr/0024-threads-and-bot-visibility.md)). A shared
+- Bot access on this Host is still visibility `shared` | `private`
+  ([ADR 0024](adr/0024-threads-and-bot-visibility.md), amended
+  2026-09-24). The target is a personal Bot. The creator can see it.
+  The Owner always can, including a Member-created Bot with no grant.
+  Anyone else needs an explicit grant (`bot_id` + `person_id`). There
+  is no flag shared with future Members. This Host has no grants table.
+  Until that milestone, the Cluster still does the following. A `shared`
   Bot is not one Household-wide timeline. Chat reads and writes the
-  viewer's bot-thread. The Owner opening a Member's private Bot reads
-  that Member's bot-thread. A private Bot cannot join a room. The Owner
-  and Members may create a `dm`, a `group`, or a `room`. Adding a Bot
-  requires every participant can see that Bot, so only a `shared` Bot
-  can join. In a `room`, a Bot replies only when the line mentions it:
+  viewer's bot-thread on a `shared` Bot. The Owner opening a Member's
+  private Bot reads that Member's bot-thread. A private Bot cannot join
+  a room. The Owner and Members may create a `dm`, a `group`, or a
+  `room`. Adding a Bot requires every participant can see that Bot, so
+  only a `shared` Bot can join. In a `room`, a Bot replies only when the
+  line mentions it:
   `@` plus the Bot's name, case-insensitive, with a space or the start
   of the line before `@`, and a space, the end of the line, or
   `. , ! ? ; :` after the name. The earliest `@` wins. When two names
@@ -232,10 +244,16 @@ What the running Cluster does today:
   HEAD ignores `?rooms=1`.
   Bubble parts are in
   this Host ([ADR 0025](adr/0025-chat-bubble-parts.md)).
-  An Invite does not change visibility. Existing `messages` rows are
-  placed on bot-threads at migration: a user row with `personId` keys
-  that person's bot-thread; every other row follows the nearest preceding
-  keyed user row on that Bot, or the Owner's bot-thread when none precedes it.
+  An Invite does not change visibility. Under the target model an Invite
+  also does not receive grants already made. The grants milestone does
+  not copy another person's bot-thread: a grantee's first open is empty
+  plus the normal Host greeting. Adding a Bot to a room does not
+  auto-grant, and a later Invite does not auto-receive Bots. Existing
+  `messages` rows were placed on bot-threads when visibility landed: a
+  user row with `personId` keys that person's bot-thread; every other
+  row follows the nearest preceding keyed user row on that Bot, or the
+  Owner's bot-thread when none precedes it. This Host does not place
+  those rows again.
 
 `pnpm install` and `pnpm check` must stay green.
 
@@ -260,6 +278,12 @@ and [`docs/deploy.md`](deploy.md)).
   day-1 seed is in this Host
   ([ADR 0026](adr/0026-kitchen-module-day-1.md)).
 - Sending an Invite by SMTP (the Owner copies the link)
+- Durable memory across bot-threads, Skill proposals from grantees,
+  and a Bot fork or clone (copy Skills without memory)
+  ([ADR 0024](adr/0024-threads-and-bot-visibility.md), amended
+  2026-09-24)
+- Peeking another person's bot-thread, auto-grant when a Bot is added
+  to a room, and auto-grant to a future Invite
 - Roles beyond Owner and Member, hard-delete of a Member
 - OAuth, passkeys, email verify, password reset
 - Mobile native

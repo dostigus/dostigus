@@ -2,11 +2,18 @@
 
 - Status: accepted
 - Date: 2026-09-23
+- Amended: 2026-09-24
 
 Household accounts stay [ADR 0012](0012-household-members.md). Invites
 stay [ADR 0023](0023-household-member-invites.md). This record leaves
-the running Host as it is. It settles the Thread model and Bot
-visibility for the milestones below.
+the running Host as it is. It settles the Thread model and who may
+open a Bot.
+
+Amended 2026-09-24. The Bot visibility section below is the target
+access model: a personal Bot plus explicit grants. It supersedes
+household-wide visibility `shared` | `private`. The running Host still
+stores that column until a later runtime milestone. This amendment
+does not add a grants table.
 
 ## Decision
 
@@ -16,29 +23,65 @@ One Cluster is one Household. There is no Org entity.
 
 ### Bot visibility
 
-A Bot has visibility `shared` or `private`. A `shared` Bot is visible
-to the Household. A `private` Bot is visible to its creator and to the
-Owner.
+A Bot is personal to its creator. Another person sees it by an
+explicit grant, or because they are the Owner. The paragraphs in this
+section are the target. Consequences names what the Host still does.
 
-The Owner creates Bots. The default is `shared`. The Owner has CRUD on
-a shared Bot and on a Bot the Owner created, and may flip visibility
-either way. A flip keeps the creator.
+Every new Bot is personal to its creator. Other Members see it only
+after a grant.
 
-A Member creates only a `private` Bot. That Member may edit its
-Manifest and delete it. Only the Owner flips a `private` Bot to
-`shared`.
+Who can see a Bot: the creator; the Owner always, including a
+Member-created Bot they were never granted; plus explicit per-person
+grants. A grant is one row, `bot_id` and `person_id`. A Bot has no
+flag that stays shared with all future Members.
 
-The Owner sees every Member `private` Bot in the list and may open it.
-That open is the Member's bot-thread with that Bot. The `private` Bot
-has that one bot-thread.
+"All current Members" is a one-shot batch grant to Members who exist
+now. A later Invite does not receive those Bots. Someone grants again.
 
-Turning off a Member's sign-in leaves their `private` Bots in place.
-The Owner still sees them. Lines keep `personId` and the author's name
-([ADR 0012](0012-household-members.md)).
+Who may grant or revoke: the Owner, on any Bot; the creator, on their
+own Bot. A grantee cannot re-share unless they are also the Owner or
+the creator under those rules.
 
-A `private` Bot cannot join a room. The Owner flips it to `shared`
-before it can sit with other people. Its only Thread until then is the
-bot-thread with the person who created it.
+Revoke cuts list and open for that person. Store rows stay, including
+that person's bot-thread messages. Same spirit as keeping data when
+the old model flipped a Bot to `private`.
+
+A Bot may be added to a room only when every person participant
+already has access (creator, Owner, or a grant). Adding the Bot does
+not grant access.
+
+The creator and the Owner may edit the Manifest (name, avatar, Skills,
+modules, description, and the rest of that definition). A grantee chats
+on their own bot-thread, and uses Module Store under existing Module
+rules. Chat does not write the Manifest from learning. The Owner Chat
+tool loop may update a Bot. Member Chat must not. Delete follows the
+same actors as Manifest edit: the creator and the Owner. A grantee
+does not delete the Bot.
+
+The first open for a grantee is an empty bot-thread plus the normal
+Host greeting. The Host does not copy the Owner's history, or anyone
+else's. The Owner's first open of a Bot they did not create follows
+the same rule on the Owner's own bot-thread.
+
+A joint conversation is a `room` (people and a Bot). Personal use is
+that person's own bot-thread. A person does not keep a private write
+on a shared chat timeline.
+
+Module package data stays in one Cluster Store for the Household. Bot
+access does not partition that Store. A per-bot private Store is later
+Module policy.
+
+This ADR does not add a Bot fork or clone (copy Skills without memory).
+
+Out of scope: durable memory across bot-threads; Skill proposals from
+grantees; a Bot fork or clone; peeking another person's bot-thread on
+a granted Bot; auto-grant when a Bot is added to a room; auto-grant to
+a future Invite; roles beyond Owner and Member.
+
+Turning off a Member's sign-in leaves their Bots in place. The Owner
+still sees them. Lines keep `personId` and the author's name
+([ADR 0012](0012-household-members.md)). Grant rows and bot-thread
+rows stay.
 
 ### Thread
 
@@ -54,51 +97,63 @@ products:
 | `room` | people and at least one Bot |
 
 Chat between people (`dm`, `group`, and a `room`) belongs to this
-model. Current Host code does not build it yet.
+model. The Host already builds those kinds. This amendment does not
+remove them.
 
-A `shared` Bot is a Bot each person can open. It is not one
-Household-wide timeline. Each person has their own bot-thread with that
-Bot: participants `{that person, that Bot}`. A `room` is the Thread
-that places a Bot with more than one person.
+Each person who can open a Bot has their own bot-thread with that Bot.
+Participants are `{that person, that Bot}`.
+A `room` is the Thread that places a Bot with more than one person.
 
 In a `room`, a Bot replies on an explicit mention or invocation. The
 default stops there. A later `listen=all` mode is outside this
 decision.
 
 The Owner and Members may create a `dm`, a `group`, or a `room`.
-Adding a Bot requires that every participant can see that Bot. A
-`shared` Bot meets that. A `private` Bot stays off the room.
+Adding a Bot requires that every person participant already has
+access. The add does not grant that access.
 
-The Owner opening a `shared` Bot uses the Owner's own bot-thread with
-it. In this version the Owner's open of a `shared` Bot stays on that
-bot-thread. Other Members' bot-threads with the same Bot stay theirs.
+Opening a Bot uses the opener's own bot-thread. The Owner's open stays
+on the Owner's bot-thread, including a Bot a Member created. Another
+person's bot-thread on that Bot stays theirs.
 
 ### Module data
 
 Module package data, including CRM-shaped records, lives in the Cluster
-Store. Bot visibility says who may open the Bot. The same Store holds
-the data either way. A `private` Bot uses the same Module packages and
-the same MCP surface under that person's permissions. A per-bot private
-data store is later Module policy.
+Store. Who may open a Bot is separate. The same Store holds the data
+either way. A personal Bot uses the same Module packages and the same
+MCP surface under that person's permissions. A per-bot private data
+store is later Module policy.
 
 ### Host navigation
 
 The target sidebar is a Threads inbox. The Bot list and the picker stay
-how a person finds and creates a Bot. Until `dm` and `group` ship, the
-Host may stay Bot-centric.
+how a person finds and creates a Bot. `dm`, `group`, and `room` are
+already in the Host under the old visibility check.
 
 ## Context
 
 [ADR 0012](0012-household-members.md) put Members on one Host with one
 Chat timeline per Bot. The Owner alone creates and deletes Bots in that
 slice. [ADR 0023](0023-household-member-invites.md) adds a Member by
-Invite. An Invite creates a Member. It is not a Share link, and it does
-not flip Bot visibility.
+Invite. An Invite creates a Member. It is not a Share link. It does
+not grant Bots.
 
 The grill on 2026-09-23 settled a messenger-shaped Cluster: people talk
-with people and with Bots, a `shared` Bot still has a separate
-bot-thread per person, and a `private` Bot stays with its creator while
-the Owner can see it.
+with people and with Bots, and each person has their own bot-thread.
+That grill used visibility `shared` | `private`. The grill on
+2026-09-24 replaces that access section with a personal Bot and
+explicit grants.
+
+The running Host still implements the old column. An Owner-created Bot
+defaults to `shared`. A Member creates only `private`. Only the Owner
+flips visibility. A flip keeps the creator. A Member sees `shared`
+Bots and their own `private` Bot. The Owner sees every Bot. The
+Owner edits a `shared` Bot and a Bot they created. A Member edits and
+deletes only their own `private` Bot. The Owner's open of a Member's
+`private` Bot reads that Member's bot-thread. A `private` Bot cannot
+join a room. Per-person bot-threads, `dm`, `group`, and `room` are
+already in the Host under that check. This amendment is the target.
+The Store has no grant rows.
 
 Today every Chat line is a `messages` row on a Bot. A Host user line
 stores `personId`. Assistant and system lines leave `personId` empty.
@@ -107,19 +162,27 @@ A Bearer `/mcp` write may also leave `personId` empty
 
 ## Consequences
 
-Docs only. The Store, the Host, and Chat routes stay as they are.
-Current Host behavior remains ADR 0012 and ADR 0023.
+Docs only. This amendment does not migrate the Store and does not
+change Host routes. Current Host behavior remains the visibility
+column described in Context, plus [ADR 0012](0012-household-members.md)
+and [ADR 0023](0023-household-member-invites.md) for Household and
+Invites.
 
-Later implementation, in order:
+The grants milestone replaces that access check. It keeps Thread kinds,
+per-person bot-threads, and mention-gated room replies. It does not
+add the out-of-scope list in the Bot visibility section.
 
-1. Interactive bubble parts ([ADR 0025](0025-chat-bubble-parts.md))
-   and a Kitchen Module demo ([ADR 0026](0026-kitchen-module-day-1.md)).
-   Bubble parts and the Kitchen Module day-1 seed are in the Host.
-2. Bot visibility and per-person bot-threads.
-3. `dm`, `group`, and `room`.
+Until that milestone, Host code may still read and write visibility
+`shared` | `private`. That column is the running check. The target
+model is this amendment.
 
-Milestone 2 places existing `messages` rows onto bot-threads. Per Bot,
-in timeline order (`createdAt`, then `id`):
+Interactive bubble parts ([ADR 0025](0025-chat-bubble-parts.md)) and
+the Kitchen Module day-1 seed ([ADR 0026](0026-kitchen-module-day-1.md))
+are in the Host. So are per-person bot-threads and `dm`, `group`, and
+`room`, gated by the old visibility column.
+
+Placement of existing `messages` rows onto bot-threads already landed
+with that column. Per Bot, in timeline order (`createdAt`, then `id`):
 
 A user row with a `personId` is the key. It is placed on the bot-thread
 `{that person, that Bot}`.
@@ -132,24 +195,48 @@ bot-thread for that Bot. Each existing row is placed on one bot-thread.
 The leading greeting is an assistant row with nothing before it, so
 this rule puts that greeting on the Owner's bot-thread.
 
+This amendment does not place those rows again. A grantee's first open
+is a new empty bot-thread plus the normal Host greeting.
+
+How current `shared` and `private` rows become creator access, Owner
+access, and grant rows is part of the grants milestone. This record
+does not choose that SQL.
+
 Outside these milestones: SMTP, guests, Share link, and any role
-besides Owner and Member. No Org entity. Milestone 3 is the messenger
-UI for `dm`, `group`, and `room`; this ADR does not build it.
+besides Owner and Member. No Org entity. `listen=all` stays later.
+Durable memory across bot-threads, Skill proposals from grantees, and
+Bot fork or clone stay out.
 
 ## Alternatives
 
-- One Household-wide timeline per `shared` Bot — rejected. Each person
-  has a bot-thread. A room is the Thread with a Bot and more than one
-  person.
-- A Member flips `private` to `shared` — rejected. The Owner flips
-  visibility.
-- A `private` Bot in a room — rejected. Share it first.
-- Bot visibility as a second Store — rejected. Module data stays in the
+- Household-wide visibility `shared` | `private` — superseded on
+  2026-09-24. A Bot is personal. Access is the creator, the Owner, and
+  explicit grants. The Host may still store the old column until the
+  grants milestone.
+- A flag shared with all future Members — rejected. "All current
+  Members" is one batch grant to Members who exist now.
+- A grantee re-shares the Bot — rejected. The Owner grants on any Bot.
+  The creator grants on their own Bot.
+- Auto-grant when a Bot joins a room — rejected. Every person
+  participant must already have access.
+- Auto-grant on a later Invite — rejected. An Invite creates a Member.
+  It does not grant Bots.
+- Copy another person's bot-thread on first open — rejected. Empty
+  bot-thread plus the normal Host greeting.
+- A private write on one shared chat timeline — rejected. A joint
+  conversation is a `room`. Personal use is that person's bot-thread.
+- The Owner opens another person's bot-thread — rejected. The Owner
+  uses their own bot-thread, including on a Bot a Member created. The
+  running Host still peeks a Member `private` Bot until the grants
+  milestone.
+- One Household-wide timeline per Bot — rejected. Each person with
+  access has a bot-thread. A room is the Thread with a Bot and more
+  than one person.
+- Bot access as a second Store — rejected. Module data stays in the
   Cluster Store.
+- A Bot fork or clone — out of this ADR.
 - An Org above the Household — rejected. One Cluster is one Household.
 - Separate products for `dm`, `group`, `bot`, and `room` — rejected.
   One Thread. The kind is a label.
-- The Owner opens another Member's bot-thread on a `shared` Bot —
-  rejected for this version. The Owner uses their own bot-thread.
 - A Bot replies to every room line — rejected as the default. Reply on
   mention or invocation. `listen=all` is later.
