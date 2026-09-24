@@ -45,9 +45,14 @@ data.
   the Store.
 - `/mcp` Bearer auth is unchanged ([ADR 0009](0009-mcp-toolkit-endpoint.md),
   [ADR 0010](0010-owner-auth-session.md)).
-- A Member Chat session may call only `dostigus_messages_list` and
-  `dostigus_messages_create`. The Owner keeps the Chat tool list above.
-  See [ADR 0012](0012-household-members.md).
+- Today a Member Chat session may call only `dostigus_messages_list`
+  and `dostigus_messages_create`. The Owner keeps the Chat tool list
+  above. See [ADR 0012](0012-household-members.md).
+  [ADR 0028](0028-bot-self-settings-via-chat.md) changes that
+  allowlist: the creator and the Owner, including a Member on a Bot
+  they created, receive `dostigus_bots_update` and Skills tools. A
+  grantee stays without those tools. Schedule tools stay
+  [ADR 0027](0027-bot-schedules.md).
 
 ## Alternatives
 

@@ -56,7 +56,9 @@ The creator and the Owner may edit the Manifest (name, avatar, Skills,
 modules, description, and the rest of that definition). A grantee chats
 on their own bot-thread, and uses Module Store under existing Module
 rules. Chat does not write the Manifest from learning. The Owner Chat
-tool loop may update a Bot. Member Chat must not. Delete follows the
+tool loop may update a Bot. A grantee's Chat must not. A Member who
+created the Bot receives Manifest update and Skills tools on that Bot
+([ADR 0028](0028-bot-self-settings-via-chat.md)). Delete follows the
 same actors as Manifest edit: the creator and the Owner. A grantee
 does not delete the Bot.
 
@@ -175,8 +177,11 @@ out-of-scope list in the Bot visibility section.
 Access is the creator, the Owner, and `bot_grants` (`bot_id`,
 `person_id`). A new Bot has no grant rows. The creator and the Owner
 may edit the Manifest and delete the Bot. A grantee chats on their own
-bot-thread. Member Chat does not include Manifest update. The Owner
-Chat tool loop may. Grant and revoke are
+bot-thread. Member Chat does not include Manifest update for a
+grantee. Chat self-settings
+([ADR 0028](0028-bot-self-settings-via-chat.md)) requires a Member
+creator's Chat to include Manifest update and Skills tools on their
+own Bot. The Owner Chat tool loop may update any Bot. Grant and revoke are
 `GET` and `POST /api/bots/:id/grants` and
 `DELETE /api/bots/:id/grants/:personId`. The Owner may grant or revoke
 on any Bot. The creator may grant or revoke on their own Bot.

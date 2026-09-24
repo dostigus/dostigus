@@ -52,6 +52,10 @@ surface.
   is rejected. Omitting them on update keeps the stored values.
 - MCP `dostigus_bots_create` / `dostigus_bots_update` accept the same
   optional fields.
+- Chat self-settings of name, label, and description reuses
+  `dostigus_bots_update`
+  ([ADR 0028](0028-bot-self-settings-via-chat.md)). Appearance stays on
+  this Sheet. Model tier stays off Chat self-settings.
 - Kit Sheet shell can center a title and render the close control as ×.
   A modal overlay stacks above a drawer so the appearance modal sits on
   the closet.

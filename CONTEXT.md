@@ -138,7 +138,11 @@ Platform git agent.
 _Avoid_: cloud agent (bare), codegen bot, authoring agent.
 
 **Skill**:
-Policy/instructions a Bot follows. Not executable UI.
+Policy and instructions a Bot follows (an id and instructions). Not
+executable UI and not a Module package. The Manifest lists that Bot's
+Skills. Self-settings may list, upsert, and delete that text on the
+Bot ([ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md)). A Skill
+does not say when the Host wakes the Bot.
 _Avoid_: prompt (unqualified), tool, Module package.
 
 **Schedule**:
@@ -150,10 +154,26 @@ cadence (`daily` or `weekly`), the local `HH:MM`, optional weekdays
 when weekly, and the wake text. The Host owns the next fire instant.
 _Avoid_: cron, crontab, alarm, reminder, Skill, Manifest field.
 
+**Self-settings**:
+A person's request in Chat that the Bot change its own name, label,
+description, Skills, or Schedules. The Bot writes the Store through
+the MCP surface. A reply that claims the change without a successful
+tool result is not the write. The Host injects one short instruction
+on every Bot turn. That instruction is not a Manifest field. The
+creator and the Owner may change the name, label, description, and
+Skills, including a Member who created the Bot. A grantee cannot.
+Schedules follow
+[ADR 0027](docs/adr/0027-bot-schedules.md). See
+[ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md).
+_Avoid_: prompt edit, config, profile.
+
 **Manifest**:
 Bot definition: persona, Skills, bound Module packages, Model tier,
 avatar shape, avatar color (Bot accent palette), an optional label,
-and an optional description.
+and an optional description. Chat Self-settings may change the name,
+the label, and the description. Appearance and Model tier are not
+Chat Self-settings
+([ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md)).
 _Avoid_: config, profile (unqualified).
 
 **Module package**:
@@ -261,6 +281,14 @@ _Avoid_: public share, invite (unqualified).
   bot-thread with that Bot, then runs the Bot turn. A room, a direct
   message, and a group do not get that fire. See
   [ADR 0027](docs/adr/0027-bot-schedules.md).
+- When a person asks a Bot to change its name, label, description,
+  Skills, or Schedules, that is Self-settings. The Bot calls MCP
+  surface tools and does not claim success without a successful tool
+  result. The creator and the Owner may change the Manifest fields and
+  the Skills from Chat, including a Member who created the Bot. A
+  grantee cannot. Schedule writes stay
+  [ADR 0027](docs/adr/0027-bot-schedules.md). See
+  [ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md).
 - Module package data lives in the Cluster Store. Bot visibility does not
   give a Bot its own Store. A personal Bot uses the same MCP surface
   under that person's permissions.
