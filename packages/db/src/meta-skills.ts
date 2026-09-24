@@ -15,6 +15,7 @@ export const META_SKILL_IDS = [
   'platform-meta-skills',
   'platform-meta-self-settings',
   'platform-meta-marketplace',
+  'platform-meta-http-get',
 ] as const
 
 export type MetaSkillId = (typeof META_SKILL_IDS)[number]
@@ -35,6 +36,8 @@ const META_SKILL_INSTRUCTIONS: Record<MetaSkillId, string> = {
 - Удалить: \`dostigus_schedules_delete\` с \`id\`.
 
 Owner может передать \`personId\` в create и list. Фраза вроде «каждое утро в 08:00» — это create.
+
+Если Wake должен прочитать публичный URL (прогноз, страница), \`wakeText\` велит вызвать \`dostigus_http_get\` и не выдумывать числа.
 `.trim(),
   'platform-meta-skills': `
 # Skill
@@ -63,7 +66,19 @@ Skill на этом Bot — объект \`{ id, instructions }\`. Это не M
 
 Доменные Module package появятся через Marketplace. Сейчас их нет.
 
-Не выдумывай инструменты погоды, Skill про погоду и Module package. Каталога и Apply нет. Пробел закрывают уже существующие Skill (\`dostigus_skills_upsert\`), Schedule и свои настройки (\`dostigus_bots_update\`). Пакет пишет Builder, не этот Bot.
+Не выдумывай инструменты погоды, Skill про погоду и Module package. Каталога и Apply нет. Не сей Weather Skill и не Apply пакет погоды. Публичный HTTP читается через \`dostigus_http_get\` (например Open-Meteo). Пробел закрывают уже существующие Skill (\`dostigus_skills_upsert\`), Schedule и свои настройки (\`dostigus_bots_update\`). Пакет пишет Builder, не этот Bot.
+`.trim(),
+  'platform-meta-http-get': `
+# Host HTTP get
+
+Публичный URL читается через \`dostigus_http_get\`. Это GET, не POST и не инструмент погоды.
+
+- Передай \`url\` — полную ссылку, включая query. Собери её сам: схема, хост, путь, параметры.
+- Пример прогноза: \`https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,apparent_temperature&timezone=auto\`. Подставь \`latitude\`, \`longitude\` и \`timezone\`. Не выдумывай weather tool и не пиши Skill про погоду.
+- Ответ: \`status\`, \`body\`, \`truncated\`. Если \`truncated\` true — тело неполное, не утверждай полный разбор JSON.
+- Ошибка инструмента — не fetch. Сообщи ошибку.
+
+Allowlist задаёт Owner в Settings. Пустой список — любые публичные хосты. Loopback и частные адреса Host всегда блокирует.
 `.trim(),
 }
 
@@ -116,8 +131,8 @@ export function insertMissingMetaSkills(store: OpenedStore, botId: string): Skil
 
 /**
  * Image upgrade for one Bot. Inserts the full set only when none of the
- * four ids are stored. Any one of them means no write: a partial delete
- * stays deleted, and an edit stays.
+ * meta Skill ids are stored. Any one of them means no write: a partial
+ * delete stays deleted, and an edit stays.
  */
 export function upgradeBotMetaSkills(store: OpenedStore, botId: string): Skill[] {
   const skills = readSkills(store, botId)

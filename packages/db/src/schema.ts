@@ -191,10 +191,12 @@ export const turns = sqliteTable('turns', {
   index('turns_thread_started_idx').on(table.threadId, table.startedAt),
 ])
 
-/** Cluster timezone singleton (`cluster`). Null timezone means unset. */
+/** Cluster settings singleton (`cluster`). Null timezone means unset. */
 export const clusterSettings = sqliteTable('cluster_settings', {
   id: text('id').primaryKey(),
   timezone: text('timezone'),
+  /** JSON array of hostnames. Null or `[]` is allow-all public hosts. */
+  httpAllowlist: text('http_allowlist'),
   updatedAt: integer('updated_at').notNull(),
 })
 

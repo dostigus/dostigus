@@ -22,6 +22,7 @@ import {
   upsertClusterSkill,
   withClusterStore,
 } from './cluster-bots'
+import { clusterHttpAllowlistGet, clusterHttpAllowlistSet, clusterHttpGet } from './http-allowlist-tools'
 import {
   addClusterPantry,
   markClusterCooked,
@@ -55,7 +56,7 @@ export type PlatformToolSpec = {
     store: OpenedStore,
     viewer?: BotViewer,
     ctx?: ScheduleToolContext,
-  ) => unknown
+  ) => unknown | Promise<unknown>
 }
 
 export type ChatToolInvokeResult = {
@@ -345,6 +346,32 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
     },
     run: (input, store, viewer) => clusterTimezoneSet(store, input, viewer),
   },
+  dostigus_http_get: {
+    name: 'dostigus_http_get',
+    description: 'GET one public http or https URL and return status plus a UTF-8 body prefix. Use this when the person needs a live public page or JSON API (a forecast, a feed, a docs page). Build the full URL yourself, including the query string. For a forecast, GET host api.open-meteo.com path /v1/forecast with query latitude, longitude, current (temperature_2m and apparent_temperature), and timezone (auto or an IANA name). Example: https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,apparent_temperature&timezone=auto — pick latitude and longitude for the place they named. Do not invent a weather tool, a Weather Skill, or a Module package. GET only: do not pass headers, a body, or a method. The Host follows redirects and re-checks each hop (scheme, Cluster http allowlist, and SSRF). Loopback, private, and link-local destinations are always blocked. A non-empty Cluster http allowlist allows only those hostnames (exact match, no wildcards). The body is capped at 65536 bytes. When the upstream body is longer, the Host returns the prefix and truncated true. Size alone is not an error. If truncated is true, do not claim a complete parse of JSON or HTML. Result fields: status, body, truncated. On a blocked host, a bad scheme, or a host missing from a non-empty allowlist, the tool errors. Report that error. Do not claim a fetch.',
+    annotations: { readOnlyHint: true },
+    chat: true,
+    inputSchema: {
+      url: z.string().min(1).max(2048),
+    },
+    run: (input, store, _viewer, ctx) => clusterHttpGet(store, input, ctx),
+  },
+  dostigus_cluster_http_allowlist_get: {
+    name: 'dostigus_cluster_http_allowlist_get',
+    description: 'Read the Cluster http allowlist. hosts is the hostname list in Settings. Empty means Host HTTP get may reach any public host (SSRF blocks still apply). Owner Chat only.',
+    annotations: { readOnlyHint: true },
+    chat: true,
+    run: (_input, store) => clusterHttpAllowlistGet(store),
+  },
+  dostigus_cluster_http_allowlist_set: {
+    name: 'dostigus_cluster_http_allowlist_set',
+    description: 'Replace the Cluster http allowlist with hosts (hostnames only, exact match, no wildcards, no paths). Empty allows every public host. Owner only. Members do not set it.',
+    chat: true,
+    inputSchema: {
+      hosts: z.array(z.string()),
+    },
+    run: (input, store, viewer) => clusterHttpAllowlistSet(store, input, viewer),
+  },
   dostigus_turns_list: {
     name: 'dostigus_turns_list',
     description: 'List Host Bot turns in this Cluster, newest first. Optional filters: botId, threadId, since (ISO-8601 or epoch milliseconds), and limit (default 50, cap 100). Each turn has id, threadId, botId, personId, trigger (user, wake, or mention), outcome (running, ok, error, or abort), startedAt, endedAt, scheduleId, errorCode, phases (thinking, tool, or typing, with at), and tools (name, ok, ms). No message bodies, tool arguments, or tool results. The ops token sees every turn. This tool is not a Chat tool.',
@@ -400,8 +427,8 @@ export function registeredMcpToolOptions(name: PlatformMcpTool) {
     ...(spec.inputSchema ? { inputSchema: spec.inputSchema } : {}),
     handler: spec.inputSchema
       ? async (input: Record<string, unknown>) =>
-        mcpJson(withClusterStore((store) => spec.run(input, store)))
-      : async () => mcpJson(withClusterStore((store) => spec.run({}, store))),
+        mcpJson(await Promise.resolve(withClusterStore((store) => spec.run(input, store))))
+      : async () => mcpJson(await Promise.resolve(withClusterStore((store) => spec.run({}, store)))),
   }
 }
 
@@ -415,7 +442,9 @@ export function invokeChatMcpTool(input: {
   turnBotId?: string
   /** Host-injected Chat Cards for this turn. */
   cards?: ChatCardTurn
-}): ChatToolInvokeResult {
+  fetchImpl?: typeof fetch
+  lookup?: ScheduleToolContext['lookup']
+}): ChatToolInvokeResult | Promise<ChatToolInvokeResult> {
   const name = input.name
   if (input.role === 'member') {
     if (!isMemberChatMcpTool(name) && !isCreatorMemberChatMcpTool(name)) {
@@ -450,30 +479,63 @@ export function invokeChatMcpTool(input: {
           role: input.role === 'member' ? 'member' as const : 'owner' as const,
         }
       : undefined
-    const ctx: ScheduleToolContext = { turnBotId: input.turnBotId }
-    const result = spec.run(parsed, input.store, viewer, ctx)
-    if (input.cards) {
-      noteToolCard(input.cards, spec.name, result)
-    }
-    writeSelfSettingsNotice({
-      store: input.store,
-      personId: input.personId,
-      role: input.role,
+    const ctx: ScheduleToolContext = {
       turnBotId: input.turnBotId,
-      name: spec.name,
-      result,
-      args: parsed,
-    })
-    logChatTool(spec.name, 'ok')
-    return { ok: true, name: spec.name, content: mcpJson(result) }
-  } catch (error) {
-    logChatTool(spec.name, 'fail')
-    return {
-      ok: false,
-      name: spec.name,
-      content: toolResultError(toolErrorMessage(error)),
+      fetchImpl: input.fetchImpl,
+      lookup: input.lookup,
     }
+    const result = spec.run(parsed, input.store, viewer, ctx)
+    if (isPromise(result)) {
+      return result.then(
+        (resolved) => finishChatTool(input, spec.name, parsed, resolved),
+        (error: unknown) => failChatTool(spec.name, error),
+      )
+    }
+    return finishChatTool(input, spec.name, parsed, result)
+  } catch (error) {
+    return failChatTool(spec.name, error)
   }
+}
+
+function finishChatTool(
+  input: {
+    store: OpenedStore
+    personId?: string
+    role?: 'owner' | 'member'
+    turnBotId?: string
+    cards?: ChatCardTurn
+  },
+  name: string,
+  args: Record<string, unknown>,
+  result: unknown,
+): ChatToolInvokeResult {
+  if (input.cards) {
+    noteToolCard(input.cards, name, result)
+  }
+  writeSelfSettingsNotice({
+    store: input.store,
+    personId: input.personId,
+    role: input.role,
+    turnBotId: input.turnBotId,
+    name,
+    result,
+    args,
+  })
+  logChatTool(name, 'ok')
+  return { ok: true, name, content: mcpJson(result) }
+}
+
+function failChatTool(name: string, error: unknown): ChatToolInvokeResult {
+  logChatTool(name, 'fail')
+  return {
+    ok: false,
+    name,
+    content: toolResultError(toolErrorMessage(error)),
+  }
+}
+
+function isPromise(value: unknown): value is Promise<unknown> {
+  return typeof value === 'object' && value !== null && 'then' in value
 }
 
 export function parseChatToolInput(

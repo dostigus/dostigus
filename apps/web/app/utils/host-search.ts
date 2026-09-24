@@ -53,8 +53,8 @@ export function hostSettingsCatalog(input: {
       {
         id: 'settings',
         title: 'Settings',
-        subtitle: 'OpenRouter key and Model tier',
-        keywords: ['openrouter', 'api key', 'model tier', 'gateway'],
+        subtitle: 'OpenRouter key, Model tier, and http allowlist',
+        keywords: ['openrouter', 'api key', 'model tier', 'gateway', 'timezone', 'allowlist', 'http'],
         href: '/settings',
         botId: null,
       },

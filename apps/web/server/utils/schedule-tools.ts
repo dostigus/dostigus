@@ -1,5 +1,6 @@
 import type { OpenedStore, Schedule, ScheduleCadence, ScheduleWeekday } from '@dostigus/db'
 import type { BotViewer } from '@dostigus/shared'
+import type { HostHttpLookup } from './http-get'
 import process from 'node:process'
 import {
   createSchedule,
@@ -21,6 +22,9 @@ import {
 
 export type ScheduleToolContext = {
   turnBotId?: string
+  /** Host HTTP get test doubles. Production leaves these unset. */
+  fetchImpl?: typeof fetch
+  lookup?: HostHttpLookup
 }
 
 function actorMayManage(schedulePersonId: string, viewer?: BotViewer): boolean {

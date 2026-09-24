@@ -218,6 +218,8 @@ it('tells a configured Chat Bot it may use the MCP surface', () => {
   expect(prompt).toContain('This Cluster has one Owner')
   expect(prompt).toContain('You cannot delete Bots from Chat')
   expect(prompt).toContain('you may read or set the Cluster timezone')
+  expect(prompt).toContain('dostigus_http_get')
+  expect(prompt).toContain('You may read or set the Cluster http allowlist')
 })
 
 it('tells a Member Chat Bot to stay on messages', () => {
@@ -235,6 +237,8 @@ it('tells a Member Chat Bot to stay on messages', () => {
   expect(prompt).toContain('list and append Chat messages')
   expect(prompt).toContain('Do not create, rename, or delete Bots')
   expect(prompt).toContain('You cannot set the Cluster timezone')
+  expect(prompt).toContain('You cannot set the Cluster http allowlist')
+  expect(prompt).toContain('dostigus_http_get')
   expect(prompt).not.toContain('read and write Bots')
   expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
 })
@@ -256,6 +260,7 @@ it('lets a creator Member rename this Bot and still forbids a blanket rename ban
   expect(prompt).not.toContain('Do not create, rename, or delete Bots')
   expect(prompt).toContain('Do not create or delete Bots')
   expect(prompt).toContain('You cannot set the Cluster timezone')
+  expect(prompt).toContain('You cannot set the Cluster http allowlist')
   expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
   expect(prompt).toContain('Skill notes: Keep short notes.')
   expect(prompt).toContain('Do not claim success without a successful tool result')

@@ -408,6 +408,12 @@ CREATE INDEX \`turns_thread_started_idx\` ON \`turns\` (\`thread_id\`,\`started_
 ALTER TABLE \`schedules\` ADD \`name\` text DEFAULT '' NOT NULL;
 `,
   },
+  {
+    id: '0017_http_allowlist',
+    sql: `
+ALTER TABLE \`cluster_settings\` ADD \`http_allowlist\` text;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

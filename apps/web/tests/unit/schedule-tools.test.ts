@@ -122,6 +122,35 @@ it('lets a Member create a daily Schedule on this Bot and keeps timezone set wit
     effective: 'America/New_York',
     source: 'store',
   })
+
+  const blockedAllowlist = invokeChatMcpTool({
+    name: 'dostigus_cluster_http_allowlist_set',
+    args: { hosts: ['api.example.com'] },
+    store,
+    role: 'member',
+    personId: member.id,
+  })
+  expect(blockedAllowlist.ok).toBe(false)
+  expect(JSON.parse(blockedAllowlist.content)).toEqual({ error: 'unknown or unavailable tool' })
+
+  const blockedAllowlistGet = invokeChatMcpTool({
+    name: 'dostigus_cluster_http_allowlist_get',
+    args: {},
+    store,
+    role: 'member',
+    personId: member.id,
+  })
+  expect(blockedAllowlistGet.ok).toBe(false)
+
+  const setAllowlist = invokeChatMcpTool({
+    name: 'dostigus_cluster_http_allowlist_set',
+    args: { hosts: ['api.open-meteo.com'] },
+    store,
+    role: 'owner',
+    personId: owner.id,
+  })
+  expect(setAllowlist.ok).toBe(true)
+  expect(JSON.parse(setAllowlist.content)).toEqual({ hosts: ['api.open-meteo.com'] })
 })
 
 it('accepts optional name on create and update, and closet list is this person only', () => {

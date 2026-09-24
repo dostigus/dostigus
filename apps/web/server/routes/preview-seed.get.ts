@@ -23,7 +23,9 @@ import process from 'node:process'
  * `?rooms=1` also seeds a direct message and a room with Bot `preview`.
  * The room line mentions that Bot and stores one reply, then opens the room.
  * `?rooms=1&as=member` signs in the Member on that same room.
- * `?members=1` still opens Members. HEAD ignores those queries. Not a domain Bot.
+ * `?members=1` still opens Members. `?settings=1` opens Settings
+ * (timezone and http allowlist). `?members=1` still wins when both are
+ * set. HEAD ignores those queries. Not a domain Bot.
  * Answers 404 unless `nuxt dev` is running with `DOSTIGUS_PREVIEW_SEED=1`.
  */
 export default defineEventHandler(async (event) => {
@@ -58,6 +60,7 @@ export default defineEventHandler(async (event) => {
       botId: seeded.botId,
       roomId: seeded.roomId,
       members: query.members,
+      settings: query.settings,
       threads: query.threads,
       rooms: query.rooms,
       as: query.as,

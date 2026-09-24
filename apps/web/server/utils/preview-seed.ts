@@ -126,6 +126,14 @@ export function previewMembersRequested(value: unknown): boolean {
 }
 
 /**
+ * `?settings=1` on GET. Opens Settings for the signed-in preview Owner
+ * (Cluster timezone and http allowlist). HEAD ignores this query.
+ */
+export function previewSettingsRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
+/**
  * `?parts=1` on GET. Inserts one assistant line with a Kit button and a status.
  * HEAD ignores this query.
  */
@@ -186,15 +194,16 @@ export function previewThreadAsMember(value: unknown): boolean {
 
 /**
  * GET /preview-seed redirect.
- * `members=1` opens Members. A room opens that Thread. Threads open
- * `/` for the Owner and `/bots/<id>` for the Member. Otherwise Chat,
- * including `hold` and `activity`. Members, threads, and rooms do not
- * keep `activity`.
+ * `members=1` opens Members. `settings=1` opens Settings. A room opens
+ * that Thread. Threads open `/` for the Owner and `/bots/<id>` for the
+ * Member. Otherwise Chat, including `hold` and `activity`. Members,
+ * settings, threads, and rooms do not keep `activity`.
  */
 export function previewSeedRedirect(input: {
   botId: string
   roomId?: string | null
   members?: unknown
+  settings?: unknown
   threads?: unknown
   rooms?: unknown
   as?: unknown
@@ -204,6 +213,9 @@ export function previewSeedRedirect(input: {
 }): string {
   if (previewMembersRequested(input.members)) {
     return '/members'
+  }
+  if (previewSettingsRequested(input.settings)) {
+    return '/settings'
   }
   if (previewRoomsRequested(input.rooms) && input.roomId) {
     return `/threads/${input.roomId}`

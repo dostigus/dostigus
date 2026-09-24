@@ -52,6 +52,13 @@ it('matches Chat lines and Host settings without opening Owner pages for a Membe
     settings: hostSettingsCatalog({ isOwner: true, bot: null }),
   })
   expect(owner.map((hit) => hit.href)).toEqual(['/settings'])
+  const allowlist = hostSearchHits({
+    query: 'allowlist',
+    bots,
+    messages: [],
+    settings: hostSettingsCatalog({ isOwner: true, bot: null }),
+  })
+  expect(allowlist.map((hit) => hit.href)).toEqual(['/settings'])
   expect(hostSearchShortcutIndex('1')).toBe(0)
   expect(hostSearchShortcutIndex('9')).toBe(8)
   expect(hostSearchShortcutIndex('0')).toBeNull()
