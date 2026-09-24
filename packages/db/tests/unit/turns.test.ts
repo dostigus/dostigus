@@ -189,6 +189,8 @@ it('lists newest first and filters by bot, thread, and since', () => {
   expect(all.map((turn) => turn.threadId)).toEqual(['thread-a', 'thread-b', 'thread-a'])
   expect(all[0]?.botId).toBe(other)
   expect(listTurns(store, { botId: notes }).map((turn) => turn.trigger)).toEqual(['mention', 'user'])
+  expect(listTurns(store, { scheduleId: 'sched-9', trigger: 'wake' }).map((turn) => turn.threadId)).toEqual(['thread-a'])
+  expect(listTurns(store, { trigger: 'user' })).toHaveLength(1)
   expect(listTurns(store, { threadId: 'thread-a' }).map((turn) => turn.botId)).toEqual([other, notes])
   expect(listTurns(store, { since: '2026-09-20T00:00:01.000Z' })).toHaveLength(2)
   expect(listTurns(store, { since: t0 + 2_000, botId: other })).toHaveLength(1)

@@ -80,6 +80,76 @@
           @blur="persistFields"
         />
       </label>
+      <section
+        class="schedules"
+        aria-labelledby="schedules-heading"
+      >
+        <div class="schedules-head">
+          <h2 id="schedules-heading">
+            Расписания
+          </h2>
+          <button
+            type="button"
+            class="add"
+            aria-label="Добавить расписание"
+            @click="openCreate"
+          >
+            +
+          </button>
+        </div>
+        <p
+          v-if="schedulesError"
+          class="error"
+        >
+          {{ schedulesError }}
+        </p>
+        <p
+          v-else-if="schedulesLoading"
+          class="hint"
+        >
+          Загружаем…
+        </p>
+        <div
+          v-else-if="schedules.length === 0"
+          class="schedules-empty"
+        >
+          <p class="hint">
+            Пока нет расписаний
+          </p>
+          <button
+            type="button"
+            class="grant-all"
+            @click="openCreate"
+          >
+            Добавить
+          </button>
+        </div>
+        <ul
+          v-else
+          class="schedules-list"
+        >
+          <li
+            v-for="row in schedules"
+            :key="row.id"
+          >
+            <button
+              type="button"
+              class="schedule-row"
+              :class="{ paused: row.paused }"
+              @click="openDetail(row)"
+            >
+              <span class="schedule-copy">
+                <span class="schedule-name">{{ scheduleDisplayName(row) }}</span>
+                <span class="schedule-cadence">{{ scheduleCadenceLabel(row) }}</span>
+              </span>
+              <span
+                class="chevron"
+                aria-hidden="true"
+              >›</span>
+            </button>
+          </li>
+        </ul>
+      </section>
       <div
         v-if="canEdit"
         class="field"
@@ -206,6 +276,37 @@
       </div>
     </div>
   </KitDialog>
+
+  <KitSheet
+    v-model:open="createOpen"
+    edge="end"
+    title="Новое расписание"
+    title-align="center"
+    close="icon"
+  >
+    <ScheduleSheet
+      v-if="bot && createOpen"
+      mode="create"
+      :bot-id="bot.id"
+      @created="onScheduleCreated"
+    />
+  </KitSheet>
+
+  <KitSheet
+    v-model:open="detailOpen"
+    edge="end"
+    :title="detailTitle"
+    title-align="center"
+    close="icon"
+  >
+    <ScheduleSheet
+      v-if="detailId && detailOpen"
+      :schedule-id="detailId"
+      @saved="void loadSchedules()"
+      @deleted="onScheduleDeleted"
+      @titled="detailTitle = $event"
+    />
+  </KitSheet>
 </template>
 
 <script setup lang="ts">
@@ -219,6 +320,7 @@ import {
   DEFAULT_AVATAR_SHAPE,
 } from '@dostigus/shared'
 import { KitBotAvatar, KitButton, KitDialog, KitSheet } from '@dostigus/ui-kit'
+import { scheduleCadenceLabel, scheduleDisplayName } from '../utils/schedule-copy'
 
 const props = defineProps<{
   bot: Bot | undefined
@@ -256,23 +358,43 @@ const heroGreet = ref(false)
 const picked = ref(false)
 
 type GrantRow = { personId: string, displayName: string }
+type ScheduleRow = {
+  id: string
+  name: string
+  cadence: 'daily' | 'weekly'
+  timeLocal: string
+  daysOfWeek: string[] | null
+  wakeText: string
+  paused: boolean
+}
 const sharePeople = ref<HouseholdPerson[]>([])
 const grantedIds = ref<Set<string>>(new Set())
 const grantBusy = ref(false)
+const schedules = ref<ScheduleRow[]>([])
+const schedulesLoading = ref(false)
+const schedulesError = ref('')
+const createOpen = ref(false)
+const detailOpen = ref(false)
+const detailId = ref('')
+const detailTitle = ref('Расписание')
 
 watch(() => props.bot?.id, () => {
   syncFromBot()
   void loadGrants()
+  void loadSchedules()
 })
 
 watch(open, (isOpen) => {
   if (isOpen) {
     syncFromBot()
     void loadGrants()
+    void loadSchedules()
     playHeroGreet()
     return
   }
   appearanceOpen.value = false
+  createOpen.value = false
+  detailOpen.value = false
   clearTimeout(heroTimer)
   heroGreet.value = false
   void persistFields()
@@ -294,6 +416,44 @@ function syncFromBot() {
   label.value = props.bot.manifest.label
   description.value = props.bot.manifest.description
   error.value = ''
+}
+
+async function loadSchedules() {
+  if (!props.bot) {
+    schedules.value = []
+    return
+  }
+  schedulesLoading.value = true
+  schedulesError.value = ''
+  try {
+    const body = await $fetch<{ schedules: ScheduleRow[] }>(`/api/bots/${props.bot.id}/schedules`)
+    schedules.value = body.schedules
+  } catch {
+    schedulesError.value = 'Не получилось открыть расписания'
+  } finally {
+    schedulesLoading.value = false
+  }
+}
+
+function openCreate() {
+  createOpen.value = true
+}
+
+function openDetail(row: ScheduleRow) {
+  detailId.value = row.id
+  detailTitle.value = scheduleDisplayName(row)
+  detailOpen.value = true
+}
+
+function onScheduleCreated() {
+  createOpen.value = false
+  void loadSchedules()
+}
+
+function onScheduleDeleted() {
+  detailOpen.value = false
+  detailId.value = ''
+  void loadSchedules()
 }
 
 async function loadGrants() {
@@ -804,5 +964,126 @@ textarea:disabled {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius);
+}
+
+.schedules {
+  margin: 0 0 1.15rem;
+}
+
+.schedules-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.schedules-head h2 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.add {
+  appearance: none;
+  width: 1.85rem;
+  height: 1.85rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.add:hover {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.add:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.schedules-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.schedules-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 0.95rem;
+  overflow: hidden;
+  background: var(--bg-chat);
+}
+
+.schedules-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.schedule-row {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 0.8rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.schedule-row:hover {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.schedule-row.paused {
+  opacity: 0.55;
+}
+
+.schedule-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.schedule-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.schedule-name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-cadence {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.chevron {
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  line-height: 1;
 }
 </style>

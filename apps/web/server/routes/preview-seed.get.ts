@@ -6,6 +6,8 @@ import process from 'node:process'
  * may change. `?tall=1` fills a tall thread once. `?parts=1` adds one
  * assistant line with a Kit button and a status once. `?kitchen=1` adds one
  * assistant line with a Kitchen button once and fills empty Kitchen tables.
+ * `?schedules=1` seeds this person's Schedules on Bot `preview`, wake Turns
+ * for run history, and one Schedule Chat Card. HEAD ignores that query.
  * `?system=1` adds the three Skill / self-settings system lines once on the
  * Owner's bot-thread for Bot `preview` (Skill upsert, Skill delete, Bot
  * update). Compose with `?hold=1`, `?activity=`, and `?parts=1`.
@@ -42,6 +44,7 @@ export default defineEventHandler(async (event) => {
         tall: previewTallRequested(query.tall),
         parts: previewPartsRequested(query.parts),
         kitchen: previewKitchenRequested(query.kitchen),
+        schedules: previewSchedulesRequested(query.schedules),
         system: previewSystemRequested(query.system),
         threads: previewThreadsRequested(query.threads),
         rooms: previewRoomsRequested(query.rooms),

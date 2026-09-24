@@ -402,6 +402,12 @@ CREATE INDEX \`turns_bot_started_idx\` ON \`turns\` (\`bot_id\`,\`started_at\`);
 CREATE INDEX \`turns_thread_started_idx\` ON \`turns\` (\`thread_id\`,\`started_at\`);
 `,
   },
+  {
+    id: '0016_schedule_name',
+    sql: `
+ALTER TABLE \`schedules\` ADD \`name\` text DEFAULT '' NOT NULL;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {
