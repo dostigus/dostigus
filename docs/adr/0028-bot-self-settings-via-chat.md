@@ -4,6 +4,7 @@
 - Date: 2026-09-24
 - Amended: 2026-09-24 — a missing capability stays on the constructor tools in this record (Skills upsert, Schedules, Bot self-settings). [ADR 0030](0030-chat-cards-module-catalog.md) is Schedule Chat Cards and does not add a stock package. Self-settings in this record are unchanged.
 - Amended: 2026-09-24 — on Bot create the Host may insert meta Skills (constructor how-to). Ids, Russian text, and insert-if-absent are [ADR 0030](0030-chat-cards-module-catalog.md). The tools and the platform instruction in this record stay. Deleting a meta Skill does not remove that duty.
+- Amended: 2026-09-24 — Skills live in `bots.skills_json` as `{ id, instructions }` (`packages/db/src/skills.ts`). A Skill id is letters, digits, `_`, or `-` (`parseSkillId` in `packages/shared/src/skill.ts`). One `instructions` string; no locale column.
 
 Chat turns stay [ADR 0011](0011-chat-mcp-tool-loop.md). The closet
 fields stay [ADR 0020](0020-bot-closet.md). Who may edit a Bot stays
@@ -67,9 +68,14 @@ instructions. It is not a Module package and not the Builder.
 | `dostigus_skills_upsert` | the creator of that Bot, or the Owner |
 | `dostigus_skills_delete` | the creator of that Bot, or the Owner |
 
-A Skill is an id plus instructions. Storage may keep using
-`bots.skills_json`, extend that column, or store Skill records. This
-record does not choose the SQL.
+A Skill is an id plus one `instructions` string. There is no locale
+column. The id is letters, digits, `_`, or `-` only. A dotted id is
+not a Skill id. `parseSkillId` in `packages/shared/src/skill.ts`
+checks that charset.
+
+Skills live in `bots.skills_json` as `{ id, instructions }`
+(`packages/db/src/skills.ts`). `Manifest.skillIds` is those ids. No
+new table and no new column.
 
 On Bot create, the Host may insert meta Skills (constructor how-to) on
 that Bot. The ids, the Russian instructions, and the rule that an
@@ -176,10 +182,10 @@ Code today, not reopened by this record:
 - `dostigus_bots_update` accepts `name`, `label`, `description`,
   `avatarShape`, `avatarColor`, and `modelTier`. It has no Skills
   field. This record does not add a second update tool.
-- `bots.skills_json` maps to `Manifest.skillIds` (ids only). The
-  shared Skill type is an id plus instructions. No Skill CRUD tools
-  exist yet. This record adds that behavior. It does not freeze a new
-  column.
+- Skills live in `bots.skills_json` as `{ id, instructions }`
+  (`packages/db/src/skills.ts`). `Manifest.skillIds` is those ids.
+  List, upsert, and delete use that column. This record does not add
+  a new table.
 - Owner Chat lists `dostigus_bots_update`. Member Chat is messages
   only, and the Member prompt says not to rename. The closet already
   lets a Member creator edit. Chat does not. The code PR aligns the
@@ -200,6 +206,11 @@ Code today, not reopened by this record:
 - Skills list, upsert, and delete are MCP tools on that Bot, for the
   creator or the Owner. A grantee does not receive them. A Member
   creator does, on their own Bot.
+- A Skill id is letters, digits, `_`, or `-`. `parseSkillId` in
+  `packages/shared/src/skill.ts` checks that. A dotted id is rejected.
+  A Skill is one `instructions` string. There is no locale column.
+  Skills live in `bots.skills_json` as `{ id, instructions }`
+  (`packages/db/src/skills.ts`). No new table.
 - The Member prompt that forbids rename does not apply on a turn where
   that Member is the creator of that Bot, or where the viewer is the
   Owner.
@@ -228,6 +239,8 @@ Code today, not reopened by this record:
 - The Host parsing natural language into a Manifest, a Skill, or a
   Schedule.
 - Pushing a raw `/mcp` write into an already-open Chat page.
+- A new Skill table, or a locale column on a Skill.
+- A dotted Skill id.
 
 ## Alternatives
 
@@ -255,3 +268,8 @@ Code today, not reopened by this record:
   already refreshes when the turn completes.
 - Live-update every open Chat on a raw `/mcp` write — rejected for
   day-1. Stale until the next refresh is acceptable.
+- Store Skills in a new table, or add a locale column — rejected.
+  Skills stay `{ id, instructions }` in `bots.skills_json`
+  (`packages/db/src/skills.ts`).
+- A dotted Skill id — rejected. The charset is letters, digits, `_`,
+  or `-` (`parseSkillId` in `packages/shared/src/skill.ts`).
