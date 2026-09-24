@@ -22,8 +22,8 @@ import {
   readChatActivityPhase,
   setChatActivityPhase,
 } from './chat-activity-phase'
+import { openChatTurn } from './chat-turn'
 import { completeAssistantReply, gatewayErrorReply } from './llm'
-import { chatMcpToolsAsOpenAi, invokeChatMcpTool } from './mcp-platform-tools'
 import {
   beginChatTurn,
   recordChatTurnTool,
@@ -211,6 +211,13 @@ async function finishWake(
     return
   }
   const viewer = viewerForPerson(input.store, input.personId)
+  const turn = openChatTurn({
+    store: input.store,
+    role,
+    canEditManifest: false,
+    personId: input.personId,
+    turnBotId: input.botId,
+  })
   let content: string
   let settle = settleFromReply({ via: 'error' })
   try {
@@ -223,15 +230,8 @@ async function finishWake(
       env: input.env,
       stored: getLlmGatewaySettings(input.store),
       audience: role,
-      tools: chatMcpToolsAsOpenAi(role),
-      invokeTool: (name, args) => invokeChatMcpTool({
-        name,
-        args,
-        store: input.store,
-        role,
-        personId: input.personId,
-        turnBotId: input.botId,
-      }),
+      tools: turn.tools(),
+      invokeTool: turn.invokeTool,
       onActivity: (phase) => {
         setChatActivityPhase(input.threadId, input.botId, phase)
       },
@@ -251,6 +251,7 @@ async function finishWake(
       botId: input.botId,
       role: 'assistant',
       content,
+      parts: turn.cards.parts(),
       threadId: input.threadId,
       viewer,
     })

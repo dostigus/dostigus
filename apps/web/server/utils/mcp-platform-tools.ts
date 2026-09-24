@@ -1,12 +1,14 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { BotViewer } from '@dostigus/shared'
 import type { ZodRawShape } from 'zod'
+import type { ChatCardTurn } from './chat-cards'
 import type { PlatformMcpTool } from './mcp-surface'
 import type { OpenAiChatFunctionTool } from './openai-tools'
 import type { ScheduleToolContext } from './schedule-tools'
 import { StoreError } from '@dostigus/db'
 import { BOT_ACCENT_HEXES, BOT_AVATAR_SHAPES, MESSAGE_ROLES, MODEL_TIERS } from '@dostigus/shared'
 import { z } from 'zod'
+import { noteToolCard } from './chat-cards'
 import {
   appendClusterMessage,
   createClusterBot,
@@ -256,18 +258,22 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_schedules_list: {
     name: 'dostigus_schedules_list',
-    description: 'List Schedules for this person and this Bot, oldest first. Each row has id, cadence (daily or weekly), timeLocal (HH:MM wall clock in the Cluster timezone), daysOfWeek (sun–sat, weekly only), wakeText, paused, and nextRunAt. The Owner may pass personId to list another person. Omit personId to list every Schedule on this Bot when you are the Owner.',
+    description: 'List Schedules for this person and this Bot, oldest first. Each row has id, cadence (daily or weekly), timeLocal (HH:MM wall clock in the Cluster timezone), daysOfWeek (sun–sat, weekly only), wakeText, paused, and nextRunAt. The Owner may pass personId to list another person. Omit personId to list every Schedule on this Bot when you are the Owner. When the person asked to set a Schedule and you list first, pass intent set plus cadence, timeLocal, and daysOfWeek. If an enabled row already has that clock, the result is already true and you do not create another. A list with no intent does not confirm a Schedule.',
     annotations: { readOnlyHint: true },
     chat: true,
     inputSchema: {
       botId: z.string().min(1),
       personId: z.string().min(1).optional(),
+      intent: z.enum(['set']).optional(),
+      cadence: z.enum(['daily', 'weekly']).optional(),
+      timeLocal: z.string().optional(),
+      daysOfWeek: z.array(z.string()).optional(),
     },
     run: (input, store, viewer, ctx) => schedulesList(store, input, viewer, ctx),
   },
   dostigus_schedules_create: {
     name: 'dostigus_schedules_create',
-    description: 'Create a Schedule that wakes this Bot on this person\'s bot-thread. cadence is daily or weekly. timeLocal is HH:MM 24-hour wall clock in the Cluster timezone. daysOfWeek is required for weekly and omitted for daily (sun, mon, tue, wed, thu, fri, sat). wakeText is the Wake line. The Host sets the next fire. A sentence such as every morning at 08:00 is this call. Do not pass nextRunAt.',
+    description: 'Create a Schedule that wakes this Bot on this person\'s bot-thread. cadence is daily or weekly. timeLocal is HH:MM 24-hour wall clock in the Cluster timezone. daysOfWeek is required for weekly and omitted for daily (sun, mon, tue, wed, thu, fri, sat). wakeText is the Wake line. The Host sets the next fire. A sentence such as every morning at 08:00 is this call. Do not pass nextRunAt. If an enabled Schedule already has the same cadence, timeLocal, and daysOfWeek, the result is already true, wakeText is unchanged, and no second row is inserted. A paused row with that clock is not already standing; resume it.',
     chat: true,
     inputSchema: {
       botId: z.string().min(1),
@@ -404,6 +410,8 @@ export function invokeChatMcpTool(input: {
   personId?: string
   /** Schedule tools stay on the Bot for this Chat turn. */
   turnBotId?: string
+  /** Host-injected Schedule Chat Cards for this turn. */
+  cards?: ChatCardTurn
 }): ChatToolInvokeResult {
   const name = input.name
   if (input.role === 'member') {
@@ -439,7 +447,11 @@ export function invokeChatMcpTool(input: {
           role: input.role === 'member' ? 'member' as const : 'owner' as const,
         }
       : undefined
-    const result = spec.run(parsed, input.store, viewer, { turnBotId: input.turnBotId })
+    const ctx: ScheduleToolContext = { turnBotId: input.turnBotId }
+    const result = spec.run(parsed, input.store, viewer, ctx)
+    if (input.cards) {
+      noteToolCard(input.cards, spec.name, result)
+    }
     logChatTool(spec.name, 'ok')
     return { ok: true, name: spec.name, content: mcpJson(result) }
   } catch (error) {

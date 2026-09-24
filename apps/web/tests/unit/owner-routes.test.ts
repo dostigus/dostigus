@@ -48,6 +48,9 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
     'threads/room-access.get.ts',
     'threads/[id].get.ts',
     'threads/[id]/messages.post.ts',
+    'schedules/[id].get.ts',
+    'schedules/[id].patch.ts',
+    'schedules/[id].delete.ts',
   ]
   for (const file of files) {
     const src = readFileSync(join(apiRoot, file), 'utf8')
@@ -133,8 +136,15 @@ it('replies in a room only after an @Name mention', () => {
 
 it('invokes Chat MCP tools in-process from the Host message route', () => {
   const src = readFileSync(join(apiRoot, 'bots/[id]/messages.post.ts'), 'utf8')
-  expect(src).toContain('invokeChatMcpTool')
-  expect(src).toContain('chatMcpToolsAsOpenAi(role, { canEditManifest })')
+  const turn = readFileSync(
+    join(import.meta.dirname, '../../server/utils/chat-turn.ts'),
+    'utf8',
+  )
+  expect(src).toContain('openChatTurn')
+  expect(src).toContain('invokeTool: turn.invokeTool')
+  expect(src).toContain('parts: turn.cards.parts()')
+  expect(turn).toContain('invokeChatMcpTool')
+  expect(turn).toContain('chatMcpToolsAsOpenAi(input.role, {')
   expect(src).toContain('personId')
   expect(src).not.toMatch(/fetch\([^)]*\/mcp/)
   expect(src).toContain('requireHostSession')

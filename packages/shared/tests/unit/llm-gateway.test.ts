@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 import {
   baseUrlForLlmGatewayPreset,
+  CHAT_NO_PACKAGE_RULE,
   CHAT_SELF_SETTINGS_RULE,
   chatSystemPrompt,
   DEFAULT_MODEL_TIER,
@@ -273,4 +274,10 @@ it('puts the self-settings rule on an Owner turn', () => {
   })
   expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
   expect(prompt).toContain('Self-settings')
+  expect(prompt).toContain(CHAT_NO_PACKAGE_RULE)
+  expect(prompt).toContain('there is no package yet')
+  expect(prompt).toContain('pass intent set')
+  expect(prompt).toContain('The Host adds the Chat Card')
+  expect(prompt).not.toContain('dostigus_modules_apply')
+  expect(prompt).not.toContain('Apply a stock')
 })

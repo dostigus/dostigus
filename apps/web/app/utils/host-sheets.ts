@@ -1,20 +1,21 @@
 import type { ChatPart } from '@dostigus/shared'
 
 /**
- * Sheets a Chat button may open. Unknown ids stay off the bubble.
+ * Sheets a Chat button or Chat Card may open. Unknown ids stay off the bubble.
  * `demo` is the ADR 0025 drawer. `kitchen` is the Kitchen Module Sheet
- * (ADR 0026).
+ * (ADR 0026). `schedule` is one Schedule (ADR 0030).
  */
 export type HostSheetEntry = {
   id: string
   title: string
-  /** `note` is a short body. `kitchen` mounts the Kitchen Sheet. */
-  kind: 'note' | 'kitchen'
+  /** `note` is a short body. `kitchen` and `schedule` mount their Sheets. */
+  kind: 'note' | 'kitchen' | 'schedule'
   body: string
 }
 
 export const HOST_DEMO_SHEET_ID = 'demo'
 export const HOST_KITCHEN_SHEET_ID = 'kitchen'
+export const HOST_SCHEDULE_SHEET_ID = 'schedule'
 
 const HOST_SHEETS: Record<string, HostSheetEntry> = {
   [HOST_DEMO_SHEET_ID]: {
@@ -29,18 +30,30 @@ const HOST_SHEETS: Record<string, HostSheetEntry> = {
     kind: 'kitchen',
     body: '',
   },
+  [HOST_SCHEDULE_SHEET_ID]: {
+    id: HOST_SCHEDULE_SHEET_ID,
+    title: 'Schedule',
+    kind: 'schedule',
+    body: '',
+  },
 }
 
 export function hostSheetById(id: string): HostSheetEntry | undefined {
   return HOST_SHEETS[id]
 }
 
-/** Status parts stay. A button renders only when the Host knows that Sheet. */
+/** Status and Card parts stay. A button or Card action renders only for a known Sheet. */
 export function hostChatParts(parts: ChatPart[]): ChatPart[] {
-  return parts.filter((part) => {
-    if (part.kind !== 'button') {
-      return true
+  return parts.flatMap((part): ChatPart[] => {
+    if (part.kind === 'button') {
+      return hostSheetById(part.action.sheetId) ? [part] : []
     }
-    return hostSheetById(part.action.sheetId) != null
+    if (part.kind === 'card') {
+      return [{
+        ...part,
+        actions: part.actions.filter((action) => hostSheetById(action.action.sheetId) != null),
+      }]
+    }
+    return [part]
   })
 }

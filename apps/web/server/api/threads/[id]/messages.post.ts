@@ -15,8 +15,8 @@ import {
   clearChatActivityPhase,
   setChatActivityPhase,
 } from '../../../utils/chat-activity-phase'
+import { openChatTurn } from '../../../utils/chat-turn'
 import { viewerFromUser } from '../../../utils/cluster-bots'
-import { invokeChatMcpTool } from '../../../utils/mcp-platform-tools'
 import {
   beginChatTurn,
   recordChatTurnTool,
@@ -75,6 +75,13 @@ export default defineEventHandler(async (event) => {
     })
     const viewer = viewerFromUser({ id: personId, role })
     const canEditManifest = canEditBot(mentioned.bot, viewer)
+    const turn = openChatTurn({
+      store,
+      role,
+      canEditManifest,
+      personId,
+      turnBotId: mentioned.bot.id,
+    })
     const reply = await completeAssistantReply({
       botName: mentioned.bot.name,
       botId: mentioned.bot.id,
@@ -85,15 +92,8 @@ export default defineEventHandler(async (event) => {
       stored: getLlmGatewaySettings(store),
       audience: role,
       canEditManifest,
-      tools: chatMcpToolsAsOpenAi(role, { canEditManifest }),
-      invokeTool: (name, args) => invokeChatMcpTool({
-        name,
-        args,
-        store,
-        role,
-        personId,
-        turnBotId: mentioned.bot.id,
-      }),
+      tools: turn.tools(),
+      invokeTool: turn.invokeTool,
       onActivity: (phase) => {
         setChatActivityPhase(threadId, mentioned.bot.id, phase)
       },
@@ -105,6 +105,7 @@ export default defineEventHandler(async (event) => {
       threadId,
       botId: mentioned.bot.id,
       content: reply.content,
+      parts: turn.cards.parts(),
     })
     settleChatTurn(store, turnId, settleFromReply({
       via: reply.via,

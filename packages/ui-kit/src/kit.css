@@ -289,6 +289,48 @@
   border-color: color-mix(in srgb, var(--accent, #f25630) 45%, var(--line, #333333));
 }
 
+.kit-card {
+  flex: 1 0 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line, #333333);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--panel, #141414) 92%, transparent);
+}
+
+.kit-card-title,
+.kit-card-body {
+  margin: 0;
+}
+
+.kit-card-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.kit-card-body {
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.kit-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.kit-card--ok {
+  border-color: color-mix(in srgb, var(--live, #3ddc84) 45%, var(--line, #333333));
+}
+
+.kit-card--warn {
+  border-color: color-mix(in srgb, var(--accent, #f25630) 45%, var(--line, #333333));
+}
+
 .kit-sticker {
   display: block;
   width: 9rem;

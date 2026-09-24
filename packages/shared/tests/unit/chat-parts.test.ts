@@ -43,6 +43,35 @@ it('parses a JSON string and rejects junk', () => {
   expect(parseChatParts(null)).toEqual([])
 })
 
+it('keeps a Schedule Card and drops other card kinds', () => {
+  const card = {
+    kind: 'card' as const,
+    card: 'schedule' as const,
+    title: 'daily 08:00',
+    body: 'уже стоит',
+    tone: 'ok' as const,
+    targetId: 'sched-1',
+    actions: [
+      { label: 'Pause', action: { type: 'openSheet' as const, sheetId: 'schedule' } },
+    ],
+  }
+  expect(parseChatParts([
+    card,
+    { ...card, card: 'module', title: 'Weather' },
+    { ...card, card: 'catalog-miss', body: 'Нет такого пакета', targetId: '' },
+    { ...card, actions: [{ label: 'Bad', action: { type: 'navigate', sheetId: 'schedule' } }] },
+  ])).toEqual([
+    card,
+    {
+      ...card,
+      actions: [],
+    },
+  ])
+  expect(chatPartsForRole('user', [card])).toEqual([])
+  expect(chatPartsForRole('system', [card])).toEqual([])
+  expect(chatPartsForRole('assistant', [card])).toEqual([card])
+})
+
 it('caps the list and ignores parts on user and system lines', () => {
   const many = Array.from({ length: CHAT_PARTS_MAX + 3 }, () => status)
   expect(parseChatParts(many)).toHaveLength(CHAT_PARTS_MAX)

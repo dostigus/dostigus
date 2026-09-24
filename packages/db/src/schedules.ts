@@ -401,6 +401,32 @@ export function deleteSchedule(store: OpenedStore, id: string): void {
   store.sqlite.prepare('DELETE FROM schedules WHERE id = ?').run(row.id)
 }
 
+/**
+ * An enabled Schedule with the same cadence, local time, and weekdays.
+ * A paused row is not already standing. See ADR 0030.
+ */
+export function findEnabledEquivalentSchedule(
+  store: OpenedStore,
+  input: {
+    botId: string
+    personId: string
+    cadence: string
+    timeLocal: string
+    daysOfWeek?: ScheduleWeekday[] | null
+  },
+): Schedule | null {
+  const cadence = normalizeCadence(input.cadence)
+  const timeLocal = normalizeTimeLocal(input.timeLocal)
+  const days = resolvedDays(cadence, input.daysOfWeek)
+  const wanted = JSON.stringify(days ?? [])
+  return listSchedules(store, { botId: input.botId, personId: input.personId }).find((row) => {
+    if (row.paused || row.cadence !== cadence || row.timeLocal !== timeLocal) {
+      return false
+    }
+    return JSON.stringify(row.daysOfWeek ?? []) === wanted
+  }) ?? null
+}
+
 export function listSchedules(
   store: OpenedStore,
   filter: { botId: string, personId?: string },

@@ -1,6 +1,7 @@
 /**
  * Kit parts on an assistant Chat line. User and system lines have none.
- * See ADR 0025. Markdown stays in `content` (ADR 0022).
+ * See ADR 0025. A Chat Card (`kind: card`) is ADR 0030.
+ * Markdown stays in `content` (ADR 0022).
  */
 
 export const CHAT_PART_STATUS_TONES = ['neutral', 'ok', 'warn'] as const
@@ -30,7 +31,28 @@ export type ChatPartStatus = {
   tone: ChatPartStatusTone
 }
 
-export type ChatPart = ChatPartButton | ChatPartStatus
+/** Host-built Schedule Chat Card. The model does not emit this. See ADR 0030. */
+export const CHAT_CARD_KINDS = ['schedule'] as const
+
+export type ChatCardKind = (typeof CHAT_CARD_KINDS)[number]
+
+export type ChatPartCardAction = {
+  label: string
+  action: ChatPartButtonAction
+}
+
+export type ChatPartCard = {
+  kind: 'card'
+  card: ChatCardKind
+  title: string
+  body: string
+  tone: ChatPartStatusTone
+  /** Schedule id. */
+  targetId: string
+  actions: ChatPartCardAction[]
+}
+
+export type ChatPart = ChatPartButton | ChatPartStatus | ChatPartCard
 
 function isTone(value: unknown): value is ChatPartStatusTone {
   return (CHAT_PART_STATUS_TONES as readonly unknown[]).includes(value)
@@ -47,11 +69,81 @@ function parseLabel(value: unknown): string | null {
   return label
 }
 
+function isCardKind(value: unknown): value is ChatCardKind {
+  return (CHAT_CARD_KINDS as readonly unknown[]).includes(value)
+}
+
+function parseTargetId(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+  const targetId = value.trim()
+  if (targetId.length > CHAT_PART_LABEL_MAX) {
+    return null
+  }
+  return targetId
+}
+
+function parseCardActions(value: unknown): ChatPartCardAction[] | null {
+  if (!Array.isArray(value)) {
+    return null
+  }
+  const actions: ChatPartCardAction[] = []
+  for (const item of value) {
+    if (actions.length >= 4) {
+      break
+    }
+    if (!item || typeof item !== 'object') {
+      continue
+    }
+    const record = item as Record<string, unknown>
+    const label = parseLabel(record.label)
+    const action = record.action
+    if (!label || !action || typeof action !== 'object') {
+      continue
+    }
+    const sheet = action as Record<string, unknown>
+    if (sheet.type !== 'openSheet' || typeof sheet.sheetId !== 'string' || !SHEET_ID.test(sheet.sheetId)) {
+      continue
+    }
+    actions.push({
+      label,
+      action: { type: 'openSheet', sheetId: sheet.sheetId },
+    })
+  }
+  return actions
+}
+
+function parseCard(item: Record<string, unknown>): ChatPartCard | null {
+  if (!isCardKind(item.card) || !isTone(item.tone)) {
+    return null
+  }
+  const title = parseLabel(item.title)
+  const body = parseLabel(item.body)
+  const targetId = parseTargetId(item.targetId)
+  const actions = parseCardActions(item.actions)
+  if (!title || !body || targetId === null || !actions) {
+    return null
+  }
+  return {
+    kind: 'card',
+    card: item.card,
+    title,
+    body,
+    tone: item.tone,
+    targetId,
+    actions,
+  }
+}
+
 function parsePart(value: unknown): ChatPart | null {
   if (!value || typeof value !== 'object') {
     return null
   }
   const item = value as Record<string, unknown>
+  if (item.kind === 'card') {
+    return parseCard(item)
+  }
   const label = parseLabel(item.label)
   if (!label) {
     return null

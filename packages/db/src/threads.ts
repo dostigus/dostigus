@@ -254,7 +254,7 @@ export function appendMessengerUserLine(
 
 export function appendMessengerAssistantLine(
   store: OpenedStore,
-  input: { threadId: string, botId: string, content: string },
+  input: { threadId: string, botId: string, content: string, parts?: unknown },
 ) {
   const bot = requireBot(store, input.botId)
   const participant = store.sqlite.prepare(`
@@ -270,6 +270,7 @@ export function appendMessengerAssistantLine(
     content: input.content,
     personId: null,
     botId: bot.id,
+    parts: input.parts,
   })
 }
 

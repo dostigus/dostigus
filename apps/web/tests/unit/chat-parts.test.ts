@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
-import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID, hostChatParts, hostSheetById } from '../../app/utils/host-sheets'
+import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID, HOST_SCHEDULE_SHEET_ID, hostChatParts, hostSheetById } from '../../app/utils/host-sheets'
 
 const chat = readFileSync(join(import.meta.dirname, '../../app/pages/bots/[id].vue'), 'utf8')
 
@@ -17,6 +17,12 @@ it('renders Kit parts on the assistant bubble and opens a Kit Sheet', () => {
   expect(chat).toContain('v-model:open="sheetOpen"')
   expect(chat).toContain('<KitchenSheet')
   expect(chat).toContain('openSheet?.kind === \'kitchen\'')
+  expect(chat).toContain('<ScheduleSheet')
+  expect(chat).toContain('openSheet?.kind === \'schedule\'')
+  const room = readFileSync(join(import.meta.dirname, '../../app/pages/threads/[id].vue'), 'utf8')
+  expect(room).toContain('KitChatParts')
+  expect(room).toContain('<ScheduleSheet')
+  expect(room).toContain('openSheet?.kind === \'schedule\'')
 })
 
 it('keeps a button only when the Host registry knows the Sheet', () => {
@@ -37,5 +43,32 @@ it('keeps a button only when the Host registry knows the Sheet', () => {
     { kind: 'button', label: 'Open Kitchen', action: { type: 'openSheet', sheetId: 'kitchen' } },
   ])).toEqual([
     { kind: 'button', label: 'Open Kitchen', action: { type: 'openSheet', sheetId: 'kitchen' } },
+  ])
+  expect(hostSheetById(HOST_SCHEDULE_SHEET_ID)?.kind).toBe('schedule')
+  expect(hostChatParts([
+    {
+      kind: 'card',
+      card: 'schedule',
+      title: 'daily 08:00',
+      body: 'уже стоит',
+      tone: 'ok',
+      targetId: 'sched-1',
+      actions: [
+        { label: 'Pause', action: { type: 'openSheet', sheetId: 'schedule' } },
+        { label: 'Missing', action: { type: 'openSheet', sheetId: 'missing' } },
+      ],
+    },
+  ])).toEqual([
+    {
+      kind: 'card',
+      card: 'schedule',
+      title: 'daily 08:00',
+      body: 'уже стоит',
+      tone: 'ok',
+      targetId: 'sched-1',
+      actions: [
+        { label: 'Pause', action: { type: 'openSheet', sheetId: 'schedule' } },
+      ],
+    },
   ])
 })

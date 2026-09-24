@@ -145,9 +145,8 @@ What the running Cluster does today:
   and system bubbles stay plain pre-wrap text and have no parts. See
   [ADR 0022](adr/0022-chat-assistant-markdown.md) and
   [ADR 0025](adr/0025-chat-bubble-parts.md). A Chat Card (`kind: card`)
-  for a Schedule change is decided in
-  [ADR 0030](adr/0030-chat-cards-module-catalog.md) and is not stored
-  in this Host yet. Sheet id `kitchen` opens the
+  for a Schedule change is stored on that assistant line. See
+  [ADR 0030](adr/0030-chat-cards-module-catalog.md). Sheet id `kitchen` opens the
   Kitchen Module: pantry, one recipe, and a cooked log with an XP
   counter, in a `KitSheet`. See
   [ADR 0026](adr/0026-kitchen-module-day-1.md). The composer stays on screen. Sidebar Bot
@@ -317,8 +316,8 @@ Schedules and fires a Wake on that person's bot-thread. A
 Schedule is not a Skill and not a Manifest field. A Schedule still
 only provides the Wake. The Platform does not seed a Weather Module,
 a weather Skill, or a weather API. Chat Cards after a Schedule change
-are [ADR 0030](adr/0030-chat-cards-module-catalog.md). They are not in
-this Host yet.
+are [ADR 0030](adr/0030-chat-cards-module-catalog.md). This Host injects
+them on the assistant line.
 
 - A Schedule is a Store row keyed by `(botId, personId)`: that person's
   bot-thread with that Bot. Many rows per person and Bot are allowed.
@@ -468,10 +467,10 @@ section above. Turn tools are not on those lists.
 
 ## Chat Cards
 
-Decided in [ADR 0030](adr/0030-chat-cards-module-catalog.md). Not in
-this Host until the code PR. This Host does not inject Chat Cards.
-This monorepo does not ship a stock Module package, a
-`packages/modules/` seed, Host-bundled Apply, or an Open-Meteo Module.
+Decided in [ADR 0030](adr/0030-chat-cards-module-catalog.md). This Host
+injects Schedule Chat Cards. This monorepo does not ship a stock Module
+package, a `packages/modules/` seed, Host-bundled Apply, or an Open-Meteo
+Module.
 
 - **Chat Card.** A Kit Card in the thread, one assistant part of kind
   `card` on `messages.parts_json`. The Host injects it after a
@@ -539,8 +538,8 @@ and [`docs/deploy.md`](deploy.md)).
 - Full Card catalog inside a bubble (tables, forms). A button and a
   status chip on an assistant bubble are
   [ADR 0025](adr/0025-chat-bubble-parts.md). The Schedule Chat Card is
-  [ADR 0030](adr/0030-chat-cards-module-catalog.md) and is not in this
-  Host yet. Assistant Markdown stays
+  [ADR 0030](adr/0030-chat-cards-module-catalog.md) and is in this Host.
+  Assistant Markdown stays
   [ADR 0022](adr/0022-chat-assistant-markdown.md)
 - Streaming the assistant bubble token-by-token, MCP tool names or
   arguments on the activity row, and model-supplied status lines.
@@ -562,9 +561,10 @@ and [`docs/deploy.md`](deploy.md)).
   seed, Host-bundled Apply of platform packages, baking packages into
   the Host image, and a Weather seed (including Open-Meteo). A
   Marketplace of packages is later (cloud product). Builder Jobs stay
-  out. Chat Cards for Schedule changes, and meta Skills on Bot create,
-  are [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are not in
-  this Host yet. Meta Skills are plain Skill text, not a stock Module
+  out. Chat Cards for Schedule changes are
+  [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are in this Host.
+  Meta Skills on Bot create are the same record and are not in this
+  Host yet. Meta Skills are plain Skill text, not a stock Module
   package. A Schedule still only writes a Wake
   ([ADR 0027](adr/0027-bot-schedules.md)).
 - Appearance via Chat, Model tier via Chat self-settings, and delete of

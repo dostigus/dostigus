@@ -10,6 +10,14 @@ import { DEFAULT_MODEL_TIER, isModelTier, MODEL_TIERS } from './types'
 export const CHAT_SELF_SETTINGS_RULE
   = 'Self-settings (name, label, description, Skills, and Schedules when those tools are available) must use the MCP surface. Do not claim success without a successful tool result. On failure, report the error. Appearance and Model tier are not Chat self-settings.'
 
+/**
+ * Host instruction beside self-settings. Not a Manifest field and not a Skill.
+ * There is no stock Module catalog to Apply. A Schedule change still gets a
+ * Chat Card from the Host. See ADR 0030, narrowed 2026-09-24.
+ */
+export const CHAT_NO_PACKAGE_RULE
+  = 'This Host has no stock Module catalog to Apply. If a capability is missing, say briefly that there is no package yet. Do not author a Module package. A Schedule change uses the Schedule tools. When the person asked to set a Schedule and you list first, pass intent set plus cadence, timeLocal, and daysOfWeek. A paused row with that clock is not already standing; resume it. The Host adds the Chat Card, so do not end that turn by only saying the Schedule changed.'
+
 /** OpenRouter-shaped default. Used when a key is set and no base URL is stored or in env. */
 export const OPENROUTER_DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1' as const
 
@@ -346,6 +354,7 @@ export function chatSystemPrompt(input: {
   }
   lines.push(
     CHAT_SELF_SETTINGS_RULE,
+    CHAT_NO_PACKAGE_RULE,
     'Do not offer to write Module packages — that is the Builder.',
     'Reply briefly and stay in character.',
   )

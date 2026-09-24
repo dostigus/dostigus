@@ -1,10 +1,11 @@
-import type { OpenedStore, ScheduleCadence, ScheduleWeekday } from '@dostigus/db'
+import type { OpenedStore, Schedule, ScheduleCadence, ScheduleWeekday } from '@dostigus/db'
 import type { BotViewer } from '@dostigus/shared'
 import process from 'node:process'
 import {
   createSchedule,
   deleteSchedule,
   effectiveClusterTimeZone,
+  findEnabledEquivalentSchedule,
   getSchedule,
   listSchedules,
   pauseSchedule,
@@ -99,18 +100,37 @@ export function schedulesList(
   assertTurnBot(botId, ctx)
   assertMemberCanSeeBot(store, botId, viewer)
   const requested = typeof input.personId === 'string' ? input.personId.trim() : ''
-  if (viewer?.role === 'member') {
-    if (requested && requested !== viewer.id) {
-      throw new StoreError('Schedule not found', 404)
+  const personId = viewer?.role === 'member'
+    ? viewer.id
+    : (requested || viewer?.id || '')
+  if (viewer?.role === 'member' && requested && requested !== viewer.id) {
+    throw new StoreError('Schedule not found', 404)
+  }
+  const schedules = listSchedules(store, {
+    botId,
+    personId: viewer?.role === 'member' ? viewer.id : (requested || undefined),
+  })
+  if (input.intent === 'set') {
+    if (!personId) {
+      throw new StoreError('Name the person for this Schedule', 400)
     }
-    return { schedules: listSchedules(store, { botId, personId: viewer.id }) }
-  }
-  return {
-    schedules: listSchedules(store, {
+    const cadence = typeof input.cadence === 'string' ? input.cadence : ''
+    const timeLocal = typeof input.timeLocal === 'string' ? input.timeLocal : ''
+    if (!cadence || !timeLocal) {
+      throw new StoreError('intent set needs cadence and timeLocal', 400)
+    }
+    const match = findEnabledEquivalentSchedule(store, {
       botId,
-      personId: requested || undefined,
-    }),
+      personId,
+      cadence,
+      timeLocal,
+      daysOfWeek: readDays(input) as ScheduleWeekday[] | undefined,
+    })
+    if (match) {
+      return { schedules, already: true as const, schedule: match }
+    }
   }
+  return { schedules }
 }
 
 export function schedulesCreate(
@@ -127,6 +147,16 @@ export function schedulesCreate(
     throw new StoreError('Bot not found', 404)
   }
   const cadence = input.cadence === 'weekly' ? 'weekly' : 'daily'
+  const standing = findEnabledEquivalentSchedule(store, {
+    botId,
+    personId,
+    cadence,
+    timeLocal: String(input.timeLocal ?? ''),
+    daysOfWeek: readDays(input) as ScheduleWeekday[] | undefined,
+  })
+  if (standing) {
+    return { schedule: standing, already: true as const }
+  }
   const schedule = createSchedule(store, {
     botId,
     personId,
@@ -183,6 +213,60 @@ export function schedulesDelete(
   ctx?: ScheduleToolContext,
 ) {
   const schedule = requireManagedSchedule(store, String(input.id ?? ''), viewer, ctx)
+  deleteSchedule(store, schedule.id)
+  return { ok: true as const, schedule }
+}
+
+function requireSheetSchedule(store: OpenedStore, id: string, viewer: BotViewer): Schedule {
+  const schedule = getSchedule(store, id)
+  if (!schedule || !actorMayManage(schedule.personId, viewer)) {
+    throw new StoreError('This Schedule is gone', 404)
+  }
+  assertMemberCanSeeBot(store, schedule.botId, viewer)
+  return schedule
+}
+
+/** Sheet id `schedule`. One row. A missing row says the Schedule is gone. */
+export function scheduleSheetRead(store: OpenedStore, id: string, viewer: BotViewer) {
+  return { schedule: requireSheetSchedule(store, id, viewer) }
+}
+
+export function scheduleSheetSave(
+  store: OpenedStore,
+  id: string,
+  input: {
+    cadence?: string
+    timeLocal?: string
+    daysOfWeek?: string[]
+    wakeText?: string
+    paused?: boolean
+  },
+  viewer: BotViewer,
+) {
+  const current = requireSheetSchedule(store, id, viewer)
+  const hasFields = input.cadence !== undefined
+    || input.timeLocal !== undefined
+    || input.daysOfWeek !== undefined
+    || input.wakeText !== undefined
+  let schedule = current
+  if (hasFields) {
+    schedule = updateSchedule(store, current.id, {
+      cadence: input.cadence as ScheduleCadence | undefined,
+      timeLocal: input.timeLocal,
+      daysOfWeek: input.daysOfWeek as ScheduleWeekday[] | undefined,
+      wakeText: input.wakeText,
+    })
+  }
+  if (input.paused === true) {
+    schedule = pauseSchedule(store, schedule.id)
+  } else if (input.paused === false) {
+    schedule = resumeSchedule(store, schedule.id)
+  }
+  return { schedule }
+}
+
+export function scheduleSheetDelete(store: OpenedStore, id: string, viewer: BotViewer) {
+  const schedule = requireSheetSchedule(store, id, viewer)
   deleteSchedule(store, schedule.id)
   return { ok: true as const }
 }
