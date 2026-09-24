@@ -25,6 +25,7 @@ Settled now, even if this repo only scaffolds them:
 | Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
 | Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
 | Host HTTP get | MCP surface tool `dostigus_http_get` on Chat and Wake. Cluster http allowlist in Store settings. See [ADR 0031](adr/0031-host-http-get.md). |
+| Cluster outbound | Two Cluster env paths: LLM uses `HTTPS_PROXY` / `HTTP_PROXY` when set; Bot HTTP egress uses `DOSTIGUS_HTTP_PROXY` (empty = direct). See [ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md). |
 | Chat LLM context | System prompt is Manifest (including label and description) plus a Skill catalog (`id` + `description`). History is the last 40 lines. Chat tools start slim; keyword expand adds builder tools on that user turn only. Wake is narrower and has no expand. See [ADR 0032](adr/0032-chat-llm-context-assembly.md). |
 | Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, appends one system Chat line (plain string, no parts). This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 
@@ -421,10 +422,36 @@ tool, the Store field, and the Settings control.
   Owner Settings. Members do not set it.
 - **SSRF.** Even on allow-all, the Host blocks loopback, private, and
   link-local destinations. The Host aborts a hung GET after 8 seconds
-  (`HOST_HTTP_GET_TIMEOUT_MS`) so it cannot stall a turn.
+  (`HOST_HTTP_GET_TIMEOUT_MS`) so it cannot stall a turn. SSRF is the
+  destination, not the Bot HTTP egress proxy host
+  ([ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
+- **Bot HTTP egress.** Contract in
+  [ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md).
+  `dostigus_http_get` reads `DOSTIGUS_HTTP_PROXY` (empty = direct).
+  It does not use `HTTPS_PROXY` or `EnvHttpProxyAgent`. The impl PR
+  lands that fetch path.
 - **Not a weather package.** [ADR 0030](adr/0030-chat-cards-module-catalog.md)
   stays. A Bot that needs weather uses Host HTTP get against an
   allowed public API from a Skill or `wakeText`.
+
+## Cluster outbound
+
+Decided in [ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md).
+This section is the contract. The impl PR lands the Host change.
+
+- **Two paths.** LLM proxy is `HTTPS_PROXY` / `HTTP_PROXY` when set
+  (explicit `ProxyAgent` in the LLM client). Bot HTTP egress is
+  `DOSTIGUS_HTTP_PROXY` (one URL for `http` and `https` targets).
+  Unset Bot env is direct. Bot never inherits the LLM proxy.
+- **Env only.** No Cluster Store field and no Settings UI on day-1.
+- **Host-owned fetch.** The Platform does not use
+  `NODE_USE_ENV_PROXY` / `EnvHttpProxyAgent` for the LLM client or
+  Host HTTP get. If that env is set, the Host logs one startup warn
+  and ignores it for those fetches.
+- **SSRF.** Destination checks stay [ADR 0031](adr/0031-host-http-get.md).
+  The proxy endpoint may be loopback or private.
+- **Fail closed.** An invalid `DOSTIGUS_HTTP_PROXY` is a tool error,
+  not a silent direct GET. No Bot `NO_PROXY` on day-1.
 
 ## Chat LLM context
 
