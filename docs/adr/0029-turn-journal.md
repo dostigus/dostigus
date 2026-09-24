@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-24
+- Amended: 2026-09-24 — harness smoke `pnpm smoke:turns`
 
 Activity phases stay [ADR 0021](0021-chat-activity-status.md). The Chat
 tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). A Wake stays
@@ -83,7 +84,6 @@ call them.
 ### Out of scope
 
 - An Owner UI Sheet for the journal
-- A harness smoke script
 - Evals
 - Storing message bodies, tool arguments, tool results, or prompts
 - Replacing the Activity poll with a Store read
@@ -120,12 +120,16 @@ does not add a Sheet and does not put the tools on the Chat allowlist.
   [ADR 0028](0028-bot-self-settings-via-chat.md). Turn tools are not
   added to those lists.
 - Rows older than 7 days leave the Store when a Turn finalizes.
+- `pnpm smoke:turns` checks the quiet Chat write path and
+  `dostigus_turns_list` / `dostigus_turns_get` on a running preview
+  Host. It is not an Owner Sheet.
 
 ## Alternatives
 
 - An Owner Sheet for turns — rejected for day-1. Ops read MCP.
-- A harness script in this change — rejected. A later PR can smoke the
-  tools.
+- A harness script in the journal change — rejected for that PR. The
+  later smoke is `pnpm smoke:turns`
+  ([`scripts/turn-journal-smoke.mjs`](../../scripts/turn-journal-smoke.mjs)).
 - Store the message body, the tool arguments, or the tool result —
   rejected. That copies prompts and secrets into the journal.
 - Read Activity from `turns` — rejected. The poll stays the in-memory

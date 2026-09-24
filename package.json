@@ -33,6 +33,7 @@
     "test:watch": "vitest",
     "preview:host": "DOSTIGUS_PREVIEW_SEED=1 pnpm --filter @dostigus/web dev",
     "smoke:preview": "node scripts/preview-seed-smoke.mjs",
+    "smoke:turns": "node scripts/turn-journal-smoke.mjs",
     "check": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build",
     "check:full": "pnpm run lint:fix && pnpm run typecheck && pnpm run test && pnpm run build"
   },

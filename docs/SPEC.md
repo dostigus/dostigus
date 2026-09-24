@@ -442,6 +442,12 @@ section above. Turn tools are not on those lists.
   bearer as the other Host tools. Day-1 the token sees every Cluster
   Turn. List filters are `botId`, `threadId`, `since`, and `limit`
   (default 50, cap 100), newest first. Get is by id.
+- The harness smoke is in this Host. `pnpm smoke:turns` needs
+  `pnpm preview:host` with `NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`)
+  set to the same value the smoke sends. When that env is unset, the
+  smoke sends Bearer `preview-agent`. It posts one quiet Chat line on
+  Bot `preview` (no LLM gateway key) and reads that Turn through the
+  two tools. See [`AGENTS.md`](../AGENTS.md).
 
 ## Self-host (compose)
 
@@ -485,11 +491,11 @@ and [`docs/deploy.md`](deploy.md)).
   ([ADR 0021](adr/0021-chat-activity-status.md), amended 2026-09-24).
   Turn journal phase meta is
   [ADR 0029](adr/0029-turn-journal.md). Skills packages stay out.
-- A Turn journal Sheet, a harness smoke script, evals, storing message
+- A Turn journal Sheet, evals, storing message
   bodies or tool arguments or results or prompts on a Turn, reading
   Activity from the Turn journal, and Schedule ticker debug tools
-  ([ADR 0029](adr/0029-turn-journal.md)). The Turn journal above is in
-  this Host.
+  ([ADR 0029](adr/0029-turn-journal.md)). The Turn journal above, and
+  the harness smoke `pnpm smoke:turns`, are in this Host.
 - Schedule list Sheet; full crontab; an interval of every N minutes;
   one-shot fires; wakes on a room, a direct message, or a group; an SSE
   ticker; a multi-node lease
