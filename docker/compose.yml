@@ -35,6 +35,11 @@ services:
       # MCP surface — empty → tools stay disabled (see docs/deploy.md).
       # NUXT_AGENT_TOKEN:
       # DOSTIGUS_MCP_TOKEN:
+      # Cluster outbound (ADR 0033). LLM and Bot HTTP egress do not share env.
+      # HTTPS_PROXY / HTTP_PROXY are the LLM path. DOSTIGUS_HTTP_PROXY is Bot GET.
+      # HTTPS_PROXY:
+      # HTTP_PROXY:
+      # DOSTIGUS_HTTP_PROXY:
     volumes:
       - cluster-data:/var/lib/dostigus
     healthcheck:

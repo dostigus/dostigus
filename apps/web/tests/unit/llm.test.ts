@@ -8,6 +8,7 @@ import {
   MEMBER_GATEWAY_EMPTY_ERROR_REPLY,
   MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY,
 } from '@dostigus/shared'
+import { Agent, ProxyAgent } from 'undici'
 import { expect, it, vi } from 'vitest'
 import {
   completeAssistantReply,
@@ -961,6 +962,62 @@ it('sends Wake tools plus the Skill catalog and keeps the Wake as system', async
     'dostigus_messages_create',
     'dostigus_cluster_timezone_get',
   ])
+})
+
+it('uses HTTPS_PROXY for an https gateway and ignores DOSTIGUS_HTTP_PROXY', async () => {
+  let dispatcher: unknown
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: {
+      ...GATEWAY_ENV,
+      HTTPS_PROXY: 'http://user:s3cret@llm-proxy.example:8080',
+      DOSTIGUS_HTTP_PROXY: 'http://bot-proxy.example:8080',
+    },
+    fetchImpl: (async (_url, init) => {
+      dispatcher = (init as { dispatcher?: unknown } | undefined)?.dispatcher
+      return completionResponse('Proxied.')
+    }) as typeof fetch,
+  })
+  expect(result).toEqual({ via: 'llm', content: 'Proxied.' })
+  expect(dispatcher).toBeInstanceOf(ProxyAgent)
+})
+
+it('goes direct when LLM proxy env is unset', async () => {
+  let dispatcher: unknown
+  await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: {
+      ...GATEWAY_ENV,
+      DOSTIGUS_HTTP_PROXY: 'http://bot-proxy.example:8080',
+    },
+    fetchImpl: (async (_url, init) => {
+      dispatcher = (init as { dispatcher?: unknown } | undefined)?.dispatcher
+      return completionResponse('Direct.')
+    }) as typeof fetch,
+  })
+  expect(dispatcher).toBeInstanceOf(Agent)
+  expect(dispatcher).not.toBeInstanceOf(ProxyAgent)
+})
+
+it('fails the LLM call on an invalid HTTPS_PROXY and does not fetch', async () => {
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: {
+      ...GATEWAY_ENV,
+      HTTPS_PROXY: '::::',
+    },
+    fetchImpl: (async () => {
+      throw new Error('must not fetch when the LLM proxy is invalid')
+    }) as typeof fetch,
+  })
+  expect(result.via).toBe('error')
+  expect(result.content).toBe(LLM_GATEWAY_TRANSIENT_ERROR_REPLY)
 })
 
 it('windows history to the last 40 Chat lines including the trigger', async () => {

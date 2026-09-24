@@ -428,8 +428,7 @@ tool, the Store field, and the Settings control.
 - **Bot HTTP egress.** Contract in
   [ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md).
   `dostigus_http_get` reads `DOSTIGUS_HTTP_PROXY` (empty = direct).
-  It does not use `HTTPS_PROXY` or `EnvHttpProxyAgent`. The impl PR
-  lands that fetch path.
+  It does not use `HTTPS_PROXY` or `EnvHttpProxyAgent`.
 - **Not a weather package.** [ADR 0030](adr/0030-chat-cards-module-catalog.md)
   stays. A Bot that needs weather uses Host HTTP get against an
   allowed public API from a Skill or `wakeText`.
@@ -437,7 +436,7 @@ tool, the Store field, and the Settings control.
 ## Cluster outbound
 
 Decided in [ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md).
-This section is the contract. The impl PR lands the Host change.
+This Host uses two explicit outbound paths.
 
 - **Two paths.** LLM proxy is `HTTPS_PROXY` / `HTTP_PROXY` when set
   (explicit `ProxyAgent` in the LLM client). Bot HTTP egress is

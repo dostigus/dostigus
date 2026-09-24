@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createOwner, openStore, setClusterHttpAllowlist } from '@dostigus/db'
+import { Agent, ProxyAgent } from 'undici'
 import { afterEach, expect, it } from 'vitest'
 import {
   assertHostHttpGetDestination,
@@ -139,6 +140,92 @@ it('records only the tool name on a Turn, not the URL or body', () => {
   expect(llm).toContain('onTool?: (entry: { name: string, ok: boolean, ms: number })')
   expect(llm).toContain('Tool name, ok, and duration only')
   expect(llm).not.toContain('onTool?: (entry: { name: string, ok: boolean, ms: number, url')
+})
+
+function dispatcherOf(init?: RequestInit): unknown {
+  return (init as { dispatcher?: unknown } | undefined)?.dispatcher
+}
+
+it('goes direct when DOSTIGUS_HTTP_PROXY is empty and ignores HTTPS_PROXY', async () => {
+  let dispatcher: unknown
+  const result = await hostHttpGet('https://api.example.com/v1', {
+    env: {
+      HTTPS_PROXY: 'http://user:s3cret@llm-proxy.example:8080',
+      HTTP_PROXY: 'http://llm-proxy.example:8080',
+      DOSTIGUS_HTTP_PROXY: '  ',
+    },
+    lookup: lookup({ 'api.example.com': ['1.2.3.4'] }),
+    fetchImpl: (async (_url, init) => {
+      dispatcher = dispatcherOf(init)
+      return new Response('ok', { status: 200 })
+    }) as typeof fetch,
+  })
+  expect(result).toEqual({ status: 200, body: 'ok', truncated: false })
+  expect(dispatcher).toBeInstanceOf(Agent)
+  expect(dispatcher).not.toBeInstanceOf(ProxyAgent)
+})
+
+it('uses DOSTIGUS_HTTP_PROXY and still SSRF-blocks the destination', async () => {
+  let fetched = false
+  const fetchImpl = (async (_url, init) => {
+    fetched = true
+    expect(dispatcherOf(init)).toBeInstanceOf(ProxyAgent)
+    return new Response('leaked', { status: 200 })
+  }) as typeof fetch
+
+  await expect(hostHttpGet('http://127.0.0.1/secret', {
+    env: { DOSTIGUS_HTTP_PROXY: 'http://user:s3cret@127.0.0.1:8888' },
+    fetchImpl,
+  })).rejects.toThrow(/blocked destination/)
+  expect(fetched).toBe(false)
+
+  const publicGet = await hostHttpGet('https://api.example.com/v1', {
+    env: { DOSTIGUS_HTTP_PROXY: 'http://user:s3cret@127.0.0.1:8888' },
+    lookup: lookup({ 'api.example.com': ['1.2.3.4'] }),
+    fetchImpl: (async (_url, init) => {
+      expect(dispatcherOf(init)).toBeInstanceOf(ProxyAgent)
+      return new Response('{"ok":true}', { status: 200 })
+    }) as typeof fetch,
+  })
+  expect(publicGet.body).toBe('{"ok":true}')
+})
+
+it('fails closed on an invalid Bot HTTP proxy and does not fetch', async () => {
+  await expect(hostHttpGet('https://api.example.com/v1', {
+    env: { DOSTIGUS_HTTP_PROXY: 'not-a-url' },
+    lookup: lookup({ 'api.example.com': ['1.2.3.4'] }),
+    fetchImpl: (async () => {
+      throw new Error('must not fetch when the Bot proxy is invalid')
+    }) as typeof fetch,
+  })).rejects.toThrow(/Bot HTTP proxy URL is invalid/)
+})
+
+it('does not read HTTPS_PROXY or EnvHttpProxyAgent on the Bot path', () => {
+  const src = readFileSync(join(import.meta.dirname, '../../server/utils/http-get.ts'), 'utf8')
+  expect(src).toContain('resolveBotHttpOutboundProxy')
+  expect(src).not.toContain('HTTPS_PROXY')
+  expect(src).not.toContain('HTTP_PROXY')
+  expect(src).not.toContain('EnvHttpProxyAgent')
+})
+
+it('returns a tool error when DOSTIGUS_HTTP_PROXY is invalid', async () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const result = await invokeChatMcpTool({
+    name: 'dostigus_http_get',
+    args: { url: 'https://api.example.com/v1' },
+    store,
+    role: 'member',
+    personId: owner.id,
+    env: { DOSTIGUS_HTTP_PROXY: '::::' },
+    lookup: lookup({ 'api.example.com': ['1.2.3.4'] }),
+    fetchImpl: (async () => {
+      throw new Error('must not fetch when the Bot proxy is invalid')
+    }) as typeof fetch,
+  })
+  expect(result.ok).toBe(false)
+  expect(result.name).toBe('dostigus_http_get')
+  expect(result.content).toContain('Bot HTTP proxy URL is invalid')
 })
 
 it('lets Owner and Member Chat GET an allowed public URL and journals the tool name only', async () => {
