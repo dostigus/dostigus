@@ -6,6 +6,9 @@ import process from 'node:process'
  * may change. `?tall=1` fills a tall thread once. `?parts=1` adds one
  * assistant line with a Kit button and a status once. `?kitchen=1` adds one
  * assistant line with a Kitchen button once and fills empty Kitchen tables.
+ * `?system=1` adds the three Skill / self-settings system lines once on the
+ * Owner's bot-thread for Bot `preview` (Skill upsert, Skill delete, Bot
+ * update). Compose with `?hold=1`, `?activity=`, and `?parts=1`.
  * `?hold=1` stays on the Chat URL so the next quiet reply waits for a
  * screenshot. An allowlisted `?activity=` (`thinking`, `tool`, `typing`,
  * `command`, `connect`) stays on that same Chat URL. `connect` also keeps
@@ -39,6 +42,7 @@ export default defineEventHandler(async (event) => {
         tall: previewTallRequested(query.tall),
         parts: previewPartsRequested(query.parts),
         kitchen: previewKitchenRequested(query.kitchen),
+        system: previewSystemRequested(query.system),
         threads: previewThreadsRequested(query.threads),
         rooms: previewRoomsRequested(query.rooms),
       },

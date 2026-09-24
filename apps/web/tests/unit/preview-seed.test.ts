@@ -22,6 +22,7 @@ import {
   PREVIEW_ROOM_PREFIX,
   PREVIEW_ROOM_REPLY_PREFIX,
   PREVIEW_ROOM_THREAD_ID,
+  PREVIEW_SYSTEM_LINES,
   PREVIEW_TALL_LINE_COUNT,
   PREVIEW_TALL_PREFIX,
   previewKitchenParts,
@@ -32,6 +33,7 @@ import {
   previewRoomsRequested,
   previewSeedAllowed,
   previewSeedRedirect,
+  previewSystemRequested,
   previewTallRequested,
   previewThreadAsMember,
   previewThreadsRequested,
@@ -108,6 +110,7 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   expect(src).toContain('members: query.members')
   expect(src).toContain('previewPartsRequested')
   expect(src).toContain('previewKitchenRequested')
+  expect(src).toContain('previewSystemRequested')
   expect(src).toContain('previewThreadsRequested')
   expect(src).toContain('previewRoomsRequested')
   expect(src).toContain('previewThreadAsMember')
@@ -137,6 +140,7 @@ it('answers HEAD without signing in or writing the Store', () => {
   expect(src).not.toContain('previewSeedRedirect')
   expect(src).not.toContain('previewMembersRequested')
   expect(src).not.toContain('previewKitchenRequested')
+  expect(src).not.toContain('previewSystemRequested')
   expect(src).not.toContain('previewThreadsRequested')
   expect(src).not.toContain('previewRoomsRequested')
   expect(src).not.toContain('/members')
@@ -299,6 +303,41 @@ it('adds one Kitchen button once and fills empty Kitchen tables', async () => {
   expect(listMessages(store, first.botId)).toHaveLength(messages.length)
   expect(listKitchenPantry(store)).toHaveLength(2)
   expect(readKitchen(store).xp).toBe(10)
+})
+
+it('adds three system Skill / self-settings lines once, after parts', async () => {
+  const store = memoryStore()
+  expect(previewSystemRequested('1')).toBe(true)
+  expect(previewSystemRequested(1)).toBe(true)
+  expect(previewSystemRequested(['1'])).toBe(true)
+  expect(previewSystemRequested(undefined)).toBe(false)
+  expect(previewSystemRequested('true')).toBe(false)
+  expect(previewSystemRequested('0')).toBe(false)
+
+  const first = await ensurePreviewCluster(store, hashPassword, verifyPassword, {
+    parts: true,
+    system: true,
+  })
+  const messages = listMessages(store, first.botId)
+  const systemLines = messages.filter((message) => message.role === 'system')
+  expect(systemLines).toHaveLength(PREVIEW_SYSTEM_LINES.length)
+  expect(systemLines.map((message) => message.content)).toEqual([...PREVIEW_SYSTEM_LINES])
+  expect(systemLines.every((message) => message.parts.length === 0)).toBe(true)
+  expect(systemLines.every((message) => message.personId === null)).toBe(true)
+  const ownerThread = listBotThreadMessages(store, first.botId, first.user.id)
+  expect(ownerThread.filter((message) => message.role === 'system').map((message) => message.content))
+    .toEqual([...PREVIEW_SYSTEM_LINES])
+  const partsLine = messages.find((message) => message.content.startsWith(PREVIEW_PARTS_PREFIX))
+  expect(partsLine).toBeDefined()
+  expect(Date.parse(systemLines[0]!.createdAt)).toBeGreaterThan(Date.parse(partsLine!.createdAt))
+  for (let index = 1; index < systemLines.length; index++) {
+    expect(Date.parse(systemLines[index]!.createdAt)).toBeGreaterThan(Date.parse(systemLines[index - 1]!.createdAt))
+  }
+
+  const second = await ensurePreviewCluster(store, hashPassword, verifyPassword, { system: true })
+  expect(second.botId).toBe(first.botId)
+  expect(listMessages(store, first.botId)).toHaveLength(messages.length)
+  expect(listMessages(store, first.botId).filter((message) => message.role === 'system')).toHaveLength(3)
 })
 
 it('fills a tall thread once on the stable Bot', async () => {
