@@ -74,15 +74,16 @@ withDefaults(defineProps<{
 .label {
   display: inline-block;
   color: transparent;
+  background-color: var(--text-muted);
   background-image: linear-gradient(
-    100deg,
-    var(--text-muted) 0%,
-    var(--text-muted) 36%,
-    color-mix(in srgb, var(--text) 86%, var(--text-muted)) 50%,
-    var(--text-muted) 64%,
-    var(--text-muted) 100%
+    105deg,
+    transparent 0%,
+    transparent 32%,
+    color-mix(in srgb, var(--text) 62%, transparent) 50%,
+    transparent 68%,
+    transparent 100%
   );
-  background-size: 280% 100%;
+  background-size: 220% 100%;
   background-repeat: no-repeat;
   background-position: 100% 50%;
   -webkit-background-clip: text;
@@ -254,6 +255,7 @@ withDefaults(defineProps<{
   .label {
     animation: activity-label-pulse 2.6s ease-in-out infinite;
     background-image: none;
+    background-color: transparent;
     background-clip: border-box;
     -webkit-background-clip: border-box;
     color: var(--text-muted);
