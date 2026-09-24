@@ -154,11 +154,16 @@ it('calls chat completions with greeting history and the Manifest system prompt'
     tools: Array<{ function: { name: string } }>
   }
   expect(payload.messages[0]?.content).toContain('You may call Cluster MCP surface tools')
+  expect(payload.messages[0]?.content).toContain('Do not claim success without a successful tool result')
+  expect(payload.messages[0]?.content).toContain('Self-settings')
   expect(payload.tools.map((tool) => tool.function.name)).toEqual([
     'dostigus_bots_list',
     'dostigus_bots_get',
     'dostigus_bots_create',
     'dostigus_bots_update',
+    'dostigus_skills_list',
+    'dostigus_skills_upsert',
+    'dostigus_skills_delete',
     'dostigus_messages_list',
     'dostigus_messages_create',
     'dostigus_schedules_list',
@@ -207,6 +212,55 @@ it('sends a system Wake to the model as the line to answer', async () => {
   const payload = body as { messages: Array<{ role: string, content: string }> }
   expect(payload.messages.map((message) => message.role)).toEqual(['system', 'user'])
   expect(payload.messages[1]?.content).toBe('Morning briefing')
+})
+
+it('loads Skill instructions and creator tools into a Member turn', async () => {
+  let body: unknown
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body))
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'Noted.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  await completeAssistantReply({
+    botName: 'Notes',
+    botId: 'b1',
+    modelTier: 'strong',
+    history: [],
+    audience: 'member',
+    canEditManifest: true,
+    skills: [{ id: 'notes', instructions: 'Keep short notes.' }],
+    env: {
+      OPENAI_COMPATIBLE_BASE_URL: 'https://example.test/v1',
+      LLM_API_KEY: 'sk-test',
+    },
+    fetchImpl,
+  })
+
+  const payload = body as {
+    messages: Array<{ content: string }>
+    tools: Array<{ function: { name: string } }>
+  }
+  expect(payload.messages[0]?.content).toContain('Skill notes: Keep short notes.')
+  expect(payload.messages[0]?.content).toContain('Do not claim success without a successful tool result')
+  expect(payload.messages[0]?.content).not.toContain('Do not create, rename, or delete Bots')
+  expect(payload.tools.map((tool) => tool.function.name)).toEqual([
+    'dostigus_messages_list',
+    'dostigus_messages_create',
+    'dostigus_schedules_list',
+    'dostigus_schedules_create',
+    'dostigus_schedules_update',
+    'dostigus_schedules_pause',
+    'dostigus_schedules_resume',
+    'dostigus_schedules_delete',
+    'dostigus_cluster_timezone_get',
+    'dostigus_bots_update',
+    'dostigus_skills_list',
+    'dostigus_skills_upsert',
+    'dostigus_skills_delete',
+  ])
+  expect(payload.tools.map((tool) => tool.function.name)).not.toContain('dostigus_cluster_timezone_set')
 })
 
 it('fails clearly instead of stubbing when the LLM gateway is configured', async () => {

@@ -1,7 +1,14 @@
 /** LLM gateway: Model tier mapping, env/Store resolve, key masking. */
 
-import type { ModelTier } from './types'
+import type { ModelTier, Skill } from './types'
 import { DEFAULT_MODEL_TIER, isModelTier, MODEL_TIERS } from './types'
+
+/**
+ * Always-on Host instruction. Not a Manifest field and not a Skill.
+ * See ADR 0028.
+ */
+export const CHAT_SELF_SETTINGS_RULE
+  = 'Self-settings (name, label, description, Skills, and Schedules when those tools are available) must use the MCP surface. Do not claim success without a successful tool result. On failure, report the error. Appearance and Model tier are not Chat self-settings.'
 
 /** OpenRouter-shaped default. Used when a key is set and no base URL is stored or in env. */
 export const OPENROUTER_DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1' as const
@@ -231,8 +238,12 @@ export function chatSystemPrompt(input: {
   }
   botId?: string
   tools?: boolean
-  /** Member Chat may list and append messages only. */
+  /** Grantee Chat: messages, Schedules, and timezone read. Not Manifest or Skills. */
   messagesOnly?: boolean
+  /** Member who created this Bot may edit its Manifest and Skills. */
+  creatorManifest?: boolean
+  /** Skill text for this Bot. Ids with empty instructions are omitted. */
+  skills?: Skill[]
 }): string {
   const skills = input.manifest.skillIds.length > 0
     ? input.manifest.skillIds.join(', ')
@@ -246,6 +257,11 @@ export function chatSystemPrompt(input: {
     'Keep the Manifest the user describes. Do not invent Skills or Module packages.',
     `Manifest: name=${input.manifest.name}; Model tier=${input.manifest.modelTier}; Skills=${skills}; Module packages=${modules}.`,
   ]
+  for (const skill of input.skills ?? []) {
+    if (skill.instructions.trim()) {
+      lines.push(`Skill ${skill.id}: ${skill.instructions.trim()}`)
+    }
+  }
   if (input.botId) {
     lines.push(`This Chat is with Bot id=${input.botId}.`)
   }
@@ -256,6 +272,15 @@ export function chatSystemPrompt(input: {
       'Do not create, rename, or delete Bots.',
       'Prefer tools over guessing Store state.',
       'The Host already stores this Chat turn; do not append it again unless asked.',
+    )
+  } else if (input.tools && input.creatorManifest) {
+    lines.push(
+      'You may call tools to list and append Chat messages for this Bot, and to update this Bot\'s name, label, description, and Skills.',
+      'You may manage Schedules for this person and this Bot (daily or weekly wall-clock time) and you may read the Cluster timezone. You cannot set the Cluster timezone.',
+      'Do not create or delete Bots. Do not change a Bot you did not create.',
+      'Prefer tools over guessing Store state.',
+      'The Host already stores this Chat turn; do not append it again unless asked.',
+      'You cannot delete Bots from Chat.',
     )
   } else if (input.tools) {
     lines.push(
@@ -268,6 +293,7 @@ export function chatSystemPrompt(input: {
     )
   }
   lines.push(
+    CHAT_SELF_SETTINGS_RULE,
     'Do not offer to write Module packages — that is the Builder.',
     'Reply briefly and stay in character.',
   )

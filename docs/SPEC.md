@@ -22,7 +22,7 @@ Settled now, even if this repo only scaffolds them:
 | Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). |
 | Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. A Bot is personal to its creator. The Owner always sees it. Other people need an explicit grant (`bot_id` + `person_id`). Bot-threads, direct messages, groups, and rooms are in this Host. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
 | Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. The Host fires a Wake. See [ADR 0027](adr/0027-bot-schedules.md). |
-| Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. Not running as specified yet. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
+| Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -226,10 +226,13 @@ What the running Cluster does today:
   sends that person's bot-thread (greeting + history) and a system prompt (new Bot, learn purpose,
   keep Manifest). When a key is set, Chat also sends Cluster MCP surface
   tools and runs an in-process tool loop (same handlers as `/mcp`, no
-  HTTP hop). Owner Chat tools: Bots list/get/create/update, messages
-  list/create, Schedule tools, and Cluster timezone get and set.
-  Member Chat tools: messages list/create, Schedule tools, and Cluster
-  timezone get. Timezone set stays with the Owner. Delete stays
+  HTTP hop). Owner Chat tools: Bots list/get/create/update, Skills
+  list/upsert/delete, messages list/create, Schedule tools, and Cluster
+  timezone get and set. Member Chat tools: messages list/create,
+  Schedule tools, and Cluster timezone get. Timezone set stays with the
+  Owner. A Member who created the Bot also receives
+  `dostigus_bots_update` and the Skills tools on that Bot. A grantee
+  does not receive Manifest or Skills tools. Delete stays
   off Chat. No key → quiet reply + banner (no tools). Configured call that
   fails → clear error, not a stub. The
   full key is never returned to the client or written to logs. Greeting
@@ -237,10 +240,7 @@ What the running Cluster does today:
   [ADR 0011](adr/0011-chat-mcp-tool-loop.md). Schedule tools are
   [ADR 0027](adr/0027-bot-schedules.md). Self-settings of name,
   label, description, and Skills is
-  [ADR 0028](adr/0028-bot-self-settings-via-chat.md). This Host does
-  not do that yet: Owner Chat already lists `dostigus_bots_update`,
-  and a Member creator still does not receive Manifest tools in Chat.
-  See Self-settings.
+  [ADR 0028](adr/0028-bot-self-settings-via-chat.md). See Self-settings.
 - `/health` stays `{ ok: true }`.
 - No seed/demo domain Bot. No Builder or Meal port. Preview
   `?kitchen=1` is local tooling, not a domain Bot. Household on this Host is
@@ -333,16 +333,13 @@ seed a Weather Module, a weather Skill, or a weather API.
 ## Self-settings
 
 Decided in [ADR 0028](adr/0028-bot-self-settings-via-chat.md). This Host
-does not inject the platform rule, does not expose Skills tools, and
-does not give a Member creator Manifest tools in Chat yet. Owner Chat
-already lists `dostigus_bots_update`. Member Chat also lists Schedule
-tools and `dostigus_cluster_timezone_get`
-([ADR 0027](adr/0027-bot-schedules.md)). It does not list Manifest
-tools, and the Member prompt says not to rename. The code PR for
-this section implements the platform rule, Skills tools, and Member
-creator Manifest tools. Schedule tools and the Schedule row stay
-[ADR 0027](adr/0027-bot-schedules.md). The Platform does not seed a
-Weather Module or a weather Skill.
+injects the platform rule on every Bot turn, exposes Skills tools, and
+gives a Member creator `dostigus_bots_update` and the Skills tools on
+that Bot. A grantee does not receive Manifest or Skills tools. The
+grantee prompt still says not to rename. Member Chat tools are messages
+list/create, Schedule tools, and `dostigus_cluster_timezone_get`
+([ADR 0027](adr/0027-bot-schedules.md)). The Host fires a Wake. The
+Platform does not seed a Weather Module or a weather Skill.
 
 - **Write.** When a person asks the Bot to change itself (name, label,
   description, Skills, or Schedules), the Bot writes the Store through
@@ -365,9 +362,10 @@ Weather Module or a weather Skill.
 - **Skills.** MCP tools `dostigus_skills_list`,
   `dostigus_skills_upsert`, and `dostigus_skills_delete` list, upsert,
   and delete Skill text on that Bot. That is not a Module package and
-  not the Builder. Storage may use or extend `bots.skills_json` or
-  Skill records. This spec does not choose the SQL. Today
-  `skills_json` maps to `Manifest.skillIds` (ids only).
+  not the Builder. Storage is `bots.skills_json`: a JSON array of
+  `{ id, instructions }`. `Manifest.skillIds` is those ids. A legacy
+  array of id strings still reads as ids with empty instructions.
+  Upsert rewrites the column as objects. No new table.
 - **Schedules.** A request to create or change a Schedule is
   Self-settings, and the Bot calls the
   [ADR 0027](adr/0027-bot-schedules.md) tools. This section does not
@@ -447,9 +445,8 @@ and [`docs/deploy.md`](deploy.md)).
 - Appearance via Chat, Model tier via Chat self-settings, and delete of
   a Bot or of Chat via Chat. The Host parsing a sentence into a
   Manifest, Skill, or Schedule write. Pushing a raw `/mcp` write into
-  an already-open Chat page. Self-settings behavior above is in scope
-  ([ADR 0028](adr/0028-bot-self-settings-via-chat.md)). This Host does
-  not run it yet.
+  an already-open Chat page. The Self-settings write above is in this
+  Host ([ADR 0028](adr/0028-bot-self-settings-via-chat.md)).
 - Managed/cloud hosting (optional later; not the default)
 
 ## Success for later MVPs (not this PR)

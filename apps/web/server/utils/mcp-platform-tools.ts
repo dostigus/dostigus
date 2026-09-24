@@ -11,10 +11,13 @@ import {
   appendClusterMessage,
   createClusterBot,
   deleteClusterBot,
+  deleteClusterSkill,
   getClusterBot,
   listClusterBots,
   listClusterMessages,
+  listClusterSkills,
   updateClusterBot,
+  upsertClusterSkill,
   withClusterStore,
 } from './cluster-bots'
 import {
@@ -24,7 +27,7 @@ import {
   saveClusterRecipe,
 } from './kitchen'
 import { mcpJson } from './mcp'
-import { CHAT_MCP_TOOLS, isChatMcpTool, isMemberChatMcpTool, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS } from './mcp-surface'
+import { CHAT_MCP_TOOLS, chatToolNamesForTurn, isChatMcpTool, isCreatorMemberChatMcpTool, isMemberChatMcpTool, PLATFORM_MCP_TOOLS } from './mcp-surface'
 import { mcpToolsToOpenAiFunctions, parseToolCallArguments, toolResultError } from './openai-tools'
 import {
   clusterTimezoneGet,
@@ -98,7 +101,7 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_bots_update: {
     name: 'dostigus_bots_update',
-    description: 'Update a Bot Manifest (name, Model tier, avatarShape, avatarColor, label, and/or description). The creator and the Owner may edit. A grantee cannot.',
+    description: 'Update a Bot Manifest (name, Model tier, avatarShape, avatarColor, label, and/or description). An empty name is rejected. The creator and the Owner may edit. A grantee cannot. Chat self-settings sends name, label, and description.',
     chat: true,
     inputSchema: {
       id: z.string().min(1),
@@ -127,6 +130,41 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
       id: z.string().min(1),
     },
     run: (input, store, viewer) => deleteClusterBot(store, String(input.id), viewer),
+  },
+  dostigus_skills_list: {
+    name: 'dostigus_skills_list',
+    description: 'List Skills on a Bot (id and instructions). The creator and the Owner may list them. A grantee cannot.',
+    annotations: { readOnlyHint: true },
+    chat: true,
+    inputSchema: {
+      botId: z.string().min(1),
+    },
+    run: (input, store, viewer) => listClusterSkills(store, String(input.botId), viewer),
+  },
+  dostigus_skills_upsert: {
+    name: 'dostigus_skills_upsert',
+    description: 'Create or replace one Skill on a Bot. id is a stable slug (letters, digits, _, -). The same id replaces instructions and does not mint a new id. instructions are required. The creator and the Owner may write. A grantee cannot.',
+    chat: true,
+    inputSchema: {
+      botId: z.string().min(1),
+      id: z.string().min(1),
+      instructions: z.string().min(1),
+    },
+    run: (input, store, viewer) => upsertClusterSkill(store, String(input.botId), {
+      id: input.id,
+      instructions: input.instructions,
+    }, viewer),
+  },
+  dostigus_skills_delete: {
+    name: 'dostigus_skills_delete',
+    description: 'Delete one Skill from a Bot by id. The creator and the Owner may delete. A grantee cannot.',
+    annotations: { destructiveHint: true },
+    chat: true,
+    inputSchema: {
+      botId: z.string().min(1),
+      id: z.string().min(1),
+    },
+    run: (input, store, viewer) => deleteClusterSkill(store, String(input.botId), input.id, viewer),
   },
   dostigus_messages_list: {
     name: 'dostigus_messages_list',
@@ -313,11 +351,10 @@ export function listChatMcpToolSpecs(): PlatformToolSpec[] {
 
 export function chatMcpToolsAsOpenAi(
   role: 'owner' | 'member' = 'owner',
+  options?: { canEditManifest?: boolean },
 ): OpenAiChatFunctionTool[] {
-  const specs = role === 'member'
-    ? MEMBER_CHAT_MCP_TOOLS.map((name) => PLATFORM_TOOL_SPECS[name])
-    : listChatMcpToolSpecs()
-  return mcpToolsToOpenAiFunctions(specs)
+  const names = chatToolNamesForTurn(role, options?.canEditManifest === true)
+  return mcpToolsToOpenAiFunctions(names.map((name) => PLATFORM_TOOL_SPECS[name]))
 }
 
 /** Options passed to `defineMcpTool` — same handlers the Chat loop invokes. */
@@ -346,7 +383,7 @@ export function invokeChatMcpTool(input: {
 }): ChatToolInvokeResult {
   const name = input.name
   if (input.role === 'member') {
-    if (!isMemberChatMcpTool(name)) {
+    if (!isMemberChatMcpTool(name) && !isCreatorMemberChatMcpTool(name)) {
       logChatTool(name, 'skip')
       return {
         ok: false,

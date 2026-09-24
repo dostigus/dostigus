@@ -6,14 +6,16 @@ import {
   authorNameForPerson,
   getLlmGatewaySettings,
   getMessengerThread,
+  listBotSkills,
   listMessengerBots,
   listThreadMessages,
 } from '@dostigus/db'
-import { mentionedRoomBot } from '@dostigus/shared'
+import { canEditBot, mentionedRoomBot } from '@dostigus/shared'
 import {
   clearChatActivityPhase,
   setChatActivityPhase,
 } from '../../../utils/chat-activity-phase'
+import { viewerFromUser } from '../../../utils/cluster-bots'
 import { invokeChatMcpTool } from '../../../utils/mcp-platform-tools'
 
 type PostBody = {
@@ -57,15 +59,19 @@ export default defineEventHandler(async (event) => {
       const name = authorNameForPerson(store, message.personId) ?? 'Someone'
       return { ...message, content: `${name}: ${message.content}` }
     })
+    const viewer = viewerFromUser({ id: personId, role })
+    const canEditManifest = canEditBot(mentioned.bot, viewer)
     const reply = await completeAssistantReply({
       botName: mentioned.bot.name,
       botId: mentioned.bot.id,
       modelTier: mentioned.bot.manifest.modelTier,
       history,
       manifest: mentioned.bot.manifest,
+      skills: listBotSkills(store, mentioned.bot.id),
       stored: getLlmGatewaySettings(store),
       audience: role,
-      tools: chatMcpToolsAsOpenAi(role),
+      canEditManifest,
+      tools: chatMcpToolsAsOpenAi(role, { canEditManifest }),
       invokeTool: (name, args) => invokeChatMcpTool({
         name,
         args,

@@ -1,4 +1,4 @@
-import type { Bot, BotAccentHex, BotAvatarShape, Invite, Member, Message, MessageRole, ModelTier, Owner } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, Invite, Member, Message, MessageRole, ModelTier, Owner, Skill } from '@dostigus/shared'
 import {
   chatPartsForRole,
   DEFAULT_AVATAR_COLOR,
@@ -43,6 +43,48 @@ export type MemberRecord = {
   disabled_at: number | null
 }
 
+/**
+ * `bots.skills_json` is a JSON array of Skill objects `{ id, instructions }`.
+ * A legacy array of id strings still reads as ids with empty instructions.
+ * `Manifest.skillIds` is those ids. See ADR 0028.
+ */
+export function skillsFromJson(raw: string): Skill[] {
+  let value: unknown
+  try {
+    value = JSON.parse(raw) as unknown
+  } catch {
+    return []
+  }
+  if (!Array.isArray(value)) {
+    return []
+  }
+  const skills: Skill[] = []
+  const seen = new Set<string>()
+  for (const item of value) {
+    if (typeof item === 'string') {
+      const id = item.trim()
+      if (!id || seen.has(id)) {
+        continue
+      }
+      seen.add(id)
+      skills.push({ id, instructions: '' })
+      continue
+    }
+    if (!item || typeof item !== 'object') {
+      continue
+    }
+    const record = item as { id?: unknown, instructions?: unknown }
+    const id = typeof record.id === 'string' ? record.id.trim() : ''
+    if (!id || seen.has(id)) {
+      continue
+    }
+    const instructions = typeof record.instructions === 'string' ? record.instructions : ''
+    seen.add(id)
+    skills.push({ id, instructions })
+  }
+  return skills
+}
+
 function parseStringList(raw: string): string[] {
   try {
     const value = JSON.parse(raw) as unknown
@@ -80,7 +122,7 @@ export function toBot(row: BotRecord): Bot {
       avatarColor: avatarColorFromRow(row.avatar_color),
       label: row.label ?? '',
       description: row.description ?? '',
-      skillIds: parseStringList(row.skills_json),
+      skillIds: skillsFromJson(row.skills_json).map((skill) => skill.id),
       modulePackageIds: parseStringList(row.modules_json),
     },
   }

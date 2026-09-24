@@ -73,6 +73,7 @@ export {
   type AssistantReplyVia,
   baseUrlForLlmGatewayPreset,
   CHAT_MCP_TOOL_MAX_ITERATIONS,
+  CHAT_SELF_SETTINGS_RULE,
   chatSystemPrompt,
   DEFAULT_TIER_MODELS,
   emptyLlmGatewayStored,
@@ -119,6 +120,13 @@ export {
   parseOwnerIdentifier,
   parseOwnerPassword,
 } from './owner'
+export {
+  parseSkillId,
+  parseSkillInstructions,
+  SKILL_ID_MAX,
+  SKILL_INSTRUCTIONS_MAX,
+  SkillInputError,
+} from './skill'
 export {
   type HouseholdPerson,
   isMessengerThreadKind,

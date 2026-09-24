@@ -1,5 +1,6 @@
 import process from 'node:process'
-import { getLlmGatewaySettings } from '@dostigus/db'
+import { getLlmGatewaySettings, listBotSkills } from '@dostigus/db'
+import { canEditBot } from '@dostigus/shared'
 import { previewQuietHoldMs, waitPreviewQuietHold } from '../../../../app/utils/preview-hold'
 import {
   clearChatActivityPhase,
@@ -35,15 +36,18 @@ export default defineEventHandler(async (event) => {
     activityThreadId = messageThreadId(store, user.id)
     setChatActivityPhase(activityThreadId, bot.id, 'thinking')
     const { messages: history } = listClusterMessages(store, botId, viewer)
+    const canEditManifest = canEditBot(bot, viewer)
     const reply = await completeAssistantReply({
       botName: bot.name,
       botId: bot.id,
       modelTier: bot.manifest.modelTier,
       history,
       manifest: bot.manifest,
+      skills: listBotSkills(store, bot.id),
       stored: getLlmGatewaySettings(store),
       audience: role,
-      tools: chatMcpToolsAsOpenAi(role),
+      canEditManifest,
+      tools: chatMcpToolsAsOpenAi(role, { canEditManifest }),
       invokeTool: (name, args) => invokeChatMcpTool({
         name,
         args,

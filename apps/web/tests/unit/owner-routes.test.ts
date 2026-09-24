@@ -134,7 +134,7 @@ it('replies in a room only after an @Name mention', () => {
 it('invokes Chat MCP tools in-process from the Host message route', () => {
   const src = readFileSync(join(apiRoot, 'bots/[id]/messages.post.ts'), 'utf8')
   expect(src).toContain('invokeChatMcpTool')
-  expect(src).toContain('chatMcpToolsAsOpenAi(role)')
+  expect(src).toContain('chatMcpToolsAsOpenAi(role, { canEditManifest })')
   expect(src).toContain('personId')
   expect(src).not.toMatch(/fetch\([^)]*\/mcp/)
   expect(src).toContain('requireHostSession')

@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 import {
   baseUrlForLlmGatewayPreset,
+  CHAT_SELF_SETTINGS_RULE,
   chatSystemPrompt,
   DEFAULT_MODEL_TIER,
   DEFAULT_TIER_MODELS,
@@ -193,4 +194,42 @@ it('tells a Member Chat Bot to stay on messages', () => {
   expect(prompt).toContain('Do not create, rename, or delete Bots')
   expect(prompt).toContain('You cannot set the Cluster timezone')
   expect(prompt).not.toContain('read and write Bots')
+  expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
+})
+
+it('lets a creator Member rename this Bot and still forbids a blanket rename ban', () => {
+  const prompt = chatSystemPrompt({
+    botName: 'Notes',
+    tools: true,
+    creatorManifest: true,
+    manifest: {
+      name: 'Notes',
+      modelTier: 'strong',
+      skillIds: ['notes'],
+      modulePackageIds: [],
+    },
+    skills: [{ id: 'notes', instructions: 'Keep short notes.' }],
+  })
+  expect(prompt).toContain('update this Bot\'s name, label, description, and Skills')
+  expect(prompt).not.toContain('Do not create, rename, or delete Bots')
+  expect(prompt).toContain('Do not create or delete Bots')
+  expect(prompt).toContain('You cannot set the Cluster timezone')
+  expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
+  expect(prompt).toContain('Skill notes: Keep short notes.')
+  expect(prompt).toContain('Do not claim success without a successful tool result')
+})
+
+it('puts the self-settings rule on an Owner turn', () => {
+  const prompt = chatSystemPrompt({
+    botName: 'Notes',
+    tools: true,
+    manifest: {
+      name: 'Notes',
+      modelTier: 'strong',
+      skillIds: [],
+      modulePackageIds: [],
+    },
+  })
+  expect(prompt).toContain(CHAT_SELF_SETTINGS_RULE)
+  expect(prompt).toContain('Self-settings')
 })

@@ -1,4 +1,4 @@
-import { openStore } from '@dostigus/db'
+import { createMember, createOwner, grantBot, openStore } from '@dostigus/db'
 import { afterEach, expect, it } from 'vitest'
 import { invokeChatMcpTool } from '../../server/utils/mcp-platform-tools'
 
@@ -152,4 +152,126 @@ it('attributes Member Chat messages and refuses Bot tools', () => {
   expect(JSON.parse(assistant.content)).toMatchObject({
     message: { personId: null, role: 'assistant' },
   })
+})
+
+it('rejects an empty rename from Chat and persists a real name', () => {
+  const store = memoryStore()
+  const created = invokeChatMcpTool({
+    name: 'dostigus_bots_create',
+    args: { name: 'Notes' },
+    store,
+  })
+  const botId = (JSON.parse(created.content) as { bot: { id: string } }).bot.id
+
+  const empty = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: botId, name: '   ' },
+    store,
+  })
+  expect(empty.ok).toBe(false)
+  expect(JSON.parse(empty.content)).toEqual({ error: 'Bot name is required' })
+
+  const renamed = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: botId, name: 'Дождевик' },
+    store,
+  })
+  expect(renamed.ok).toBe(true)
+  expect(JSON.parse(renamed.content)).toMatchObject({
+    bot: { id: botId, name: 'Дождевик' },
+  })
+})
+
+it('lets the creator Member update and edit Skills, and refuses a grantee', () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const creator = createMember(store, {
+    displayName: 'Grace',
+    username: 'grace',
+    passwordHash: 'hash:grace',
+  })
+  const grantee = createMember(store, {
+    displayName: 'Lin',
+    username: 'lin',
+    passwordHash: 'hash:lin',
+  })
+  const created = invokeChatMcpTool({
+    name: 'dostigus_bots_create',
+    args: { name: 'Notes' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+  })
+  const botId = (JSON.parse(created.content) as { bot: { id: string } }).bot.id
+  store.sqlite.prepare('UPDATE bots SET created_by = ? WHERE id = ?').run(creator.id, botId)
+  grantBot(store, botId, grantee.id)
+
+  const renamed = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: botId, name: 'Дождевик' },
+    store,
+    role: 'member',
+    personId: creator.id,
+  })
+  expect(renamed.ok).toBe(true)
+  expect(JSON.parse(renamed.content)).toMatchObject({ bot: { name: 'Дождевик' } })
+
+  const upserted = invokeChatMcpTool({
+    name: 'dostigus_skills_upsert',
+    args: { botId, id: 'notes', instructions: 'Keep short notes.' },
+    store,
+    role: 'member',
+    personId: creator.id,
+  })
+  expect(upserted.ok).toBe(true)
+  expect(JSON.parse(upserted.content)).toMatchObject({
+    skills: [{ id: 'notes', instructions: 'Keep short notes.' }],
+  })
+
+  const listed = invokeChatMcpTool({
+    name: 'dostigus_skills_list',
+    args: { botId },
+    store,
+    role: 'owner',
+    personId: owner.id,
+  })
+  expect(listed.ok).toBe(true)
+
+  const blockedUpdate = invokeChatMcpTool({
+    name: 'dostigus_bots_update',
+    args: { id: botId, name: 'Stolen' },
+    store,
+    role: 'member',
+    personId: grantee.id,
+  })
+  expect(blockedUpdate.ok).toBe(false)
+  expect(JSON.parse(blockedUpdate.content).error).toMatch(/Only the Owner can change this/)
+
+  const blockedSkill = invokeChatMcpTool({
+    name: 'dostigus_skills_delete',
+    args: { botId, id: 'notes' },
+    store,
+    role: 'member',
+    personId: grantee.id,
+  })
+  expect(blockedSkill.ok).toBe(false)
+
+  const removed = invokeChatMcpTool({
+    name: 'dostigus_skills_delete',
+    args: { botId, id: 'notes' },
+    store,
+    role: 'owner',
+    personId: owner.id,
+  })
+  expect(removed.ok).toBe(true)
+  expect(JSON.parse(removed.content)).toMatchObject({ skills: [] })
+
+  const still = invokeChatMcpTool({
+    name: 'dostigus_bots_get',
+    args: { id: botId },
+    store,
+    role: 'owner',
+    personId: owner.id,
+  })
+  expect(JSON.parse(still.content)).toMatchObject({ bot: { name: 'Дождевик' } })
 })

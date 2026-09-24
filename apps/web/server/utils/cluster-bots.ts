@@ -3,16 +3,19 @@ import type { BotViewer, MessageRole } from '@dostigus/shared'
 import {
   createBot,
   deleteBot,
+  deleteBotSkill,
   grantBot,
   grantBotToCurrentMembers,
   insertMessage,
   listBotGrants,
   listBots,
+  listBotSkills,
   listBotThreadMessages,
   requireBot,
   revokeBotGrant,
   StoreError,
   updateBot,
+  upsertBotSkill,
   viewerMaySeeBot,
 } from '@dostigus/db'
 import {
@@ -111,6 +114,43 @@ export function updateClusterBot(
     assertCanChange(store, id, viewer)
   }
   return { bot: updateBot(store, id, input) }
+}
+
+function assertSkillActor(store: OpenedStore, botId: string, viewer?: BotViewer) {
+  if (viewer) {
+    assertCanChange(store, botId, viewer)
+    return
+  }
+  requireBot(store, botId)
+}
+
+export function listClusterSkills(
+  store: OpenedStore,
+  botId: string,
+  viewer?: BotViewer,
+) {
+  assertSkillActor(store, botId, viewer)
+  return { skills: listBotSkills(store, botId) }
+}
+
+export function upsertClusterSkill(
+  store: OpenedStore,
+  botId: string,
+  input: { id: unknown, instructions: unknown },
+  viewer?: BotViewer,
+) {
+  assertSkillActor(store, botId, viewer)
+  return { skills: upsertBotSkill(store, botId, input) }
+}
+
+export function deleteClusterSkill(
+  store: OpenedStore,
+  botId: string,
+  skillId: unknown,
+  viewer?: BotViewer,
+) {
+  assertSkillActor(store, botId, viewer)
+  return { skills: deleteBotSkill(store, botId, skillId) }
 }
 
 export function deleteClusterBot(store: OpenedStore, id: string, viewer?: BotViewer) {
