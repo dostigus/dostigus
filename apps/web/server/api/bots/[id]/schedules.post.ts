@@ -1,5 +1,5 @@
-import { viewerFromUser } from '../../utils/cluster-bots'
-import { scheduleSheetSave } from '../../utils/schedule-tools'
+import { viewerFromUser } from '../../../utils/cluster-bots'
+import { scheduleClosetCreate } from '../../../utils/schedule-tools'
 
 type Body = {
   name?: string
@@ -7,22 +7,20 @@ type Body = {
   timeLocal?: string
   daysOfWeek?: string[]
   wakeText?: string
-  paused?: boolean
 }
 
-/** Pause, resume, or save one Schedule. Delete is a separate confirm. */
+/** Create this person's Schedule on this Bot. Same Store create as MCP. */
 export default defineEventHandler(async (event) => {
   const session = await requireHostSession(event)
-  const id = getRouterParam(event, 'id') ?? ''
+  const botId = getRouterParam(event, 'id') ?? ''
   const body = await readBody<Body>(event).catch(() => ({} as Body))
   try {
-    return scheduleSheetSave(useStore(), id, {
+    return scheduleClosetCreate(useStore(), botId, {
       name: body?.name,
       cadence: body?.cadence,
       timeLocal: body?.timeLocal,
       daysOfWeek: body?.daysOfWeek,
       wakeText: body?.wakeText,
-      paused: body?.paused,
     }, viewerFromUser(session.user))
   } catch (error) {
     throwStoreError(error)

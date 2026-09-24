@@ -44,6 +44,7 @@ it('stores a daily Schedule and recomputes next_run_at in the Cluster timezone',
   }, { ...utc, now })
   expect(schedule.timeLocal).toBe('08:00')
   expect(schedule.wakeText).toBe('Morning briefing')
+  expect(schedule.name).toBe('')
   expect(schedule.daysOfWeek).toBeNull()
   expect(schedule.paused).toBe(false)
   expect(schedule.nextRunAt).toBe('2026-01-15T08:00:00.000Z')
@@ -127,4 +128,22 @@ it('rejects a weekly Schedule with no weekdays and a daily Schedule that lists t
   expect(() => updateSchedule(store, daily.id, {
     daysOfWeek: ['mon'],
   }, utc)).toThrow(/omitted for a daily/)
+})
+
+it('stores an optional name and clears it on update', () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const bot = createBot(store, { name: 'Notes', createdBy: owner.id }).bot
+  const named = createSchedule(store, {
+    botId: bot.id,
+    personId: owner.id,
+    name: '  Morning  ',
+    cadence: 'daily',
+    timeLocal: '08:00',
+    wakeText: 'Wake',
+  }, utc)
+  expect(named.name).toBe('Morning')
+  const cleared = updateSchedule(store, named.id, { name: '' }, utc)
+  expect(cleared.name).toBe('')
+  expect(cleared.wakeText).toBe('Wake')
 })

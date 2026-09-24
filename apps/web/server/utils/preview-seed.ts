@@ -1,9 +1,9 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { ChatPart } from '@dostigus/shared'
 import type { HostSessionUser } from './owner-auth'
-import { addKitchenPantry, createBot, createMember, createMessengerThread, findMemberSecretByLogin, findOwnerSecretByLogin, getBot, getKitchenRecipe, grantBot, insertMessage, insertThreadLine, listBots, listKitchenCooked, listKitchenPantry, listMessages, listThreadMessages, markKitchenCooked, ownerExists, saveKitchenRecipe } from '@dostigus/db'
+import { addKitchenPantry, botThreadIdFor, createBot, createMember, createMessengerThread, createSchedule, findMemberSecretByLogin, findOwnerSecretByLogin, finishTurn, getBot, getKitchenRecipe, grantBot, insertMessage, insertThreadLine, listBots, listKitchenCooked, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, markKitchenCooked, ownerExists, pauseSchedule, saveKitchenRecipe, startTurn } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
-import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID } from '../../app/utils/host-sheets'
+import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID, HOST_SCHEDULE_SHEET_ID } from '../../app/utils/host-sheets'
 import { previewChatLocation } from '../../app/utils/preview-hold'
 import { appendClusterMessage } from './cluster-bots'
 import {
@@ -82,6 +82,18 @@ export const PREVIEW_PARTS_PREFIX = 'Preview Kit parts.'
 export const PREVIEW_KITCHEN_PREFIX = 'Kitchen is open.'
 
 /**
+ * Assistant line inserted by `?schedules=1`. The prefix marks a bubble already filled.
+ * The Card opens the same Schedule detail Sheet as closet «Изменить».
+ */
+export const PREVIEW_SCHEDULES_PREFIX = 'Preview schedule card.'
+
+/** Named preview Schedule on Bot `preview` for the closet list. */
+export const PREVIEW_SCHEDULE_NAME = 'Утро: погода Светлогорск'
+
+/** Wake text on the named preview Schedule. */
+export const PREVIEW_SCHEDULE_WAKE = 'Preview schedule wake.'
+
+/**
  * System lines inserted by `?system=1` on the Owner's bot-thread.
  * Skill upsert, Skill delete, and Bot self-settings. Exact content marks
  * a thread already filled.
@@ -126,6 +138,15 @@ export function previewPartsRequested(value: unknown): boolean {
  * HEAD ignores this query.
  */
 export function previewKitchenRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
+/**
+ * `?schedules=1` on GET. Seeds this person's Schedules on Bot `preview`,
+ * a few wake Turns for run history, and one Schedule Chat Card.
+ * HEAD ignores this query.
+ */
+export function previewSchedulesRequested(value: unknown): boolean {
   return previewQueryOn(value)
 }
 
@@ -250,7 +271,7 @@ export async function ensurePreviewCluster(
   store: OpenedStore,
   hashPassword: (password: string) => Promise<string>,
   verifyPassword: (hash: string, password: string) => Promise<boolean>,
-  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, system?: boolean, threads?: boolean, rooms?: boolean } = {},
+  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, system?: boolean, schedules?: boolean, threads?: boolean, rooms?: boolean } = {},
 ): Promise<{ user: HostSessionUser, botId: string, member: HostSessionUser | null, roomId: string | null }> {
   const user = await ensurePreviewOwner(store, hashPassword, verifyPassword)
   const botId = stablePreviewBotId(listBots(store))
@@ -270,6 +291,9 @@ export async function ensurePreviewCluster(
   }
   if (options.system) {
     ensurePreviewSystemLines(store, botId, user.id)
+  }
+  if (options.schedules) {
+    ensurePreviewSchedules(store, botId, user.id)
   }
   const member = options.threads || options.rooms
     ? await ensurePreviewThreads(store, hashPassword, user.id, botId)
@@ -366,6 +390,96 @@ export function ensurePreviewKitchen(store: OpenedStore, botId: string, personId
     role: 'assistant',
     content: previewKitchenContent(),
     parts: previewKitchenParts(),
+  })
+  store.sqlite.prepare('UPDATE messages SET created_at = ? WHERE id = ?').run(at + 1, message.id)
+}
+
+export function previewSchedulesContent(): string {
+  return `${PREVIEW_SCHEDULES_PREFIX}\n\nA **Card** in this bubble opens the Schedule Sheet.`
+}
+
+export function previewScheduleCard(scheduleId: string): ChatPart[] {
+  return [
+    {
+      kind: 'card',
+      card: 'schedule',
+      title: 'daily 08:02',
+      body: PREVIEW_SCHEDULE_WAKE,
+      tone: 'ok',
+      targetId: scheduleId,
+      actions: [
+        { label: 'Pause', action: { type: 'openSheet', sheetId: HOST_SCHEDULE_SHEET_ID } },
+        { label: 'Изменить', action: { type: 'openSheet', sheetId: HOST_SCHEDULE_SHEET_ID } },
+      ],
+    },
+  ]
+}
+
+/**
+ * Seed this person's Schedules on Bot `preview`, wake Turns for history,
+ * and one Schedule Chat Card. A second visit does not add more rows.
+ */
+export function ensurePreviewSchedules(store: OpenedStore, botId: string, personId: string): void {
+  let rows = listSchedules(store, { botId, personId })
+  let named = rows.find((row) => row.name === PREVIEW_SCHEDULE_NAME)
+  if (!named) {
+    named = createSchedule(store, {
+      botId,
+      personId,
+      name: PREVIEW_SCHEDULE_NAME,
+      cadence: 'daily',
+      timeLocal: '08:02',
+      wakeText: PREVIEW_SCHEDULE_WAKE,
+    })
+    const longWake = 'Длинный текст пробуждения без имени, чтобы список показал обрезку.'
+    const unnamed = createSchedule(store, {
+      botId,
+      personId,
+      cadence: 'weekly',
+      timeLocal: '09:21',
+      daysOfWeek: ['mon'],
+      wakeText: longWake,
+    })
+    pauseSchedule(store, unnamed.id)
+    rows = listSchedules(store, { botId, personId })
+    named = rows.find((row) => row.name === PREVIEW_SCHEDULE_NAME) ?? named
+  }
+  const threadId = botThreadIdFor(botId, personId)
+  const existingTurns = listTurns(store, { scheduleId: named.id, trigger: 'wake' })
+  if (existingTurns.length === 0) {
+    const stamps = [
+      Date.parse('2026-09-22T08:12:00.000Z'),
+      Date.parse('2026-09-23T08:12:00.000Z'),
+      Date.parse('2026-09-24T08:15:00.000Z'),
+    ]
+    for (const startedAt of stamps) {
+      const turn = startTurn(store, {
+        threadId,
+        botId,
+        personId,
+        trigger: 'wake',
+        scheduleId: named.id,
+        now: startedAt,
+      })
+      finishTurn(store, turn.id, { outcome: 'ok', now: startedAt + 4_000 })
+    }
+  }
+  const existing = listMessages(store, botId)
+  if (existing.some((message) => message.content.startsWith(PREVIEW_SCHEDULES_PREFIX))) {
+    return
+  }
+  let at = 0
+  for (const message of existing) {
+    const ms = Date.parse(message.createdAt)
+    if (ms > at) {
+      at = ms
+    }
+  }
+  const message = appendClusterMessage(store, {
+    botId,
+    role: 'assistant',
+    content: previewSchedulesContent(),
+    parts: previewScheduleCard(named.id),
   })
   store.sqlite.prepare('UPDATE messages SET created_at = ? WHERE id = ?').run(at + 1, message.id)
 }

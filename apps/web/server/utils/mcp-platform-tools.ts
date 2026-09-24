@@ -259,7 +259,7 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_schedules_list: {
     name: 'dostigus_schedules_list',
-    description: 'List Schedules for this person and this Bot, oldest first. Each row has id, cadence (daily or weekly), timeLocal (HH:MM wall clock in the Cluster timezone), daysOfWeek (sun–sat, weekly only), wakeText, paused, and nextRunAt. The Owner may pass personId to list another person. Omit personId to list every Schedule on this Bot when you are the Owner. When the person asked to set a Schedule and you list first, pass intent set plus cadence, timeLocal, and daysOfWeek. If an enabled row already has that clock, the result is already true and you do not create another. A list with no intent does not confirm a Schedule.',
+    description: 'List Schedules for this person and this Bot, oldest first. Each row has id, optional name, cadence (daily or weekly), timeLocal (HH:MM wall clock in the Cluster timezone), daysOfWeek (sun–sat, weekly only), wakeText, paused, and nextRunAt. Empty name means the Host UI shows truncated wakeText. The Owner may pass personId to list another person. Omit personId to list every Schedule on this Bot when you are the Owner. When the person asked to set a Schedule and you list first, pass intent set plus cadence, timeLocal, and daysOfWeek. If an enabled row already has that clock, the result is already true and you do not create another. A list with no intent does not confirm a Schedule.',
     annotations: { readOnlyHint: true },
     chat: true,
     inputSchema: {
@@ -274,10 +274,11 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_schedules_create: {
     name: 'dostigus_schedules_create',
-    description: 'Create a Schedule that wakes this Bot on this person\'s bot-thread. cadence is daily or weekly. timeLocal is HH:MM 24-hour wall clock in the Cluster timezone. daysOfWeek is required for weekly and omitted for daily (sun, mon, tue, wed, thu, fri, sat). wakeText is the Wake line. The Host sets the next fire. A sentence such as every morning at 08:00 is this call. Do not pass nextRunAt. If an enabled Schedule already has the same cadence, timeLocal, and daysOfWeek, the result is already true, wakeText is unchanged, and no second row is inserted. A paused row with that clock is not already standing; resume it.',
+    description: 'Create a Schedule that wakes this Bot on this person\'s bot-thread. Optional name is a short display title (empty stores empty). cadence is daily or weekly. timeLocal is HH:MM 24-hour wall clock in the Cluster timezone. daysOfWeek is required for weekly and omitted for daily (sun, mon, tue, wed, thu, fri, sat). wakeText is the Wake line. The Host sets the next fire. A sentence such as every morning at 08:00 is this call. Do not pass nextRunAt. If an enabled Schedule already has the same cadence, timeLocal, and daysOfWeek, the result is already true, wakeText is unchanged, and no second row is inserted. A paused row with that clock is not already standing; resume it.',
     chat: true,
     inputSchema: {
       botId: z.string().min(1),
+      name: z.string().max(80).optional(),
       cadence: z.enum(['daily', 'weekly']),
       timeLocal: z.string().min(4).max(5),
       daysOfWeek: z.array(z.string()).optional(),
@@ -288,10 +289,11 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_schedules_update: {
     name: 'dostigus_schedules_update',
-    description: 'Update a Schedule (cadence, timeLocal, daysOfWeek, and/or wakeText) for this person and this Bot. Recomputes the next fire. The Owner may update any Schedule.',
+    description: 'Update a Schedule (optional name, cadence, timeLocal, daysOfWeek, and/or wakeText) for this person and this Bot. Empty name clears the title. Recomputes the next fire. The Owner may update any Schedule.',
     chat: true,
     inputSchema: {
       id: z.string().min(1),
+      name: z.string().max(80).optional(),
       cadence: z.enum(['daily', 'weekly']).optional(),
       timeLocal: z.string().min(4).max(5).optional(),
       daysOfWeek: z.array(z.string()).optional(),

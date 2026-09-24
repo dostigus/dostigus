@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { createBot, listBots, listBotThreadMessages, listKitchenPantry, listMessages, listThreadMessages, openStore, readKitchen, updateBot } from '@dostigus/db'
+import { createBot, listBots, listBotThreadMessages, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, openStore, readKitchen, updateBot } from '@dostigus/db'
 import { DEFAULT_BOT_NAME, mentionedRoomBot } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import { OwnerAuthError, registerClusterOwner } from '../../server/utils/owner-auth'
@@ -22,6 +22,9 @@ import {
   PREVIEW_ROOM_PREFIX,
   PREVIEW_ROOM_REPLY_PREFIX,
   PREVIEW_ROOM_THREAD_ID,
+  PREVIEW_SCHEDULE_NAME,
+  PREVIEW_SCHEDULE_WAKE,
+  PREVIEW_SCHEDULES_PREFIX,
   PREVIEW_SYSTEM_LINES,
   PREVIEW_TALL_LINE_COUNT,
   PREVIEW_TALL_PREFIX,
@@ -31,6 +34,8 @@ import {
   previewParts,
   previewPartsRequested,
   previewRoomsRequested,
+  previewScheduleCard,
+  previewSchedulesRequested,
   previewSeedAllowed,
   previewSeedRedirect,
   previewSystemRequested,
@@ -110,6 +115,7 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   expect(src).toContain('members: query.members')
   expect(src).toContain('previewPartsRequested')
   expect(src).toContain('previewKitchenRequested')
+  expect(src).toContain('previewSchedulesRequested')
   expect(src).toContain('previewSystemRequested')
   expect(src).toContain('previewThreadsRequested')
   expect(src).toContain('previewRoomsRequested')
@@ -140,6 +146,7 @@ it('answers HEAD without signing in or writing the Store', () => {
   expect(src).not.toContain('previewSeedRedirect')
   expect(src).not.toContain('previewMembersRequested')
   expect(src).not.toContain('previewKitchenRequested')
+  expect(src).not.toContain('previewSchedulesRequested')
   expect(src).not.toContain('previewSystemRequested')
   expect(src).not.toContain('previewThreadsRequested')
   expect(src).not.toContain('previewRoomsRequested')
@@ -303,6 +310,33 @@ it('adds one Kitchen button once and fills empty Kitchen tables', async () => {
   expect(listMessages(store, first.botId)).toHaveLength(messages.length)
   expect(listKitchenPantry(store)).toHaveLength(2)
   expect(readKitchen(store).xp).toBe(10)
+})
+
+it('adds this person\'s Schedules, wake history, and one Card once', async () => {
+  const store = memoryStore()
+  expect(previewSchedulesRequested('1')).toBe(true)
+  expect(previewSchedulesRequested(1)).toBe(true)
+  expect(previewSchedulesRequested(undefined)).toBe(false)
+
+  const first = await ensurePreviewCluster(store, hashPassword, verifyPassword, {
+    schedules: true,
+  })
+  const rows = listSchedules(store, { botId: first.botId, personId: first.user.id })
+  expect(rows).toHaveLength(2)
+  const named = rows.find((row) => row.name === PREVIEW_SCHEDULE_NAME)
+  expect(named?.timeLocal).toBe('08:02')
+  expect(named?.wakeText).toBe(PREVIEW_SCHEDULE_WAKE)
+  expect(rows.some((row) => row.name === '' && row.paused)).toBe(true)
+  expect(listTurns(store, { scheduleId: named?.id, trigger: 'wake' })).toHaveLength(3)
+
+  const messages = listMessages(store, first.botId)
+  const cardLine = messages.find((message) => message.content.startsWith(PREVIEW_SCHEDULES_PREFIX))
+  expect(cardLine?.role).toBe('assistant')
+  expect(cardLine?.parts).toEqual(previewScheduleCard(named!.id))
+
+  await ensurePreviewCluster(store, hashPassword, verifyPassword, { schedules: true })
+  expect(listSchedules(store, { botId: first.botId, personId: first.user.id })).toHaveLength(2)
+  expect(listMessages(store, first.botId)).toHaveLength(messages.length)
 })
 
 it('adds three system Skill / self-settings lines once, after parts', async () => {

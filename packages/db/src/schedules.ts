@@ -20,9 +20,10 @@ import { StoreError } from './store-error'
 
 const CLUSTER_SETTINGS_ID = 'cluster'
 const WAKE_TEXT_MAX = 2_000
+const NAME_MAX = 80
 
 const SCHEDULE_COLUMNS = `
-  id, bot_id, person_id, cadence, time_local, days_of_week_json, wake_text,
+  id, bot_id, person_id, name, cadence, time_local, days_of_week_json, wake_text,
   paused, next_run_at, last_run_at, last_run_status, defer_count, created_at, updated_at
 `
 
@@ -32,6 +33,7 @@ export type Schedule = {
   id: string
   botId: string
   personId: string
+  name: string
   cadence: ScheduleCadence
   timeLocal: string
   daysOfWeek: ScheduleWeekday[] | null
@@ -64,6 +66,7 @@ type ScheduleRow = {
   id: string
   bot_id: string
   person_id: string
+  name: string
   cadence: string
   time_local: string
   days_of_week_json: string | null
@@ -80,6 +83,7 @@ type ScheduleRow = {
 export type ScheduleWrite = {
   botId: string
   personId: string
+  name?: string | null
   cadence: ScheduleCadence
   timeLocal: string
   daysOfWeek?: ScheduleWeekday[] | null
@@ -151,6 +155,17 @@ export function normalizeWeekdays(value: readonly string[] | null | undefined): 
   return days
 }
 
+function normalizeName(value: string | null | undefined): string {
+  if (value == null) {
+    return ''
+  }
+  const trimmed = value.trim()
+  if (trimmed.length > NAME_MAX) {
+    throw new StoreError(`Name must be ${NAME_MAX} characters or fewer`, 400)
+  }
+  return trimmed
+}
+
 function normalizeWakeText(value: string): string {
   const trimmed = value.trim()
   if (!trimmed) {
@@ -202,6 +217,7 @@ function toSchedule(row: ScheduleRow): Schedule {
     id: row.id,
     botId: row.bot_id,
     personId: row.person_id,
+    name: row.name ?? '',
     cadence,
     timeLocal: row.time_local,
     daysOfWeek: cadence === 'weekly' ? parseDays(row.days_of_week_json) : null,
@@ -304,6 +320,7 @@ export function createSchedule(
   const cadence = normalizeCadence(input.cadence)
   const timeLocal = normalizeTimeLocal(input.timeLocal)
   const days = resolvedDays(cadence, input.daysOfWeek)
+  const name = normalizeName(input.name)
   const wakeText = normalizeWakeText(input.wakeText)
   const now = clockNow(clock)
   const timeZone = effectiveClusterTimeZone(store, clockEnv(clock)).effective
@@ -315,10 +332,10 @@ export function createSchedule(
   const id = randomUUID()
   store.sqlite.prepare(`
     INSERT INTO schedules (
-      id, bot_id, person_id, cadence, time_local, days_of_week_json, wake_text,
+      id, bot_id, person_id, name, cadence, time_local, days_of_week_json, wake_text,
       paused, next_run_at, last_run_at, last_run_status, defer_count, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NULL, NULL, 0, ?, ?)
-  `).run(id, botId, personId, cadence, timeLocal, daysJson(days), wakeText, nextRunAt, now, now)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NULL, NULL, 0, ?, ?)
+  `).run(id, botId, personId, name, cadence, timeLocal, daysJson(days), wakeText, nextRunAt, now, now)
   return toSchedule(requireSchedule(store, id))
 }
 
@@ -326,6 +343,7 @@ export function updateSchedule(
   store: OpenedStore,
   id: string,
   input: {
+    name?: string | null
     cadence?: ScheduleCadence
     timeLocal?: string
     daysOfWeek?: ScheduleWeekday[] | null
@@ -334,6 +352,7 @@ export function updateSchedule(
   clock?: ScheduleClock,
 ): Schedule {
   const row = requireSchedule(store, id)
+  const name = input.name !== undefined ? normalizeName(input.name) : (row.name ?? '')
   const cadence = input.cadence ? normalizeCadence(input.cadence) : normalizeCadence(row.cadence)
   const timeLocal = input.timeLocal ? normalizeTimeLocal(input.timeLocal) : row.time_local
   const wakeText = input.wakeText !== undefined ? normalizeWakeText(input.wakeText) : row.wake_text
@@ -360,6 +379,7 @@ export function updateSchedule(
   }, timeZone, now)
   store.sqlite.prepare(`
     UPDATE schedules SET
+      name = ?,
       cadence = ?,
       time_local = ?,
       days_of_week_json = ?,
@@ -368,7 +388,7 @@ export function updateSchedule(
       defer_count = 0,
       updated_at = ?
     WHERE id = ?
-  `).run(cadence, timeLocal, daysJson(days), wakeText, nextRunAt, now, row.id)
+  `).run(name, cadence, timeLocal, daysJson(days), wakeText, nextRunAt, now, row.id)
   return toSchedule(requireSchedule(store, row.id))
 }
 

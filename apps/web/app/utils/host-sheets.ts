@@ -32,7 +32,7 @@ const HOST_SHEETS: Record<string, HostSheetEntry> = {
   },
   [HOST_SCHEDULE_SHEET_ID]: {
     id: HOST_SCHEDULE_SHEET_ID,
-    title: 'Schedule',
+    title: 'Расписание',
     kind: 'schedule',
     body: '',
   },

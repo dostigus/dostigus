@@ -309,6 +309,7 @@ it('saves and deletes one Schedule from the Sheet', () => {
   const id = (JSON.parse(created.content) as { schedule: { id: string } }).schedule.id
   const viewer = { id: owner.id, role: 'owner' as const }
   const saved = scheduleSheetSave(store, id, {
+    name: 'Friday ping',
     cadence: 'weekly',
     timeLocal: '09:15',
     daysOfWeek: ['fri'],
@@ -316,6 +317,7 @@ it('saves and deletes one Schedule from the Sheet', () => {
     paused: true,
   }, viewer)
   expect(saved.schedule).toMatchObject({
+    name: 'Friday ping',
     cadence: 'weekly',
     timeLocal: '09:15',
     daysOfWeek: ['fri'],

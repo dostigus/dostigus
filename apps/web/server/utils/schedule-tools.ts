@@ -8,6 +8,7 @@ import {
   findEnabledEquivalentSchedule,
   getSchedule,
   listSchedules,
+  listTurns,
   pauseSchedule,
   personMayOpenBot,
   requireBot,
@@ -160,6 +161,7 @@ export function schedulesCreate(
   const schedule = createSchedule(store, {
     botId,
     personId,
+    name: typeof input.name === 'string' ? input.name : '',
     cadence: cadence as ScheduleCadence,
     timeLocal: String(input.timeLocal ?? ''),
     daysOfWeek: readDays(input) as ScheduleWeekday[] | undefined,
@@ -178,6 +180,7 @@ export function schedulesUpdate(
   const days = readDays(input)
   return {
     schedule: updateSchedule(store, schedule.id, {
+      name: typeof input.name === 'string' ? input.name : undefined,
       cadence: typeof input.cadence === 'string' ? input.cadence as ScheduleCadence : undefined,
       timeLocal: typeof input.timeLocal === 'string' ? input.timeLocal : undefined,
       daysOfWeek: days as ScheduleWeekday[] | undefined,
@@ -217,6 +220,31 @@ export function schedulesDelete(
   return { ok: true as const, schedule }
 }
 
+/** Closet list: this person's rows on this Bot. See ADR 0027. */
+export function scheduleClosetList(store: OpenedStore, botId: string, viewer: BotViewer) {
+  const id = botId.trim()
+  if (!id) {
+    throw new StoreError('Bot not found', 404)
+  }
+  assertMemberCanSeeBot(store, id, viewer)
+  if (viewer.role === 'member' && !personMayOpenBot(store, id, viewer.id)) {
+    throw new StoreError('Bot not found', 404)
+  }
+  return {
+    schedules: listSchedules(store, { botId: id, personId: viewer.id }),
+    timeZone: effectiveClusterTimeZone(store).effective,
+  }
+}
+
+export function scheduleClosetCreate(
+  store: OpenedStore,
+  botId: string,
+  input: Record<string, unknown>,
+  viewer: BotViewer,
+) {
+  return schedulesCreate(store, { ...input, botId, personId: viewer.id }, viewer)
+}
+
 function requireSheetSchedule(store: OpenedStore, id: string, viewer: BotViewer): Schedule {
   const schedule = getSchedule(store, id)
   if (!schedule || !actorMayManage(schedule.personId, viewer)) {
@@ -228,13 +256,19 @@ function requireSheetSchedule(store: OpenedStore, id: string, viewer: BotViewer)
 
 /** Sheet id `schedule`. One row. A missing row says the Schedule is gone. */
 export function scheduleSheetRead(store: OpenedStore, id: string, viewer: BotViewer) {
-  return { schedule: requireSheetSchedule(store, id, viewer) }
+  const schedule = requireSheetSchedule(store, id, viewer)
+  return {
+    schedule,
+    timeZone: effectiveClusterTimeZone(store).effective,
+    runs: listTurns(store, { scheduleId: schedule.id, trigger: 'wake' }),
+  }
 }
 
 export function scheduleSheetSave(
   store: OpenedStore,
   id: string,
   input: {
+    name?: string
     cadence?: string
     timeLocal?: string
     daysOfWeek?: string[]
@@ -244,13 +278,15 @@ export function scheduleSheetSave(
   viewer: BotViewer,
 ) {
   const current = requireSheetSchedule(store, id, viewer)
-  const hasFields = input.cadence !== undefined
+  const hasFields = input.name !== undefined
+    || input.cadence !== undefined
     || input.timeLocal !== undefined
     || input.daysOfWeek !== undefined
     || input.wakeText !== undefined
   let schedule = current
   if (hasFields) {
     schedule = updateSchedule(store, current.id, {
+      name: input.name,
       cadence: input.cadence as ScheduleCadence | undefined,
       timeLocal: input.timeLocal,
       daysOfWeek: input.daysOfWeek as ScheduleWeekday[] | undefined,

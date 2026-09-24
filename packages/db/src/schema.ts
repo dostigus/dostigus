@@ -151,6 +151,7 @@ export const schedules = sqliteTable('schedules', {
   id: text('id').primaryKey(),
   botId: text('bot_id').notNull().references(() => bots.id, { onDelete: 'cascade' }),
   personId: text('person_id').notNull(),
+  name: text('name').notNull().default(''),
   cadence: text('cadence').notNull(),
   timeLocal: text('time_local').notNull(),
   daysOfWeekJson: text('days_of_week_json'),

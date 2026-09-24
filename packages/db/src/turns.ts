@@ -365,6 +365,8 @@ export function finishTurn(store: OpenedStore, id: string, input: TurnFinish): T
 export type TurnListFilter = {
   botId?: string | null
   threadId?: string | null
+  scheduleId?: string | null
+  trigger?: TurnTrigger | null
   since?: string | number | null
   limit?: number | null
 }
@@ -417,6 +419,8 @@ function parseLimit(value: number | null | undefined): number {
 export function listTurns(store: OpenedStore, filter: TurnListFilter = {}): Turn[] {
   const botId = blankToNull(filter.botId)
   const threadId = blankToNull(filter.threadId)
+  const scheduleId = blankToNull(filter.scheduleId)
+  const trigger = readTriggerFilter(filter.trigger)
   const since = parseTurnSince(filter.since)
   const limit = parseLimit(filter.limit)
   const rows = store.sqlite.prepare(`
@@ -424,9 +428,33 @@ export function listTurns(store: OpenedStore, filter: TurnListFilter = {}): Turn
     FROM turns
     WHERE (? IS NULL OR bot_id = ?)
       AND (? IS NULL OR thread_id = ?)
+      AND (? IS NULL OR schedule_id = ?)
+      AND (? IS NULL OR trigger = ?)
       AND (? IS NULL OR started_at >= ?)
     ORDER BY started_at DESC, id DESC
     LIMIT ?
-  `).all(botId, botId, threadId, threadId, since, since, limit) as TurnSqlRow[]
+  `).all(
+    botId,
+    botId,
+    threadId,
+    threadId,
+    scheduleId,
+    scheduleId,
+    trigger,
+    trigger,
+    since,
+    since,
+    limit,
+  ) as TurnSqlRow[]
   return rows.map(toTurn)
+}
+
+function readTriggerFilter(value: TurnTrigger | null | undefined): string | null {
+  if (value == null) {
+    return null
+  }
+  if (!isTrigger(value)) {
+    throw new StoreError('Turn trigger must be user, wake, or mention', 400)
+  }
+  return value
 }
