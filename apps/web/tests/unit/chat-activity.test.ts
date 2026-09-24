@@ -123,6 +123,7 @@ it('holds a phase for the minimum display before switching', () => {
 it('sweeps the status line and pulses it when motion is reduced', () => {
   const row = readFileSync(join(import.meta.dirname, '../../app/components/ChatActivityRow.vue'), 'utf8')
   expect(row).toContain('class="label"')
+  expect(row).toContain('background-color: var(--text-muted)')
   expect(row).toContain('@keyframes activity-label-shimmer')
   expect(row).toContain('@keyframes activity-label-pulse')
   expect(row).toContain('@media (prefers-reduced-motion: reduce)')
