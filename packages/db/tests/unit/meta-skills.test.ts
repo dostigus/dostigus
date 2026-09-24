@@ -80,7 +80,7 @@ it('seeds meta Skills on Bot create and stays under the instructions cap', () =>
   expect(byId['platform-meta-http-get']).toContain('dostigus_http_get')
   expect(byId['platform-meta-http-get']).toContain('truncated')
   expect(byId['platform-meta-http-get']).toContain('другим публичным URL')
-  expect(byId['platform-meta-http-get']).toContain('не выдумывай факты')
+  expect(byId['platform-meta-http-get']).toContain('Не выдумывай факты')
   expect(byId['platform-meta-http-get']).toContain('Host сам другие URL не перебирает')
   expect(byId['platform-meta-http-get']).not.toMatch(/open-meteo|wttr|openweather/i)
   expect(byId['platform-meta-http-get']).not.toMatch(/dostigus_modules|packages\/modules/)
