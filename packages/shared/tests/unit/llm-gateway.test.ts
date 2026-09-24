@@ -7,8 +7,16 @@ import {
   DEFAULT_TIER_MODELS,
   emptyLlmGatewayStored,
   isLlmGatewayConfigured,
+  LLM_GATEWAY_AUTH_ERROR_REPLY,
+  LLM_GATEWAY_EMPTY_ERROR_REPLY,
+  LLM_GATEWAY_RETRY_BACKOFF_MS,
+  LLM_GATEWAY_TRANSIENT_ERROR_REPLY,
+  llmGatewayErrorReply,
   llmGatewayPresetFromBaseUrl,
   maskApiKey,
+  MEMBER_GATEWAY_AUTH_ERROR_REPLY,
+  MEMBER_GATEWAY_EMPTY_ERROR_REPLY,
+  MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY,
   OPENROUTER_DEFAULT_BASE_URL,
   readLlmGatewayEnv,
   redactSecrets,
@@ -103,6 +111,39 @@ it('keeps an unconfigured Chat reply calm and product-facing', () => {
   expect(STUB_ASSISTANT_REPLY).toContain('Settings')
   expect(STUB_ASSISTANT_REPLY.toLowerCase()).not.toContain('stub')
   expect(STUB_ASSISTANT_REPLY.toLowerCase()).not.toContain('llm gateway')
+})
+
+it('uses distinct Russian gateway errors for the Owner and a Member', () => {
+  expect(LLM_GATEWAY_RETRY_BACKOFF_MS).toBeGreaterThanOrEqual(400)
+  expect(LLM_GATEWAY_RETRY_BACKOFF_MS).toBeLessThanOrEqual(800)
+
+  expect(llmGatewayErrorReply('owner', 'auth')).toBe(LLM_GATEWAY_AUTH_ERROR_REPLY)
+  expect(LLM_GATEWAY_AUTH_ERROR_REPLY).toContain('Settings')
+  expect(LLM_GATEWAY_AUTH_ERROR_REPLY).not.toMatch(/ещё раз|напиши|отправ/i)
+
+  expect(llmGatewayErrorReply('owner', 'transient')).toBe(LLM_GATEWAY_TRANSIENT_ERROR_REPLY)
+  expect(LLM_GATEWAY_TRANSIENT_ERROR_REPLY).toContain('Отправь сообщение ещё раз')
+  expect(LLM_GATEWAY_TRANSIENT_ERROR_REPLY).toContain('Если снова упадёт — проверь ключ в Settings')
+
+  expect(llmGatewayErrorReply('owner', 'empty')).toBe(LLM_GATEWAY_EMPTY_ERROR_REPLY)
+  expect(LLM_GATEWAY_EMPTY_ERROR_REPLY).toContain('пустой ответ')
+  expect(LLM_GATEWAY_EMPTY_ERROR_REPLY).toContain('Напиши ещё раз')
+  expect(LLM_GATEWAY_EMPTY_ERROR_REPLY).not.toContain('Settings')
+
+  expect(llmGatewayErrorReply('member', 'auth')).toBe(MEMBER_GATEWAY_AUTH_ERROR_REPLY)
+  expect(MEMBER_GATEWAY_AUTH_ERROR_REPLY).toContain('Владелец')
+  expect(MEMBER_GATEWAY_AUTH_ERROR_REPLY).not.toMatch(/отправ|напиши ещё раз/i)
+  expect(MEMBER_GATEWAY_AUTH_ERROR_REPLY).not.toBe(LLM_GATEWAY_AUTH_ERROR_REPLY)
+
+  expect(llmGatewayErrorReply('member', 'transient')).toBe(MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY)
+  expect(MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY).toContain('ещё раз')
+  expect(MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY).not.toContain('Settings')
+  expect(MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY).not.toBe(LLM_GATEWAY_TRANSIENT_ERROR_REPLY)
+
+  expect(llmGatewayErrorReply('member', 'empty')).toBe(MEMBER_GATEWAY_EMPTY_ERROR_REPLY)
+  expect(MEMBER_GATEWAY_EMPTY_ERROR_REPLY).toContain('пустой ответ')
+  expect(MEMBER_GATEWAY_EMPTY_ERROR_REPLY).toContain('ещё раз')
+  expect(MEMBER_GATEWAY_EMPTY_ERROR_REPLY).not.toContain('Settings')
 })
 
 it('uses Store settings when env is unset, defaulting the base to OpenRouter', () => {

@@ -1,5 +1,6 @@
 import type {
   AssistantReplyVia,
+  LlmGatewayFailureKind,
   LlmGatewayStored,
   Manifest,
   Message,
@@ -15,10 +16,10 @@ import {
   CHAT_MCP_TOOL_MAX_ITERATIONS,
   chatSystemPrompt,
   isLlmGatewayConfigured as envOrStoreConfigured,
-  LLM_GATEWAY_ERROR_REPLY,
   LLM_GATEWAY_PING_TIMEOUT_MS,
+  LLM_GATEWAY_RETRY_BACKOFF_MS,
   LLM_GATEWAY_TIMEOUT_MS,
-  MEMBER_GATEWAY_ERROR_REPLY,
+  llmGatewayErrorReply,
   MEMBER_QUIET_ASSISTANT_REPLY,
   readLlmGatewayEnv,
   redactSecrets,
@@ -47,8 +48,11 @@ export function stubAssistantReply(audience: 'owner' | 'member' = 'owner'): stri
   return audience === 'member' ? MEMBER_QUIET_ASSISTANT_REPLY : STUB_ASSISTANT_REPLY
 }
 
-export function gatewayErrorReply(audience: 'owner' | 'member' = 'owner'): string {
-  return audience === 'member' ? MEMBER_GATEWAY_ERROR_REPLY : LLM_GATEWAY_ERROR_REPLY
+export function gatewayErrorReply(
+  audience: 'owner' | 'member' = 'owner',
+  kind: LlmGatewayFailureKind = 'transient',
+): string {
+  return llmGatewayErrorReply(audience, kind)
 }
 
 export function resolveClusterLlmGateway(input: {
@@ -120,16 +124,21 @@ export async function completeAssistantReply(input: {
     })
     const trimmed = result.content.trim()
     if (!trimmed) {
-      return { content: gatewayErrorReply(audience), via: 'error' }
+      return { content: gatewayErrorReply(audience, 'empty'), via: 'error' }
     }
     return {
       content: trimmed,
       via: result.usedTools ? 'llm+tools' : 'llm',
     }
-  } catch {
-    // Do not log the key, headers, or provider body.
-    console.error('LLM gateway request failed')
-    return { content: gatewayErrorReply(audience), via: 'error' }
+  } catch (error) {
+    const kind: LlmGatewayFailureKind = isGatewayRequestError(error) && error.failure === 'auth'
+      ? 'auth'
+      : 'transient'
+    if (!isGatewayRequestError(error)) {
+      // Do not log the key, headers, or provider body.
+      console.error('LLM gateway request failed')
+    }
+    return { content: gatewayErrorReply(audience, kind), via: 'error' }
   }
 }
 
@@ -308,7 +317,59 @@ async function appendToolResults(input: {
   }
 }
 
+/** One automatic retry, and only for a transient failure of this request. */
+const LLM_GATEWAY_ATTEMPTS = 2
+
+class LlmGatewayRequestError extends Error {
+  constructor(
+    readonly failure: 'auth' | 'transient',
+    /** Status class or transport label. Never a key, header, or provider body. */
+    readonly detail: string,
+    readonly status?: number,
+  ) {
+    super(detail)
+    this.name = 'LlmGatewayRequestError'
+  }
+}
+
+function isGatewayRequestError(error: unknown): error is LlmGatewayRequestError {
+  return error instanceof LlmGatewayRequestError
+}
+
 async function postChatCompletion(input: {
+  resolved: ResolvedLlmGateway
+  modelTier: ModelTier
+  fetchImpl: typeof fetch
+  messages: OpenAiChatMessage[]
+  tools?: OpenAiChatFunctionTool[]
+}): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
+  let last: LlmGatewayRequestError | undefined
+  for (let attempt = 1; attempt <= LLM_GATEWAY_ATTEMPTS; attempt += 1) {
+    try {
+      return await postChatCompletionAttempt(input)
+    } catch (error) {
+      if (!isGatewayRequestError(error) || error.failure !== 'transient') {
+        if (isGatewayRequestError(error)) {
+          logGatewayFailure(error.detail, 'stop')
+        }
+        throw error
+      }
+      last = error
+      const retry = attempt < LLM_GATEWAY_ATTEMPTS
+      logGatewayFailure(error.detail, retry ? 'retry' : 'stop')
+      if (!retry) {
+        throw error
+      }
+      // Activity stays on thinking: this function does not change the phase.
+      if (error.status === 429) {
+        await delay(LLM_GATEWAY_RETRY_BACKOFF_MS)
+      }
+    }
+  }
+  throw last ?? new LlmGatewayRequestError('transient', 'network')
+}
+
+async function postChatCompletionAttempt(input: {
   resolved: ResolvedLlmGateway
   modelTier: ModelTier
   fetchImpl: typeof fetch
@@ -329,21 +390,72 @@ async function postChatCompletion(input: {
     body.tools = input.tools
   }
 
-  const response = await input.fetchImpl(url, {
-    method: 'POST',
-    headers: gatewayHeaders(apiKey),
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(LLM_GATEWAY_TIMEOUT_MS),
-  })
+  let response: Response
+  try {
+    response = await input.fetchImpl(url, {
+      method: 'POST',
+      headers: gatewayHeaders(apiKey),
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(LLM_GATEWAY_TIMEOUT_MS),
+    })
+  } catch (error) {
+    const detail = isTimeoutOrAbort(error) ? 'timeout' : 'network'
+    throw new LlmGatewayRequestError('transient', detail)
+  }
 
   if (!response.ok) {
-    throw new Error(`LLM gateway HTTP ${response.status}`)
+    throw gatewayFailureForStatus(response.status)
   }
 
-  const payload = await response.json() as {
+  let payload: {
     choices?: Array<{ message?: { content?: string | null, tool_calls?: OpenAiToolCall[] } }>
   }
+  try {
+    payload = await response.json() as typeof payload
+  } catch {
+    // A parse error can quote the provider body. Log only the label.
+    throw new LlmGatewayRequestError('transient', 'invalid')
+  }
   return payload.choices?.[0]?.message ?? {}
+}
+
+function gatewayFailureForStatus(status: number): LlmGatewayRequestError {
+  const detail = `HTTP ${status}`
+  if (status === 429 || (status >= 500 && status <= 599)) {
+    return new LlmGatewayRequestError('transient', detail, status)
+  }
+  return new LlmGatewayRequestError('auth', detail, status)
+}
+
+function isTimeoutOrAbort(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+  const name = 'name' in error ? String(error.name) : ''
+  if (name === 'AbortError' || name === 'TimeoutError') {
+    return true
+  }
+  if (error instanceof Error && /timeout|aborted|AbortError/i.test(error.message)) {
+    return true
+  }
+  if ('cause' in error && error.cause && error.cause !== error) {
+    return isTimeoutOrAbort(error.cause)
+  }
+  return false
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+function logGatewayFailure(detail: string, outcome: 'retry' | 'stop'): void {
+  if (outcome === 'retry') {
+    console.error(`LLM gateway request failed (${detail}); retrying`)
+    return
+  }
+  console.error(`LLM gateway request failed (${detail})`)
 }
 
 function gatewayHeaders(apiKey: string): Record<string, string> {

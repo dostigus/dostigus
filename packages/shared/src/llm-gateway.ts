@@ -30,11 +30,60 @@ export const STUB_ASSISTANT_REPLY
 export const MEMBER_QUIET_ASSISTANT_REPLY
   = 'Got it. Replies stay quiet until the Owner adds an OpenRouter key.'
 
-export const LLM_GATEWAY_ERROR_REPLY
-  = 'Could not complete this reply. Check the key in Settings.'
+/**
+ * Owner bubble when the gateway rejects the key (HTTP 401 / 403) or
+ * another non-retry 4xx. Do not tell them to send the line again.
+ */
+export const LLM_GATEWAY_AUTH_ERROR_REPLY
+  = 'Не получилось ответить. Проверь ключ в Settings.'
 
-export const MEMBER_GATEWAY_ERROR_REPLY
-  = 'Could not complete this reply. The Owner can check the key in Settings.'
+/**
+ * Owner bubble after one retry still cannot reach the model
+ * (timeout, abort, network, HTTP 429, HTTP 5xx).
+ */
+export const LLM_GATEWAY_TRANSIENT_ERROR_REPLY
+  = 'Не получилось связаться с моделью. Отправь сообщение ещё раз. Если снова упадёт — проверь ключ в Settings.'
+
+/** Owner bubble when HTTP succeeded and the assistant text is empty. */
+export const LLM_GATEWAY_EMPTY_ERROR_REPLY
+  = 'Модель вернула пустой ответ. Напиши ещё раз.'
+
+/** Member cannot open Settings. Point at the Owner for a key problem. */
+export const MEMBER_GATEWAY_AUTH_ERROR_REPLY
+  = 'Не получилось ответить. Владелец может проверить ключ в Settings.'
+
+/** Member can send the line again. Do not send them to Settings. */
+export const MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY
+  = 'Не получилось связаться с моделью. Можно отправить сообщение ещё раз.'
+
+export const MEMBER_GATEWAY_EMPTY_ERROR_REPLY
+  = 'Модель вернула пустой ответ. Можно написать ещё раз.'
+
+export const LLM_GATEWAY_FAILURE_KINDS = ['auth', 'transient', 'empty'] as const
+
+export type LlmGatewayFailureKind = typeof LLM_GATEWAY_FAILURE_KINDS[number]
+
+const OWNER_GATEWAY_ERROR_REPLIES: Record<LlmGatewayFailureKind, string> = {
+  auth: LLM_GATEWAY_AUTH_ERROR_REPLY,
+  transient: LLM_GATEWAY_TRANSIENT_ERROR_REPLY,
+  empty: LLM_GATEWAY_EMPTY_ERROR_REPLY,
+}
+
+const MEMBER_GATEWAY_ERROR_REPLIES: Record<LlmGatewayFailureKind, string> = {
+  auth: MEMBER_GATEWAY_AUTH_ERROR_REPLY,
+  transient: MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY,
+  empty: MEMBER_GATEWAY_EMPTY_ERROR_REPLY,
+}
+
+export function llmGatewayErrorReply(
+  audience: 'owner' | 'member',
+  kind: LlmGatewayFailureKind,
+): string {
+  const replies = audience === 'member'
+    ? MEMBER_GATEWAY_ERROR_REPLIES
+    : OWNER_GATEWAY_ERROR_REPLIES
+  return replies[kind]
+}
 
 export const LLM_GATEWAY_PRESETS = ['openrouter', 'custom'] as const
 
@@ -42,6 +91,9 @@ export type LlmGatewayPreset = typeof LLM_GATEWAY_PRESETS[number]
 
 export const LLM_GATEWAY_TIMEOUT_MS = 30_000
 export const LLM_GATEWAY_PING_TIMEOUT_MS = 10_000
+
+/** Pause before the single retry of an HTTP 429. Other transient retries are immediate. */
+export const LLM_GATEWAY_RETRY_BACKOFF_MS = 600
 
 /** Chat completions that may call Cluster MCP tools. Includes a final text-only attempt. */
 export const CHAT_MCP_TOOL_MAX_ITERATIONS = 6

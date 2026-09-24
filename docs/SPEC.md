@@ -235,9 +235,18 @@ What the running Cluster does today:
   Owner. A Member who created the Bot also receives
   `dostigus_bots_update` and the Skills tools on that Bot. A grantee
   does not receive Manifest or Skills tools. Delete stays
-  off Chat. No key → quiet reply + banner (no tools). Configured call that
-  fails → clear error, not a stub. The
-  full key is never returned to the client or written to logs. Greeting
+  off Chat. No key → quiet reply + banner (no tools). A configured call
+  retries once on a transient gateway failure (timeout, abort, network,
+  HTTP 429, or HTTP 5xx). HTTP 429 waits briefly first. Activity stays
+  on thinking. HTTP 401, HTTP 403, other 4xx, and an empty assistant
+  body are not retried. The stored error is Russian: the Owner checks
+  the key in Settings, sends the line again after a transient miss, or
+  writes again after an empty body. A Member is pointed at the Owner
+  for a key problem and can still send again after a transient miss.
+  The error is not a stub. The
+  full key is never returned to the client or written to logs. A log
+  may name the status class (for example HTTP 429) and must not include
+  the key, headers, or provider body. Greeting
   is always stored. Keys are **not** required for compose. See
   [ADR 0011](adr/0011-chat-mcp-tool-loop.md). Schedule tools are
   [ADR 0027](adr/0027-bot-schedules.md). Self-settings of name,
