@@ -76,20 +76,30 @@ withDefaults(defineProps<{
   color: transparent;
   background-color: var(--text-muted);
   background-image: linear-gradient(
-    105deg,
+    100deg,
     transparent 0%,
-    transparent 32%,
+    transparent 34%,
+    color-mix(in srgb, var(--text) 18%, transparent) 41%,
+    color-mix(in srgb, var(--text) 52%, transparent) 47%,
     color-mix(in srgb, var(--text) 62%, transparent) 50%,
-    transparent 68%,
+    color-mix(in srgb, var(--text) 52%, transparent) 53%,
+    color-mix(in srgb, var(--text) 18%, transparent) 59%,
+    transparent 66%,
     transparent 100%
   );
-  background-size: 220% 100%;
-  background-repeat: no-repeat;
-  background-position: 100% 50%;
+  /*
+   * One tile is 3x the label. At size 300%, position p offsets the tile by
+   * -2p label widths, so 150% -> 0% moves it exactly one tile: the first and
+   * last frames match and the loop has no seam. The band sits in the middle
+   * third, so a gap of plain muted text trails each pass.
+   */
+  background-size: 300% 100%;
+  background-repeat: repeat-x;
+  background-position: 150% 50%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: activity-label-shimmer 2.1s linear infinite;
+  animation: activity-label-shimmer 2.4s linear infinite;
 }
 
 .wave,
@@ -220,7 +230,7 @@ withDefaults(defineProps<{
 
 @keyframes activity-label-shimmer {
   0% {
-    background-position: 100% 50%;
+    background-position: 150% 50%;
   }
 
   100% {
