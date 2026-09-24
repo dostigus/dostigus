@@ -50,6 +50,26 @@ export function listHouseholdPeople(store: OpenedStore) {
   return people
 }
 
+export type RoomBotAudience = {
+  botId: string
+  /** Household people who can already open this Bot. Listing does not grant. */
+  personIds: string[]
+}
+
+/**
+ * Bots this person can open, with the Household people who can already
+ * open each one. A room create still checks access and does not grant.
+ */
+export function listRoomBotAudience(store: OpenedStore, viewer: BotViewer): RoomBotAudience[] {
+  const people = listHouseholdPeople(store)
+  return listBots(store, viewer).map((bot) => ({
+    botId: bot.id,
+    personIds: people
+      .filter((person) => viewerMaySeeBot(store, bot, { id: person.id, role: person.role }))
+      .map((person) => person.id),
+  }))
+}
+
 export function listInboxThreads(store: OpenedStore, viewer: BotViewer): ThreadListItem[] {
   const ids = new Set<string>()
   const joined = store.sqlite.prepare(`

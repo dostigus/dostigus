@@ -9,6 +9,10 @@
     />
     <HostSidebar />
     <HostSearch />
+    <HostMemberAddSheet
+      v-if="isOwner"
+      v-model:open="memberAddOpen"
+    />
     <div class="pane">
       <ThreadComposer
         v-if="threadOpen"
@@ -31,9 +35,11 @@
 import type { Bot } from '@dostigus/shared'
 
 const route = useRoute()
+const { isOwner } = useHostAccount()
 const { open, narrow, close } = useHostNav()
 const { open: createOpen, closeCreate, dismissCreate } = useHostCreate()
 const { open: threadOpen, closeThreadCreate, dismissThreadCreate } = useHostThreadCreate()
+const { open: memberAddOpen, closeMemberAdd } = useHostMemberAdd()
 const { bots, refresh } = await useHostBots()
 const { refresh: refreshThreads } = await useHostThreads()
 
@@ -41,6 +47,7 @@ watch(() => route.fullPath, () => {
   close()
   closeCreate()
   closeThreadCreate()
+  closeMemberAdd()
 })
 
 async function onCreated(bot: Bot) {
@@ -61,7 +68,7 @@ async function onThreadCreated(thread: { href: string }) {
 }
 
 function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && open.value && !createOpen.value && !threadOpen.value) {
+  if (event.key === 'Escape' && open.value && !createOpen.value && !threadOpen.value && !memberAddOpen.value) {
     close()
   }
 }

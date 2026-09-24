@@ -18,7 +18,17 @@ with no title and no close control. Escape, the overlay, and a chosen
 row dismiss it. The Chat pill’s rest inset is a little wider on both
 sides.
 
-The sidebar `+` opens the Bot picker. See
+Amended 2026-09-24: the sidebar `+` opens one menu. Find or create a
+Bot, a direct message, a people-only group, and a room («Создать
+групповой чат») live there. The Owner starts Add Member (Invite or a
+password) from that menu as well as from Members. The rail is loupe,
+`+`, then the user. There is no third create control on that rail. The
+room picker lists Household people and Bots the current person can
+already open. Creating the room does not grant a Bot. See
+[ADR 0024](0024-threads-and-bot-visibility.md).
+
+The sidebar `+` opens that menu. Find or create a Bot is one item and
+still opens the picker. See
 [ADR 0019](0019-bot-picker-and-chat-purpose.md).
 
 ## Decision

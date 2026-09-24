@@ -179,7 +179,10 @@ The width and collapsed state stay in the browser.
 The top of the expanded sidebar is a loupe and a `+`, side by side, both
 outlined icon buttons with no accent fill. On the icon rail they leave
 that header and stack at the bottom: loupe, then `+`, then the user mark.
-Each Bot hit target on the rail is a square. The `+` opens the Bot picker. The
+Each Bot hit target on the rail is a square. The `+` opens one menu:
+find or create a Bot, a direct message, a people-only group, a room
+(«Создать групповой чат»), and, for the Owner, Add Member. The rail is
+loupe, `+`, then the user. There is no third create control. The
 loupe opens a centered search Sheet with no title and no close control:
 a field with a loupe and the placeholder Поиск, then rows with an
 avatar, a name, an optional section tag, one subtitle line, and ⌘1–⌘9 on
@@ -188,13 +191,14 @@ a row dismiss it. Search covers Bot names, Chat lines, and basic Host
 settings (Settings, Members, and the open Bot’s Sheet). With no Bots,
 that list region centers a short muted line. The main pane then shows
 the wave sticker and **Create a Bot**.
-The `+` and that button replace the Chat pane with the picker: a **To:**
+**Найти или создать Bot** in that menu, and **Create a Bot** on the empty
+pane, replace the Chat pane with the picker: a **To:**
 field across the pane, a **×** on the right of that row, then **Create
-new Bot** (plain **+**, Owner only), then existing Bots (mark, name,
+new Bot** (plain **+**), then existing Bots (mark, name,
 latest Chat line). The sidebar stays. **×** and Escape return to the pane
 that was open before the picker. Choosing a Bot, creating a Bot, or a
 sidebar Bot row also leaves it. The picker search does not create a Bot from the
-query. A Member sees search and existing Bots only. Each sidebar row is
+query. A Member uses that same picker to find or create a Bot. Each sidebar row is
 an avatar, the Bot name, and a one-line preview of the latest Chat line.
 The bottom of the expanded sidebar is a user button, under a `--line-soft` rule. Its mark is a
 little smaller than a Bot row avatar and sits on a neutral `--surface`

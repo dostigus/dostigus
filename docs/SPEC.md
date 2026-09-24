@@ -87,23 +87,27 @@ What the running Cluster does today:
   `KitDialog` modal) and `KitButton` sit on Reka UI and those tokens.
   The Brand goose logo, stickers, and Bot marks live in the Kit. The Host
   mark uses the goose logo. With no Threads, the sidebar centers a short line
-  and the main pane shows the wave sticker, **Create a Bot**, and **New thread**. Add Member opens a Sheet. See
+  and the main pane shows the wave sticker, **Create a Bot**, and **Создать групповой чат**. Add Member opens a Sheet, including from the sidebar `+`. See
   [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). On a wide screen the Host
   is a resizable Threads inbox beside Chat. The sidebar can collapse to
   an icon rail. Each expanded row shows an avatar, the Thread title
   (**DM**, **Group**, or **Room** on those kinds), and the latest line. A bot-thread row opens `/bots/:id`. A
   direct message, group, or room opens `/threads/:id`. On the icon rail
   each row’s hit target is a square.
-  A loupe, a `+`, and a **New thread** bubble sit at the top of the
-  expanded sidebar, quiet icon buttons with no accent fill. The `+` stays
-  the Bot picker. **New thread** creates a direct message, a group, or a
-  room. On the icon rail they stack at the bottom, above the user mark:
-  loupe, then `+`, then **New thread**, then the user.
+  A loupe and a `+` sit at the top of the
+  expanded sidebar, quiet icon buttons with no accent fill. The `+` opens
+  one menu: **Найти или создать Bot** (the Bot picker), **Написать лично**
+  (a direct message), **Создать группу** (people only), **Создать групповой
+  чат** (a `room`: Household people and Bots the current person can open),
+  and, for the Owner, **Добавить Member** (Invite, or add a Member with a
+  password). There is no separate new-thread control on the rail. On the
+  icon rail the loupe and `+` stack at the bottom, above the user mark:
+  loupe, then `+`, then the user.
   The loupe opens a centered search Sheet with no title and no close
   control: a field with a loupe and the placeholder Поиск, then rows for
   Bot names, Chat lines, and Host settings that person can open. Escape,
   the overlay, and choosing a row dismiss it.
-  The `+` opens
+  The `+` opens that menu. **Найти или создать Bot** opens
   the Bot picker. A user button opens Settings (`/settings`), Members
   (`/members`), and Sign out. Chat overlays a centered pill on the thread:
   avatar and name, translucent, so lines scroll under it. A top inset about
@@ -159,7 +163,7 @@ What the running Cluster does today:
   pill and does not add a thread row. The Chat pill still thinks, speaks,
   and cheers. A green live dot
   marks the busy Bot on the Chat pill and the matching sidebar row. With no Bots, the main pane offers **Create a Bot**
-  and the sidebar stays a short centered line. The `+` and that button open
+  and the sidebar stays a short centered line. That button, and **Найти или создать Bot** in the `+` menu, open
   the picker as the Chat pane. **×** returns to the pane that was open.
   Creating a Bot opens that Chat. See
   [ADR 0014](adr/0014-host-messenger-shell.md),
@@ -223,7 +227,8 @@ What the running Cluster does today:
   There is no flag shared with future Members. Chat reads and writes the
   viewer's own bot-thread. The Owner opening a Bot they did not create
   uses the Owner's bot-thread and does not copy another person's lines.
-  The Owner and Members may create a `dm`, a `group`, or a `room`.
+  The Owner and Members may create a `dm`, a `group`, or a `room` from the sidebar `+`.
+  **Создать групповой чат** is the `room`. The picker lists Household people and Bots the current person can open. A Bot stays selectable only when every chosen person can already open it.
   Adding a Bot requires every person participant to already have access.
   The add does not grant that access. In a `room`, a Bot replies only
   when the line mentions it:

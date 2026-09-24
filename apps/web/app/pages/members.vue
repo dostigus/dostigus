@@ -357,6 +357,7 @@ const {
 } = await useFetch<{ invites: Invite[] }>('/api/members/invites')
 const invites = computed(() => inviteData.value?.invites ?? [])
 
+const { revision } = useHostMemberAdd()
 const addOpen = ref(false)
 const displayName = ref('')
 const login = ref('')
@@ -478,6 +479,11 @@ async function rotate(id: string) {
     busyInviteId.value = ''
   }
 }
+
+watch(revision, () => {
+  void refresh()
+  void refreshInvites()
+})
 
 watch(addOpen, (isOpen) => {
   if (isOpen) {
