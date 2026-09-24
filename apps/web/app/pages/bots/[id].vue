@@ -88,7 +88,7 @@
           <KitChatParts
             v-if="assistantBubbleUsesMarkdown(message.role) && hostChatParts(message.parts).length"
             :parts="hostChatParts(message.parts)"
-            @open-sheet="(sheetId, targetId) => onOpenSheet(sheetId, targetId, message.botId)"
+            @open-sheet="onOpenSheet"
           />
         </li>
         <li
@@ -240,11 +240,6 @@
         v-else-if="openSheet?.kind === 'schedule'"
         :schedule-id="sheetTargetId"
       />
-      <SkillSheet
-        v-else-if="openSheet?.kind === 'skill'"
-        :bot-id="sheetBotId"
-        :skill-id="sheetTargetId"
-      />
       <p
         v-else
         class="sheet-copy"
@@ -315,7 +310,6 @@ const settingsOpen = ref(false)
 const sheetOpen = ref(false)
 const openSheet = ref<HostSheetEntry | null>(null)
 const sheetTargetId = ref('')
-const sheetBotId = ref('')
 const openSheetTitle = computed(() => openSheet.value?.title ?? 'Sheet')
 const openSheetBody = computed(() => openSheet.value?.body ?? '')
 const threadEl = ref<HTMLOListElement | null>(null)
@@ -324,7 +318,7 @@ const pillEl = ref<HTMLButtonElement | null>(null)
 /** Shown while the thread is scrolled above the latest line. */
 const showLatestJump = ref(false)
 let threadScrollEl: HTMLElement | null = null
-const { pendingId: pendingSheetId, requestOpen } = useHostBotSheet()
+const { pendingId: pendingSheetId } = useHostBotSheet()
 
 const timeline = computed(() => withOptimisticUser<TimelineLine>(messages.value, optimistic.value))
 const showPurpose = computed(() => showsBotPurposeCard(timeline.value))
@@ -688,26 +682,12 @@ watch([timeline, botPending, showPurpose, threadActivity], () => {
   pinAfterLayout()
 }, { flush: 'post', immediate: true })
 
-function onOpenSheet(sheetId: string, targetId?: string, lineBotId?: string | null) {
+function onOpenSheet(sheetId: string, targetId?: string) {
   const sheet = hostSheetById(sheetId)
   if (!sheet) {
     return
   }
-  if (sheet.kind === 'bot') {
-    const id = targetId || lineBotId || botId.value
-    sheetOpen.value = false
-    if (id === botId.value) {
-      settingsOpen.value = true
-      return
-    }
-    if (id) {
-      requestOpen(id)
-      void navigateTo(`/bots/${id}`)
-    }
-    return
-  }
   sheetTargetId.value = targetId ?? ''
-  sheetBotId.value = lineBotId || botId.value
   openSheet.value = sheet
   sheetOpen.value = true
 }
@@ -991,9 +971,19 @@ async function onBotSaved() {
 }
 
 .bubble.assistant,
-.bubble.system,
 .bubble.user:not(.mine) {
   align-self: flex-start;
+}
+
+.bubble.system {
+  align-self: center;
+  max-width: min(28rem, 92%);
+  padding: 0.15rem 0.6rem;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.82rem;
 }
 
 .bubble.failed {

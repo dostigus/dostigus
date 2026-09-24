@@ -238,7 +238,8 @@ async function callOpenAiCompatible(input: {
       }),
     },
     ...input.history.map((message) => ({
-      // A stored system line is the Wake. The Bot replies to it as a user line.
+      // A stored system line is a Wake or a Skill / self-settings notice.
+      // The Bot sees it as a user line. It does not start a turn by itself.
       role: message.role === 'system' ? 'user' as const : message.role,
       content: message.content,
     })),

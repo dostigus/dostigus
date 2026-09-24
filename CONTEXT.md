@@ -91,24 +91,21 @@ _Avoid_: user, attendee.
 Inline structured UI in the Chat (button, table, status). Day-1 renders
 a button and a status as Kit parts on an assistant bubble
 ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)). A **Chat Card** is the
-Host-injected Card for a Schedule change, a Skill upsert or delete, or
-a Bot self-settings update of name, label, or description
+Host-injected Card for a Schedule change
 ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). A table and
-forms stay later.
+other Card kinds stay later.
 _Avoid_: widget, embed, attachment (unqualified).
 
 **Chat Card**:
 A Kit Card the Host injects in the thread after a successful Schedule
-change, a successful Skill upsert or delete, or a successful
-`dostigus_bots_update` of name, label, or description. Stored as one
-assistant message part (`kind: card`) so reload keeps it. Card kinds
-are `schedule`, `skill`, and `bot`. Kind `bot` is the self-settings
-Card. Not a system line and not a closet control. Изменить opens the
-Sheet for that row: Sheet id `schedule`, Sheet id `skill`, or Sheet id
-`bot` (the existing Bot Параметры closet). Delete confirms in the
-Schedule Sheet or the Skill Sheet. The model does not emit the part.
-Day-1 does not inject a Card after Apply, and does not inject a Card
-for a bare list or get.
+change. Stored as one assistant message part (`kind: card`) so reload
+keeps it. Card kind is `schedule`. Not a system line and not a closet
+control. Pause and Изменить open Sheet id `schedule`. Delete confirms
+in that Sheet. The model does not emit the part. Day-1 does not inject
+a Card after Apply, and does not inject a Card for a Skill upsert or
+delete, a Bot self-settings update, or a bare list or get. Those Skill
+and self-settings successes are a Host-written system Chat line (the
+Wake family): plain string, no parts, no Изменить.
 _Avoid_: widget, toast, system line, embed.
 
 **Sheet**:
@@ -354,8 +351,11 @@ _Avoid_: public share, invite (unqualified).
   A missing capability uses Skills upsert, Schedule tools, and Bot
   self-settings already in Chat. On Bot create the Host inserts missing
   meta Skills that teach those tools (insert-if-missing). That seed does
-  not call `upsertBotSkill`. They are plain Skills. This
-  monorepo does not ship a stock Module package
+  not call `upsertBotSkill`. They are plain Skills. A successful Skill
+  upsert or delete, and a successful `dostigus_bots_update` of name,
+  label, or description, appends one system Chat line on that
+  bot-thread (plain string, no parts, same family as a Wake). It is
+  not a Chat Card. This monorepo does not ship a stock Module package
   ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)).
 - Module package data lives in the Cluster Store. Bot visibility does not
   give a Bot its own Store. A personal Bot uses the same MCP surface
@@ -374,8 +374,7 @@ _Avoid_: public share, invite (unqualified).
   ([ADR 0022](docs/adr/0022-chat-assistant-markdown.md)) and may carry Kit
   parts: a button that opens a Sheet, a status
   ([ADR 0025](docs/adr/0025-chat-bubble-parts.md)), and a Chat Card the
-  Host injects after a Schedule change, a Skill upsert or delete, or a
-  Bot self-settings update
+  Host injects after a Schedule change
   ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). User and
   system lines have no parts. Bot-threads, `dm`, `group`, and `room` are in the Host.
   Grant rows are in the Host

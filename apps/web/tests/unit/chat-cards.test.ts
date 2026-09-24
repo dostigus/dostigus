@@ -4,6 +4,7 @@ import {
   createOwner,
   grantBot,
   listBotSkills,
+  listBotThreadMessages,
   listSchedules,
   openStore,
   StoreError,
@@ -16,11 +17,6 @@ import {
   scheduleSheetRead,
   scheduleSheetSave,
 } from '../../server/utils/schedule-tools'
-import {
-  skillSheetDelete,
-  skillSheetRead,
-  skillSheetSave,
-} from '../../server/utils/skill-sheet'
 
 const opened: Array<ReturnType<typeof openStore>> = []
 
@@ -358,15 +354,13 @@ it('does not inject a Card for a failed tool or a catalog name', () => {
   expect(cards.parts()).toEqual([])
 })
 
-const SKILL_ACTIONS = [
-  { label: 'Изменить', action: { type: 'openSheet', sheetId: 'skill' } },
-]
+function systemLines(store: ReturnType<typeof openStore>, botId: string, personId: string): string[] {
+  return listBotThreadMessages(store, botId, personId)
+    .filter((message) => message.role === 'system')
+    .map((message) => message.content)
+}
 
-const BOT_ACTIONS = [
-  { label: 'Изменить', action: { type: 'openSheet', sheetId: 'bot' } },
-]
-
-it('injects one Skill Card after upsert and replaces it on delete', () => {
+it('appends one system line per Skill upsert or delete and no Card', () => {
   const store = memoryStore()
   const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
   const bot = createBot(store, { name: 'Notes', createdBy: owner.id }).bot
@@ -376,7 +370,7 @@ it('injects one Skill Card after upsert and replaces it on delete', () => {
     args: {
       botId: bot.id,
       id: 'notes',
-      instructions: 'Keep short notes.\nSecond line stays off the Card.',
+      instructions: 'Keep short notes.\nSecond line stays off the line.',
     },
     store,
     role: 'owner',
@@ -385,19 +379,10 @@ it('injects one Skill Card after upsert and replaces it on delete', () => {
     cards,
   })
   expect(upserted.ok).toBe(true)
-  expect(cards.parts()).toEqual([
-    {
-      kind: 'card',
-      card: 'skill',
-      title: 'notes',
-      body: 'Keep short notes.',
-      tone: 'ok',
-      targetId: 'notes',
-      actions: SKILL_ACTIONS,
-    },
-  ])
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual(['Skill · notes · Keep short notes.'])
 
-  const replaced = invokeChatMcpTool({
+  const again = invokeChatMcpTool({
     name: 'dostigus_skills_upsert',
     args: { botId: bot.id, id: 'notes', instructions: 'Shorter.' },
     store,
@@ -406,9 +391,12 @@ it('injects one Skill Card after upsert and replaces it on delete', () => {
     turnBotId: bot.id,
     cards,
   })
-  expect(replaced.ok).toBe(true)
-  expect(cards.parts()).toHaveLength(1)
-  expect(cards.parts()[0]).toMatchObject({ body: 'Shorter.', targetId: 'notes' })
+  expect(again.ok).toBe(true)
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual([
+    'Skill · notes · Keep short notes.',
+    'Skill · notes · Shorter.',
+  ])
 
   const listed = invokeChatMcpTool({
     name: 'dostigus_skills_list',
@@ -420,7 +408,7 @@ it('injects one Skill Card after upsert and replaces it on delete', () => {
     cards,
   })
   expect(listed.ok).toBe(true)
-  expect(cards.parts()).toHaveLength(1)
+  expect(systemLines(store, bot.id, owner.id)).toHaveLength(2)
 
   const removed = invokeChatMcpTool({
     name: 'dostigus_skills_delete',
@@ -432,16 +420,11 @@ it('injects one Skill Card after upsert and replaces it on delete', () => {
     cards,
   })
   expect(removed.ok).toBe(true)
-  expect(cards.parts()).toEqual([
-    {
-      kind: 'card',
-      card: 'skill',
-      title: 'notes',
-      body: 'Удалено',
-      tone: 'warn',
-      targetId: 'notes',
-      actions: [],
-    },
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual([
+    'Skill · notes · Keep short notes.',
+    'Skill · notes · Shorter.',
+    'Skill · notes · Удалено',
   ])
 })
 
@@ -467,12 +450,8 @@ it('uses «записан» when the Skill line does not fit and skips a failed 
     cards,
   })
   expect(upserted.ok).toBe(true)
-  expect(cards.parts()[0]).toMatchObject({
-    card: 'skill',
-    title: 'long-note',
-    body: 'записан',
-    tone: 'ok',
-  })
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual(['Skill · long-note · записан'])
 
   const denied = invokeChatMcpTool({
     name: 'dostigus_skills_delete',
@@ -484,57 +463,12 @@ it('uses «записан» when the Skill line does not fit and skips a failed 
     cards,
   })
   expect(denied.ok).toBe(false)
-  expect(cards.parts()).toHaveLength(1)
+  expect(systemLines(store, bot.id, owner.id)).toEqual(['Skill · long-note · записан'])
+  expect(systemLines(store, bot.id, member.id)).toEqual([])
   expect(listBotSkills(store, bot.id).some((skill) => skill.id === 'long-note')).toBe(true)
 })
 
-it('saves and deletes one Skill from the Sheet for the creator or the Owner', () => {
-  const store = memoryStore()
-  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
-  const member = createMember(store, {
-    displayName: 'Grace',
-    username: 'grace',
-    passwordHash: 'hash:grace',
-  })
-  const bot = createBot(store, { name: 'Notes', createdBy: member.id }).bot
-  const ownerViewer = { id: owner.id, role: 'owner' as const }
-  const creator = { id: member.id, role: 'member' as const }
-  invokeChatMcpTool({
-    name: 'dostigus_skills_upsert',
-    args: { botId: bot.id, id: 'notes', instructions: 'Keep short notes.' },
-    store,
-    role: 'member',
-    personId: member.id,
-    turnBotId: bot.id,
-  })
-  expect(skillSheetRead(store, bot.id, 'notes', creator).skill).toMatchObject({
-    id: 'notes',
-    instructions: 'Keep short notes.',
-  })
-  const saved = skillSheetSave(store, bot.id, 'notes', {
-    id: 'notes-renamed',
-    instructions: 'Renamed skill.',
-  }, ownerViewer)
-  expect(saved.skill).toEqual({ id: 'notes-renamed', instructions: 'Renamed skill.' })
-  expect(listBotSkills(store, bot.id).some((skill) => skill.id === 'notes')).toBe(false)
-  expect(() => skillSheetRead(store, bot.id, 'notes', ownerViewer)).toThrow(StoreError)
-  try {
-    skillSheetRead(store, bot.id, 'notes', ownerViewer)
-  } catch (error) {
-    expect(error).toMatchObject({ statusCode: 404, message: 'This Skill is gone' })
-  }
-  const grantee = createMember(store, {
-    displayName: 'Bea',
-    username: 'bea',
-    passwordHash: 'hash:bea',
-  })
-  grantBot(store, bot.id, grantee.id)
-  expect(() => skillSheetRead(store, bot.id, 'notes-renamed', { id: grantee.id, role: 'member' })).toThrow(StoreError)
-  expect(skillSheetDelete(store, bot.id, 'notes-renamed', creator)).toEqual({ ok: true })
-  expect(() => skillSheetDelete(store, bot.id, 'notes-renamed', creator)).toThrow(StoreError)
-})
-
-it('injects a self-settings Card when name, label, or description changes', () => {
+it('appends a system line when name, label, or description changes and no Card', () => {
   const store = memoryStore()
   const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
   const bot = createBot(store, { name: 'Notes', createdBy: owner.id }).bot
@@ -549,17 +483,8 @@ it('injects a self-settings Card when name, label, or description changes', () =
     cards,
   })
   expect(renamed.ok).toBe(true)
-  expect(cards.parts()).toEqual([
-    {
-      kind: 'card',
-      card: 'bot',
-      title: 'Field notes',
-      body: 'учёба',
-      tone: 'ok',
-      targetId: bot.id,
-      actions: BOT_ACTIONS,
-    },
-  ])
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual(['Бот · Field notes · учёба'])
 
   const described = invokeChatMcpTool({
     name: 'dostigus_bots_update',
@@ -571,8 +496,11 @@ it('injects a self-settings Card when name, label, or description changes', () =
     cards,
   })
   expect(described.ok).toBe(true)
-  expect(cards.parts()).toHaveLength(1)
-  expect(cards.parts()[0]).toMatchObject({ title: 'Field notes', body: 'учёба', targetId: bot.id })
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toEqual([
+    'Бот · Field notes · учёба',
+    'Бот · Field notes · учёба',
+  ])
 
   const cleared = invokeChatMcpTool({
     name: 'dostigus_bots_update',
@@ -584,8 +512,9 @@ it('injects a self-settings Card when name, label, or description changes', () =
     cards,
   })
   expect(cleared.ok).toBe(true)
-  expect(cards.parts()[0]).toMatchObject({ body: 'обновлено', tone: 'ok' })
+  expect(systemLines(store, bot.id, owner.id).at(-1)).toBe('Бот · Field notes · обновлено')
 
+  const beforeAvatar = systemLines(store, bot.id, owner.id).length
   const avatar = invokeChatMcpTool({
     name: 'dostigus_bots_update',
     args: { id: bot.id, avatarColor: '#1F7AE5' },
@@ -596,7 +525,7 @@ it('injects a self-settings Card when name, label, or description changes', () =
     cards,
   })
   expect(avatar.ok).toBe(true)
-  expect(cards.parts()).toHaveLength(1)
+  expect(systemLines(store, bot.id, owner.id)).toHaveLength(beforeAvatar)
 
   const listed = invokeChatMcpTool({
     name: 'dostigus_bots_list',
@@ -618,7 +547,8 @@ it('injects a self-settings Card when name, label, or description changes', () =
     cards,
   })
   expect(got.ok).toBe(true)
-  expect(cards.parts()).toHaveLength(1)
+  expect(cards.parts()).toEqual([])
+  expect(systemLines(store, bot.id, owner.id)).toHaveLength(beforeAvatar)
 
   const longName = 'N'.repeat(90)
   const longLabel = 'L'.repeat(90)
@@ -632,11 +562,7 @@ it('injects a self-settings Card when name, label, or description changes', () =
     cards,
   })
   expect(wide.ok).toBe(true)
-  expect(cards.parts()[0]).toMatchObject({
-    title: longName.slice(0, 80),
-    body: 'обновлено',
-    targetId: bot.id,
-  })
+  expect(systemLines(store, bot.id, owner.id).at(-1)).toBe(`Бот · ${longName} · обновлено`)
 })
 
 it('requires cadence and timeLocal for intent set', () => {

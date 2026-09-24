@@ -24,7 +24,7 @@ Settled now, even if this repo only scaffolds them:
 | Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. The Host fires a Wake. See [ADR 0027](adr/0027-bot-schedules.md). |
 | Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
 | Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
-| Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, a Skill upsert or delete, or a Bot self-settings update of name, label, or description. Stored as assistant message parts. This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
+| Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, appends one system Chat line (plain string, no parts). This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -150,7 +150,9 @@ What the running Cluster does today:
   and system bubbles stay plain pre-wrap text and have no parts. See
   [ADR 0022](adr/0022-chat-assistant-markdown.md) and
   [ADR 0025](adr/0025-chat-bubble-parts.md). A Chat Card (`kind: card`)
-  for a Schedule change is stored on that assistant line. See
+  for a Schedule change is stored on that assistant line. A Skill
+  upsert or delete, and a Bot self-settings update of name, label, or
+  description, append a system Chat line (plain string, no parts). See
   [ADR 0030](adr/0030-chat-cards-module-catalog.md). Sheet id `kitchen` opens the
   Kitchen Module: pantry, one recipe, and a cooked log with an XP
   counter, in a `KitSheet`. See
@@ -477,14 +479,15 @@ section above. Turn tools are not on those lists.
 ## Chat Cards
 
 Decided in [ADR 0030](adr/0030-chat-cards-module-catalog.md). This Host
-injects Schedule Cards, Skill Cards, and self-settings Cards. This
-monorepo does not ship a stock Module package, a `packages/modules/`
-seed, Host-bundled Apply, or an Open-Meteo Module.
+injects Schedule Chat Cards. A successful Skill upsert or delete, and
+a Bot self-settings update of name, label, or description, append one
+system Chat line. This monorepo does not ship a stock Module package,
+a `packages/modules/` seed, Host-bundled Apply, or an Open-Meteo
+Module.
 
 - **Chat Card.** A Kit Card in the thread, one assistant part of kind
-  `card` on `messages.parts_json`. Card kinds are `schedule`, `skill`,
-  and `bot`. Kind `bot` is the self-settings Card. The Host injects a
-  Schedule Card after a successful `dostigus_schedules_create`,
+  `card` on `messages.parts_json`. The card kind is `schedule`. The
+  Host injects it after a successful `dostigus_schedules_create`,
   `dostigus_schedules_update`, `dostigus_schedules_pause`,
   `dostigus_schedules_resume`, or `dostigus_schedules_delete`. List
   injects a Card only with `intent: set` when an enabled row for that
@@ -492,21 +495,22 @@ seed, Host-bundled Apply, or an Open-Meteo Module.
   weekdays. Create against that row does not insert another. The Card
   body is «уже стоит». One turn keeps one Schedule Card per Schedule
   id. Pause and Изменить open Sheet id `schedule` for that row. Delete
-  confirms inside the Sheet. The Host injects a Skill Card after a
-  successful `dostigus_skills_upsert` or `dostigus_skills_delete`.
-  `dostigus_skills_list` injects nothing. The title is the Skill id.
-  Upsert body is the first line of instructions when it fits the part
-  label cap, otherwise «записан». Delete body is «Удалено». One turn
-  keeps one Skill Card per Skill id. Изменить opens Sheet id `skill`
-  (id and instructions; save is upsert; delete confirms). The Host
-  injects a self-settings Card after a successful
+  confirms inside the Sheet. The model does not emit the part. There
+  is no Card after Apply. There is no Card kind `skill` or `bot`.
+- **Skill and self-settings lines.** After a successful
+  `dostigus_skills_upsert`, `dostigus_skills_delete`, or
   `dostigus_bots_update` that sets name and/or label and/or
-  description. `dostigus_bots_list` and `dostigus_bots_get` inject
-  nothing. Avatar or Model tier alone injects nothing. The title is
-  the Bot name. The body is the label when it is set and fits the
-  cap, otherwise «обновлено». Изменить opens Sheet id `bot`, the
-  existing Bot Параметры closet. The model does not emit the part.
-  There is no Card after Apply.
+  description, the Host appends one system Chat line on that
+  bot-thread. The line is plain text with no parts, the same family
+  as a Wake. Upsert is `Skill · <id> · <first instruction line>` or
+  `Skill · <id> · записан` when that line does not fit the part label
+  cap. Delete is `Skill · <id> · Удалено`. A Bot update is
+  `Бот · <name> · <label>` or `Бот · <name> · обновлено` when the
+  label is empty or too long. `dostigus_skills_list`,
+  `dostigus_bots_list`, and `dostigus_bots_get` write nothing. Avatar
+  or Model tier alone writes nothing. There is no Sheet id `skill`
+  from a Card, and no Изменить button on these lines. One success
+  appends one line. A later success appends another.
 - **Capability gaps.** Skills upsert, Schedule tools, and Bot
   self-settings already in Chat
   ([ADR 0028](adr/0028-bot-self-settings-via-chat.md)) close a missing
@@ -526,9 +530,9 @@ seed, Host-bundled Apply, or an Open-Meteo Module.
   with the Skills tools. This seed is in this Host. It is
   insert-if-missing and does not call `dostigus_skills_upsert` or
   `upsertBotSkill`. It is not a Module package, not an MCP
-  tool, and not `packages/modules/`. Chat Cards for Skill upsert and
-  delete, and for `dostigus_bots_update`, are in the Chat Cards
-  section above.
+  tool, and not `packages/modules/`. Chat Cards above stay
+  Schedule-only. Skill and self-settings success is the system line
+  in this section.
 
 ## Self-host (compose)
 
@@ -564,9 +568,9 @@ and [`docs/deploy.md`](deploy.md)).
 - Arbitrary in-cluster sandbox code
 - Full Card catalog inside a bubble (tables, forms). A button and a
   status chip on an assistant bubble are
-  [ADR 0025](adr/0025-chat-bubble-parts.md). Schedule, Skill, and
-  self-settings Chat Cards are
+  [ADR 0025](adr/0025-chat-bubble-parts.md). Schedule Chat Cards are
   [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are in this Host.
+  Skill and self-settings success is a system Chat line in that record.
   Assistant Markdown stays
   [ADR 0022](adr/0022-chat-assistant-markdown.md)
 - Streaming the assistant bubble token-by-token, MCP tool names or

@@ -41,6 +41,7 @@ import {
   schedulesResume,
   schedulesUpdate,
 } from './schedule-tools'
+import { writeSelfSettingsNotice } from './self-settings-notice'
 import { turnsGet, turnsList } from './turn-tools'
 
 export type PlatformToolSpec = {
@@ -450,8 +451,17 @@ export function invokeChatMcpTool(input: {
     const ctx: ScheduleToolContext = { turnBotId: input.turnBotId }
     const result = spec.run(parsed, input.store, viewer, ctx)
     if (input.cards) {
-      noteToolCard(input.cards, spec.name, result, parsed)
+      noteToolCard(input.cards, spec.name, result)
     }
+    writeSelfSettingsNotice({
+      store: input.store,
+      personId: input.personId,
+      role: input.role,
+      turnBotId: input.turnBotId,
+      name: spec.name,
+      result,
+      args: parsed,
+    })
     logChatTool(spec.name, 'ok')
     return { ok: true, name: spec.name, content: mcpJson(result) }
   } catch (error) {
