@@ -263,7 +263,7 @@
                   rows="1"
                   maxlength="16000"
                   :placeholder="pendingAttachments.length > 0
-                    ? 'Добавьте сообщение или просто отправьте.'
+                    ? 'Добавьте сообщение или просто отправьте'
                     : `Сообщение для ${bot?.name ?? 'Bot'}`"
                   :disabled="!bot"
                   @keydown.enter.exact.prevent="send"
