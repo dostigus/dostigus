@@ -72,8 +72,8 @@ _Avoid_: tool name, status string, Store row.
 **Turn**:
 One Host Bot Chat turn: one Bot LLM tool loop, the same span as one
 Activity session. Trigger is `user`, `wake`, or `mention`. The row is
-ops meta (outcome, phase times, tool names). It is not a Chat line and
-not an Activity row.
+ops meta (outcome, phase times, tool names, modelId, modelTier,
+visionParts). It is not a Chat line and not an Activity row.
 _Avoid_: trace, span, log (unqualified), transcript.
 
 **Turn journal**:
