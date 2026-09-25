@@ -26,8 +26,13 @@ export type OpenAiToolCall = {
   }
 }
 
+export type OpenAiUserContentPart
+  = | { type: 'text', text: string }
+    | { type: 'image_url', image_url: { url: string, detail: 'auto' } }
+
 export type OpenAiChatMessage
-  = | { role: 'system' | 'user' | 'assistant', content: string }
+  = | { role: 'system' | 'assistant', content: string }
+    | { role: 'user', content: string | OpenAiUserContentPart[] }
     | { role: 'assistant', content: string | null, tool_calls: OpenAiToolCall[] }
     | { role: 'tool', tool_call_id: string, content: string }
 

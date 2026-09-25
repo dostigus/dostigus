@@ -73,7 +73,7 @@ export default defineNuxtConfig({
     },
     externals: {
       inline: ['@dostigus/db', '@dostigus/shared', '@dostigus/ui-kit'],
-      external: ['node:sqlite'],
+      external: ['node:sqlite', 'sharp'],
     },
   },
 })

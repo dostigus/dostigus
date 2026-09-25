@@ -1,3 +1,4 @@
+import type { Artifact, Message } from '@dostigus/shared'
 import {
   CHAT_MCP_TOOL_MAX_ITERATIONS,
   LLM_GATEWAY_AUTH_ERROR_REPLY,
@@ -7,6 +8,9 @@ import {
   MEMBER_GATEWAY_AUTH_ERROR_REPLY,
   MEMBER_GATEWAY_EMPTY_ERROR_REPLY,
   MEMBER_GATEWAY_TRANSIENT_ERROR_REPLY,
+  VISION_EMPTY_CONTENT,
+  VISION_JPEG_MIME,
+  VISION_SOFT_NOTE,
 } from '@dostigus/shared'
 import { Agent, ProxyAgent } from 'undici'
 import { expect, it, vi } from 'vitest'
@@ -1056,4 +1060,248 @@ it('windows history to the last 40 Chat lines including the trigger', async () =
   expect(payload.messages[1]?.role).toBe('user')
   expect(payload.messages[1]?.content).toBe('line 2')
   expect(payload.messages.at(-1)?.content).toBe('line 41')
+})
+
+function jpegArtifact(id: string): Artifact {
+  return {
+    id,
+    filename: `${id}.jpg`,
+    mime: 'image/jpeg',
+    byteSize: 12,
+    createdAt: new Date().toISOString(),
+  }
+}
+
+function chatLine(input: {
+  id: string
+  role?: Message['role']
+  content: string
+  artifacts?: Artifact[]
+}): Message {
+  return {
+    id: input.id,
+    botId: 'b1',
+    role: input.role ?? 'user',
+    content: input.content,
+    createdAt: new Date().toISOString(),
+    personId: null,
+    parts: [],
+    artifacts: input.artifacts,
+  }
+}
+
+const TINY_JPEG = Uint8Array.from([0xFF, 0xD8, 0xFF, 0xD9])
+
+async function encodeTinyJpeg(): Promise<Uint8Array> {
+  return TINY_JPEG
+}
+
+async function readTinyJpeg(): Promise<Uint8Array> {
+  return TINY_JPEG
+}
+
+function userContent(message: { content?: unknown }) {
+  return message.content
+}
+
+it('keeps image parts off an allowlist miss and adds the soft RU note', async () => {
+  let body: unknown
+  const result = await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    history: [
+      chatLine({
+        id: 'u1',
+        content: 'Look\n\nAttached Artifacts:\n- a1.jpg (image/jpeg, 12 bytes, id a1)',
+        artifacts: [jpegArtifact('a1')],
+      }),
+    ],
+    env: {
+      ...GATEWAY_ENV,
+      LLM_MODEL: 'meta-llama/llama-3.1-70b',
+    },
+    fetchImpl: (async (_url, init) => {
+      body = JSON.parse(String(init?.body))
+      return completionResponse('I only see the name.')
+    }) as typeof fetch,
+    readArtifactBytes: readTinyJpeg,
+    encodeVisionJpeg: encodeTinyJpeg,
+  })
+  expect(result.via).toBe('llm')
+  const payload = body as { messages: Array<{ role: string, content: unknown }>, model: string }
+  expect(payload.model).toBe('meta-llama/llama-3.1-70b')
+  const trigger = payload.messages.at(-1)
+  expect(trigger?.role).toBe('user')
+  expect(typeof trigger?.content).toBe('string')
+  expect(trigger?.content).toContain(VISION_SOFT_NOTE)
+  expect(trigger?.content).toContain('a1.jpg')
+  expect(JSON.stringify(payload.messages)).not.toContain('image_url')
+  expect(JSON.stringify(payload)).not.toContain('data:image')
+})
+
+it('sends JPEG image_url parts on the triggering user line only', async () => {
+  let body: unknown
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    history: [
+      chatLine({
+        id: 'old',
+        content: 'Yesterday\n\nAttached Artifacts:\n- old.jpg (image/jpeg, 12 bytes, id old)',
+        artifacts: [jpegArtifact('old')],
+      }),
+      chatLine({
+        id: 'now',
+        content: 'Attached Artifacts:\n- now.jpg (image/jpeg, 12 bytes, id now)',
+        artifacts: [jpegArtifact('now')],
+      }),
+    ],
+    env: GATEWAY_ENV,
+    fetchImpl: (async (_url, init) => {
+      body = JSON.parse(String(init?.body))
+      return completionResponse('A red square.')
+    }) as typeof fetch,
+    readArtifactBytes: readTinyJpeg,
+    encodeVisionJpeg: encodeTinyJpeg,
+  })
+  const payload = body as { messages: Array<{ role: string, content: unknown }> }
+  expect(payload.messages).toHaveLength(3)
+  expect(payload.messages[1]?.role).toBe('user')
+  expect(payload.messages[1]?.content).toBe(
+    'Yesterday\n\nAttached Artifacts:\n- old.jpg (image/jpeg, 12 bytes, id old)',
+  )
+  expect(JSON.stringify(payload.messages[1])).not.toContain('image_url')
+  const trigger = userContent(payload.messages[2]!)
+  expect(Array.isArray(trigger)).toBe(true)
+  const parts = trigger as Array<{ type: string, text?: string, image_url?: { url: string, detail: string } }>
+  expect(parts[0]).toEqual({
+    type: 'text',
+    text: `${VISION_EMPTY_CONTENT}\n\nAttached Artifacts:\n- now.jpg (image/jpeg, 12 bytes, id now)`,
+  })
+  expect(parts[1]?.type).toBe('image_url')
+  expect(parts[1]?.image_url?.detail).toBe('auto')
+  expect(parts[1]?.image_url?.url.startsWith(`data:${VISION_JPEG_MIME};base64,`)).toBe(true)
+})
+
+it('keeps those image parts on every tool-loop completion round', async () => {
+  const bodies: unknown[] = []
+  const result = await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    history: [
+      chatLine({
+        id: 'now',
+        content: 'Look\n\nAttached Artifacts:\n- now.jpg (image/jpeg, 12 bytes, id now)',
+        artifacts: [jpegArtifact('now')],
+      }),
+    ],
+    env: GATEWAY_ENV,
+    fetchImpl: (async (_url, init) => {
+      const body = JSON.parse(String(init?.body))
+      bodies.push(body)
+      if (bodies.length === 1) {
+        return new Response(JSON.stringify({
+          choices: [{
+            message: {
+              tool_calls: [{
+                id: 'call_1',
+                type: 'function',
+                function: { name: 'dostigus_messages_list', arguments: '{}' },
+              }],
+            },
+          }],
+        }), { status: 200 })
+      }
+      return completionResponse('Saw the photo.')
+    }) as typeof fetch,
+    invokeTool: async (name) => ({
+      ok: true,
+      name,
+      content: '{"messages":[]}',
+    }),
+    readArtifactBytes: readTinyJpeg,
+    encodeVisionJpeg: encodeTinyJpeg,
+  })
+  expect(result.content).toBe('Saw the photo.')
+  expect(bodies).toHaveLength(2)
+  for (const body of bodies) {
+    const messages = (body as { messages: Array<{ role: string, content: unknown }> }).messages
+    const user = messages.find((message) => message.role === 'user')
+    expect(Array.isArray(user?.content)).toBe(true)
+    expect(JSON.stringify(user?.content)).toContain('image_url')
+    expect(JSON.stringify(user?.content)).toContain(`data:${VISION_JPEG_MIME};base64,`)
+  }
+})
+
+it('retries a modality error once without image parts', async () => {
+  const logs = captureGatewayLogs()
+  const bodies: unknown[] = []
+  try {
+    const result = await completeAssistantReply({
+      botName: 'Notes',
+      modelTier: 'strong',
+      history: [
+        chatLine({
+          id: 'now',
+          content: 'Look\n\nAttached Artifacts:\n- now.jpg (image/jpeg, 12 bytes, id now)',
+          artifacts: [jpegArtifact('now')],
+        }),
+      ],
+      env: GATEWAY_ENV,
+      fetchImpl: (async (_url, init) => {
+        const body = JSON.parse(String(init?.body))
+        bodies.push(body)
+        if (bodies.length === 1) {
+          return new Response('This model does not support image input', { status: 400 })
+        }
+        return completionResponse('Name and size only.')
+      }) as typeof fetch,
+      readArtifactBytes: readTinyJpeg,
+      encodeVisionJpeg: encodeTinyJpeg,
+    })
+    expect(result).toEqual({ via: 'llm', content: 'Name and size only.' })
+    expect(bodies).toHaveLength(2)
+    expect(JSON.stringify((bodies[0] as { messages: unknown }).messages)).toContain('image_url')
+    const retryUser = (bodies[1] as { messages: Array<{ role: string, content: unknown }> })
+      .messages
+      .find((message) => message.role === 'user')
+    expect(typeof retryUser?.content).toBe('string')
+    expect(retryUser?.content).toContain(VISION_SOFT_NOTE)
+    expect(JSON.stringify(retryUser)).not.toContain('image_url')
+    const logged = logs.lines.join('\n')
+    expect(logged).toContain('LLM gateway request failed (modality); retrying')
+    expect(logged).not.toContain('sk-test-secret-key')
+    expect(logged).not.toContain('data:image')
+    expect(logged).not.toContain('does not support image')
+  } finally {
+    logs.restore()
+  }
+})
+
+it('does not attach image parts on a Wake', async () => {
+  let body: unknown
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    wake: true,
+    history: [
+      chatLine({
+        id: 'wake',
+        role: 'system',
+        content: 'Morning briefing',
+        artifacts: [jpegArtifact('wake')],
+      }),
+    ],
+    env: GATEWAY_ENV,
+    fetchImpl: (async (_url, init) => {
+      body = JSON.parse(String(init?.body))
+      return completionResponse('Morning.')
+    }) as typeof fetch,
+    readArtifactBytes: readTinyJpeg,
+    encodeVisionJpeg: encodeTinyJpeg,
+  })
+  const payload = body as { messages: Array<{ role: string, content: unknown }> }
+  expect(payload.messages.at(-1)?.role).toBe('system')
+  expect(payload.messages.at(-1)?.content).toBe('Morning briefing')
+  expect(JSON.stringify(payload.messages)).not.toContain('image_url')
 })

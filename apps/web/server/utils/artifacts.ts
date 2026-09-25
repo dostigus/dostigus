@@ -37,6 +37,7 @@ import {
   isImageArtifactMime,
   resolveArtifactMime,
   sanitizeArtifactFilename,
+  VISION_EMPTY_CONTENT,
   withArtifactLlmContent,
 } from '@dostigus/shared'
 import { hostHttpGetBytes } from './http-get'
@@ -429,9 +430,14 @@ export function annotateHistoryWithArtifacts<T extends {
         .filter((part): part is string => Boolean(part && part.trim()))
         .join('\n\n') || null
     }
+    const body = isTrigger
+      && !message.content.trim()
+      && artifacts.some((artifact) => isImageArtifactMime(artifact.mime))
+      ? VISION_EMPTY_CONTENT
+      : message.content
     return {
       ...message,
-      content: withArtifactLlmContent(message.content, artifacts, extract),
+      content: withArtifactLlmContent(body, artifacts, extract),
     }
   })
 }

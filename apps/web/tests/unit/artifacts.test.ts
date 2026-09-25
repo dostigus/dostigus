@@ -276,6 +276,33 @@ it('injects text extract on the triggering line only', () => {
   expect(fromDefault[0]?.content).toContain('hello from a note')
 })
 
+it('adds the empty-image placeholder on the triggering line', () => {
+  const artifact = {
+    id: 'img1',
+    filename: 'photo.jpg',
+    mime: 'image/jpeg',
+    byteSize: 12,
+    createdAt: new Date().toISOString(),
+  }
+  const older = {
+    id: 'old',
+    role: 'user' as const,
+    content: '',
+    artifacts: [artifact],
+  }
+  const trigger = {
+    id: 'now',
+    role: 'user' as const,
+    content: '',
+    artifacts: [artifact],
+  }
+  const annotated = annotateHistoryWithArtifacts([older, trigger])
+  expect(annotated[0]?.content).toContain('photo.jpg')
+  expect(annotated[0]?.content).not.toContain('(изображение)')
+  expect(annotated[1]?.content).toContain('(изображение)')
+  expect(annotated[1]?.content).toContain('photo.jpg')
+})
+
 it('writes bytesBase64 through putArtifactFromTool', async () => {
   const { store, owner, dir } = seedOwner()
   const artifact = await putArtifactFromTool(store, {
