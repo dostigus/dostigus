@@ -66,7 +66,9 @@
         {{ catalogErrorCopy(catalog?.error ?? 'network') }}
       </p>
       <p class="banner-detail">
-        Полка моделей недоступна. Bots продолжают думать через маршрутизацию OpenRouter.
+        {{ catalog?.keyAccepted === false
+          ? 'Полка моделей появится, когда OpenRouter примет ключ.'
+          : 'Полка моделей недоступна. Bots продолжают думать через маршрутизацию OpenRouter.' }}
       </p>
       <KitButton
         variant="ghost"
@@ -86,7 +88,7 @@
         v-for="card in cards"
         :key="card.slot"
         class="card"
-        :class="{ on: card.pinnedId && card.pinnedId === card.top?.id, empty: !card.top }"
+        :class="{ on: Boolean(card.pinnedId), empty: !card.top }"
       >
         <header class="card-head">
           <p class="slot">
@@ -160,10 +162,25 @@
               <button
                 type="button"
                 class="alt-pin"
+                :aria-label="card.pinnedId === alt.id ? `${alt.name} закреплена` : `Закрепить ${alt.name}`"
+                :title="card.pinnedId === alt.id ? 'Закреплена' : 'Закрепить'"
                 :disabled="busy || card.pinnedId === alt.id"
                 @click="emit('pin', card.slot, alt.id)"
               >
-                {{ card.pinnedId === alt.id ? '✓' : 'Закрепить' }}
+                <svg
+                  v-if="card.pinnedId === alt.id"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M6.5 12.5l3.6 3.5L17.5 8.5" />
+                </svg>
+                <svg
+                  v-else
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
               </button>
             </li>
           </ul>
@@ -373,7 +390,7 @@ function scoreOf(slot: OpenRouterShelfSlot, model: OpenRouterCatalogModel): numb
   gap: 0.7rem;
 }
 
-@container (min-width: 38rem) {
+@container (min-width: 30rem) {
   .cards {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -521,15 +538,31 @@ code {
 
 .alt-pin {
   appearance: none;
+  display: grid;
+  place-items: center;
   flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text);
   border-radius: 999px;
-  padding: 0.2rem 0.6rem;
-  font: inherit;
-  font-size: 0.74rem;
   cursor: pointer;
+}
+
+.alt-pin:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--text) 30%, var(--line));
+}
+
+.alt-pin svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .alts li.on .alt-pin {

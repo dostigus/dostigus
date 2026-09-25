@@ -25,13 +25,17 @@
       На сервере уже задан ключ. Пока он там, ответы идут через него, а не через эти настройки.
     </p>
 
-    <div class="grid">
+    <div
+      class="grid"
+      :class="{ 'story-first': providers.length === 0 }"
+    >
       <SettingsLlmFlow
         class="col-flow"
         :bots="bots"
         :providers="providers"
         :tier-binds="effectiveBinds"
         :names="names"
+        :rejected="rejectedIds"
       />
 
       <div class="col-config">
@@ -81,7 +85,7 @@
               </h2>
               <p class="p-meta">
                 <span>{{ provider.hasApiKey ? `Ключ ${provider.apiKeyMasked ?? 'сохранён'}` : 'Нет ключа' }}</span>
-                <span v-if="provider.kind === 'openrouter'">· {{ routingSummary(provider.id) }}</span>
+                <span v-if="provider.kind === 'openrouter' && routingSummary(provider.id)">· {{ routingSummary(provider.id) }}</span>
                 <span v-else-if="provider.baseUrl && provider.kind === 'openai-compatible'">· {{ provider.baseUrl }}</span>
               </p>
             </div>
@@ -387,7 +391,7 @@ import {
   pinOpenRouterTiers,
 } from '@dostigus/shared'
 import { KitButton } from '@dostigus/ui-kit'
-import { providerHealth, routingModeCopy, TIER_SITUATIONS } from '../../utils/provider-settings'
+import { providerHealth, TIER_SITUATIONS } from '../../utils/provider-settings'
 
 type Binds = Partial<Record<ModelTier, LlmTierBind>>
 
@@ -480,6 +484,10 @@ const names = computed(() => {
   return out
 })
 
+const rejectedIds = computed(() => Object.values(catalogs.value)
+  .filter((catalog) => catalog.keyAccepted === false)
+  .map((catalog) => catalog.providerId))
+
 const health = computed(() => providerHealth({
   providers: providers.value,
   tierBinds: effectiveBinds.value,
@@ -506,9 +514,11 @@ function providerOptionLabel(provider: LlmProviderPublic): string {
   return provider.apiKeyMasked ? `${label} · ${provider.apiKeyMasked}` : label
 }
 
+/** Only the unusual case. The routing card already says meta vs pinned. */
 function routingSummary(providerId: string): string {
-  const mode = openRouterRoutingMode(effectiveBinds.value, providerId)
-  return mode === 'none' ? 'не привязан к Model tier' : `маршрутизация: ${routingModeCopy(mode)}`
+  return openRouterRoutingMode(effectiveBinds.value, providerId) === 'none'
+    ? 'не привязан к Model tier'
+    : ''
 }
 
 function pinnedName(tier: ModelTier): string {
@@ -553,10 +563,21 @@ async function writeBinds(binds: Binds, success: string) {
   }
 }
 
-async function loadCatalog(providerId: string, refresh = false) {
-  if (loadingIds.value.includes(providerId)) {
-    return
+const catalogFlights = new Map<string, Promise<void>>()
+
+function loadCatalog(providerId: string, refresh = false): Promise<void> {
+  const flying = catalogFlights.get(providerId)
+  if (flying) {
+    return flying
   }
+  const flight = fetchCatalog(providerId, refresh).finally(() => {
+    catalogFlights.delete(providerId)
+  })
+  catalogFlights.set(providerId, flight)
+  return flight
+}
+
+async function fetchCatalog(providerId: string, refresh: boolean) {
   loadingIds.value = [...loadingIds.value, providerId]
   try {
     const result = await $fetch<{ catalog: OpenRouterCatalogPublic }>(
@@ -630,11 +651,22 @@ async function addProvider(input: { kind: LlmProviderKind, apiKey: string, baseU
     firstAdd.value?.reset()
     nextAdd.value?.reset()
     adding.value = false
-    say(saved.providers.length === 1
-      ? 'Ключ сохранён. Bots уже могут думать.'
-      : 'Provider добавлен. Назначьте ему Model tiers ниже, если нужно.')
-    if (input.kind === 'openrouter') {
-      void loadCatalog(id)
+    const sole = saved.providers.length === 1
+    if (input.kind !== 'openrouter') {
+      say(sole
+        ? 'Ключ сохранён. Нажмите «Проверить», чтобы убедиться, что он работает.'
+        : 'Provider добавлен. Назначьте ему Model tiers ниже, если нужно.')
+      return
+    }
+    say('Ключ сохранён. Проверяем…')
+    await loadCatalog(id)
+    const accepted = catalogs.value[id]?.keyAccepted
+    if (accepted === false) {
+      flash.value = null
+    } else if (sole) {
+      say('Ключ сохранён. Bots уже могут думать.')
+    } else {
+      say('Provider добавлен. Назначьте ему Model tiers ниже, если нужно.')
     }
   } catch (error) {
     say(errorText(error, 'Could not save Settings.'), true)
@@ -850,13 +882,14 @@ h1 {
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
 }
 
 .col-flow {
   order: 2;
+  min-width: 0;
 }
 
 .col-config {
@@ -867,10 +900,14 @@ h1 {
   gap: 1rem;
 }
 
-@container (min-width: 60rem) {
+.story-first .col-flow {
+  order: 0;
+}
+
+@container (min-width: 54rem) {
   .grid {
-    grid-template-columns: minmax(17rem, 21rem) minmax(0, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: minmax(15.5rem, 19rem) minmax(0, 1fr);
+    gap: 1.4rem;
   }
 
   .col-flow {

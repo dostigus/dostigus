@@ -58,7 +58,7 @@
       >
         <span
           class="dot"
-          :class="row.ready ? 'ready' : 'idle'"
+          :class="row.state"
           aria-hidden="true"
         />
         <div class="tier-copy">
@@ -71,16 +71,16 @@
           </p>
           <p
             class="tier-bind"
-            :title="row.bind ? `${row.bind.provider} · ${row.bind.policy}` : undefined"
+            :class="{ none: !row.bind, pinned: row.bind?.pinned }"
+            :title="row.bind ? bindTitle(row.bind) : undefined"
           >
             <template v-if="row.bind">
               <span class="bind-provider">{{ row.bind.provider }}</span>
               <span class="bind-policy">{{ row.bind.policy }}</span>
             </template>
-            <span
-              v-else
-              class="bind-none"
-            >Не задан</span>
+            <template v-else>
+              Не задан
+            </template>
           </p>
         </div>
       </li>
@@ -130,6 +130,8 @@ const props = defineProps<{
   providers: Array<{ id: string, kind: LlmProviderKind, hasApiKey: boolean }>
   tierBinds: Partial<Record<ModelTier, LlmTierBind>>
   names: Record<string, string>
+  /** Providers whose key the soft probe saw rejected. */
+  rejected?: string[]
 }>()
 
 const shownBots = computed(() => props.bots.slice(0, 5))
@@ -151,12 +153,19 @@ const botNames = computed(() => {
 const rows = computed(() => TIER_SITUATIONS.map((situation) => {
   const bind = props.tierBinds[situation.tier]
   const provider = props.providers.find((entry) => entry.id === bind?.providerId)
+  const rejected = Boolean(provider && props.rejected?.includes(provider.id))
   return {
     ...situation,
     bind: bindCopy(bind, props.providers, props.names),
-    ready: Boolean(bind && provider?.hasApiKey),
+    state: !bind || !provider?.hasApiKey ? 'idle' : rejected ? 'bad' : 'ready',
   }
 }))
+
+function bindTitle(bind: { provider: string, policy: string, pinned: boolean }): string {
+  return bind.pinned
+    ? `${bind.provider} · закреплена ${bind.policy}`
+    : `${bind.provider} · маршрутизация ${bind.policy}`
+}
 
 const providerLabels = computed(() => {
   const labels = props.providers
@@ -283,6 +292,11 @@ h2 {
   border: 1.5px solid var(--text-muted);
 }
 
+.dot.bad {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
 .tier-copy {
   min-width: 0;
   flex: 1;
@@ -316,33 +330,54 @@ code {
 
 .tier-bind {
   margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--live) 30%, var(--line));
+  background: color-mix(in srgb, var(--live) 8%, transparent);
+  font-size: 0.76rem;
+  overflow: hidden;
 }
 
 .bind-provider,
-.bind-policy,
-.bind-none {
+.bind-policy {
   padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.bind-provider {
+  flex: none;
+  color: var(--text-muted);
+  border-right: 1px solid color-mix(in srgb, var(--live) 25%, var(--line));
+}
+
 .bind-policy {
-  border-color: transparent;
-  background: color-mix(in srgb, var(--live) 14%, transparent);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: color-mix(in srgb, var(--live) 70%, var(--text));
 }
 
-.bind-none {
-  color: var(--text-muted);
+.tier-bind.pinned {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.tier-bind.pinned .bind-provider {
+  border-right-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+.tier-bind.pinned .bind-policy {
+  color: color-mix(in srgb, var(--accent) 55%, var(--text));
+}
+
+.tier-bind.none {
+  padding: 0.1rem 0.55rem;
   border-style: dashed;
+  border-color: var(--line);
+  background: transparent;
+  color: var(--text-muted);
 }
 
 .plug {

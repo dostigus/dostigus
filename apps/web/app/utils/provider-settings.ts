@@ -176,19 +176,19 @@ export function bindCopy(
   bind: LlmTierBind | undefined,
   providers: ReadonlyArray<{ id: string, kind: LlmProviderKind }>,
   names: Readonly<Record<string, string>> = {},
-): { provider: string, policy: string } | null {
+): { provider: string, policy: string, pinned: boolean } | null {
   if (!bind) {
     return null
   }
   const provider = providers.find((entry) => entry.id === bind.providerId)
   const providerLabel = provider ? LLM_PROVIDER_KIND_LABELS[provider.kind] : 'Provider'
   if (bind.policy.kind === 'free') {
-    return { provider: providerLabel, policy: 'маршрутизация Free' }
+    return { provider: providerLabel, policy: 'Free', pinned: false }
   }
   if (bind.policy.kind === 'auto') {
-    return { provider: providerLabel, policy: 'маршрутизация Auto' }
+    return { provider: providerLabel, policy: 'Auto', pinned: false }
   }
-  return { provider: providerLabel, policy: names[bind.policy.modelId] ?? bind.policy.modelId }
+  return { provider: providerLabel, policy: names[bind.policy.modelId] ?? bind.policy.modelId, pinned: true }
 }
 
 /** Case-insensitive match on name or id; every word must hit. */

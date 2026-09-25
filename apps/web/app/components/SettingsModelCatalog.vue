@@ -283,7 +283,9 @@ const tierRows = computed(() => TIER_SITUATIONS.map((situation) => {
   return {
     tier: situation.tier,
     title: situation.title,
-    policy: !copy ? 'Не задан' : here ? copy.policy : `${copy.provider} · ${copy.policy}`,
+    policy: !copy
+      ? 'Не задан'
+      : `${here ? '' : `${copy.provider} · `}${copy.pinned ? copy.policy : `маршрутизация ${copy.policy}`}`,
     pinned: here && bind?.policy.kind === 'model',
   }
 }))

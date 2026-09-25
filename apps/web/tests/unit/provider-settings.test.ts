@@ -108,9 +108,9 @@ describe('copy helpers', () => {
 
   it('names a pinned bind from the catalog', () => {
     const providers = [{ id: 'or', kind: 'openrouter' as const }]
-    expect(bindCopy(meta.strong, providers)).toEqual({ provider: 'OpenRouter', policy: 'маршрутизация Auto' })
+    expect(bindCopy(meta.strong, providers)).toEqual({ provider: 'OpenRouter', policy: 'Auto', pinned: false })
     expect(bindCopy({ providerId: 'or', policy: { kind: 'model', modelId: 'lab/x' } }, providers, { 'lab/x': 'Lab X' }))
-      .toEqual({ provider: 'OpenRouter', policy: 'Lab X' })
+      .toEqual({ provider: 'OpenRouter', policy: 'Lab X', pinned: true })
     expect(bindCopy(undefined, providers)).toBeNull()
   })
 

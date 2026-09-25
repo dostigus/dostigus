@@ -81,8 +81,8 @@
 definePageMeta({ layout: 'host' })
 
 const SETTINGS_PAGES = [
-  { to: '/settings/providers', label: 'Провайдеры', hint: 'LLM, на которой думают Bots', icon: 'providers' },
-  { to: '/settings/other', label: 'Прочее', hint: 'Часовой пояс и http allowlist', icon: 'other' },
+  { to: '/settings/providers', label: 'Провайдеры', hint: 'LLM для Bots', icon: 'providers' },
+  { to: '/settings/other', label: 'Прочее', hint: 'Часовой пояс, http', icon: 'other' },
 ] as const
 
 const route = useRoute()
@@ -99,6 +99,8 @@ useHead(() => ({
   min-height: 0;
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
+  container-name: settings;
 }
 
 .top {
@@ -128,17 +130,15 @@ useHead(() => ({
   flex: 1;
   min-height: 0;
   display: flex;
-  container-type: inline-size;
-  container-name: settings;
 }
 
 .tabs {
   flex: none;
-  width: 15rem;
+  width: 13rem;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  padding: 1.1rem 0.7rem;
+  padding: 1.1rem 0.6rem;
   border-right: 1px solid var(--line-soft);
   overflow: auto;
 }
@@ -214,7 +214,7 @@ useHead(() => ({
   min-width: 0;
   min-height: 0;
   overflow: auto;
-  padding: 1.6rem 1.6rem 3rem;
+  padding: 1.5rem 1.4rem 3rem;
 }
 
 @container settings (max-width: 46rem) {
@@ -224,6 +224,7 @@ useHead(() => ({
 
   .tabs {
     width: auto;
+    flex: none;
     flex-direction: row;
     gap: 0.4rem;
     padding: 0.6rem 0.9rem;
