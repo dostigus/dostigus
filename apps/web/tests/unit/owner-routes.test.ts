@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
+import { isOwnerPath } from '../../app/utils/owner-paths'
 
 const apiRoot = join(import.meta.dirname, '../../server/api')
 
@@ -69,6 +70,7 @@ it('keeps Bot writes, Settings, and Members with the Owner', () => {
     'settings/llm-gateway.get.ts',
     'settings/llm-gateway.put.ts',
     'settings/llm-gateway/ping.post.ts',
+    'settings/llm-gateway/providers/[id]/catalog.get.ts',
     'settings/timezone.get.ts',
     'settings/timezone.put.ts',
     'settings/http-allowlist.get.ts',
@@ -156,6 +158,22 @@ it('invokes Chat MCP tools in-process from the Host message route', () => {
   expect(src).toContain('requireHostSession')
   expect(src).toContain('setChatActivityPhase')
   expect(src).toContain('clearChatActivityPhase')
+})
+
+it('sends a Member away from /settings and every /settings/... page', () => {
+  expect(isOwnerPath('/settings')).toBe(true)
+  expect(isOwnerPath('/settings/providers')).toBe(true)
+  expect(isOwnerPath('/settings/other')).toBe(true)
+  expect(isOwnerPath('/members')).toBe(true)
+  expect(isOwnerPath('/settingsx')).toBe(false)
+  expect(isOwnerPath('/bots/preview')).toBe(false)
+  expect(isOwnerPath('/')).toBe(false)
+  const src = readFileSync(
+    join(import.meta.dirname, '../../app/middleware/owner.global.ts'),
+    'utf8',
+  )
+  expect(src).toContain('isOwnerPath(to.path)')
+  expect(src).not.toContain('OWNER_PATHS.has')
 })
 
 it('keeps Invite links reachable while logged out', () => {

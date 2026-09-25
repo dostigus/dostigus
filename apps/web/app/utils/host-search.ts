@@ -52,10 +52,18 @@ export function hostSettingsCatalog(input: {
     entries.push(
       {
         id: 'settings',
-        title: 'Settings',
-        subtitle: 'OpenRouter key, Model tier, and http allowlist',
-        keywords: ['openrouter', 'api key', 'model tier', 'gateway', 'timezone', 'allowlist', 'http'],
-        href: '/settings',
+        title: 'Провайдеры',
+        subtitle: 'Settings · OpenRouter key, models, and Model tiers',
+        keywords: ['settings', 'provider', 'openrouter', 'api key', 'model', 'model tier', 'gateway', 'провайдеры'],
+        href: '/settings/providers',
+        botId: null,
+      },
+      {
+        id: 'settings-other',
+        title: 'Прочее',
+        subtitle: 'Settings · Cluster timezone and http allowlist',
+        keywords: ['settings', 'timezone', 'allowlist', 'http', 'прочее'],
+        href: '/settings/other',
         botId: null,
       },
       {

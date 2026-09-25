@@ -1,7 +1,7 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { ChatPart } from '@dostigus/shared'
 import type { HostSessionUser } from './owner-auth'
-import { addKitchenPantry, botThreadIdFor, createBot, createMember, createMessengerThread, createSchedule, findMemberSecretByLogin, findOwnerSecretByLogin, finishTurn, getBot, getKitchenRecipe, grantBot, insertMessage, insertThreadLine, listBots, listKitchenCooked, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, markKitchenCooked, ownerExists, pauseSchedule, saveKitchenRecipe, startTurn } from '@dostigus/db'
+import { addKitchenPantry, botThreadIdFor, createBot, createMember, createMessengerThread, createSchedule, findMemberSecretByLogin, findOwnerSecretByLogin, finishTurn, getBot, getKitchenRecipe, getLlmGatewaySettings, grantBot, insertMessage, insertThreadLine, listBots, listKitchenCooked, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, markKitchenCooked, ownerExists, pauseSchedule, saveKitchenRecipe, startTurn, upsertLlmGatewaySettings } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID, HOST_SCHEDULE_SHEET_ID } from '../../app/utils/host-sheets'
 import { previewChatLocation } from '../../app/utils/preview-hold'
@@ -126,11 +126,52 @@ export function previewMembersRequested(value: unknown): boolean {
 }
 
 /**
- * `?settings=1` on GET. Opens Settings for the signed-in preview Owner
- * (Cluster timezone and http allowlist). HEAD ignores this query.
+ * `?settings=1` on GET. Opens Settings → Провайдеры for the signed-in
+ * preview Owner. HEAD ignores this query.
  */
 export function previewSettingsRequested(value: unknown): boolean {
   return previewQueryOn(value)
+}
+
+/** Fixture OpenRouter Provider for `?providers=1`. Not a working key. */
+export const PREVIEW_OPENROUTER_PROVIDER_ID = 'preview-openrouter'
+export const PREVIEW_OPENROUTER_KEY = 'sk-or-v1-preview-fixture'
+
+/**
+ * `?providers=1` on GET. Saves the fixture OpenRouter Provider when the
+ * Store has none, then opens Settings → Провайдеры. On `nuxt dev` with
+ * the preview gate open, the catalog route skips the key probe for that
+ * fixture only, so the shelf ranks the real public OpenRouter list.
+ * Chat on that fixture key still fails like any rejected key.
+ * HEAD ignores this query.
+ */
+export function previewProvidersRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
+export function ensurePreviewOpenRouterProvider(store: OpenedStore): void {
+  const current = getLlmGatewaySettings(store)
+  if ((current.providers ?? []).length > 0 || current.apiKey) {
+    return
+  }
+  upsertLlmGatewaySettings(store, {
+    providers: [{
+      id: PREVIEW_OPENROUTER_PROVIDER_ID,
+      kind: 'openrouter',
+      apiKey: PREVIEW_OPENROUTER_KEY,
+      baseUrl: null,
+      defaultModel: null,
+    }],
+  })
+}
+
+/** Preview fixture only: the catalog trusts this key without `GET /key`. */
+export function previewCatalogSkipsKeyProbe(input: {
+  dev: boolean
+  flag: string | undefined
+  providerId: string
+}): boolean {
+  return previewSeedAllowed(input) && input.providerId === PREVIEW_OPENROUTER_PROVIDER_ID
 }
 
 /**
@@ -194,7 +235,8 @@ export function previewThreadAsMember(value: unknown): boolean {
 
 /**
  * GET /preview-seed redirect.
- * `members=1` opens Members. `settings=1` opens Settings. A room opens
+ * `members=1` opens Members. `settings=1` and `providers=1` open
+ * Settings → Провайдеры. A room opens
  * that Thread. Threads open `/` for the Owner and `/bots/<id>` for the
  * Member. Otherwise Chat, including `hold` and `activity`. Members,
  * settings, threads, and rooms do not keep `activity`.
@@ -204,6 +246,7 @@ export function previewSeedRedirect(input: {
   roomId?: string | null
   members?: unknown
   settings?: unknown
+  providers?: unknown
   threads?: unknown
   rooms?: unknown
   as?: unknown
@@ -214,8 +257,8 @@ export function previewSeedRedirect(input: {
   if (previewMembersRequested(input.members)) {
     return '/members'
   }
-  if (previewSettingsRequested(input.settings)) {
-    return '/settings'
+  if (previewSettingsRequested(input.settings) || previewProvidersRequested(input.providers)) {
+    return '/settings/providers'
   }
   if (previewRoomsRequested(input.rooms) && input.roomId) {
     return `/threads/${input.roomId}`
