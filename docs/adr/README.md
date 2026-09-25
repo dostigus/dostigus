@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0035, so the next ADR
-is **0036**. Name it `0036-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0036, so the next ADR
+is **0037**. Name it `0037-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one.
 
@@ -35,7 +35,7 @@ English.
 | [0001](0001-platform-git-vs-in-cluster-bot-packages.md) | Platform git vs in-cluster bot packages |
 | [0002](0002-host-ui-kit-and-sheets.md) | Host UI kit and Sheets |
 | [0003](0003-mcp-as-bot-store-contract.md) | MCP as the Bot ↔ store contract |
-| [0004](0004-llm-gateway-tiers.md) | LLM gateway and model tiers (amended 2026-09-24: one transient retry, Russian error copy; Chat assembly [0032](0032-chat-llm-context-assembly.md); amended 2026-09-25: triggering-line image parts [0035](0035-image-artifact-vision.md)) |
+| [0004](0004-llm-gateway-tiers.md) | LLM gateway and model tiers (amended 2026-09-24: one transient retry, Russian error copy; Chat assembly [0032](0032-chat-llm-context-assembly.md); amended 2026-09-25: triggering-line image parts [0035](0035-image-artifact-vision.md); amended 2026-09-25: bind / resolve / escalate [0036](0036-llm-providers-tier-resolve-escalate.md); OpenRouter Policy `free` on cheap/toy for casual supersedes “roulette is toy only”) |
 | [0005](0005-self-host-first.md) | Self-host first |
 | [0006](0006-day-1-declarative-modules.md) | Day-1 declarative modules (before arbitrary sandbox) |
 | [0007](0007-platform-image-tags.md) | Platform image tags |
@@ -60,10 +60,11 @@ English.
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
 | [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets; Wake tools [0032](0032-chat-llm-context-assembly.md)) |
 | [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat (amended 2026-09-24: closet Schedule list stays [0027](0027-bot-schedules.md); Skill `description` + catalog [0032](0032-chat-llm-context-assembly.md)) |
-| [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows; amended 2026-09-25: modelId / modelTier / visionParts observability; amended 2026-09-25: servedModelId + token usage on the Turn) |
+| [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows; amended 2026-09-25: modelId / modelTier / visionParts observability; amended 2026-09-25: servedModelId + token usage on the Turn; amended 2026-09-25: escalate may resolve more than once [0036](0036-llm-providers-tier-resolve-escalate.md); journal stays last successful / last attempted resolve + llmCallCount) |
 | [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create; Card «Изменить» opens closet detail; meta Skills catalog + read [0032](0032-chat-llm-context-assembly.md)) |
 | [0031](0031-host-http-get.md) | Host HTTP get and Cluster http allowlist (amended 2026-09-24: allowlist Chat tools behind expand [0032](0032-chat-llm-context-assembly.md); Bot HTTP egress [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md); soft retry / pursue-result in tool text + `platform-meta-http-get`) |
 | [0032](0032-chat-llm-context-assembly.md) | Chat LLM context assembly (amended 2026-09-24: slim + Wake gain `dostigus_artifacts_put`; no get tool [0034](0034-artifacts.md); amended 2026-09-25: triggering user message may use content parts [0035](0035-image-artifact-vision.md)) |
 | [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md) | Cluster outbound: LLM proxy vs Bot HTTP proxy (amended 2026-09-24: domain failover lists stay out of scope; soft policy is [0031](0031-host-http-get.md)) |
 | [0034](0034-artifacts.md) | Artifacts (amended 2026-09-25: image vision is [0035](0035-image-artifact-vision.md); no get tool stays) |
 | [0035](0035-image-artifact-vision.md) | Image Artifact vision |
+| [0036](0036-llm-providers-tier-resolve-escalate.md) | LLM Providers, tier resolve, and escalate |

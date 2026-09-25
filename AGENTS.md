@@ -7,7 +7,7 @@
    **Dostigus, Platform, Cluster, Owner, Member, Host, Chat, Card, Sheet, Kit,
    Brand, Sticker, Sheet shell, Bot, Orchestrator, Builder, Skill, Manifest,
    Module package, Store, Artifact, MCP surface, Job, Apply, LLM gateway,
-   Model tier, Household, Share link.**
+   Provider, Policy, Model tier, Household, Share link.**
    Prefer **Host** (Host shell is a synonym). Prefer **MCP surface** (MCP
    contract is its interface definition). A Bot is not a Module package. Avoid
    bare “cloud agent” — use Builder. Do not invent synonyms. All repo docs are
