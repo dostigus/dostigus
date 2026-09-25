@@ -62,6 +62,7 @@ export default defineEventHandler(async (event) => {
     const llmHistory = annotateHistoryWithArtifacts(history)
     const canEditManifest = canEditBot(bot, viewer)
     const expand = chatExpandKeywordHit(user.content)
+    const locale = await resolveEventLocale(event, store)
     const turn = openChatTurn({
       store,
       role,
@@ -69,6 +70,7 @@ export default defineEventHandler(async (event) => {
       personId,
       turnBotId: bot.id,
       expand,
+      locale,
     })
     const reply = await completeAssistantReply({
       botName: bot.name,
@@ -81,6 +83,7 @@ export default defineEventHandler(async (event) => {
       audience: role,
       canEditManifest,
       expand,
+      locale,
       tools: turn.tools(),
       invokeTool: turn.invokeTool,
       onActivity: (phase) => {

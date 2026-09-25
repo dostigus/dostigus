@@ -20,7 +20,21 @@ export default defineNuxtConfig({
   build: {
     transpile: ['@dostigus/ui-kit'],
   },
-  modules: ['@nuxt/fonts', '@nuxtjs/mcp-toolkit', 'nuxt-auth-utils'],
+  modules: ['@nuxt/fonts', '@nuxtjs/i18n', '@nuxtjs/mcp-toolkit', 'nuxt-auth-utils'],
+  i18n: {
+    strategy: 'no_prefix',
+    defaultLocale: 'en',
+    locales: [
+      { code: 'en', language: 'en', name: 'EN', file: 'en.json' },
+      { code: 'ru', language: 'ru', name: 'RU', file: 'ru.json' },
+    ],
+    langDir: 'locales',
+    vueI18n: 'i18n.config.ts',
+    detectBrowserLanguage: false,
+    compilation: {
+      strictMessage: false,
+    },
+  },
   mcp: {
     name: 'Dostigus',
     route: '/mcp',
@@ -35,6 +49,10 @@ export default defineNuxtConfig({
     // Sealed Host Owner session. NUXT_SESSION_PASSWORD (≥32 chars) is required in production.
     session: {
       password: process.env.NUXT_SESSION_PASSWORD || '',
+    },
+    public: {
+      // preview:host / shoot:preview always force Locale `en`.
+      previewSeed: process.env.DOSTIGUS_PREVIEW_SEED === '1',
     },
   },
   fonts: {

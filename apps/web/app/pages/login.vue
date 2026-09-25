@@ -2,15 +2,15 @@
   <HostAuthShell>
     <form @submit.prevent="submit">
       <p class="kicker">
-        Host
+        {{ $t('auth.login.kicker') }}
       </p>
-      <h1>Welcome back</h1>
+      <h1>{{ $t('auth.login.title') }}</h1>
       <p class="hint">
-        Sign in with your email or username.
+        {{ $t('auth.login.hint') }}
       </p>
 
       <label class="field">
-        <span>Email or username</span>
+        <span>{{ $t('auth.field.login') }}</span>
         <input
           v-model="login"
           type="text"
@@ -20,7 +20,7 @@
       </label>
 
       <label class="field">
-        <span>Password</span>
+        <span>{{ $t('auth.field.password') }}</span>
         <input
           v-model="password"
           type="password"
@@ -41,14 +41,15 @@
         class="solid"
         :disabled="busy"
       >
-        {{ busy ? 'Signing in…' : 'Sign in' }}
+        {{ busy ? $t('auth.login.submitBusy') : $t('auth.login.submit') }}
       </button>
     </form>
   </HostAuthShell>
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Dostigus · Sign in' })
+const { t } = useI18n()
+useHead({ title: () => t('auth.login.titleDoc') })
 
 const { fetch: refreshSession } = useUserSession()
 const login = ref('')
@@ -74,7 +75,7 @@ async function submit() {
     const fetchError = error as { data?: { statusMessage?: string }, statusMessage?: string }
     message.value = fetchError.data?.statusMessage
       ?? fetchError.statusMessage
-      ?? 'Could not sign in.'
+      ?? t('auth.error.fallbackSignIn')
   } finally {
     busy.value = false
   }

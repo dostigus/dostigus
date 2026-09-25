@@ -41,6 +41,7 @@ export type MemberRecord = {
   password_hash: string
   created_at: number
   disabled_at: number | null
+  locale: string | null
 }
 
 /**
@@ -178,6 +179,7 @@ export function toMember(row: MemberRecord): Member {
     username: row.username,
     createdAt: new Date(row.created_at).toISOString(),
     disabledAt: row.disabled_at == null ? null : new Date(row.disabled_at).toISOString(),
+    locale: row.locale ?? null,
   }
 }
 

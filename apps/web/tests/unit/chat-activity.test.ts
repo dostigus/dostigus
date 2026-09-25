@@ -18,7 +18,12 @@ it('maps a configured reply in flight to thinking until a phase arrives', () => 
   expect(chatActivityStatus({
     pending: true,
     gatewayConfigured: true,
+    locale: 'ru',
   })).toEqual({ kind: 'thinking', label: CHAT_ACTIVITY_THINKING })
+  expect(chatActivityStatus({
+    pending: true,
+    gatewayConfigured: true,
+  })).toEqual({ kind: 'thinking', label: 'Thinking…' })
   expect(CHAT_ACTIVITY_THINKING).toBe('Думает…')
   expect(CHAT_ACTIVITY_POLL_MS).toBe(400)
   expect(CHAT_ACTIVITY_PHASE_MIN_MS).toBe(300)
@@ -29,12 +34,14 @@ it('follows the polled phase on the same row', () => {
     pending: true,
     gatewayConfigured: true,
     phase: 'tool',
+    locale: 'ru',
   })).toEqual({ kind: 'tool', label: CHAT_ACTIVITY_TOOL })
   expect(CHAT_ACTIVITY_TOOL).toBe('Выполняет команду…')
   expect(chatActivityStatus({
     pending: true,
     gatewayConfigured: true,
     phase: 'typing',
+    locale: 'ru',
   })).toEqual({ kind: 'typing', label: CHAT_ACTIVITY_TYPING })
   expect(CHAT_ACTIVITY_TYPING).toBe('Печатает…')
 })
@@ -60,11 +67,13 @@ it('lets a preview force show tool or connect without a live reply', () => {
     pending: false,
     gatewayConfigured: false,
     forced: 'command',
+    locale: 'ru',
   })).toEqual({ kind: 'tool', label: CHAT_ACTIVITY_TOOL })
   expect(chatActivityStatus({
     pending: false,
     gatewayConfigured: false,
     forced: 'tool',
+    locale: 'ru',
   })).toEqual({ kind: 'tool', label: CHAT_ACTIVITY_TOOL })
   expect(chatActivityStatus({
     pending: true,
@@ -72,22 +81,24 @@ it('lets a preview force show tool or connect without a live reply', () => {
     phase: 'thinking',
     forced: 'connect',
     connectTarget: 'Expi',
+    locale: 'ru',
   })).toEqual({ kind: 'connect', label: 'Подключается к Expi' })
 })
 
 it('drops the connect target when it is blank', () => {
-  expect(connectActivityLabel('  ')).toBe(CHAT_ACTIVITY_CONNECT)
-  expect(connectActivityLabel(null)).toBe('Подключается…')
+  expect(connectActivityLabel('  ', 'ru')).toBe(CHAT_ACTIVITY_CONNECT)
+  expect(connectActivityLabel(null, 'ru')).toBe('Подключается…')
   expect(chatActivityStatus({
     pending: false,
     gatewayConfigured: false,
     forced: 'connect',
     connectTarget: '   ',
+    locale: 'ru',
   })?.label).toBe(CHAT_ACTIVITY_CONNECT)
 })
 
 it('keeps a long connect target on one short line', () => {
-  const label = connectActivityLabel('OpenRouter gateway name that should not run the full width of the thread')
+  const label = connectActivityLabel('OpenRouter gateway name that should not run the full width of the thread', 'ru')
   expect(label.startsWith('Подключается к ')).toBe(true)
   expect(label.endsWith('…')).toBe(true)
   expect(label.length).toBeLessThan(80)

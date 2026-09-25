@@ -5,6 +5,7 @@ declare module '#auth-utils' {
     username: string | null
     displayName: string
     role: 'owner' | 'member'
+    locale?: string | null
   }
 }
 

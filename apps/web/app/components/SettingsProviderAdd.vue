@@ -14,9 +14,9 @@
         alt=""
       />
       <div>
-        <h3>Подключите OpenRouter</h3>
+        <h3>{{ $t('settings.providers.add.connectOpenRouter') }}</h3>
         <p class="hint">
-          Один ключ — и Bots начинают думать. Модель OpenRouter подберёт сам, остальное по желанию.
+          {{ $t('settings.providers.add.connectHint') }}
         </p>
       </div>
     </div>
@@ -24,11 +24,11 @@
       v-else
       class="add-head"
     >
-      <h3>Новый Provider</h3>
+      <h3>{{ $t('settings.providers.add.newProvider') }}</h3>
       <button
         type="button"
         class="close"
-        aria-label="Отмена"
+        :aria-label="$t('common.cancel')"
         @click="emit('cancel')"
       >
         ×
@@ -59,7 +59,7 @@
       v-if="kind === 'openai-compatible'"
       class="field"
     >
-      <span>Base URL</span>
+      <span>{{ $t('settings.providers.add.baseUrl') }}</span>
       <input
         v-model="baseUrl"
         type="url"
@@ -71,7 +71,7 @@
 
     <div class="key-row">
       <label class="field grow">
-        <span>{{ kind === 'openrouter' ? 'Ключ OpenRouter' : 'API key' }}</span>
+        <span>{{ kind === 'openrouter' ? $t('settings.providers.add.openRouterKey') : $t('settings.providers.add.apiKey') }}</span>
         <input
           v-model="apiKey"
           type="password"
@@ -87,7 +87,7 @@
         type="submit"
         :disabled="busy || !apiKey.trim()"
       >
-        {{ busy ? 'Сохраняем…' : 'Сохранить' }}
+        {{ busy ? $t('settings.providers.add.saving') : $t('settings.providers.add.save') }}
       </KitButton>
     </div>
 
@@ -95,7 +95,7 @@
       v-if="kind !== 'openrouter'"
       class="field"
     >
-      <span>Model</span>
+      <span>{{ $t('settings.providers.add.model') }}</span>
       <input
         v-model="defaultModel"
         type="text"
@@ -103,7 +103,7 @@
         autocomplete="off"
         spellcheck="false"
       >
-      <span class="field-hint">Одна модель на все Model tiers, пока это единственный Provider.</span>
+      <span class="field-hint">{{ $t('settings.providers.add.modelHint') }}</span>
     </label>
 
     <div
@@ -114,7 +114,7 @@
         type="submit"
         :disabled="busy || !apiKey.trim() || (kind === 'openai-compatible' && !baseUrl.trim())"
       >
-        {{ busy ? 'Сохраняем…' : 'Сохранить' }}
+        {{ busy ? $t('settings.providers.add.saving') : $t('settings.providers.add.save') }}
       </KitButton>
     </div>
 
@@ -122,12 +122,12 @@
       v-if="kind === 'openrouter'"
       class="where"
     >
-      Ключ можно создать на
+      {{ $t('settings.providers.add.whereBefore') }}
       <a
         href="https://openrouter.ai/keys"
         target="_blank"
         rel="noopener noreferrer"
-      >openrouter.ai/keys</a>. Host хранит его у себя и не показывает в браузере.
+      >openrouter.ai/keys</a>{{ $t('settings.providers.add.whereAfter') }}
     </p>
 
     <button
@@ -136,7 +136,7 @@
       class="link"
       @click="other = true"
     >
-      Другой Provider: OpenAI или OpenAI-compatible
+      {{ $t('settings.providers.add.otherOpenAI') }}
     </button>
   </form>
 </template>

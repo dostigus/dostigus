@@ -19,6 +19,7 @@ export type PendingAttachment = {
 }
 
 export function useComposerAttachments() {
+  const { t } = useI18n()
   const items = ref<PendingAttachment[]>([])
   const fileInput = ref<HTMLInputElement | null>(null)
   const dropActive = ref(false)
@@ -101,7 +102,7 @@ export function useComposerAttachments() {
     } catch {
       items.value = items.value.map((item) => (
         item.localId === localId
-          ? { ...item, status: 'error', error: 'Upload failed' }
+          ? { ...item, status: 'error', error: t('chat.attachments.uploadFailed') }
           : item
       ))
     }

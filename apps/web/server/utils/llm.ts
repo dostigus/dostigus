@@ -34,6 +34,7 @@ import {
   startTierForSituation,
   STUB_ASSISTANT_REPLY,
 } from '@dostigus/shared'
+import { isHostLocale, tHost } from '@dostigus/ui-kit/locale'
 import { applyTriggeringVision, stripVisionImageParts } from './artifact-vision'
 import { chatMcpToolsAsOpenAi } from './mcp-platform-tools'
 import { isChatMcpTool } from './mcp-surface'
@@ -82,7 +83,11 @@ export function stubAssistantReply(audience: 'owner' | 'member' = 'owner'): stri
 export function gatewayErrorReply(
   audience: 'owner' | 'member' = 'owner',
   kind: LlmGatewayFailureKind = 'transient',
+  locale?: string | null,
 ): string {
+  if (isHostLocale(locale)) {
+    return tHost(locale, `chat.errorGateway.${audience}.${kind}`)
+  }
   return llmGatewayErrorReply(audience, kind)
 }
 
@@ -232,8 +237,10 @@ export async function completeAssistantReply(input: {
   readArtifactBytes?: VisionReadFn
   /** Test double. Production uses sharp. */
   encodeVisionJpeg?: VisionEncodeFn
+  locale?: string | null
 }): Promise<{ content: string, via: AssistantReplyVia }> {
   const audience = input.audience === 'member' ? 'member' : 'owner'
+  const locale = input.locale
   const creatorManifest = audience === 'member' && input.canEditManifest === true
   const env = readLlmGatewayEnv(input.env ?? process.env)
   const resolved = resolveClusterLlmGateway({
@@ -277,7 +284,7 @@ export async function completeAssistantReply(input: {
       modelTier: startTier,
       visionParts: false,
     })
-    return { content: gatewayErrorReply(audience, 'transient'), via: 'error' }
+    return { content: gatewayErrorReply(audience, 'transient', locale), via: 'error' }
   }
 
   let lastKind: LlmGatewayFailureKind = 'transient'
@@ -318,7 +325,7 @@ export async function completeAssistantReply(input: {
       }
       lastKind = 'empty'
       if (last) {
-        return { content: gatewayErrorReply(audience, 'empty'), via: 'error' }
+        return { content: gatewayErrorReply(audience, 'empty', locale), via: 'error' }
       }
     } catch (error) {
       lastKind = isGatewayRequestError(error) && error.failure === 'auth'
@@ -329,11 +336,11 @@ export async function completeAssistantReply(input: {
         console.error('LLM gateway request failed')
       }
       if (last) {
-        return { content: gatewayErrorReply(audience, lastKind), via: 'error' }
+        return { content: gatewayErrorReply(audience, lastKind, locale), via: 'error' }
       }
     }
   }
-  return { content: gatewayErrorReply(audience, lastKind), via: 'error' }
+  return { content: gatewayErrorReply(audience, lastKind, locale), via: 'error' }
 }
 
 export async function pingLlmGateway(input: {

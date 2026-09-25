@@ -78,6 +78,8 @@ export {
   getMember,
   listMembers,
   type MemberSecret,
+  seedMemberLocale,
+  updateMemberLocale,
 } from './members'
 export {
   backfillMetaSkillDescriptions,

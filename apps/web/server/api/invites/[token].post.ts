@@ -1,3 +1,5 @@
+import { seedMemberLocale } from '@dostigus/db'
+
 type AcceptBody = {
   displayName?: string
   password?: string
@@ -8,8 +10,10 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<AcceptBody>(event).catch(() => ({} as AcceptBody))
   try {
     await refuseSignedInInvite(event)
-    const member = await acceptHouseholdInvite(useStore(), token, body, hashPassword)
-    await startOwnerSession(event, toMemberSession(member))
+    const store = useStore()
+    const member = await acceptHouseholdInvite(store, token, body, hashPassword)
+    const seeded = seedMemberLocale(store, member.id, readLocaleCookie(event))
+    await startOwnerSession(event, toMemberSession(seeded))
     setResponseStatus(event, 201)
     return { member }
   } catch (error) {

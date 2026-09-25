@@ -29,3 +29,16 @@ export {
   assistantBubbleUsesMarkdown,
   renderChatMarkdown,
 } from './markdown'
+export {
+  DEFAULT_HOST_LOCALE,
+  HOST_LOCALE_COOKIE,
+  HOST_LOCALE_MESSAGES,
+  HOST_LOCALES,
+  type HostLocale,
+  type HostLocaleMessages,
+  type HostTranslateParams,
+  isHostLocale,
+  localeMessageKeys,
+  resolveHostLocale,
+  tHost,
+} from './locale'

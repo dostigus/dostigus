@@ -7,20 +7,20 @@
       v-if="loadError"
       class="banner"
     >
-      Could not open this Chat.
+      {{ $t('chat.loadError') }}
     </p>
     <p
       v-else-if="gatewayUnset"
       class="quiet-banner"
     >
       <template v-if="isOwner">
-        Replies stay quiet until you add an OpenRouter key.
+        {{ $t('chat.quietOwnerShort') }}
         <NuxtLink to="/settings/providers">
-          Settings
+          {{ $t('host.menu.settings') }}
         </NuxtLink>
       </template>
       <template v-else>
-        Replies stay quiet until the Owner adds an OpenRouter key.
+        {{ $t('chat.quietMember') }}
       </template>
     </p>
 
@@ -67,7 +67,7 @@
       <ol
         ref="threadEl"
         class="thread"
-        aria-label="Chat"
+        :aria-label="$t('chat.ariaChat')"
       >
         <li
           v-for="message in timeline"
@@ -122,7 +122,7 @@
           v-else-if="botPending"
           class="pending-mark"
           aria-live="polite"
-          aria-label="Replying"
+          :aria-label="$t('chat.aria.replying')"
         >
           <HostBotAvatar
             :name="bot?.name ?? 'Bot'"
@@ -138,10 +138,10 @@
           class="empty-chat"
         >
           <p class="empty-title">
-            Start the Chat
+            {{ $t('chat.emptyTitle') }}
           </p>
           <p class="empty-hint">
-            Say what this Bot is for.
+            {{ $t('chat.emptyHint') }}
           </p>
         </li>
       </ol>
@@ -151,7 +151,7 @@
         class="drop-mask"
         aria-hidden="true"
       >
-        Drop files here
+        {{ $t('chat.dropFiles') }}
       </div>
       <form
         ref="composerEl"
@@ -170,7 +170,7 @@
             :disabled="sending"
             @click="retry"
           >
-            Try again
+            {{ $t('chat.retry') }}
           </button>
         </p>
         <div class="composer-foot">
@@ -182,7 +182,7 @@
             <ul
               v-if="pendingAttachments.length"
               class="pending-chips"
-              aria-label="Attachments"
+              :aria-label="$t('chat.aria.attachments')"
             >
               <li
                 v-for="item in pendingAttachments"
@@ -215,11 +215,11 @@
                 <span
                   v-if="item.previewUrl && item.status !== 'ready'"
                   class="pending-veil"
-                >{{ item.status === 'uploading' ? 'Uploading…' : 'Failed' }}</span>
+                >{{ item.status === 'uploading' ? $t('chat.attachments.uploading') : $t('chat.attachments.failed') }}</span>
                 <button
                   type="button"
                   class="pending-remove"
-                  :aria-label="`Remove ${item.filename}`"
+                  :aria-label="$t('chat.attachments.remove', { file: item.filename })"
                   @click="removeAttachment(item.localId)"
                 >
                   <svg
@@ -244,8 +244,8 @@
                 type="button"
                 class="attach"
                 :disabled="!bot"
-                aria-label="Attach"
-                title="Attach"
+                :aria-label="$t('chat.aria.attach')"
+                :title="$t('chat.aria.attach')"
                 @click="pickFiles()"
               >
                 <svg
@@ -256,15 +256,15 @@
                 </svg>
               </button>
               <label class="draft">
-                <span class="sr-only">Message</span>
+                <span class="sr-only">{{ $t('chat.aria.message') }}</span>
                 <textarea
                   ref="draftEl"
                   v-model="draft"
                   rows="1"
                   maxlength="16000"
                   :placeholder="pendingAttachments.length > 0
-                    ? 'Добавьте сообщение или просто отправьте'
-                    : `Сообщение для ${bot?.name ?? 'Bot'}`"
+                    ? $t('chat.placeholderOrSend')
+                    : $t('chat.placeholderFor', { name: bot?.name ?? 'Bot' })"
                   :disabled="!bot"
                   @keydown.enter.exact.prevent="send"
                   @paste="onAttachPaste"
@@ -277,7 +277,7 @@
                 type="submit"
                 class="send"
                 :disabled="sending || !bot || attachmentsUploading"
-                aria-label="Send"
+                :aria-label="$t('chat.aria.send')"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -295,7 +295,7 @@
         v-if="showLatestJump"
         type="button"
         class="to-latest"
-        aria-label="Scroll to latest"
+        :aria-label="$t('chat.aria.scrollLatest')"
         @click="jumpToLatest"
       >
         <svg
@@ -315,7 +315,7 @@
     <KitSheet
       v-model:open="sheetOpen"
       :title="openSheetTitle"
-      :description="openSheet?.kind === 'kitchen' ? 'Pantry, one recipe, and a cooked log.' : undefined"
+      :description="openSheet?.kind === 'kitchen' ? $t('chat.sheet.kitchenDescription') : undefined"
     >
       <KitchenSheet v-if="openSheet?.kind === 'kitchen'" />
       <ScheduleSheet
@@ -391,10 +391,10 @@ const {
 
 function pendingMeta(item: PendingAttachment) {
   if (item.status === 'uploading') {
-    return 'Uploading…'
+    return t('chat.attachments.uploading')
   }
   if (item.status === 'error') {
-    return item.error ?? 'Failed'
+    return item.error ?? t('chat.attachments.failed')
   }
   return formatPendingBytes(item.byteSize)
 }
@@ -420,7 +420,7 @@ const settingsOpen = ref(false)
 const sheetOpen = ref(false)
 const openSheet = ref<HostSheetEntry | null>(null)
 const sheetTargetId = ref('')
-const openSheetTitle = computed(() => openSheet.value?.title ?? 'Sheet')
+const openSheetTitle = computed(() => openSheet.value?.title ?? t('chat.sheet.defaultTitle'))
 const openSheetBody = computed(() => openSheet.value?.body ?? '')
 const threadEl = ref<HTMLOListElement | null>(null)
 const stageEl = ref<HTMLElement | null>(null)
@@ -460,6 +460,7 @@ const { phase: liveActivityPhase } = useChatActivityPhase({
   threadId: botThreadId,
   botId,
 })
+const { locale, t } = useI18n()
 const threadActivity = computed(() => chatActivityStatus({
   pending: botPending.value,
   gatewayConfigured: readyData.value?.configured === true,
@@ -468,14 +469,15 @@ const threadActivity = computed(() => chatActivityStatus({
   connectTarget: import.meta.dev && typeof route.query.target === 'string'
     ? route.query.target
     : null,
+  locale: locale.value === 'ru' ? 'ru' : 'en',
 }))
 const identityLabel = computed(() => {
   if (!bot.value) {
-    return 'Bot settings'
+    return t('chat.identityAria.settings')
   }
   return botLive.value
-    ? `${bot.value.name}, online, Bot settings`
-    : `${bot.value.name}, Bot settings`
+    ? t('chat.identityAria.onlineSettings', { name: bot.value.name })
+    : `${bot.value.name}, ${t('chat.identityAria.settings')}`
 })
 /**
  * Pill mark states, strongest first: a failed send beats a reply in
@@ -902,7 +904,7 @@ async function deliver(raw: string, existing: TimelineLine | null, artifactIds: 
     } else if (optimistic.value) {
       optimistic.value = { ...optimistic.value, pending: false, failed: true }
     }
-    sendError.value = 'Could not send that message.'
+    sendError.value = t('chat.sendError')
     showMarkError()
   } finally {
     if (botId.value === targetId) {

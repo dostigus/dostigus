@@ -4,10 +4,10 @@
       <HostMenuButton />
       <div>
         <p class="mark">
-          Settings
+          {{ $t('settings.title') }}
         </p>
         <p class="sub">
-          {{ current?.label ?? 'Cluster' }}
+          {{ current?.label ?? $t('settings.cluster') }}
         </p>
       </div>
     </header>
@@ -15,7 +15,7 @@
     <div class="body">
       <nav
         class="tabs"
-        aria-label="Settings"
+        :aria-label="$t('settings.aria')"
       >
         <NuxtLink
           v-for="item in SETTINGS_PAGES"
@@ -80,16 +80,20 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'host' })
 
-const SETTINGS_PAGES = [
-  { to: '/settings/providers', label: 'Провайдеры', hint: 'LLM для Bots', icon: 'providers' },
-  { to: '/settings/other', label: 'Прочее', hint: 'Часовой пояс, http', icon: 'other' },
-] as const
+const { t } = useI18n()
+
+const SETTINGS_PAGES = computed(() => [
+  { to: '/settings/providers', label: t('settings.nav.providers'), hint: t('settings.nav.providersHint'), icon: 'providers' as const },
+  { to: '/settings/other', label: t('settings.nav.other'), hint: t('settings.nav.otherHint'), icon: 'other' as const },
+])
 
 const route = useRoute()
-const current = computed(() => SETTINGS_PAGES.find((item) => route.path.startsWith(item.to)))
+const current = computed(() => SETTINGS_PAGES.value.find((item) => route.path.startsWith(item.to)))
 
 useHead(() => ({
-  title: current.value ? `Dostigus · Settings · ${current.value.label}` : 'Dostigus · Settings',
+  title: current.value
+    ? t('settings.titleDocPage', { page: current.value.label })
+    : t('settings.titleDoc'),
 }))
 </script>
 

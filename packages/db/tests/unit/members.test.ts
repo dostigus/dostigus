@@ -10,7 +10,9 @@ import {
   listMembers,
   listMessages,
   openStore,
+  seedMemberLocale,
   StoreError,
+  updateMemberLocale,
 } from '../../src/index'
 
 function memoryStore() {
@@ -29,6 +31,7 @@ it('adds a Member and rejects a login the Owner already uses', () => {
   expect(member.displayName).toBe('Ada')
   expect(member.username).toBe('ada')
   expect(member.disabledAt).toBeNull()
+  expect(member.locale).toBeNull()
   expect(listMembers(store)).toHaveLength(1)
 
   expect(() => createMember(store, {
@@ -71,6 +74,22 @@ it('turns off sign-in and keeps the display name on Chat', () => {
   expect(authorNameForPerson(store, member.id)).toBe('Ada Lovelace')
   expect(listMessages(store, bot.id).find((line) => line.role === 'user')?.personId).toBe(member.id)
   expect(findMemberSecretByLogin(store, 'ada@example.test')?.disabledAt).toBeTruthy()
+  store.close()
+})
+
+it('seeds Member.locale from the cookie only while it is still null', () => {
+  const store = memoryStore()
+  const member = createMember(store, {
+    displayName: 'Ada',
+    username: 'ada',
+    passwordHash: 'hash:ada',
+  })
+  expect(member.locale).toBeNull()
+  expect(seedMemberLocale(store, member.id, 'nope').locale).toBeNull()
+  expect(seedMemberLocale(store, member.id, 'ru').locale).toBe('ru')
+  expect(seedMemberLocale(store, member.id, 'en').locale).toBe('ru')
+  expect(updateMemberLocale(store, member.id, 'en').locale).toBe('en')
+  expect(() => updateMemberLocale(store, member.id, 'de')).toThrow(StoreError)
   store.close()
 })
 

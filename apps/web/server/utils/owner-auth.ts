@@ -28,6 +28,7 @@ export type HostSessionUser = {
   username: string | null
   displayName: string
   role: HostRole
+  locale?: string | null
 }
 
 export function toOwnerSession(owner: Owner): HostSessionUser {
@@ -45,6 +46,7 @@ export function toMemberSession(member: {
   email: string | null
   username: string | null
   displayName: string
+  locale?: string | null
 }): HostSessionUser {
   return {
     id: member.id,
@@ -52,6 +54,7 @@ export function toMemberSession(member: {
     username: member.username,
     displayName: member.displayName,
     role: 'member',
+    locale: member.locale ?? null,
   }
 }
 

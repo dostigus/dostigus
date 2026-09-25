@@ -23,6 +23,7 @@ allowBuilds:
 catalog:
   '@antfu/eslint-config': ^6.3.0
   '@nuxt/fonts': ^0.14.0
+  '@nuxtjs/i18n': ^10.6.0
   '@nuxtjs/mcp-toolkit': ^0.18.0
   '@types/node': ^24.3.0
   drizzle-kit: ^0.31.10

@@ -5,10 +5,10 @@
       aria-labelledby="adv-tiers"
     >
       <h4 id="adv-tiers">
-        Model tiers
+        {{ $t('settings.providers.catalog.tiersTitle') }}
       </h4>
       <p class="hint">
-        Закрепите модель на отдельный Model tier или верните маршрутизацию OpenRouter.
+        {{ $t('settings.providers.catalog.tiersHint') }}
       </p>
       <ul class="tier-list">
         <li
@@ -29,7 +29,7 @@
             :disabled="busy"
             @click="emit('pin', row.tier, null)"
           >
-            Сбросить
+            {{ $t('settings.providers.catalog.reset') }}
           </button>
         </li>
       </ul>
@@ -41,31 +41,31 @@
     >
       <div class="block-head">
         <h4 id="adv-all">
-          Все модели
+          {{ $t('settings.providers.catalog.all') }}
           <span
             v-if="catalog?.models.length"
             class="count"
-          >{{ filtered.length }} из {{ catalog.models.length }}</span>
+          >{{ $t('settings.providers.catalog.count', { filtered: filtered.length, total: catalog.models.length }) }}</span>
         </h4>
         <div class="refresh">
           <span
             v-if="catalog?.fetchedAt"
             class="fetched"
-          >{{ fetchedAtCopy(catalog.fetchedAt) }}<template v-if="catalog.stale"> · из кэша</template></span>
+          >{{ fetchedAtCopy(catalog.fetchedAt, undefined, hostLocale) }}<template v-if="catalog.stale"> · {{ $t('settings.providers.catalog.fromCache') }}</template></span>
           <KitButton
             variant="ghost"
             size="sm"
             :disabled="loading"
             @click="emit('refresh')"
           >
-            {{ loading ? 'Обновляем…' : 'Обновить список' }}
+            {{ loading ? $t('settings.providers.catalog.refreshing') : $t('settings.providers.catalog.refresh') }}
           </KitButton>
         </div>
       </div>
 
       <div class="toolbar">
         <label class="search">
-          <span class="kit-sr-only">Найти модель</span>
+          <span class="kit-sr-only">{{ $t('settings.providers.catalog.find') }}</span>
           <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
@@ -80,7 +80,7 @@
           <input
             v-model="query"
             type="search"
-            placeholder="Найти модель"
+            :placeholder="$t('settings.providers.catalog.find')"
             autocomplete="off"
             spellcheck="false"
           >
@@ -88,7 +88,7 @@
         <div
           class="filters"
           role="radiogroup"
-          aria-label="Фильтр"
+          :aria-label="$t('settings.providers.catalog.filter')"
         >
           <button
             v-for="option in FILTERS"
@@ -109,13 +109,13 @@
         v-if="!catalog?.ok && !loading"
         class="hint"
       >
-        {{ catalogErrorCopy(catalog?.error ?? 'network') }}
+        {{ catalogErrorCopy(catalog?.error ?? 'network', hostLocale) }}
       </p>
       <p
         v-else-if="filtered.length === 0 && !loading"
         class="hint"
       >
-        Ничего не нашлось.
+        {{ $t('settings.providers.catalog.noneFound') }}
       </p>
       <ul
         v-else
@@ -134,30 +134,30 @@
               {{ model.id }}
             </p>
             <p class="model-meta">
-              <span class="price">{{ modelPriceCopy(model) }}</span>
-              <span v-if="model.contextLength">{{ contextCopy(model.contextLength) }}</span>
+              <span class="price">{{ modelPriceCopy(model, hostLocale) }}</span>
+              <span v-if="model.contextLength">{{ contextCopy(model.contextLength, hostLocale) }}</span>
               <span
                 v-if="model.intelligence != null"
-                title="Artificial Analysis Intelligence Index"
-              >Интеллект {{ Math.round(model.intelligence) }}</span>
+                :title="$t('settings.providers.shelf.scoreTitleIntelligence')"
+              >{{ $t('settings.providers.catalog.intelligence', { n: Math.round(model.intelligence) }) }}</span>
               <span
                 v-if="model.vision"
                 class="vision"
-              >Vision</span>
+              >{{ $t('settings.providers.shelf.vision') }}</span>
               <span
                 v-if="!model.tools"
                 class="warn"
-              >Без tools</span>
+              >{{ $t('settings.providers.catalog.noTools') }}</span>
               <span
                 v-if="model.expiresAt"
                 class="warn"
-              >Уходит {{ model.expiresAt }}</span>
+              >{{ $t('settings.providers.catalog.expires', { date: model.expiresAt }) }}</span>
             </p>
             <p
               v-if="pinnedTiers(model.id).length > 0"
               class="pinned-on"
             >
-              Закреплена на
+              {{ $t('settings.providers.catalog.pinnedOn') }}
               <code
                 v-for="tier in pinnedTiers(model.id)"
                 :key="tier"
@@ -165,10 +165,10 @@
             </p>
           </div>
           <label class="pin">
-            <span class="kit-sr-only">Закрепить {{ model.name }} на Model tier</span>
+            <span class="kit-sr-only">{{ $t('settings.providers.catalog.pinSr', { name: model.name }) }}</span>
             <select
               :disabled="busy || !model.tools"
-              :title="model.tools ? undefined : 'Chat вызывает tools, а эта модель их не поддерживает'"
+              :title="model.tools ? undefined : $t('settings.providers.catalog.noToolsHint')"
               value=""
               @change="onPin(model.id, $event)"
             >
@@ -176,7 +176,7 @@
                 value=""
                 disabled
               >
-                Закрепить на…
+                {{ $t('settings.providers.catalog.pinTo') }}
               </option>
               <option
                 v-for="tier in MODEL_TIERS"
@@ -195,7 +195,7 @@
         size="sm"
         @click="limit += PAGE"
       >
-        Показать ещё {{ Math.min(PAGE, filtered.length - visible.length) }}
+        {{ $t('settings.providers.catalog.showMore', { n: Math.min(PAGE, filtered.length - visible.length) }) }}
       </KitButton>
     </section>
 
@@ -204,10 +204,10 @@
       aria-labelledby="adv-policy"
     >
       <h4 id="adv-policy">
-        Policy
+        {{ $t('settings.providers.catalog.policy') }}
       </h4>
       <p class="hint">
-        Как Host сейчас выбирает модель для каждого Model tier.
+        {{ $t('settings.providers.catalog.policyHint') }}
       </p>
       <pre class="raw">{{ rawPolicy }}</pre>
     </section>
@@ -225,7 +225,7 @@ import {
   fetchedAtCopy,
   modelPriceCopy,
   searchCatalogModels,
-  TIER_SITUATIONS,
+  tierSituations,
 } from '../utils/provider-settings'
 
 const props = defineProps<{
@@ -244,16 +244,18 @@ const emit = defineEmits<{
 }>()
 
 const PAGE = 40
+const { locale, t } = useI18n()
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
 
-const FILTERS = [
-  { id: 'all', label: 'Все' },
-  { id: 'free', label: 'Бесплатные' },
-  { id: 'vision', label: 'Vision' },
-  { id: 'tools', label: 'С tools' },
-] as const
+const FILTERS = computed(() => [
+  { id: 'all' as const, label: t('settings.providers.catalog.filterAll') },
+  { id: 'free' as const, label: t('settings.providers.catalog.free') },
+  { id: 'vision' as const, label: t('settings.providers.shelf.vision') },
+  { id: 'tools' as const, label: t('settings.providers.catalog.tools') },
+])
 
 const query = ref('')
-const filter = ref<(typeof FILTERS)[number]['id']>('all')
+const filter = ref<'all' | 'free' | 'vision' | 'tools'>('all')
 const limit = ref(PAGE)
 
 watch([query, filter], () => {
@@ -276,7 +278,7 @@ const filtered = computed(() => {
 
 const visible = computed(() => filtered.value.slice(0, limit.value))
 
-const tierRows = computed(() => TIER_SITUATIONS.map((situation) => {
+const tierRows = computed(() => tierSituations(hostLocale.value).map((situation) => {
   const bind = props.tierBinds[situation.tier]
   const copy = bindCopy(bind, props.providers, props.names)
   const here = bind?.providerId === props.providerId
@@ -284,8 +286,8 @@ const tierRows = computed(() => TIER_SITUATIONS.map((situation) => {
     tier: situation.tier,
     title: situation.title,
     policy: !copy
-      ? 'Не задан'
-      : `${here ? '' : `${copy.provider} · `}${copy.pinned ? copy.policy : `маршрутизация ${copy.policy}`}`,
+      ? t('settings.providers.catalog.unset')
+      : `${here ? '' : `${copy.provider} · `}${copy.pinned ? copy.policy : t('settings.providers.catalog.routing', { policy: copy.policy })}`,
     pinned: here && bind?.policy.kind === 'model',
   }
 }))

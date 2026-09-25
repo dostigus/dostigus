@@ -1,10 +1,13 @@
 /**
- * In-thread Chat activity row. Copy is Russian Host chrome.
+ * In-thread Chat activity row. Copy follows Host Locale.
  * A configured reply polls an Activity phase: thinking, tool, then typing.
  * Command and connect render when a local preview query forces them.
  * With no key the caller keeps the flock mark and this row stays hidden.
  * See ADR 0021.
  */
+
+import type { HostLocale } from '@dostigus/ui-kit/locale'
+import { DEFAULT_HOST_LOCALE, tHost } from '@dostigus/ui-kit/locale'
 
 export const CHAT_ACTIVITY_PHASES = ['thinking', 'tool', 'typing'] as const
 
@@ -15,10 +18,23 @@ export const CHAT_ACTIVITY_KINDS = ['thinking', 'tool', 'typing', 'command', 'co
 
 export type ChatActivityKind = typeof CHAT_ACTIVITY_KINDS[number]
 
-export const CHAT_ACTIVITY_THINKING = 'Думает…'
-export const CHAT_ACTIVITY_TOOL = 'Выполняет команду…'
-export const CHAT_ACTIVITY_TYPING = 'Печатает…'
-export const CHAT_ACTIVITY_CONNECT = 'Подключается…'
+export function chatActivityThinking(locale: HostLocale = DEFAULT_HOST_LOCALE): string {
+  return tHost(locale, 'chat.activity.thinking')
+}
+export function chatActivityTool(locale: HostLocale = DEFAULT_HOST_LOCALE): string {
+  return tHost(locale, 'chat.activity.tool')
+}
+export function chatActivityTyping(locale: HostLocale = DEFAULT_HOST_LOCALE): string {
+  return tHost(locale, 'chat.activity.typing')
+}
+export function chatActivityConnect(locale: HostLocale = DEFAULT_HOST_LOCALE): string {
+  return tHost(locale, 'chat.activity.connect')
+}
+
+export const CHAT_ACTIVITY_THINKING = chatActivityThinking('ru')
+export const CHAT_ACTIVITY_TOOL = chatActivityTool('ru')
+export const CHAT_ACTIVITY_TYPING = chatActivityTyping('ru')
+export const CHAT_ACTIVITY_CONNECT = chatActivityConnect('ru')
 
 /** Open Thread poll interval while the viewer's own reply is in flight. */
 export const CHAT_ACTIVITY_POLL_MS = 400
@@ -51,31 +67,35 @@ export function parseChatActivityKind(value: unknown): ChatActivityKind | null {
 }
 
 /** «Подключается к {name}» when a short target is known. */
-export function connectActivityLabel(target?: string | null): string {
+export function connectActivityLabel(
+  target?: string | null,
+  locale: HostLocale = DEFAULT_HOST_LOCALE,
+): string {
   const name = target?.trim().replace(/\s+/g, ' ') ?? ''
   if (!name) {
-    return CHAT_ACTIVITY_CONNECT
+    return chatActivityConnect(locale)
   }
   const short = name.length > CONNECT_TARGET_MAX
     ? `${name.slice(0, CONNECT_TARGET_MAX).trimEnd()}…`
     : name
-  return `Подключается к ${short}`
+  return tHost(locale, 'chat.activity.connectTo', { name: short })
 }
 
 function activityForKind(
   kind: ChatActivityKind,
   connectTarget?: string | null,
+  locale: HostLocale = DEFAULT_HOST_LOCALE,
 ): ChatActivity {
   if (kind === 'command' || kind === 'tool') {
-    return { kind: 'tool', label: CHAT_ACTIVITY_TOOL }
+    return { kind: 'tool', label: chatActivityTool(locale) }
   }
   if (kind === 'connect') {
-    return { kind: 'connect', label: connectActivityLabel(connectTarget) }
+    return { kind: 'connect', label: connectActivityLabel(connectTarget, locale) }
   }
   if (kind === 'thinking') {
-    return { kind: 'thinking', label: CHAT_ACTIVITY_THINKING }
+    return { kind: 'thinking', label: chatActivityThinking(locale) }
   }
-  return { kind: 'typing', label: CHAT_ACTIVITY_TYPING }
+  return { kind: 'typing', label: chatActivityTyping(locale) }
 }
 
 /**
@@ -91,14 +111,16 @@ export function chatActivityStatus(input: {
   phase?: ChatActivityPhase | null
   forced?: ChatActivityKind | null
   connectTarget?: string | null
+  locale?: HostLocale
 }): ChatActivity | null {
+  const locale = input.locale ?? DEFAULT_HOST_LOCALE
   if (input.forced) {
-    return activityForKind(input.forced, input.connectTarget)
+    return activityForKind(input.forced, input.connectTarget, locale)
   }
   if (!input.pending || !input.gatewayConfigured) {
     return null
   }
-  return activityForKind(input.phase ?? 'thinking', null)
+  return activityForKind(input.phase ?? 'thinking', null, locale)
 }
 
 export type ChatActivityClock = {

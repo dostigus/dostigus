@@ -4,14 +4,13 @@
     aria-labelledby="llm-flow-title"
   >
     <p class="kicker">
-      Как это устроено
+      {{ $t('settings.providers.flow.how') }}
     </p>
     <h2 id="llm-flow-title">
-      Bots думают через LLM
+      {{ $t('settings.providers.flow.botsThink') }}
     </h2>
     <p class="lead">
-      Каждый ответ Bot — запрос к LLM. Model tier выбирает модель под ситуацию,
-      Provider её даёт.
+      {{ $t('settings.providers.flow.lead') }}
     </p>
 
     <div class="node bots-node">
@@ -36,7 +35,7 @@
           {{ botsTitle }}
         </p>
         <p class="node-detail">
-          {{ bots.length > 0 ? botNames : 'Новые Bots подключатся сами.' }}
+          {{ bots.length > 0 ? botNames : $t('settings.providers.flow.newBotsJoin') }}
         </p>
       </div>
     </div>
@@ -48,7 +47,7 @@
 
     <ol
       class="tiers"
-      aria-label="Model tiers"
+      :aria-label="$t('settings.providers.flow.tiersAria')"
     >
       <li
         v-for="row in rows"
@@ -79,7 +78,7 @@
               <span class="bind-policy">{{ row.bind.policy }}</span>
             </template>
             <template v-else>
-              Не задан
+              {{ $t('settings.providers.unset') }}
             </template>
           </p>
         </div>
@@ -105,17 +104,16 @@
       </span>
       <div class="node-copy">
         <p class="node-title">
-          {{ providerLabels.length > 0 ? providerLabels.join(' + ') : 'Provider не подключён' }}
+          {{ providerLabels.length > 0 ? providerLabels.join(' + ') : $t('settings.providers.flow.noProvider') }}
         </p>
         <p class="node-detail">
-          {{ providerLabels.length > 0 ? 'Provider' : 'Пока нет ключа, Bots отвечают тихой заглушкой.' }}
+          {{ providerLabels.length > 0 ? 'Provider' : $t('settings.providers.flow.noKeyQuiet') }}
         </p>
       </div>
     </div>
 
     <p class="foot">
-      Не вышло с первой попытки — Host тихо пробует дальше:
-      <code>cheap</code> → <code>strong</code> → <code>code</code>.
+      {{ $t('settings.providers.flow.escalateChain') }}
     </p>
   </section>
 </template>
@@ -123,7 +121,7 @@
 <script setup lang="ts">
 import type { BotListItem, LlmProviderKind, LlmTierBind, ModelTier } from '@dostigus/shared'
 import { LLM_PROVIDER_KIND_LABELS } from '@dostigus/shared'
-import { bindCopy, TIER_SITUATIONS } from '../utils/provider-settings'
+import { bindCopy, tierSituations } from '../utils/provider-settings'
 
 const props = defineProps<{
   bots: BotListItem[]
@@ -134,23 +132,27 @@ const props = defineProps<{
   rejected?: string[]
 }>()
 
+const { locale, t } = useI18n()
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
+const TIER_SITUATIONS = computed(() => tierSituations(hostLocale.value))
+
 const shownBots = computed(() => props.bots.slice(0, 5))
 
 const botsTitle = computed(() => {
   const count = props.bots.length
   if (count === 0) {
-    return 'Bots пока нет'
+    return t('settings.providers.flow.noBots')
   }
-  return count === 1 ? '1 Bot на этом Host' : `${count} Bots на этом Host`
+  return t('settings.providers.flow.botsOnHost', { count })
 })
 
 const botNames = computed(() => {
   const names = props.bots.slice(0, 3).map((bot) => bot.name)
   const rest = props.bots.length - names.length
-  return rest > 0 ? `${names.join(', ')} и ещё ${rest}` : names.join(', ')
+  return rest > 0 ? `${names.join(', ')} ${t('settings.providers.flow.andMore', { count: rest })}` : names.join(', ')
 })
 
-const rows = computed(() => TIER_SITUATIONS.map((situation) => {
+const rows = computed(() => TIER_SITUATIONS.value.map((situation) => {
   const bind = props.tierBinds[situation.tier]
   const provider = props.providers.find((entry) => entry.id === bind?.providerId)
   const rejected = Boolean(provider && props.rejected?.includes(provider.id))
@@ -163,8 +165,8 @@ const rows = computed(() => TIER_SITUATIONS.map((situation) => {
 
 function bindTitle(bind: { provider: string, policy: string, pinned: boolean }): string {
   return bind.pinned
-    ? `${bind.provider} · закреплена ${bind.policy}`
-    : `${bind.provider} · маршрутизация ${bind.policy}`
+    ? t('settings.providers.flow.pinnedBind', bind)
+    : t('settings.providers.flow.routingBind', bind)
 }
 
 const providerLabels = computed(() => {

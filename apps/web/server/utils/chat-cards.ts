@@ -1,5 +1,7 @@
 import type { ChatPartCard } from '@dostigus/shared'
+import type { HostLocale } from '@dostigus/ui-kit/locale'
 import { CHAT_PART_LABEL_MAX, CHAT_PARTS_MAX } from '@dostigus/shared'
+import { DEFAULT_HOST_LOCALE, tHost } from '@dostigus/ui-kit/locale'
 
 /**
  * Schedule Cards the Host injects onto the assistant line of one turn.
@@ -8,10 +10,12 @@ import { CHAT_PART_LABEL_MAX, CHAT_PARTS_MAX } from '@dostigus/shared'
  * See ADR 0030.
  */
 
-const SCHEDULE_ACTIONS: ChatPartCard['actions'] = [
-  { label: 'Pause', action: { type: 'openSheet', sheetId: 'schedule' } },
-  { label: 'Изменить', action: { type: 'openSheet', sheetId: 'schedule' } },
-]
+function scheduleActions(locale: HostLocale): ChatPartCard['actions'] {
+  return [
+    { label: tHost(locale, 'chat.card.schedule.pause'), action: { type: 'openSheet', sheetId: 'schedule' } },
+    { label: tHost(locale, 'chat.card.schedule.edit'), action: { type: 'openSheet', sheetId: 'schedule' } },
+  ]
+}
 
 export type ScheduleCardSource = {
   id: string
@@ -43,14 +47,19 @@ function fittedWake(schedule: ScheduleCardSource, title: string): string {
   return title
 }
 
-export function scheduleChatCard(schedule: ScheduleCardSource, outcome: ScheduleCardOutcome): ChatPartCard {
+export function scheduleChatCard(
+  schedule: ScheduleCardSource,
+  outcome: ScheduleCardOutcome,
+  locale: HostLocale = DEFAULT_HOST_LOCALE,
+): ChatPartCard {
   const title = scheduleCardTitle(schedule)
+  const actions = scheduleActions(locale)
   if (outcome === 'delete') {
     return {
       kind: 'card',
       card: 'schedule',
       title,
-      body: 'Удалено',
+      body: tHost(locale, 'chat.card.schedule.deleted'),
       tone: 'warn',
       targetId: schedule.id,
       actions: [],
@@ -61,10 +70,10 @@ export function scheduleChatCard(schedule: ScheduleCardSource, outcome: Schedule
       kind: 'card',
       card: 'schedule',
       title,
-      body: 'На паузе',
+      body: tHost(locale, 'chat.card.schedule.paused'),
       tone: 'warn',
       targetId: schedule.id,
-      actions: SCHEDULE_ACTIONS,
+      actions,
     }
   }
   if (outcome === 'already') {
@@ -72,10 +81,10 @@ export function scheduleChatCard(schedule: ScheduleCardSource, outcome: Schedule
       kind: 'card',
       card: 'schedule',
       title,
-      body: 'уже стоит',
+      body: tHost(locale, 'chat.card.schedule.already'),
       tone: 'ok',
       targetId: schedule.id,
-      actions: SCHEDULE_ACTIONS,
+      actions,
     }
   }
   return {
@@ -85,11 +94,13 @@ export function scheduleChatCard(schedule: ScheduleCardSource, outcome: Schedule
     body: fittedWake(schedule, title),
     tone: 'ok',
     targetId: schedule.id,
-    actions: SCHEDULE_ACTIONS,
+    actions,
   }
 }
 
 export class ChatCardTurn {
+  constructor(readonly locale: HostLocale = DEFAULT_HOST_LOCALE) {}
+
   private scheduleCards = new Map<string, ChatPartCard>()
 
   note(card: ChatPartCard): void {
@@ -134,7 +145,7 @@ export function noteToolCard(turn: ChatCardTurn, name: string, result: unknown):
     if (record.already === true) {
       const schedule = asSchedule(record.schedule)
       if (schedule) {
-        turn.note(scheduleChatCard(schedule, 'already'))
+        turn.note(scheduleChatCard(schedule, 'already', turn.locale))
       }
     }
     return
@@ -142,28 +153,28 @@ export function noteToolCard(turn: ChatCardTurn, name: string, result: unknown):
   if (name === 'dostigus_schedules_create') {
     const schedule = asSchedule(record.schedule)
     if (schedule) {
-      turn.note(scheduleChatCard(schedule, record.already === true ? 'already' : 'create'))
+      turn.note(scheduleChatCard(schedule, record.already === true ? 'already' : 'create', turn.locale))
     }
     return
   }
   if (name === 'dostigus_schedules_update' || name === 'dostigus_schedules_resume') {
     const schedule = asSchedule(record.schedule)
     if (schedule) {
-      turn.note(scheduleChatCard(schedule, name.endsWith('resume') ? 'resume' : 'update'))
+      turn.note(scheduleChatCard(schedule, name.endsWith('resume') ? 'resume' : 'update', turn.locale))
     }
     return
   }
   if (name === 'dostigus_schedules_pause') {
     const schedule = asSchedule(record.schedule)
     if (schedule) {
-      turn.note(scheduleChatCard(schedule, 'pause'))
+      turn.note(scheduleChatCard(schedule, 'pause', turn.locale))
     }
     return
   }
   if (name === 'dostigus_schedules_delete') {
     const schedule = asSchedule(record.schedule)
     if (schedule) {
-      turn.note(scheduleChatCard(schedule, 'delete'))
+      turn.note(scheduleChatCard(schedule, 'delete', turn.locale))
     }
   }
 }

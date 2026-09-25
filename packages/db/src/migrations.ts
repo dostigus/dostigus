@@ -467,6 +467,13 @@ ALTER TABLE \`llm_gateway\` ADD \`providers_json\` text DEFAULT '[]' NOT NULL;
 ALTER TABLE \`llm_gateway\` ADD \`tier_binds_json\` text DEFAULT '{}' NOT NULL;
 `,
   },
+  {
+    id: '0022_member_locale',
+    sql: `
+ALTER TABLE \`members\` ADD \`locale\` text;
+UPDATE \`members\` SET \`locale\` = 'en' WHERE \`locale\` IS NULL;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

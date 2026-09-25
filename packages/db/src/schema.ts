@@ -74,6 +74,8 @@ export const members = sqliteTable('members', {
   passwordHash: text('password_hash').notNull(),
   createdAt: integer('created_at').notNull(),
   disabledAt: integer('disabled_at'),
+  /** Host UI Locale (`en` | `ru`). Null until first login may seed the cookie. */
+  locale: text('locale'),
 })
 
 /**

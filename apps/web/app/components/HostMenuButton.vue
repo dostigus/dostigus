@@ -2,7 +2,7 @@
   <button
     type="button"
     class="menu"
-    aria-label="Threads"
+    :aria-label="$t('host.nav.threads')"
     aria-controls="host-sidebar"
     :aria-expanded="open"
     @click="toggle"

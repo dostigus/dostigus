@@ -85,6 +85,7 @@ export default defineEventHandler(async (event) => {
     const viewer = viewerFromUser({ id: personId, role })
     const canEditManifest = canEditBot(mentioned.bot, viewer)
     const expand = chatExpandKeywordHit(user.content)
+    const locale = await resolveEventLocale(event, store)
     const turn = openChatTurn({
       store,
       role,
@@ -92,6 +93,7 @@ export default defineEventHandler(async (event) => {
       personId,
       turnBotId: mentioned.bot.id,
       expand,
+      locale,
     })
     const reply = await completeAssistantReply({
       botName: mentioned.bot.name,
@@ -104,6 +106,7 @@ export default defineEventHandler(async (event) => {
       audience: role,
       canEditManifest,
       expand,
+      locale,
       tools: turn.tools(),
       invokeTool: turn.invokeTool,
       onActivity: (phase) => {

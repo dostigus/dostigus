@@ -2,7 +2,7 @@
   <KitSheet
     v-model:open="open"
     edge="end"
-    title="Параметры"
+    :title="$t('closet.title')"
     title-align="center"
     close="icon"
   >
@@ -20,14 +20,14 @@
         v-if="canEdit"
         type="button"
         class="hero"
-        aria-label="Изменить аватар"
+        :aria-label="$t('closet.changeAvatar')"
         @click="openAppearance"
       />
       <button
         v-if="canEdit"
         type="button"
         class="pencil"
-        aria-label="Изменить аватар"
+        :aria-label="$t('closet.changeAvatar')"
         @click="openAppearance"
       >
         <svg
@@ -46,7 +46,7 @@
       @submit.prevent="persistFields"
     >
       <label class="field">
-        <span>Имя</span>
+        <span>{{ $t('closet.name') }}</span>
         <input
           v-model="name"
           type="text"
@@ -58,24 +58,24 @@
         >
       </label>
       <label class="field">
-        <span>Метка (необязательно)</span>
+        <span>{{ $t('closet.labelOptional') }}</span>
         <input
           v-model="label"
           type="text"
           maxlength="160"
           autocomplete="off"
-          placeholder="Например, учёба или работа"
+          :placeholder="$t('closet.labelPlaceholder')"
           :disabled="!canEdit || saving"
           @blur="persistFields"
         >
       </label>
       <label class="field">
-        <span>Описание</span>
+        <span>{{ $t('closet.description') }}</span>
         <textarea
           v-model="description"
           maxlength="2000"
           rows="5"
-          placeholder="Для чего нужен этот Bot"
+          :placeholder="$t('closet.descriptionPlaceholder')"
           :disabled="!canEdit || saving"
           @blur="persistFields"
         />
@@ -86,12 +86,12 @@
       >
         <div class="schedules-head">
           <h2 id="schedules-heading">
-            Расписания
+            {{ $t('closet.schedules') }}
           </h2>
           <button
             type="button"
             class="add"
-            aria-label="Добавить расписание"
+            :aria-label="$t('closet.addSchedule')"
             @click="openCreate"
           >
             +
@@ -107,21 +107,21 @@
           v-else-if="schedulesLoading"
           class="hint"
         >
-          Загружаем…
+          {{ $t('closet.loading') }}
         </p>
         <div
           v-else-if="schedules.length === 0"
           class="schedules-empty"
         >
           <p class="hint">
-            Пока нет расписаний
+            {{ $t('closet.noSchedules') }}
           </p>
           <button
             type="button"
             class="grant-all"
             @click="openCreate"
           >
-            Добавить
+            {{ $t('closet.add') }}
           </button>
         </div>
         <ul
@@ -140,7 +140,7 @@
             >
               <span class="schedule-copy">
                 <span class="schedule-name">{{ scheduleDisplayName(row) }}</span>
-                <span class="schedule-cadence">{{ scheduleCadenceLabel(row) }}</span>
+                <span class="schedule-cadence">{{ scheduleCadenceLabel(row, hostLocale) }}</span>
               </span>
               <span
                 class="chevron"
@@ -154,15 +154,15 @@
         v-if="canEdit"
         class="field"
       >
-        <span>Кто видит</span>
+        <span>{{ $t('closet.whoSees') }}</span>
         <p class="hint">
-          Личный Bot. Отметьте участников. Новый Invite не получит доступ сам.
+          {{ $t('closet.whoSeesHint') }}
         </p>
         <p
           v-if="sharePeople.length === 0"
           class="hint"
         >
-          В Household пока нет других участников.
+          {{ $t('closet.noOtherMembers') }}
         </p>
         <label
           v-for="person in sharePeople"
@@ -184,7 +184,7 @@
           :disabled="grantBusy"
           @click="grantEveryone"
         >
-          Всем текущим
+          {{ $t('closet.grantAll') }}
         </button>
       </div>
       <p
@@ -198,7 +198,7 @@
 
   <KitDialog
     v-model:open="appearanceOpen"
-    title="Аватар"
+    :title="$t('closet.avatar')"
     title-align="center"
     close="icon"
   >
@@ -209,7 +209,7 @@
       <div
         class="shapes"
         role="group"
-        aria-label="Птица"
+        :aria-label="$t('closet.bird')"
       >
         <button
           v-for="item in shapes"
@@ -234,7 +234,7 @@
       <div
         class="swatches"
         role="group"
-        aria-label="Цвет"
+        :aria-label="$t('closet.color')"
       >
         <button
           v-for="swatch in accents"
@@ -244,7 +244,7 @@
           :class="{ selected: draftColor === swatch.hex }"
           :style="{ background: `var(${swatch.cssVar})` }"
           :disabled="appearanceSaving"
-          :aria-label="`Цвет ${swatch.token}`"
+          :aria-label="$t('closet.colorToken', { token: swatch.token })"
           :aria-pressed="draftColor === swatch.hex"
           @click="pickColor(swatch.hex)"
         />
@@ -264,14 +264,14 @@
           :disabled="appearanceSaving"
           @click="resetAppearance"
         >
-          Сбросить
+          {{ $t('closet.reset') }}
         </button>
         <KitButton
           type="button"
           :disabled="appearanceSaving"
           @click="saveAppearance"
         >
-          {{ appearanceSaving ? 'Сохраняем…' : 'Сохранить' }}
+          {{ appearanceSaving ? $t('closet.saving') : $t('closet.save') }}
         </KitButton>
       </div>
     </div>
@@ -280,7 +280,7 @@
   <KitSheet
     v-model:open="createOpen"
     edge="end"
-    title="Новое расписание"
+    :title="$t('closet.newSchedule')"
     title-align="center"
     close="icon"
   >
@@ -313,7 +313,6 @@
 import type { Bot, BotAccentHex, BotAvatarShape, BotAvatarState, HouseholdPerson } from '@dostigus/shared'
 import {
   BOT_ACCENT_TOKENS,
-  BOT_AVATAR_SHAPE_LABELS,
   BOT_AVATAR_SHAPES,
   canEditBot,
   DEFAULT_AVATAR_COLOR,
@@ -329,6 +328,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   saved: []
 }>()
+
+const { locale, t } = useI18n()
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
 
 const open = defineModel<boolean>('open', { required: true })
 
@@ -376,7 +378,7 @@ const schedulesError = ref('')
 const createOpen = ref(false)
 const detailOpen = ref(false)
 const detailId = ref('')
-const detailTitle = ref('Расписание')
+const detailTitle = ref('')
 
 watch(() => props.bot?.id, () => {
   syncFromBot()
@@ -429,7 +431,7 @@ async function loadSchedules() {
     const body = await $fetch<{ schedules: ScheduleRow[] }>(`/api/bots/${props.bot.id}/schedules`)
     schedules.value = body.schedules
   } catch {
-    schedulesError.value = 'Не получилось открыть расписания'
+    schedulesError.value = t('closet.openSchedulesFailed')
   } finally {
     schedulesLoading.value = false
   }
@@ -471,7 +473,7 @@ async function loadGrants() {
     sharePeople.value = people.people.filter((person) => person.role === 'member' && person.id !== creatorId)
     grantedIds.value = new Set(grants.grants.map((grant) => grant.personId))
   } catch {
-    error.value = 'Не получилось открыть доступ'
+    error.value = t('closet.openAccessFailed')
   }
 }
 
@@ -497,7 +499,7 @@ async function toggleGrant(personId: string, checked: boolean) {
     }
     await loadGrants()
   } catch {
-    error.value = 'Не получилось сохранить доступ'
+    error.value = t('closet.saveAccessFailed')
     await loadGrants()
   } finally {
     grantBusy.value = false
@@ -517,14 +519,25 @@ async function grantEveryone() {
     })
     await loadGrants()
   } catch {
-    error.value = 'Не получилось сохранить доступ'
+    error.value = t('closet.saveAccessFailed')
   } finally {
     grantBusy.value = false
   }
 }
 
+const SHAPE_LABELS = {
+  goose: 'closetAvatar.goose',
+  duck: 'closetAvatar.duck',
+  swan: 'closetAvatar.swan',
+  chick: 'closetAvatar.chick',
+  parrot: 'closetAvatar.parrot',
+  heron: 'closetAvatar.heron',
+  puffin: 'closetAvatar.puffin',
+  owl: 'closetAvatar.owl',
+} as const
+
 function shapeLabel(value: BotAvatarShape): string {
-  return BOT_AVATAR_SHAPE_LABELS[value]
+  return t(SHAPE_LABELS[value])
 }
 
 const heroState = computed<BotAvatarState>(() => (heroGreet.value ? 'greet' : 'idle'))
@@ -597,7 +610,7 @@ async function persistFields() {
   const nextDescription = description.value.trim()
   if (!nextName) {
     if (open.value) {
-      error.value = 'Напишите имя'
+      error.value = t('closet.needName')
       return
     }
     nextName = props.bot.name
@@ -624,7 +637,7 @@ async function persistFields() {
     })
     emit('saved')
   } catch {
-    error.value = 'Не получилось сохранить'
+    error.value = t('closet.saveFailed')
   } finally {
     saving.value = false
   }
@@ -654,7 +667,7 @@ async function saveAppearance() {
     emit('saved')
     appearanceOpen.value = false
   } catch {
-    appearanceError.value = 'Не получилось сохранить аватар'
+    appearanceError.value = t('closet.saveAvatarFailed')
   } finally {
     appearanceSaving.value = false
   }

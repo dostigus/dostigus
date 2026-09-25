@@ -2,15 +2,15 @@
   <HostAuthShell>
     <form @submit.prevent="submit">
       <p class="kicker">
-        First visit
+        {{ $t('auth.onboarding.kicker') }}
       </p>
-      <h1>Create your Owner</h1>
+      <h1>{{ $t('auth.onboarding.title') }}</h1>
       <p class="hint">
-        This Host needs one Owner. Choose a name or email and a password.
+        {{ $t('auth.onboarding.hint') }}
       </p>
 
       <label class="field">
-        <span>Email or username</span>
+        <span>{{ $t('auth.field.login') }}</span>
         <input
           v-model="login"
           type="text"
@@ -20,7 +20,7 @@
       </label>
 
       <label class="field">
-        <span>Password</span>
+        <span>{{ $t('auth.field.password') }}</span>
         <input
           v-model="password"
           type="password"
@@ -28,11 +28,11 @@
           required
           minlength="8"
         >
-        <span class="field-hint">At least 8 characters</span>
+        <span class="field-hint">{{ $t('auth.field.passwordMin') }}</span>
       </label>
 
       <label class="field">
-        <span>Confirm password</span>
+        <span>{{ $t('auth.field.confirmPassword') }}</span>
         <input
           v-model="confirm"
           type="password"
@@ -54,14 +54,15 @@
         class="solid"
         :disabled="busy"
       >
-        {{ busy ? 'Creating…' : 'Create Owner' }}
+        {{ busy ? $t('auth.onboarding.submitBusy') : $t('auth.onboarding.submit') }}
       </button>
     </form>
   </HostAuthShell>
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Dostigus · Create Owner' })
+const { t } = useI18n()
+useHead({ title: () => t('auth.onboarding.titleDoc') })
 
 const { fetch: refreshSession } = useUserSession()
 const login = ref('')
@@ -73,7 +74,7 @@ const message = ref('')
 async function submit() {
   message.value = ''
   if (password.value !== confirm.value) {
-    message.value = 'Passwords do not match.'
+    message.value = t('auth.error.passwordMismatch')
     return
   }
   busy.value = true
@@ -91,7 +92,7 @@ async function submit() {
   } catch (error) {
     message.value = error instanceof Error
       ? error.message
-      : 'Could not create the Owner.'
+      : t('auth.error.fallbackCreateOwner')
     const fetchError = error as { data?: { statusMessage?: string }, statusMessage?: string }
     message.value = fetchError.data?.statusMessage
       ?? fetchError.statusMessage
