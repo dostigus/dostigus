@@ -552,7 +552,7 @@ function showMarkError() {
 }
 
 /**
- * Pill on one line; `--radius-card` once the field is taller than that
+ * Pill on one line; a concentric corner once the field is taller than that
  * or the attachment tray sits inside it.
  * Easing `9999px` down to 28px stays a pill until the last moment, so the
  * transition is pinned to the corner already on screen (half the row).
@@ -1247,12 +1247,18 @@ async function onBotSaved() {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  --composer-button: 2.25rem;
+  --composer-pad: 0.3rem;
+  --composer-rim: 1px;
+  /* Anything inset by --composer-pad shares the button bend, so the
+     outer corner is that bend plus the pad and the rim (concentric). */
+  --composer-inner-radius: calc(var(--composer-button) / 2);
+  gap: var(--composer-pad);
   overflow: hidden;
   /* Equal on every side so each circle sits concentric with its end cap. */
-  padding: 0.3rem;
+  padding: var(--composer-pad);
   /* A step lighter than the fill so the rim still reads on Chat black. */
-  border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));
+  border: var(--composer-rim) solid color-mix(in srgb, var(--text) 8%, var(--composer));
   border-radius: 9999px;
   background: var(--composer);
   /* Same clock for the corner, the rim, and the fill so the stroke does not hitch. */
@@ -1262,7 +1268,7 @@ async function onBotSaved() {
 }
 
 .composer-row.multiline {
-  border-radius: var(--radius-card);
+  border-radius: calc(var(--composer-inner-radius) + var(--composer-pad) + var(--composer-rim));
 }
 
 .composer-line {
@@ -1305,8 +1311,8 @@ async function onBotSaved() {
   appearance: none;
   display: grid;
   place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: var(--composer-button);
+  height: var(--composer-button);
   flex: none;
   border: 0;
   border-radius: 999px;
@@ -1363,7 +1369,7 @@ async function onBotSaved() {
 .pending-chips {
   list-style: none;
   margin: 0;
-  padding: 0.25rem 0.25rem 0;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -1377,8 +1383,9 @@ async function onBotSaved() {
   gap: 0.55rem;
   max-width: 15rem;
   height: 3.5rem;
-  padding: 0 2rem 0 0.55rem;
-  border-radius: var(--radius);
+  --chip-inset: 0.625rem;
+  padding: 0 2rem 0 var(--chip-inset);
+  border-radius: var(--composer-inner-radius);
   border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
   background: color-mix(in srgb, var(--text) 4%, transparent);
   font-size: 0.82rem;
@@ -1425,7 +1432,7 @@ async function onBotSaved() {
   flex: none;
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: calc(var(--radius) - 0.2rem);
+  border-radius: calc(var(--composer-inner-radius) - var(--chip-inset));
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--accent);
 }
@@ -1467,8 +1474,8 @@ async function onBotSaved() {
 .pending-remove {
   appearance: none;
   position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
+  top: calc(var(--composer-inner-radius) - 0.65rem);
+  right: calc(var(--composer-inner-radius) - 0.65rem);
   display: grid;
   place-items: center;
   width: 1.3rem;
