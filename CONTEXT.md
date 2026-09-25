@@ -73,7 +73,11 @@ _Avoid_: tool name, status string, Store row.
 One Host Bot Chat turn: one Bot LLM tool loop, the same span as one
 Activity session. Trigger is `user`, `wake`, or `mention`. The row is
 ops meta (outcome, phase times, tool names, modelId, modelTier,
-visionParts). It is not a Chat line and not an Activity row.
+visionParts, servedModelId, promptTokens, completionTokens,
+totalTokens, llmCallCount). `modelId` is the id sent after resolve.
+`servedModelId` is the last non-empty provider `response.model`.
+Token fields are Turn aggregates. It is not a Chat line and not an
+Activity row.
 _Avoid_: trace, span, log (unqualified), transcript.
 
 **Turn journal**:
