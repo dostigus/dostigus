@@ -95,3 +95,16 @@ it('overlays a Chat pill and pads the thread above it', () => {
   const open = block('.identity:hover:not(:disabled) .cue-slot,', '.cue {')
   expect(open).toContain('width: 1.05rem')
 })
+
+it('clears pending chips with the draft, before the send POST waits on the reply', () => {
+  const deliver = block('async function deliver(', 'async function onBotSaved(')
+  const post = deliver.indexOf('await $fetch(`/api/bots/')
+  const optimistic = deliver.indexOf('optimistic.value = {')
+  const cleared = deliver.indexOf('clearAttachments()')
+
+  expect(post).toBeGreaterThan(-1)
+  expect(deliver.indexOf('draft.value = \'\'')).toBeLessThan(post)
+  expect(cleared).toBeGreaterThan(optimistic)
+  expect(cleared).toBeLessThan(post)
+  expect(deliver.lastIndexOf('clearAttachments()')).toBe(cleared)
+})
