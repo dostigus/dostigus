@@ -126,8 +126,8 @@ export function previewMembersRequested(value: unknown): boolean {
 }
 
 /**
- * `?settings=1` on GET. Opens Settings → Провайдеры for the signed-in
- * preview Owner. HEAD ignores this query.
+ * `?settings=1` on GET. Opens Dashboard Overview (`/dashboard`) for
+ * the signed-in preview Owner. HEAD ignores this query.
  */
 export function previewSettingsRequested(value: unknown): boolean {
   return previewQueryOn(value)
@@ -139,7 +139,7 @@ export const PREVIEW_OPENROUTER_KEY = 'sk-or-v1-preview-fixture'
 
 /**
  * `?providers=1` on GET. Saves the fixture OpenRouter Provider when the
- * Store has none, then opens Settings → Провайдеры. On `nuxt dev` with
+ * Store has none, then opens Dashboard → Providers. On `nuxt dev` with
  * the preview gate open, the catalog route skips the key probe for that
  * fixture only, so the shelf ranks the real public OpenRouter list.
  * Chat on that fixture key still fails like any rejected key.
@@ -235,8 +235,8 @@ export function previewThreadAsMember(value: unknown): boolean {
 
 /**
  * GET /preview-seed redirect.
- * `members=1` opens Members. `settings=1` and `providers=1` open
- * Settings → Провайдеры. A room opens
+ * `members=1` opens Members. `settings=1` opens `/dashboard`.
+ * `providers=1` opens `/dashboard/providers`. A room opens
  * that Thread. Threads open `/` for the Owner and `/bots/<id>` for the
  * Member. Otherwise Chat, including `hold` and `activity`. Members,
  * settings, threads, and rooms do not keep `activity`.

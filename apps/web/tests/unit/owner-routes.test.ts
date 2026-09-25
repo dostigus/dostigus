@@ -162,16 +162,14 @@ it('invokes Chat MCP tools in-process from the Host message route', () => {
   expect(src).toContain('clearChatActivityPhase')
 })
 
-it('sends a Member away from Dashboard, leftover /settings, and Members', () => {
+it('sends a Member away from Dashboard and Members', () => {
   expect(isOwnerPath('/dashboard')).toBe(true)
   expect(isOwnerPath('/dashboard/providers')).toBe(true)
   expect(isOwnerPath('/dashboard/cluster')).toBe(true)
   expect(isOwnerPath('/dashboard/settings')).toBe(true)
-  expect(isOwnerPath('/settings')).toBe(true)
-  expect(isOwnerPath('/settings/providers')).toBe(true)
-  expect(isOwnerPath('/settings/other')).toBe(true)
+  expect(isOwnerPath('/settings')).toBe(false)
+  expect(isOwnerPath('/settings/providers')).toBe(false)
   expect(isOwnerPath('/members')).toBe(true)
-  expect(isOwnerPath('/settingsx')).toBe(false)
   expect(isOwnerPath('/dashboardx')).toBe(false)
   expect(isOwnerPath('/bots/preview')).toBe(false)
   expect(isOwnerPath('/')).toBe(false)

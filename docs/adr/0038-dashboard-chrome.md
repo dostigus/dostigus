@@ -67,17 +67,14 @@ selected Thread row on the Host sidebar.
 Overview and Settings are placeholders. Do not invent Cluster
 monitoring or a Marketplace UI in this record.
 
-Leftover Host links stay valid:
-
-- `/settings` → `/dashboard`
-- `/settings/providers` → `/dashboard/providers`
-- `/settings/other` → `/dashboard/cluster`
+Do **not** keep `/settings` pages or HTTP/Nuxt redirects.
+In-app links use `/dashboard/...`. Old `/settings` bookmarks
+404.
 
 Members stays on the Host messenger layout. A Member still
 cannot open Dashboard
 ([ADR 0012](0012-household-members.md)). The Owner page gate
-covers `/dashboard`, `/dashboard/...`, and the leftover
-`/settings` redirects.
+covers `/dashboard` and `/dashboard/...`.
 
 ## Context
 
@@ -112,3 +109,5 @@ product behavior; this record is routing and shell IA.
   rejected. Nick: do not implement.
 - Keep the chrome named Settings with Providers / Other
   only — superseded the same day by this Dashboard IA.
+- HTTP/Nuxt redirects from `/settings` to `/dashboard` —
+  rejected. Remove `/settings` pages. Old bookmarks 404.

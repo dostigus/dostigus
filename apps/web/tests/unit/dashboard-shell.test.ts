@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tHost } from '@dostigus/ui-kit/locale'
 import { expect, it } from 'vitest'
@@ -67,8 +67,11 @@ it('reuses HostUserMenu and omits Settings on the Dashboard rail', () => {
   expect(layout.indexOf('class="items"')).toBeLessThan(layout.indexOf('class="foot"'))
 })
 
-it('keeps leftover /settings routes as redirects into Dashboard', () => {
-  expect(read('pages/settings/index.vue')).toContain('redirect: \'/dashboard\'')
-  expect(read('pages/settings/providers.vue')).toContain('redirect: \'/dashboard/providers\'')
-  expect(read('pages/settings/other.vue')).toContain('redirect: \'/dashboard/cluster\'')
+it('does not keep /settings pages or redirects', () => {
+  expect(existsSync(join(appRoot, 'pages/settings'))).toBe(false)
+  expect(read('layouts/dashboard.vue')).not.toContain('redirect:')
+  expect(read('pages/dashboard.vue')).not.toContain('redirect:')
+  const nuxt = readFileSync(join(appRoot, '../nuxt.config.ts'), 'utf8')
+  expect(nuxt).not.toContain('routeRules')
+  expect(nuxt).not.toMatch(/['"]\/settings/)
 })

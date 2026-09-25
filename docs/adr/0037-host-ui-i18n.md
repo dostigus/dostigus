@@ -71,8 +71,7 @@ the Host dictionary):
 - Migration: existing Member rows with a null Locale become
   `en`.
 - The Owner changes Locale on Dashboard → Cluster settings
-  (`/dashboard/cluster`; leftover `/settings/other` redirects
-  there, [ADR 0038](0038-dashboard-chrome.md)). That write updates the cookie. The impl
+  (`/dashboard/cluster`, [ADR 0038](0038-dashboard-chrome.md)). That write updates the cookie. The impl
   PR persists the Owner's choice for later visits (the cookie,
   and an Owner Store field in that same PR if a cookie is not
   enough). Do not add a second switcher.

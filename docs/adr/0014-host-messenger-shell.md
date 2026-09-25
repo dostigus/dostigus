@@ -5,8 +5,8 @@
 
 Amended 2026-09-25: Dashboard leaves this shell.
 `/dashboard` and `/dashboard/...` use `layouts/dashboard.vue`
-([ADR 0038](0038-dashboard-chrome.md)). Leftover `/settings`
-routes redirect there. Members and Chat stay here.
+([ADR 0038](0038-dashboard-chrome.md)). There are no
+`/settings` page routes. Members and Chat stay here.
 
 Desktop list chrome, Chat labels, and the composer are refined in
 [ADR 0015](0015-host-desktop-shell.md). The Create Bot modal and the wave
@@ -24,7 +24,8 @@ On a wide screen the Host is a messenger-shaped shell
 
 - A narrow sidebar lists Bots and offers create (Owner only).
 - Members and Settings are quiet links at the bottom of that sidebar.
-  **Settings** stays the `/settings` page. **Members** stays `/members`.
+  **Settings** is `/dashboard/settings` inside Dashboard
+  ([ADR 0038](0038-dashboard-chrome.md)). **Members** stays `/members`.
   Neither is a Sheet over Chat.
 - The rest of the screen is Chat when a Bot is selected: the Bot name, the
   timeline, and the composer. The composer stays on screen.

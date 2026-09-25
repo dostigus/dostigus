@@ -21,7 +21,7 @@
  * to `/dashboard/providers`.
  * `?providers=1` leaves an OpenRouter Provider; its catalog answers 200
  * without the key (a soft catalog miss is noted, not failed). A Member
- * gets 403 on the catalog and 302 / on every `/settings/...` page.
+ * gets 403 on the catalog and 302 / on every `/dashboard/...` page.
  * HEAD ignores `?providers=1`.
  * GET `?activity=typing` must 302 to `/bots/<id>?activity=typing`.
  * HEAD ignores `?activity=` and does not set a session cookie.
@@ -706,7 +706,7 @@ async function main() {
   if (memberCatalog.response.status !== 403) {
     fail(`GET ${catalogPath} as Member expected 403, got ${memberCatalog.response.status}`)
   }
-  for (const page of ['/dashboard', '/dashboard/providers', '/dashboard/cluster', '/dashboard/settings', '/settings', '/settings/providers', '/settings/other']) {
+  for (const page of ['/dashboard', '/dashboard/providers', '/dashboard/cluster', '/dashboard/settings']) {
     const hit = await request(page, { cookie: memberSession })
     const where = locationPath(hit.response.headers.get('location'))
     if (hit.response.status !== 302 || where !== '/') {

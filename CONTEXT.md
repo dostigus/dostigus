@@ -57,8 +57,8 @@ layout: left grouped nav + scrolling content, no Host Bot list
 ([ADR 0038](docs/adr/0038-dashboard-chrome.md)). Day-1 pages:
 Overview (`/dashboard`), Cluster settings (`/dashboard/cluster`),
 Providers (`/dashboard/providers`), and Settings
-(`/dashboard/settings`). Leftover `/settings` and `/settings/...`
-redirect here. Not Member-visible.
+(`/dashboard/settings`). There are no `/settings` page
+routes. Not Member-visible.
 _Avoid_: admin panel, treating Dashboard as the Host messenger
 shell, treating Settings as the whole chrome.
 
@@ -69,7 +69,7 @@ page. Cluster leftover (timezone, http allowlist, Locale
 switcher) is **Cluster settings**, not this page. Not the Bot
 closet. Not Member-visible.
 _Avoid_: admin panel, Preferences (unqualified), treating
-Settings as one monolithic `/settings` page after
+Settings as a `/settings` chrome after
 [ADR 0038](docs/adr/0038-dashboard-chrome.md).
 
 **Locale**:

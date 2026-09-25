@@ -103,8 +103,7 @@ which applies the same gate (`members/index.get.ts`,
 `requireHostSession` / `withHostStore` so a Member can use them. Settings,
 Bot create/delete, and Members stay on the Owner gate. The page gate is
 [`apps/web/app/middleware/owner.global.ts`](apps/web/app/middleware/owner.global.ts):
-`/members`, `/dashboard`, every `/dashboard/...` page, leftover
-`/settings` redirects, and every `/settings/...` page send a Member to
+`/members`, `/dashboard`, and every `/dashboard/...` page send a Member to
 `/` (`isOwnerPath` in
 [`apps/web/app/utils/owner-paths.ts`](apps/web/app/utils/owner-paths.ts)).
 Invite accept
@@ -197,8 +196,8 @@ Overview, Cluster settings, Providers, and Settings. Providers
 (`/dashboard/providers`) holds the OpenRouter quality shelf, «Подробнее»
 (full live catalog, per-tier pins, raw Policy), and health. Cluster
 settings (`/dashboard/cluster`) holds the Cluster timezone, the Cluster
-http allowlist, and the Locale switcher. Leftover `/settings` and
-`/settings/...` redirect into Dashboard. The OpenRouter catalog is
+http allowlist, and the Locale switcher. There are no `/settings`
+page routes. The OpenRouter catalog is
 `GET /api/settings/llm-gateway/providers/:id/catalog` (Owner session,
 `?refresh=1` bypasses the ~24h Host cache). Store is SQLite
 (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
@@ -424,7 +423,7 @@ Owner while `?threads=1&as=member` opens a different bot-thread on Bot
 `preview`. HEAD ignores `?threads=1`. `?settings=1` lands on `/dashboard`; `?providers=1`
 lands on `/dashboard/providers`; the catalog answers without the key; a
 Member gets 403 on the catalog and 302 `/` on every `/dashboard/...`
-and leftover `/settings/...` page. HEAD ignores `?providers=1`.
+page. HEAD ignores `?providers=1`.
 `?rooms=1` opens `/threads/preview-room` after seeding a direct message
 and that room. HEAD ignores `?rooms=1`.
 GET `?activity=typing` lands on `/bots/preview?activity=typing` while
@@ -524,7 +523,7 @@ A Member may call those. `dostigus_cluster_timezone_set`,
 `dostigus_cluster_http_allowlist_get`, and
 `dostigus_cluster_http_allowlist_set` are Owner only.
 The Owner sets the Cluster timezone and the Cluster http allowlist on
-Settings. Host HTTP get is GET only, 64 KiB body cap with `truncated`,
+Dashboard → Cluster settings (`/dashboard/cluster`). Host HTTP get is GET only, 64 KiB body cap with `truncated`,
 and always blocks loopback, private, and link-local destinations
 ([ADR 0031](docs/adr/0031-host-http-get.md)). The Host process polls
 due Schedules. See [ADR 0027](docs/adr/0027-bot-schedules.md).
