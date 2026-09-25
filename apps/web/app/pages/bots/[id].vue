@@ -179,82 +179,115 @@
             class="composer-row"
             :class="{ multiline: composerMultiline }"
           >
-            <input
-              ref="fileInputEl"
-              type="file"
-              class="sr-only"
-              multiple
-              accept="image/*,application/pdf,text/plain,text/markdown,.md,.txt,.pdf"
-              @change="onFileInput"
+            <ul
+              v-if="pendingAttachments.length"
+              class="pending-chips"
+              aria-label="Attachments"
             >
-            <button
-              type="button"
-              class="attach"
-              :disabled="!bot"
-              aria-label="Attach"
-              title="Attach"
-              @click="pickFiles()"
-            >
-              <span aria-hidden="true">+</span>
-            </button>
-            <label class="draft">
-              <span class="sr-only">Message</span>
-              <textarea
-                ref="draftEl"
-                v-model="draft"
-                rows="1"
-                maxlength="16000"
-                :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
-                :disabled="!bot"
-                @keydown.enter.exact.prevent="send"
-                @paste="onAttachPaste"
-                @focus="listening = true"
-                @blur="listening = false"
-              />
-            </label>
-            <button
-              v-if="draft.trim() || canSendAttachments"
-              type="submit"
-              class="send"
-              :disabled="sending || !bot || attachmentsUploading"
-              aria-label="Send"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
+              <li
+                v-for="item in pendingAttachments"
+                :key="item.localId"
+                class="pending-chip"
+                :class="[item.status, { image: item.previewUrl }]"
+                :title="item.error ?? item.filename"
               >
-                <path d="M12 19V6M7 11l5-5 5 5" />
-              </svg>
-            </button>
-          </div>
-          <ul
-            v-if="pendingAttachments.length"
-            class="pending-chips"
-          >
-            <li
-              v-for="item in pendingAttachments"
-              :key="item.localId"
-              class="pending-chip"
-              :class="item.status"
-            >
-              <img
-                v-if="item.previewUrl"
-                :src="item.previewUrl"
-                :alt="item.filename"
-                class="pending-thumb"
+                <img
+                  v-if="item.previewUrl"
+                  :src="item.previewUrl"
+                  :alt="item.filename"
+                  class="pending-thumb"
+                >
+                <template v-else>
+                  <span
+                    class="pending-icon"
+                    aria-hidden="true"
+                  >
+                    <svg viewBox="0 0 24 24">
+                      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+                      <path d="M14 3v5h5" />
+                    </svg>
+                  </span>
+                  <span class="pending-copy">
+                    <span class="pending-name">{{ item.filename }}</span>
+                    <span class="pending-meta">{{ pendingMeta(item) }}</span>
+                  </span>
+                </template>
+                <span
+                  v-if="item.previewUrl && item.status !== 'ready'"
+                  class="pending-veil"
+                >{{ item.status === 'uploading' ? 'Uploading…' : 'Failed' }}</span>
+                <button
+                  type="button"
+                  class="pending-remove"
+                  :aria-label="`Remove ${item.filename}`"
+                  @click="removeAttachment(item.localId)"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 7l10 10M17 7L7 17" />
+                  </svg>
+                </button>
+              </li>
+            </ul>
+            <div class="composer-line">
+              <input
+                ref="fileInputEl"
+                type="file"
+                class="sr-only"
+                multiple
+                accept="image/*,application/pdf,text/plain,text/markdown,.md,.txt,.pdf"
+                @change="onFileInput"
               >
-              <span class="pending-name">{{ item.filename }}</span>
-              <span class="pending-meta">{{ formatPendingBytes(item.byteSize) }}</span>
               <button
                 type="button"
-                class="pending-remove"
-                :aria-label="`Remove ${item.filename}`"
-                @click="removeAttachment(item.localId)"
+                class="attach"
+                :disabled="!bot"
+                aria-label="Attach"
+                title="Attach"
+                @click="pickFiles()"
               >
-                ×
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
               </button>
-            </li>
-          </ul>
+              <label class="draft">
+                <span class="sr-only">Message</span>
+                <textarea
+                  ref="draftEl"
+                  v-model="draft"
+                  rows="1"
+                  maxlength="16000"
+                  :placeholder="pendingAttachments.length > 0
+                    ? 'Добавьте сообщение или просто отправьте'
+                    : `Сообщение для ${bot?.name ?? 'Bot'}`"
+                  :disabled="!bot"
+                  @keydown.enter.exact.prevent="send"
+                  @paste="onAttachPaste"
+                  @focus="listening = true"
+                  @blur="listening = false"
+                />
+              </label>
+              <button
+                v-if="draft.trim() || canSendAttachments"
+                type="submit"
+                class="send"
+                :disabled="sending || !bot || attachmentsUploading"
+                aria-label="Send"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 19V6M7 11l5-5 5 5" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       </form>
 
@@ -301,6 +334,7 @@
 
 <script setup lang="ts">
 import type { Bot, BotAvatarState, Message } from '@dostigus/shared'
+import type { PendingAttachment } from '../../composables/useComposerAttachments'
 import type { HostSheetEntry } from '../../utils/host-sheets'
 import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet } from '@dostigus/ui-kit'
 import { hostChatParts, hostSheetById } from '../../utils/host-sheets'
@@ -354,6 +388,17 @@ const {
   bindWindow: bindAttachmentWindow,
   unbindWindow: unbindAttachmentWindow,
 } = useComposerAttachments()
+
+function pendingMeta(item: PendingAttachment) {
+  if (item.status === 'uploading') {
+    return 'Uploading…'
+  }
+  if (item.status === 'error') {
+    return item.error ?? 'Failed'
+  }
+  return formatPendingBytes(item.byteSize)
+}
+
 const draft = ref('')
 const draftEl = ref<HTMLTextAreaElement | null>(null)
 const pageEl = ref<HTMLElement | null>(null)
@@ -507,7 +552,8 @@ function showMarkError() {
 }
 
 /**
- * Pill on one line; `--radius-card` once the field is taller than that.
+ * Pill on one line; a concentric corner once the field is taller than that
+ * or the attachment tray sits inside it.
  * Easing `9999px` down to 28px stays a pill until the last moment, so the
  * transition is pinned to the corner already on screen (half the row).
  */
@@ -515,6 +561,10 @@ function measureComposer() {
   const el = draftEl.value
   if (!el) {
     setComposerMultiline(false)
+    return
+  }
+  if (pendingAttachments.value.length > 0) {
+    setComposerMultiline(true)
     return
   }
   const style = getComputedStyle(el)
@@ -712,7 +762,7 @@ onUnmounted(() => {
   }
 })
 
-watch(draft, () => {
+watch([draft, () => pendingAttachments.value.length], () => {
   nextTick(measureComposer)
 })
 
@@ -1196,22 +1246,44 @@ async function onBotSaved() {
   position: relative;
   z-index: 1;
   display: flex;
-  gap: 0.25rem;
-  align-items: flex-end;
+  flex-direction: column;
+  --composer-button: 2.25rem;
+  --composer-pad: 0.3rem;
+  --composer-rim: 1px;
+  /* Anything inset by --composer-pad shares the button bend, so the
+     outer corner is that bend plus the pad and the rim (concentric). */
+  --composer-inner-radius: calc(var(--composer-button) / 2);
+  gap: var(--composer-pad);
   overflow: hidden;
-  padding: 0.3rem 0.4rem;
-  /* A step lighter than the fill so the rim still reads on Chat black. */
-  border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));
+  /* Equal on every side so each circle sits concentric with its end cap. */
+  padding: var(--composer-pad);
+  border: var(--composer-rim) solid var(--composer-line);
   border-radius: 9999px;
   background: var(--composer);
-  /* Same clock for the corner, the rim, and the fill so the stroke does not hitch. */
+  /* Corner and fill share one clock so the stroke does not hitch; the rim
+     answers hover and focus on its own short step. */
   transition-property: border-radius, border-color, background-color;
-  transition-duration: 640ms;
+  transition-duration: 640ms, 160ms, 640ms;
   transition-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
 }
 
+.composer-row:hover,
+.composer-row:focus-within {
+  border-color: var(--composer-line-strong);
+}
+
 .composer-row.multiline {
-  border-radius: var(--radius-card);
+  border-radius: calc(var(--composer-inner-radius) + var(--composer-pad) + var(--composer-rim));
+}
+
+.composer-line {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.composer-row.multiline .composer-line {
+  align-items: flex-end;
 }
 
 .send-error {
@@ -1244,8 +1316,8 @@ async function onBotSaved() {
   appearance: none;
   display: grid;
   place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: var(--composer-button);
+  height: var(--composer-button);
   flex: none;
   border: 0;
   border-radius: 999px;
@@ -1253,17 +1325,37 @@ async function onBotSaved() {
   cursor: pointer;
 }
 
+/* Ghost twin of Send: same circle, a soft fill and a hairline rim drawn
+   inside so the footprint stays exactly the Send diameter. */
 .attach {
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 1.45rem;
-  line-height: 1;
-  font-weight: 500;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent);
+  color: var(--text);
+  transition: background-color 160ms ease;
+}
+
+.attach:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 13%, transparent);
+}
+
+.attach:focus-visible,
+.send:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .attach:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.attach svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
 }
 
 .drop-mask {
@@ -1281,23 +1373,33 @@ async function onBotSaved() {
 
 .pending-chips {
   list-style: none;
-  margin: 0.4rem 0 0;
-  padding: 0 0.2rem;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  align-items: flex-end;
+  gap: 0.45rem;
 }
 
 .pending-chip {
-  display: inline-flex;
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  max-width: 100%;
-  padding: 0.25rem 0.4rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  font-size: 0.8rem;
+  gap: 0.55rem;
+  max-width: 15rem;
+  height: 3.5rem;
+  --chip-inset: 0.625rem;
+  padding: 0 2rem 0 var(--chip-inset);
+  border-radius: var(--composer-inner-radius);
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+  font-size: 0.82rem;
+}
+
+.pending-chip.image {
+  width: 3.5rem;
+  padding: 0;
+  overflow: hidden;
 }
 
 .pending-chip.error {
@@ -1305,31 +1407,108 @@ async function onBotSaved() {
 }
 
 .pending-thumb {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 0.3rem;
+  display: block;
+}
+
+.pending-chip.uploading .pending-thumb {
+  opacity: 0.55;
+}
+
+.pending-veil {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 0.1rem 0;
+  text-align: center;
+  font-size: 0.62rem;
+  background: color-mix(in srgb, var(--bg-chat) 70%, transparent);
+  color: var(--text);
+}
+
+.pending-chip.error .pending-veil {
+  color: var(--accent);
+}
+
+.pending-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: calc(var(--composer-inner-radius) - var(--chip-inset));
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
+.pending-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.9;
+  stroke-linejoin: round;
+}
+
+.pending-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
 }
 
 .pending-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 8rem;
+  color: var(--text);
+  font-weight: 600;
 }
 
 .pending-meta {
   color: var(--text-muted);
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.pending-chip.error .pending-meta {
+  color: var(--accent);
 }
 
 .pending-remove {
   appearance: none;
+  position: absolute;
+  top: calc(var(--composer-inner-radius) - 0.65rem);
+  right: calc(var(--composer-inner-radius) - 0.65rem);
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
   border: 0;
-  background: transparent;
-  color: var(--text-muted);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-chat) 72%, transparent);
+  color: var(--text);
   cursor: pointer;
-  font: inherit;
-  line-height: 1;
+}
+
+.pending-remove:hover {
+  background: var(--bg-chat);
+}
+
+.pending-remove:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pending-remove svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
 }
 
 .send {
@@ -1377,8 +1556,10 @@ textarea {
   border: 0;
   background: transparent;
   color: var(--text);
+  /* One line is exactly the 2.25rem button box: 1.45rem + 2 × 0.4rem. */
   padding: 0.4rem 0.25rem;
-  min-height: 1.6rem;
+  line-height: 1.45rem;
+  min-height: 2.25rem;
   max-height: 8rem;
   field-sizing: content;
 }

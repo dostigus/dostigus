@@ -54,6 +54,15 @@ export function useComposerAttachments() {
       return
     }
     if (file.size > ARTIFACT_UI_MAX_BYTES) {
+      items.value = [...items.value, {
+        localId: crypto.randomUUID(),
+        filename: file.name || 'file',
+        mime: file.type || 'application/octet-stream',
+        byteSize: file.size,
+        previewUrl: null,
+        status: 'error',
+        error: `Over ${formatArtifactBytes(ARTIFACT_UI_MAX_BYTES)}`,
+      }]
       return
     }
     const localId = crypto.randomUUID()
@@ -92,7 +101,7 @@ export function useComposerAttachments() {
     } catch {
       items.value = items.value.map((item) => (
         item.localId === localId
-          ? { ...item, status: 'error', error: 'Could not upload that file.' }
+          ? { ...item, status: 'error', error: 'Upload failed' }
           : item
       ))
     }

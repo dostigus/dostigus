@@ -4,7 +4,10 @@
   --bg-chat: #000000;
   --surface: #262626;
   /* Composer only. A step lighter than bubble --surface. */
-  --composer: color-mix(in srgb, var(--text) 12%, var(--surface));
+  --composer: color-mix(in srgb, var(--text) 7%, var(--surface));
+  /* Composer rim: resting, then hover / focus so the field reads as a control. */
+  --composer-line: color-mix(in srgb, var(--text) 14%, var(--composer));
+  --composer-line-strong: color-mix(in srgb, var(--text) 30%, var(--composer));
   --sheet: #212121;
   --card: #000000;
   --line: #333333;

@@ -533,9 +533,15 @@ async function send() {
   gap: 0.25rem;
   align-items: flex-end;
   padding: 0.3rem 0.4rem;
-  border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));
+  border: 1px solid var(--composer-line);
   border-radius: 9999px;
   background: var(--composer);
+  transition: border-color 160ms cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.composer-row:hover,
+.composer-row:focus-within {
+  border-color: var(--composer-line-strong);
 }
 
 .draft {
