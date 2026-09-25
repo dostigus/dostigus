@@ -173,6 +173,58 @@
             Try again
           </button>
         </p>
+        <ul
+          v-if="pendingAttachments.length"
+          class="pending-chips"
+          aria-label="Attachments"
+        >
+          <li
+            v-for="item in pendingAttachments"
+            :key="item.localId"
+            class="pending-chip"
+            :class="[item.status, { image: item.previewUrl }]"
+            :title="item.error ?? item.filename"
+          >
+            <img
+              v-if="item.previewUrl"
+              :src="item.previewUrl"
+              :alt="item.filename"
+              class="pending-thumb"
+            >
+            <template v-else>
+              <span
+                class="pending-icon"
+                aria-hidden="true"
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+                  <path d="M14 3v5h5" />
+                </svg>
+              </span>
+              <span class="pending-copy">
+                <span class="pending-name">{{ item.filename }}</span>
+                <span class="pending-meta">{{ pendingMeta(item) }}</span>
+              </span>
+            </template>
+            <span
+              v-if="item.previewUrl && item.status !== 'ready'"
+              class="pending-veil"
+            >{{ item.status === 'uploading' ? 'Uploading…' : 'Failed' }}</span>
+            <button
+              type="button"
+              class="pending-remove"
+              :aria-label="`Remove ${item.filename}`"
+              @click="removeAttachment(item.localId)"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M7 7l10 10M17 7L7 17" />
+              </svg>
+            </button>
+          </li>
+        </ul>
         <div class="composer-foot">
           <div
             ref="composerRowEl"
@@ -195,7 +247,12 @@
               title="Attach"
               @click="pickFiles()"
             >
-              <span aria-hidden="true">+</span>
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
             </button>
             <label class="draft">
               <span class="sr-only">Message</span>
@@ -227,34 +284,6 @@
               </svg>
             </button>
           </div>
-          <ul
-            v-if="pendingAttachments.length"
-            class="pending-chips"
-          >
-            <li
-              v-for="item in pendingAttachments"
-              :key="item.localId"
-              class="pending-chip"
-              :class="item.status"
-            >
-              <img
-                v-if="item.previewUrl"
-                :src="item.previewUrl"
-                :alt="item.filename"
-                class="pending-thumb"
-              >
-              <span class="pending-name">{{ item.filename }}</span>
-              <span class="pending-meta">{{ formatPendingBytes(item.byteSize) }}</span>
-              <button
-                type="button"
-                class="pending-remove"
-                :aria-label="`Remove ${item.filename}`"
-                @click="removeAttachment(item.localId)"
-              >
-                ×
-              </button>
-            </li>
-          </ul>
         </div>
       </form>
 
@@ -301,6 +330,7 @@
 
 <script setup lang="ts">
 import type { Bot, BotAvatarState, Message } from '@dostigus/shared'
+import type { PendingAttachment } from '../../composables/useComposerAttachments'
 import type { HostSheetEntry } from '../../utils/host-sheets'
 import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet } from '@dostigus/ui-kit'
 import { hostChatParts, hostSheetById } from '../../utils/host-sheets'
@@ -354,6 +384,17 @@ const {
   bindWindow: bindAttachmentWindow,
   unbindWindow: unbindAttachmentWindow,
 } = useComposerAttachments()
+
+function pendingMeta(item: PendingAttachment) {
+  if (item.status === 'uploading') {
+    return 'Uploading…'
+  }
+  if (item.status === 'error') {
+    return item.error ?? 'Failed'
+  }
+  return formatPendingBytes(item.byteSize)
+}
+
 const draft = ref('')
 const draftEl = ref<HTMLTextAreaElement | null>(null)
 const pageEl = ref<HTMLElement | null>(null)
@@ -1253,17 +1294,37 @@ async function onBotSaved() {
   cursor: pointer;
 }
 
+/* Ghost twin of Send: same circle, a soft fill and a hairline rim drawn
+   inside so the footprint stays exactly the Send diameter. */
 .attach {
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 1.45rem;
-  line-height: 1;
-  font-weight: 500;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent);
+  color: var(--text);
+  transition: background-color 160ms ease;
+}
+
+.attach:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 13%, transparent);
+}
+
+.attach:focus-visible,
+.send:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .attach:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.attach svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
 }
 
 .drop-mask {
@@ -1280,24 +1341,34 @@ async function onBotSaved() {
 }
 
 .pending-chips {
+  pointer-events: auto;
   list-style: none;
-  margin: 0.4rem 0 0;
+  margin: 0;
   padding: 0 0.2rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  align-items: flex-end;
+  gap: 0.45rem;
 }
 
 .pending-chip {
-  display: inline-flex;
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  max-width: 100%;
-  padding: 0.25rem 0.4rem;
+  gap: 0.55rem;
+  max-width: 15rem;
+  height: 3.5rem;
+  padding: 0 2rem 0 0.55rem;
   border-radius: var(--radius);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  font-size: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--text) 10%, var(--composer));
+  background: var(--composer);
+  font-size: 0.82rem;
+}
+
+.pending-chip.image {
+  width: 3.5rem;
+  padding: 0;
+  overflow: hidden;
 }
 
 .pending-chip.error {
@@ -1305,31 +1376,108 @@ async function onBotSaved() {
 }
 
 .pending-thumb {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 0.3rem;
+  display: block;
+}
+
+.pending-chip.uploading .pending-thumb {
+  opacity: 0.55;
+}
+
+.pending-veil {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 0.1rem 0;
+  text-align: center;
+  font-size: 0.62rem;
+  background: color-mix(in srgb, var(--bg-chat) 70%, transparent);
+  color: var(--text);
+}
+
+.pending-chip.error .pending-veil {
+  color: var(--accent);
+}
+
+.pending-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: calc(var(--radius) - 0.2rem);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
+.pending-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.9;
+  stroke-linejoin: round;
+}
+
+.pending-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
 }
 
 .pending-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 8rem;
+  color: var(--text);
+  font-weight: 600;
 }
 
 .pending-meta {
   color: var(--text-muted);
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.pending-chip.error .pending-meta {
+  color: var(--accent);
 }
 
 .pending-remove {
   appearance: none;
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
   border: 0;
-  background: transparent;
-  color: var(--text-muted);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-chat) 72%, transparent);
+  color: var(--text);
   cursor: pointer;
-  font: inherit;
-  line-height: 1;
+}
+
+.pending-remove:hover {
+  background: var(--bg-chat);
+}
+
+.pending-remove:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pending-remove svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
 }
 
 .send {
