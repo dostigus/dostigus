@@ -364,17 +364,21 @@ async function stopChrome(launched) {
   if (!launched) {
     return
   }
-  launched.child.kill('SIGTERM')
-  const died = await Promise.race([
+  launched.child.kill('SIGKILL')
+  await Promise.race([
     new Promise((resolve) => {
-      launched.child.once('exit', () => resolve(true))
+      launched.child.once('exit', () => resolve())
     }),
-    sleep(2000).then(() => false),
+    sleep(2000),
   ])
-  if (!died) {
-    launched.child.kill('SIGKILL')
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      await rm(launched.userDataDir, { recursive: true, force: true })
+      return
+    } catch {
+      await sleep(100)
+    }
   }
-  await rm(launched.userDataDir, { recursive: true, force: true })
 }
 
 async function attachPage(cdp) {
@@ -485,8 +489,12 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     note(`preview-shoot: wrote ${outPath}`)
     console.log(outPath)
   } finally {
-    cdp?.close()
-    await stopChrome(launched)
+    try {
+      cdp?.close()
+      await stopChrome(launched)
+    } catch (error) {
+      note(`preview-shoot: chrome cleanup: ${error?.message ?? error}`)
+    }
   }
 }
 
