@@ -30,7 +30,7 @@
     >
       <NuxtLink
         v-if="isOwner && !hideSettings"
-        to="/settings/providers"
+        to="/dashboard/settings"
         class="item"
         role="menuitem"
         @click="choose"

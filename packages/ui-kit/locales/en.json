@@ -262,6 +262,41 @@
     "placeholderOrSend": "Add a message or just send",
     "kitchenDescriptionAlt": "Pantry, one recipe, and a cooked log."
   },
+  "dashboard": {
+    "title": "Dashboard",
+    "titleDoc": "Dostigus · Dashboard",
+    "titleDocPage": "Dostigus · Dashboard · {page}",
+    "aria": "Dashboard",
+    "nav": {
+      "back": "Bots",
+      "backAria": "Back to Bots",
+      "overview": "Overview",
+      "overviewHint": "Cluster status",
+      "cluster": "Cluster",
+      "clusterSettings": "Cluster settings",
+      "clusterSettingsHint": "Timezone, http",
+      "integrations": "Integrations",
+      "providers": "Providers",
+      "providersHint": "LLM for Bots",
+      "account": "Account",
+      "settings": "Settings",
+      "settingsHint": "Owner account"
+    },
+    "overview": {
+      "title": "Overview",
+      "lead": "Cluster status and work will live here.",
+      "stub": "No Cluster work to show yet."
+    },
+    "cluster": {
+      "title": "Cluster settings",
+      "lead": "Remaining Cluster settings."
+    },
+    "settings": {
+      "title": "Settings",
+      "lead": "Owner account settings will live here.",
+      "stub": "Account settings are not available yet."
+    }
+  },
   "settings": {
     "title": "Settings",
     "titleDoc": "Dostigus · Settings",
@@ -269,8 +304,6 @@
     "cluster": "Cluster",
     "aria": "Settings",
     "nav": {
-      "back": "Bots",
-      "backAria": "Back to Bots",
       "providers": "Providers",
       "providersHint": "LLM for Bots",
       "other": "Other",

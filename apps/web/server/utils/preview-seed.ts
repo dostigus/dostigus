@@ -258,7 +258,7 @@ export function previewSeedRedirect(input: {
     return '/members'
   }
   if (previewSettingsRequested(input.settings) || previewProvidersRequested(input.providers)) {
-    return '/settings/providers'
+    return previewProvidersRequested(input.providers) ? '/dashboard/providers' : '/dashboard'
   }
   if (previewRoomsRequested(input.rooms) && input.roomId) {
     return `/threads/${input.roomId}`

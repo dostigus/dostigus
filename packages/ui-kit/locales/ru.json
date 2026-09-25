@@ -262,6 +262,41 @@
     "placeholderOrSend": "Добавьте сообщение или просто отправьте",
     "kitchenDescriptionAlt": "Кладовая, один рецепт и приготовленное."
   },
+  "dashboard": {
+    "title": "Dashboard",
+    "titleDoc": "Dostigus · Dashboard",
+    "titleDocPage": "Dostigus · Dashboard · {page}",
+    "aria": "Dashboard",
+    "nav": {
+      "back": "Боты",
+      "backAria": "Назад к Боты",
+      "overview": "Главная",
+      "overviewHint": "Состояние Cluster",
+      "cluster": "Кластер",
+      "clusterSettings": "Настройки кластера",
+      "clusterSettingsHint": "Часовой пояс, http",
+      "integrations": "Интеграции",
+      "providers": "Providers",
+      "providersHint": "LLM для Bots",
+      "account": "Аккаунт",
+      "settings": "Настройки",
+      "settingsHint": "Аккаунт Owner"
+    },
+    "overview": {
+      "title": "Главная",
+      "lead": "Состояние Cluster и работа появятся здесь.",
+      "stub": "Пока нет работы Cluster."
+    },
+    "cluster": {
+      "title": "Настройки кластера",
+      "lead": "Остальные настройки Cluster."
+    },
+    "settings": {
+      "title": "Настройки",
+      "lead": "Настройки аккаунта Owner появятся здесь.",
+      "stub": "Настройки аккаунта пока недоступны."
+    }
+  },
   "settings": {
     "title": "Settings",
     "titleDoc": "Dostigus · Settings",
@@ -269,8 +304,6 @@
     "cluster": "Cluster",
     "aria": "Settings",
     "nav": {
-      "back": "Боты",
-      "backAria": "Назад к Боты",
       "providers": "Провайдеры",
       "providersHint": "LLM для Bots",
       "other": "Прочее",

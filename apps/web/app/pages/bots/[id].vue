@@ -15,8 +15,8 @@
     >
       <template v-if="isOwner">
         {{ $t('chat.quietOwnerShort') }}
-        <NuxtLink to="/settings/providers">
-          {{ $t('host.menu.settings') }}
+        <NuxtLink to="/dashboard/providers">
+          {{ $t('dashboard.nav.providers') }}
         </NuxtLink>
       </template>
       <template v-else>

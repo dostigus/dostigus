@@ -7,7 +7,7 @@
    **Dostigus, Platform, Cluster, Owner, Member, Host, Chat, Card, Sheet, Kit,
    Brand, Sticker, Sheet shell, Bot, Orchestrator, Builder, Skill, Manifest,
    Module package, Store, Artifact, MCP surface, Job, Apply, LLM gateway,
-   Provider, Policy, Model tier, Household, Share link.**
+   Provider, Policy, Model tier, Household, Share link, Dashboard.**
    Prefer **Host** (Host shell is a synonym). Prefer **MCP surface** (MCP
    contract is its interface definition). A Bot is not a Module package. Avoid
    bare “cloud agent” — use Builder. Do not invent synonyms. All repo docs are
@@ -103,7 +103,8 @@ which applies the same gate (`members/index.get.ts`,
 `requireHostSession` / `withHostStore` so a Member can use them. Settings,
 Bot create/delete, and Members stay on the Owner gate. The page gate is
 [`apps/web/app/middleware/owner.global.ts`](apps/web/app/middleware/owner.global.ts):
-`/members`, `/settings`, and every `/settings/...` page send a Member to
+`/members`, `/dashboard`, every `/dashboard/...` page, leftover
+`/settings` redirects, and every `/settings/...` page send a Member to
 `/` (`isOwnerPath` in
 [`apps/web/app/utils/owner-paths.ts`](apps/web/app/utils/owner-paths.ts)).
 Invite accept
@@ -190,28 +191,29 @@ often listens on IPv6 only: open **http://localhost:3000/**.
 **http://127.0.0.1:3000** refuses the connection.
 
 The Host is a Bot list + Chat. Press
-**+** to create a Bot (default **New Bot**). **Settings** is multi-page
-with a left nav ([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
-`/settings` lands on **Провайдеры** (`/settings/providers`): Providers,
-the OpenRouter quality shelf, «Подробнее» (full live catalog, per-tier
-pins, raw Policy), and health. **Прочее** (`/settings/other`) holds the
-Cluster timezone and the Cluster http allowlist. Not a landing page.
-The OpenRouter catalog is
+**+** to create a Bot (default **New Bot**). **Dashboard** is Owner
+chrome under `/dashboard/**` ([ADR 0038](docs/adr/0038-dashboard-chrome.md)):
+Overview, Cluster settings, Providers, and Settings. Providers
+(`/dashboard/providers`) holds the OpenRouter quality shelf, «Подробнее»
+(full live catalog, per-tier pins, raw Policy), and health. Cluster
+settings (`/dashboard/cluster`) holds the Cluster timezone, the Cluster
+http allowlist, and the Locale switcher. Leftover `/settings` and
+`/settings/...` redirect into Dashboard. The OpenRouter catalog is
 `GET /api/settings/llm-gateway/providers/:id/catalog` (Owner session,
 `?refresh=1` bypasses the ~24h Host cache). Store is SQLite
 (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
 First visit creates the Cluster Owner; later visits sign in. The Owner opens
 **Members** to add a Member (display name, email or username, password). A
-Member signs in and uses Bot list and Chat. Settings stays with the Owner.
+Member signs in and uses Bot list and Chat. Dashboard stays with the Owner.
 
 ### Host UI / pane width
 
 Chat, Threads, and Members sit in the Host sidebar + pane
-([`layouts/host.vue`](apps/web/app/layouts/host.vue)). Settings uses its
-own chrome ([ADR 0038](docs/adr/0038-settings-chrome.md),
-[`layouts/settings.vue`](apps/web/app/layouts/settings.vue)): a Settings
+([`layouts/host.vue`](apps/web/app/layouts/host.vue)). Dashboard uses its
+own chrome ([ADR 0038](docs/adr/0038-dashboard-chrome.md),
+[`layouts/dashboard.vue`](apps/web/app/layouts/dashboard.vue)): a grouped
 left nav and a scrolling content column. There is no Host Bot list on
-`/settings/**`.
+`/dashboard/**`.
 
 Size container-query / two-column breakpoints against the **content
 pane**, not the full viewport.
@@ -221,17 +223,17 @@ Measure from current CSS (16px root):
 - Host sidebar default is **280px / 17.5rem**
  (`SIDEBAR_DEFAULT` in [`apps/web/app/utils/sidebar-width.ts`](apps/web/app/utils/sidebar-width.ts);
  CSS fallback `--sidebar-width` on [`HostSidebar.vue`](apps/web/app/components/HostSidebar.vue)).
-- Settings left nav is **16rem**
- ([`apps/web/app/layouts/settings.vue`](apps/web/app/layouts/settings.vue)).
-- Settings content (`.pane`) is the rest of the viewport and is the
+- Dashboard left nav is **16rem**
+ ([`apps/web/app/layouts/dashboard.vue`](apps/web/app/layouts/dashboard.vue)).
+- Dashboard content (`.pane`) is the rest of the viewport and is the
  scroll container (title + sections). Horizontal padding is **1.75rem**
  each side on that column.
 
-At **1440px** Settings content is about **70rem** (viewport minus the
-Settings nav and padding). At **1280px** the same column is closer to
-**60rem**. Below **46rem** the Settings nav stacks above the content
-(`max-width: 46rem` on the Settings layout). The Host drawer breakpoint
-(**52rem**) does not apply on Settings — that layout does not mount
+At **1440px** Dashboard content is about **70rem** (viewport minus the
+Dashboard nav and padding). At **1280px** the same column is closer to
+**60rem**. Below **46rem** the Dashboard nav stacks above the content
+(`max-width: 46rem` on the Dashboard layout). The Host drawer breakpoint
+(**52rem**) does not apply on Dashboard — that layout does not mount
 the Bot sidebar.
 
 Put `container-type` on a parent and `@container` rules on a **child**.
@@ -240,10 +242,9 @@ queried element is not its own container.
 
 `/settings/providers` in [PR #132](https://github.com/dostigus/dostigus/pull/132)
 is the example that burned screenshot rounds: a **60rem** two-column
-breakpoint never fired at 1440px while Settings still sat inside the
+breakpoint never fired at 1440px while Providers still sat inside the
 Host pane. The live query is `@container (min-width: 54rem)` on a child
-of `.providers`. With Settings as its own chrome that query fires at
-common desktop widths.
+of `.providers`. On Dashboard that query fires at common desktop widths.
 
 ### Preview seed
 
@@ -315,17 +316,18 @@ is set. **HEAD**
 ignores `?members=1` and still answers **204** or **302** to
 `/bots/preview` with no session cookie.
 
-For Settings, open
+For Dashboard, open
 **http://localhost:3000/preview-seed?settings=1**. That GET signs in the
-same preview Owner and redirects to `/settings/providers`. Timezone and
-http allowlist are on **Прочее** (`/settings/other`). `?members=1` still
+same preview Owner and redirects to `/dashboard` (Overview). Timezone and
+http allowlist are on Cluster settings (`/dashboard/cluster`). Account
+Settings is `/dashboard/settings`. `?members=1` still
 wins when both are set. **HEAD** ignores `?settings=1`.
 
 For the Providers page with a saved OpenRouter key, open
 **http://localhost:3000/preview-seed?providers=1**. When the Store has
 no Provider and no legacy key, that GET saves the fixture OpenRouter
 Provider (id `preview-openrouter`, key `sk-or-v1-preview-fixture`),
-then redirects to `/settings/providers`. On `nuxt dev` with
+then redirects to `/dashboard/providers`. On `nuxt dev` with
 `DOSTIGUS_PREVIEW_SEED=1`, the catalog route skips `GET /key` for that
 fixture id only, so health is green and the shelf ranks the real
 public OpenRouter list (the VM needs outbound HTTPS). The fixture key
@@ -419,10 +421,10 @@ that query, that `?kitchen=1` adds one Kitchen button once while
 HEAD ignores that query, that `?system=1` adds three system Skill /
 self-settings lines once while HEAD ignores that query, and that `?threads=1` lists Bot `preview` and the Member's Bot for the
 Owner while `?threads=1&as=member` opens a different bot-thread on Bot
-`preview`. HEAD ignores `?threads=1`. `?settings=1` and `?providers=1`
-land on `/settings/providers`; the catalog answers without the key; a
-Member gets 403 on the catalog and 302 `/` on every `/settings/...`
-page. HEAD ignores `?providers=1`.
+`preview`. HEAD ignores `?threads=1`. `?settings=1` lands on `/dashboard`; `?providers=1`
+lands on `/dashboard/providers`; the catalog answers without the key; a
+Member gets 403 on the catalog and 302 `/` on every `/dashboard/...`
+and leftover `/settings/...` page. HEAD ignores `?providers=1`.
 `?rooms=1` opens `/threads/preview-room` after seeding a direct message
 and that room. HEAD ignores `?rooms=1`.
 GET `?activity=typing` lands on `/bots/preview?activity=typing` while
@@ -451,10 +453,10 @@ explicit ready marker (not network idle), and writes a PNG under
 | --- | --- | --- | --- |
 | `chat` | `/preview-seed` | `.bubble` | 1440×900 |
 | `system` | `?system=1` | three `.bubble.system` | 1440×900 |
-| `providers-empty` | `?settings=1` | `.providers .add` | 1440×900 |
+| `providers-empty` | `?settings=1` then `/dashboard/providers` | `.providers .add` | 1440×900 |
 | `providers-fixture` | `?providers=1` | `.provider` and the shelf (cards or miss banner) | 1440×900 |
-| `settings-other` | `?settings=1` then `/settings/other` | `.other input[name="timezone"]` | 1440×900 |
-| `narrow` | `?settings=1` | `.providers h1` | 390×844 |
+| `settings-other` | `?settings=1` then `/dashboard/cluster` | `.cluster input[name="timezone"]` | 1440×900 |
+| `narrow` | `?settings=1` then `/dashboard/providers` | `.providers h1` | 390×844 |
 
 `providers-empty` needs a Store with no Provider (a prior
 `providers-fixture` on the same `DATABASE_URL` leaves the fixture;

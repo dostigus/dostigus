@@ -60,9 +60,10 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
   opens that Sheet. It does not create a Bot and it does not add a route.
   The `+` opens the Bot picker.
 - The bottom of the expanded sidebar is a user button (initials and name).
-  Its menu opens Settings (`/settings`), Members (`/members`, Owner only),
-  and Sign out. Those links leave the sidebar chrome. Settings stays a
-  page. Members stays a page.
+  Its menu opens Settings (`/dashboard/settings`), Members (`/members`,
+  Owner only), and Sign out. Those links leave the sidebar chrome.
+  Settings is a Dashboard page
+  ([ADR 0038](0038-dashboard-chrome.md)). Members stays a page.
 - Chat has no full-width header bar. A centered pill overlays the thread:
   the Bot avatar and name. The thread scrolls under the translucent pill.
   A top inset, about the pill height, keeps the first line clear when the

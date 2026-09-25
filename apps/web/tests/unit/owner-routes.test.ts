@@ -162,12 +162,17 @@ it('invokes Chat MCP tools in-process from the Host message route', () => {
   expect(src).toContain('clearChatActivityPhase')
 })
 
-it('sends a Member away from /settings and every /settings/... page', () => {
+it('sends a Member away from Dashboard, leftover /settings, and Members', () => {
+  expect(isOwnerPath('/dashboard')).toBe(true)
+  expect(isOwnerPath('/dashboard/providers')).toBe(true)
+  expect(isOwnerPath('/dashboard/cluster')).toBe(true)
+  expect(isOwnerPath('/dashboard/settings')).toBe(true)
   expect(isOwnerPath('/settings')).toBe(true)
   expect(isOwnerPath('/settings/providers')).toBe(true)
   expect(isOwnerPath('/settings/other')).toBe(true)
   expect(isOwnerPath('/members')).toBe(true)
   expect(isOwnerPath('/settingsx')).toBe(false)
+  expect(isOwnerPath('/dashboardx')).toBe(false)
   expect(isOwnerPath('/bots/preview')).toBe(false)
   expect(isOwnerPath('/')).toBe(false)
   const src = readFileSync(

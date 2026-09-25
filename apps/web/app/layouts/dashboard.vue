@@ -1,13 +1,13 @@
 <template>
-  <div class="settings">
+  <div class="dashboard">
     <nav
       class="rail"
-      :aria-label="$t('settings.aria')"
+      :aria-label="$t('dashboard.aria')"
     >
       <NuxtLink
         to="/"
         class="back"
-        :aria-label="$t('settings.nav.backAria')"
+        :aria-label="$t('dashboard.nav.backAria')"
       >
         <span
           class="chevron"
@@ -17,43 +17,43 @@
             <path d="M15 6 9 12l6 6" />
           </svg>
         </span>
-        <span>{{ $t('settings.nav.back') }}</span>
+        <span>{{ $t('dashboard.nav.back') }}</span>
       </NuxtLink>
 
       <div class="items">
         <NuxtLink
-          v-for="item in SETTINGS_PAGES"
-          :key="item.to"
-          :to="item.to"
+          to="/dashboard"
           class="item"
-          :aria-current="current?.to === item.to ? 'page' : undefined"
+          :aria-current="route.path === '/dashboard' ? 'page' : undefined"
         >
           <span
             class="glyph"
             aria-hidden="true"
           >
-            <svg
-              v-if="item.icon === 'providers'"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" />
-              <rect
-                x="7.5"
-                y="7.5"
-                width="9"
-                height="9"
-                rx="2.5"
-              />
-              <circle
-                cx="12"
-                cy="12"
-                r="1.4"
-              />
+            <svg viewBox="0 0 24 24">
+              <path d="M4.5 11.5 12 5l7.5 6.5" />
+              <path d="M7 10.5V19h4v-5h2v5h4v-8.5" />
             </svg>
-            <svg
-              v-else
-              viewBox="0 0 24 24"
-            >
+          </span>
+          <span class="item-copy">
+            <span class="item-label">{{ $t('dashboard.nav.overview') }}</span>
+            <span class="item-hint">{{ $t('dashboard.nav.overviewHint') }}</span>
+          </span>
+        </NuxtLink>
+
+        <p class="group">
+          {{ $t('dashboard.nav.cluster') }}
+        </p>
+        <NuxtLink
+          to="/dashboard/cluster"
+          class="item"
+          :aria-current="route.path === '/dashboard/cluster' ? 'page' : undefined"
+        >
+          <span
+            class="glyph"
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24">
               <path d="M5 7h9M18 7h1M5 17h1M10 17h9" />
               <circle
                 cx="16"
@@ -68,8 +68,69 @@
             </svg>
           </span>
           <span class="item-copy">
-            <span class="item-label">{{ item.label }}</span>
-            <span class="item-hint">{{ item.hint }}</span>
+            <span class="item-label">{{ $t('dashboard.nav.clusterSettings') }}</span>
+            <span class="item-hint">{{ $t('dashboard.nav.clusterSettingsHint') }}</span>
+          </span>
+        </NuxtLink>
+
+        <p class="group">
+          {{ $t('dashboard.nav.integrations') }}
+        </p>
+        <NuxtLink
+          to="/dashboard/providers"
+          class="item"
+          :aria-current="route.path === '/dashboard/providers' ? 'page' : undefined"
+        >
+          <span
+            class="glyph"
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" />
+              <rect
+                x="7.5"
+                y="7.5"
+                width="9"
+                height="9"
+                rx="2.5"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="1.4"
+              />
+            </svg>
+          </span>
+          <span class="item-copy">
+            <span class="item-label">{{ $t('dashboard.nav.providers') }}</span>
+            <span class="item-hint">{{ $t('dashboard.nav.providersHint') }}</span>
+          </span>
+        </NuxtLink>
+
+        <p class="group">
+          {{ $t('dashboard.nav.account') }}
+        </p>
+        <NuxtLink
+          to="/dashboard/settings"
+          class="item"
+          :aria-current="route.path === '/dashboard/settings' ? 'page' : undefined"
+        >
+          <span
+            class="glyph"
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24">
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+              />
+              <path d="M12 4.5v2.2M12 17.3V19.5M4.5 12h2.2M17.3 12H19.5M6.4 6.4l1.6 1.6M16 16l1.6 1.6M17.6 6.4 16 8M8 16l-1.6 1.6" />
+            </svg>
+          </span>
+          <span class="item-copy">
+            <span class="item-label">{{ $t('dashboard.nav.settings') }}</span>
+            <span class="item-hint">{{ $t('dashboard.nav.settingsHint') }}</span>
           </span>
         </NuxtLink>
       </div>
@@ -86,19 +147,11 @@
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
-
-const SETTINGS_PAGES = computed(() => [
-  { to: '/settings/providers', label: t('settings.nav.providers'), hint: t('settings.nav.providersHint'), icon: 'providers' as const },
-  { to: '/settings/other', label: t('settings.nav.other'), hint: t('settings.nav.otherHint'), icon: 'other' as const },
-])
-
 const route = useRoute()
-const current = computed(() => SETTINGS_PAGES.value.find((item) => route.path.startsWith(item.to)))
 </script>
 
 <style scoped>
-.settings {
+.dashboard {
   height: 100dvh;
   display: flex;
   overflow: hidden;
@@ -164,8 +217,17 @@ const current = computed(() => SETTINGS_PAGES.value.find((item) => route.path.st
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
   overflow: auto;
+}
+
+.group {
+  margin: 0.85rem 0.6rem 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .foot {
@@ -240,7 +302,7 @@ const current = computed(() => SETTINGS_PAGES.value.find((item) => route.path.st
 }
 
 @media (max-width: 46rem) {
-  .settings {
+  .dashboard {
     flex-direction: column;
   }
 
@@ -263,7 +325,23 @@ const current = computed(() => SETTINGS_PAGES.value.find((item) => route.path.st
   .items {
     flex: 1;
     flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 0.35rem;
+  }
+
+  .group {
+    display: none;
+  }
+
+  .item {
+    flex: none;
+    padding: 0.4rem 0.75rem 0.4rem 0.5rem;
+    gap: 0.45rem;
+  }
+
+  .item-hint {
+    display: none;
   }
 
   .foot {
@@ -287,16 +365,6 @@ const current = computed(() => SETTINGS_PAGES.value.find((item) => route.path.st
     left: auto;
     right: 0;
     width: 12rem;
-  }
-
-  .item {
-    flex: none;
-    padding: 0.4rem 0.75rem 0.4rem 0.5rem;
-    gap: 0.45rem;
-  }
-
-  .item-hint {
-    display: none;
   }
 }
 </style>

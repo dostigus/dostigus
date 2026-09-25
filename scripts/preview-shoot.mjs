@@ -40,6 +40,7 @@ export const PREVIEW_SHOOT_STATES = {
   },
   'providers-empty': {
     seed: 'settings=1',
+    thenPath: '/dashboard/providers',
     ready: { selector: '.providers .add', count: 1 },
     viewport: DEFAULT_VIEWPORT,
     hint: 'providers-empty needs a Store with no Provider (use a fresh DATABASE_URL or remove the fixture on the page).',
@@ -56,12 +57,13 @@ export const PREVIEW_SHOOT_STATES = {
   },
   'settings-other': {
     seed: 'settings=1',
-    thenPath: '/settings/other',
-    ready: { selector: '.other input[name="timezone"]', count: 1 },
+    thenPath: '/dashboard/cluster',
+    ready: { selector: '.cluster input[name="timezone"]', count: 1 },
     viewport: DEFAULT_VIEWPORT,
   },
   'narrow': {
     seed: 'settings=1',
+    thenPath: '/dashboard/providers',
     ready: { selector: '.providers h1', count: 1 },
     viewport: NARROW_VIEWPORT,
   },

@@ -9,13 +9,13 @@ function read(rel: string): string {
   return readFileSync(join(appRoot, rel), 'utf8')
 }
 
-it('gives Settings its own chrome without the Host Bot list', () => {
-  const layout = read('layouts/settings.vue')
-  const page = read('pages/settings.vue')
+it('gives Dashboard its own chrome without the Host Bot list', () => {
+  const layout = read('layouts/dashboard.vue')
+  const page = read('pages/dashboard.vue')
   const host = read('layouts/host.vue')
 
-  expect(page).toContain('layout: \'settings\'')
-  expect(page).toContain('$t(\'settings.title\')')
+  expect(page).toContain('layout: \'dashboard\'')
+  expect(page).toContain('$t(\'dashboard.title\')')
   expect(page).toContain('<NuxtPage />')
   expect(page).not.toContain('HostMenuButton')
   expect(page).not.toContain('class="top"')
@@ -27,7 +27,11 @@ it('gives Settings its own chrome without the Host Bot list', () => {
   expect(layout).toContain('<HostUserMenu hide-settings')
   expect(layout).toContain('overflow: auto')
   expect(layout).toContain('to="/"')
-  expect(layout).toContain('settings.nav.back')
+  expect(layout).toContain('to="/dashboard"')
+  expect(layout).toContain('to="/dashboard/cluster"')
+  expect(layout).toContain('to="/dashboard/providers"')
+  expect(layout).toContain('to="/dashboard/settings"')
+  expect(layout).toContain('dashboard.nav.back')
   expect(layout).toContain('aria-current')
   expect(layout).not.toContain('HostSidebar')
   expect(layout).not.toContain('HostSearch')
@@ -36,26 +40,35 @@ it('gives Settings its own chrome without the Host Bot list', () => {
   expect(layout).not.toContain('host.nav.search')
 
   expect(host).toContain('HostSidebar')
-  expect(host).not.toContain('settings.nav.back')
+  expect(host).not.toContain('dashboard.nav.back')
 
-  expect(tHost('en', 'settings.nav.back')).toBe('Bots')
-  expect(tHost('en', 'settings.nav.backAria')).toBe('Back to Bots')
-  expect(tHost('ru', 'settings.nav.back')).toBe('Боты')
-  expect(tHost('ru', 'settings.nav.backAria')).toBe('Назад к Боты')
+  expect(tHost('en', 'dashboard.nav.back')).toBe('Bots')
+  expect(tHost('en', 'dashboard.nav.backAria')).toBe('Back to Bots')
+  expect(tHost('ru', 'dashboard.nav.back')).toBe('Боты')
+  expect(tHost('ru', 'dashboard.nav.backAria')).toBe('Назад к Боты')
+  expect(tHost('ru', 'dashboard.nav.overview')).toBe('Главная')
+  expect(tHost('ru', 'dashboard.nav.clusterSettings')).toBe('Настройки кластера')
+  expect(tHost('ru', 'dashboard.nav.settings')).toBe('Настройки')
 })
 
-it('reuses HostUserMenu and omits Settings when hideSettings is set', () => {
+it('reuses HostUserMenu and omits Settings on the Dashboard rail', () => {
   const menu = read('components/HostUserMenu.vue')
   const sidebar = read('components/HostSidebar.vue')
-  const layout = read('layouts/settings.vue')
+  const layout = read('layouts/dashboard.vue')
 
   expect(menu).toContain('hideSettings')
   expect(menu).toContain('isOwner && !hideSettings')
-  expect(menu).toContain('to="/settings/providers"')
+  expect(menu).toContain('to="/dashboard/settings"')
   expect(menu).toContain('to="/members"')
   expect(menu).toContain('HostLogoutButton')
   expect(sidebar).toContain('<HostUserMenu :collapsed="rail" />')
   expect(sidebar).not.toContain('hide-settings')
   expect(layout).toContain('<HostUserMenu hide-settings />')
   expect(layout.indexOf('class="items"')).toBeLessThan(layout.indexOf('class="foot"'))
+})
+
+it('keeps leftover /settings routes as redirects into Dashboard', () => {
+  expect(read('pages/settings/index.vue')).toContain('redirect: \'/dashboard\'')
+  expect(read('pages/settings/providers.vue')).toContain('redirect: \'/dashboard/providers\'')
+  expect(read('pages/settings/other.vue')).toContain('redirect: \'/dashboard/cluster\'')
 })

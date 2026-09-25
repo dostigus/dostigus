@@ -75,11 +75,13 @@ What the running Cluster does today:
 - Host UI: Bot list (empty state + `+` picker), Chat (timeline + composer,
   unlabeled bubbles), Settings, and Members.   Settings presents a
   Providers list (OpenRouter, OpenAI, or OpenAI-compatible). Casual
-  OpenRouter is paste key → meta free / auto.   Settings is multi-page
-  under `/settings/...` (**Провайдеры** and **Прочее**). Those
-  routes use their own chrome (Settings nav + scrolling
+  OpenRouter is paste key → meta free / auto.   Dashboard is Owner chrome under `/dashboard/...`
+  (Overview, Cluster settings, Providers, Settings). Those
+  routes use their own chrome (grouped nav + scrolling
   content), not the Host Bot list
-  ([ADR 0038](adr/0038-settings-chrome.md)). The four-tier
+  ([ADR 0038](adr/0038-dashboard-chrome.md)). Leftover
+  `/settings` and `/settings/...` redirect into Dashboard.
+  The four-tier
   bind stays in the Store; the live catalog shelf, Advanced pin, and
   Settings health are
   [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md). **Прочее**
@@ -135,8 +137,8 @@ What the running Cluster does today:
   Bot names, Chat lines, and Host settings that person can open. Escape,
   the overlay, and choosing a row dismiss it.
   The `+` opens that menu. **Найти или создать Bot** opens
-  the Bot picker. A user button opens Settings (`/settings` or
-  `/settings/...`), Members
+  the Bot picker. A user button opens Settings
+  (`/dashboard/settings`), Members
   (`/members`), and Sign out. Chat overlays a centered pill on the thread:
   avatar and name, translucent, so lines scroll under it. A top inset about
   the pill’s height keeps the first line clear of the pill when the thread

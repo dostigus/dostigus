@@ -3,10 +3,10 @@
 - Status: accepted
 - Date: 2026-09-22
 
-Amended 2026-09-25: Settings leaves this shell.
-`/settings` and `/settings/...` use `layouts/settings.vue`
-([ADR 0038](0038-settings-chrome.md)). Members and Chat stay
-here.
+Amended 2026-09-25: Dashboard leaves this shell.
+`/dashboard` and `/dashboard/...` use `layouts/dashboard.vue`
+([ADR 0038](0038-dashboard-chrome.md)). Leftover `/settings`
+routes redirect there. Members and Chat stay here.
 
 Desktop list chrome, Chat labels, and the composer are refined in
 [ADR 0015](0015-host-desktop-shell.md). The Create Bot modal and the wave
@@ -63,7 +63,7 @@ optimistic send without streaming, and a single empty-state call to action.
 ## Consequences
 
 - `layouts/host.vue` wraps `/`, `/bots/:id`, `/threads/:id`, and
-  `/members`. Settings is [ADR 0038](0038-settings-chrome.md).
+  `/members`. Dashboard is [ADR 0038](0038-dashboard-chrome.md).
 - The LLM gateway, the in-process tool loop, and message routes are
   unchanged. Optimism is Host UI only.
 - A failed send leaves the user line in place with a retry. It does not

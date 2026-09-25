@@ -3,5 +3,5 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ redirect: '/settings/providers' })
+definePageMeta({ redirect: '/dashboard' })
 </script>
