@@ -7,13 +7,20 @@
   shelf Free / Smart / Coding as Policy pins, Advanced pin now day-1
   of this amend. Escalate and meta free / auto stay. This docs PR
   does not implement Host code.
+- Amended: 2026-09-25 — Settings information architecture (grill
+  Q13–Q17): multi-page `/settings/...` with left nav; day-1 pages
+  **Провайдеры** and **Прочее**; Providers page two-column story;
+  health / confidence from key + soft catalog probe (not a Chat
+  blocker). Catalog / shelf / Advanced / pin / cache / OpenRouter-only
+  stay.
 
 The OpenAI-compatible LLM gateway shape and transient *same-model*
 retry stay [ADR 0004](0004-llm-gateway-tiers.md). Model tier *names*
 stay `cheap` | `strong` | `code` | `toy`. This record owns how those
 tiers are **bound and resolved**, and how the Host **escalates** after
-a failed attempt. Settings catalog and the OpenRouter quality shelf
-also live here. Do not mint a new ADR for that layer.
+a failed attempt. Settings catalog, the OpenRouter quality shelf,
+and Settings information architecture also live here. Do not mint
+a new ADR for that layer.
 
 Turn journal fields stay
 [ADR 0029](0029-turn-journal.md) (`modelId`, `servedModelId`, token
@@ -33,7 +40,8 @@ Host impl lands after this docs PR merges.
 
 Nick locked the bind / escalate shape on 2026-09-25 (grill
 «рекомендуемые» + «да погнали»). Nick locked the Settings /
-OpenRouter catalog layer the same day (grill rounds 1–3).
+OpenRouter catalog layer the same day (grill rounds 1–3), then
+Settings information architecture (Q13–Q17).
 
 ## Decision
 
@@ -213,11 +221,12 @@ model field; that stays
 [ADR 0028](0028-bot-self-settings-via-chat.md)).
 
 The first day-1 sketch put a four-tier Provider + Policy grid
-in the face. This amend **supersedes** that for OpenRouter:
-paste key, meta routing by default, optional quality shelf,
-details under «Подробнее». The four-tier bind remains the
-Store model; it is not required in the casual face. No Bot
-closet model field.
+in the face on one Settings page. This amend **supersedes**
+that for OpenRouter: paste key, meta routing by default,
+optional quality shelf, details under «Подробнее». The
+four-tier bind remains the Store model; it is not required
+in the casual face. Settings itself becomes multi-page (see
+Settings information architecture). No Bot closet model field.
 
 ### Settings / OpenRouter catalog (amend)
 
@@ -312,6 +321,70 @@ new gate.
 Do not invent other catalog routes in this record. Do not
 put the Provider key in the catalog response.
 
+### Settings information architecture (amend)
+
+Nick locked this on 2026-09-25 (grill Q13–Q17, «рекомендуемые»).
+Same record as the catalog / shelf. It does not mint ADR 0037.
+Catalog fetch, cache, shelf pins, Advanced, vision badge, and
+`kind=openrouter` only stay as written above.
+
+#### Shell
+
+Settings is **multi-page** Host routes under `/settings/...`
+with a **left nav**, not one monolithic page. Pages are
+deep-linkable.
+
+Day-1 carve-out (two pages only):
+
+| Page | What it holds |
+| --- | --- |
+| **Провайдеры** | Providers page: story, configure, shelf, Advanced, health |
+| **Прочее** | Leftover existing Settings (Cluster timezone, Cluster http allowlist, and anything else already on `/settings`) without a full redesign of every section |
+
+A broader Settings redesign is later. `/settings` may land on
+**Провайдеры**. Exact child slugs are the impl PR. Do not add
+more Settings tabs on day-1 of this amend.
+
+The Owner page gate stays
+[ADR 0010](0010-owner-auth-session.md) /
+[ADR 0012](0012-household-members.md). It must cover `/settings`
+and `/settings/...`. A Member still cannot open Settings. The
+today exact-path set that only lists `/settings` is not enough
+once child routes exist.
+
+#### Providers page
+
+The Owner must see how the platform works: **Bots need an LLM
+to think; Providers supply that.** Key in → green status
+without touching the tier grid. Advanced / «Подробнее» stays
+for pins and the full catalog.
+
+Prefer a **two-column** layout, or an equivalent clear split:
+
+| Side | Content |
+| --- | --- |
+| One | Bots / Model tiers that depend on Providers (the dependency) |
+| Other | Pick and configure a Provider, the quality shelf, and health |
+
+This is a mental model, not a screenshot. Do not invent extra
+Host APIs for the left column beyond the Store data the Host
+already has (Bots, tier → Provider + Policy).
+
+#### Health / confidence
+
+Green “works as intended” when **at least one** Provider key
+is accepted **and** a **soft probe** succeeds. The soft probe
+is the catalog load (`GET /models` or the same Host catalog
+endpoint). It is not a second Chat-path ping and not a Chat
+gate.
+
+Show routing mode: OpenRouter meta free / auto versus pinned.
+Copy like «Ключ принят · каталог загружен · маршрутизация: …».
+
+If the probe fails, Settings shows a banner or a **degraded**
+status only. The Cluster **still runs** on meta free / auto.
+That is the same rule as catalog fail: not a Chat blocker.
+
 ### Legacy compat
 
 Live Clusters today store one LLM gateway row: base URL, key,
@@ -390,6 +463,13 @@ via meta free / auto. Live catalog + quality shelf + Advanced
 pin are Settings on top of the same bind. They are not a new
 ADR and not a change to escalate.
 
+Q13–Q17 the same day locked Settings **information
+architecture**: `/settings/...` with a left nav, **Провайдеры**
+as the clear page, leftover settings under **Прочее**, a
+two-column Providers story (Bots need an LLM; Providers
+supply it), and a green health status from key + soft catalog
+probe. The probe is Settings chrome. It does not block Chat.
+
 Competitor notes (botato, OpenMausBot, rakazo; 2026-09-25)
 confirmed all three are **Owner-selected single model (or
 Provider + model) per bot / thread / space**. None implement
@@ -410,8 +490,10 @@ concrete id.
   escalate, and the legacy compat read. This amend does not
   change that code.
 - A later Host impl PR adds the Owner-session catalog proxy
-  (~24h cache + Refresh), the OpenRouter quality shelf, and
-  the Advanced pin UI. This record does not.
+  (~24h cache + Refresh), the OpenRouter quality shelf, the
+  Advanced pin UI, multi-page Settings (`/settings/...` with
+  **Провайдеры** / **Прочее**), and Settings health chrome.
+  This record does not.
 - [ADR 0004](0004-llm-gateway-tiers.md) still owns the
   OpenAI-compatible request shape, key masking, quiet / stub
   path when no key, Russian error copy, and one same-model
@@ -434,9 +516,13 @@ concrete id.
   [`CONTEXT.md`](../../CONTEXT.md). **LLM gateway** stays the
   Cluster capability. Do not rename the gateway per Provider.
   Shelf labels Free / Smart / Coding are not Model tier names.
-- Settings casual face is OpenRouter key → meta routing. The
-  four-tier bind stays in the Store and under Advanced. The
-  Bot closet stays without a model field.
+- Settings casual face is OpenRouter key → meta routing on
+  the **Провайдеры** page. The four-tier bind stays in the
+  Store and under Advanced. Leftover Cluster settings sit on
+  **Прочее**. The Bot closet stays without a model field.
+- Settings health is Owner chrome (key accepted + soft
+  catalog probe + routing mode). A failed probe is a banner
+  or degraded status. It does not gate Chat.
 - No model-id allowlist is baked in Host source as the product
   catalog. The shelf is ranked from the live API.
 - Exact OpenRouter meta slugs are verified at impl time.
@@ -445,6 +531,10 @@ concrete id.
 
 - Host or Store implementation for this amend. That is the
   Settings / catalog impl PR.
+- A full redesign of every Settings section (timezone,
+  allowlist, and the rest stay under **Прочее** on day-1)
+- Extra Settings tabs beyond **Провайдеры** and **Прочее**
+- Soft probe as a Chat blocker
 - OpenAI / `openai-compatible` live catalogs (later, same
   Host proxy + cache pattern)
 - A baked model-id shortlist in Dostigus source
@@ -500,8 +590,15 @@ concrete id.
   rejected after the Providers Port. Key first. Shelf +
   Advanced. The Store still binds each Model tier.
 - Mint ADR 0037 for Settings / catalog — rejected. Same
-  record. Bind, resolve, escalate, and Settings catalog are
-  one decision.
+  record. Bind, resolve, escalate, Settings catalog, and
+  Settings information architecture are one decision.
+- Keep one monolithic `/settings` page — rejected. Multi-page
+  `/settings/...` with a left nav. Deep-linkable.
+- Redesign timezone, http allowlist, and every other Settings
+  block on day-1 — rejected. Carve out **Провайдеры**; leftovers
+  under **Прочее**.
+- Soft catalog probe blocks Chat — rejected. Banner /
+  degraded status only. Same as catalog fail.
 - Rank a Host-baked shortlist — rejected. Live API only.
   No model ids in git.
 - Catalog fail blocks Chat — rejected. Banner in Settings.

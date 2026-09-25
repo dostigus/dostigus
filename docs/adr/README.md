@@ -67,4 +67,4 @@ English.
 | [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md) | Cluster outbound: LLM proxy vs Bot HTTP proxy (amended 2026-09-24: domain failover lists stay out of scope; soft policy is [0031](0031-host-http-get.md)) |
 | [0034](0034-artifacts.md) | Artifacts (amended 2026-09-25: image vision is [0035](0035-image-artifact-vision.md); no get tool stays) |
 | [0035](0035-image-artifact-vision.md) | Image Artifact vision |
-| [0036](0036-llm-providers-tier-resolve-escalate.md) | LLM Providers, tier resolve, and escalate (amended 2026-09-25: OpenRouter Settings catalog + quality shelf; Advanced pin is day-1 of this amend for `kind=openrouter`) |
+| [0036](0036-llm-providers-tier-resolve-escalate.md) | LLM Providers, tier resolve, and escalate (amended 2026-09-25: OpenRouter Settings catalog + quality shelf; Advanced pin is day-1 of this amend for `kind=openrouter`; amended 2026-09-25: Settings IA — `/settings/...` Провайдеры / Прочее, health from key + soft catalog probe) |

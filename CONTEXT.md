@@ -38,6 +38,15 @@ is a synonym — prefer Host.
 _Avoid_: Host shell (prefer Host), mini-app, dashboard, admin (unqualified),
 per-bot SPA.
 
+**Settings**:
+Owner Host pages under `/settings` and `/settings/...`. Day-1 of
+the [ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)
+Settings amend: **Провайдеры** (Providers page — catalog, shelf,
+health) and **Прочее** (leftover Cluster settings). Not the Bot
+closet. Not Member-visible.
+_Avoid_: admin panel, dashboard, Preferences (unqualified), treating
+Settings as one monolithic page after this amend.
+
 **Chat**:
 The lines a person reads and writes on a Thread in the Host.
 **Chat LLM context** is the system prompt, Skill catalog, history
