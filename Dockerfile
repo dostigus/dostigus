@@ -17,6 +17,8 @@ COPY packages/shared/package.json packages/shared/package.json
 COPY packages/ui-kit/package.json packages/ui-kit/package.json
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
+# sharp is a native addon (ADR 0035). --ignore-scripts skips its extract.
+RUN pnpm rebuild sharp
 RUN pnpm --filter @dostigus/web build
 
 FROM node:22-bookworm-slim AS runtime

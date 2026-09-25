@@ -20,6 +20,7 @@
     "@nuxtjs/mcp-toolkit": "catalog:",
     "nuxt-auth-utils": "catalog:",
     "reka-ui": "catalog:",
+    "sharp": "catalog:",
     "undici": "catalog:",
     "zod": "catalog:"
   },

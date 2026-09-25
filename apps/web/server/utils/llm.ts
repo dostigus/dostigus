@@ -9,6 +9,7 @@ import type {
   Skill,
 } from '@dostigus/shared'
 import type { ChatActivityPhase } from '../../app/utils/chat-activity'
+import type { VisionEncodeFn, VisionReadFn } from './artifact-vision'
 import type { ChatToolInvokeResult } from './mcp-platform-tools'
 import type { OpenAiChatFunctionTool, OpenAiChatMessage, OpenAiToolCall } from './openai-tools'
 import process from 'node:process'
@@ -18,6 +19,7 @@ import {
   chatSystemPrompt,
   chatToolSurface,
   isLlmGatewayConfigured as envOrStoreConfigured,
+  isModalityErrorText,
   LLM_GATEWAY_PING_TIMEOUT_MS,
   LLM_GATEWAY_RETRY_BACKOFF_MS,
   LLM_GATEWAY_TIMEOUT_MS,
@@ -28,6 +30,7 @@ import {
   resolveLlmGateway,
   STUB_ASSISTANT_REPLY,
 } from '@dostigus/shared'
+import { applyTriggeringVision, stripVisionImageParts } from './artifact-vision'
 import { chatMcpToolsAsOpenAi } from './mcp-platform-tools'
 import { isChatMcpTool } from './mcp-surface'
 import { collectToolCalls, toolResultError } from './openai-tools'
@@ -112,6 +115,12 @@ export async function completeAssistantReply(input: {
   onActivity?: (phase: ChatActivityPhase) => void
   /** Tool name, ok, and duration only. Arguments and results stay off this hook. */
   onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
+  /** Artifact volume dir for triggering-line vision. */
+  artifactsDir?: string
+  /** Test double. Production reads Cluster volume bytes. */
+  readArtifactBytes?: VisionReadFn
+  /** Test double. Production uses sharp. */
+  encodeVisionJpeg?: VisionEncodeFn
 }): Promise<{ content: string, via: AssistantReplyVia }> {
   const audience = input.audience === 'member' ? 'member' : 'owner'
   const creatorManifest = audience === 'member' && input.canEditManifest === true
@@ -158,6 +167,9 @@ export async function completeAssistantReply(input: {
       skills: input.skills,
       onActivity: input.onActivity,
       onTool: input.onTool,
+      artifactsDir: input.artifactsDir,
+      readArtifactBytes: input.readArtifactBytes,
+      encodeVisionJpeg: input.encodeVisionJpeg,
     })
     const trimmed = result.content.trim()
     if (!trimmed) {
@@ -259,6 +271,9 @@ async function callOpenAiCompatible(input: {
   skills?: Skill[]
   onActivity?: (phase: ChatActivityPhase) => void
   onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
+  artifactsDir?: string
+  readArtifactBytes?: VisionReadFn
+  encodeVisionJpeg?: VisionEncodeFn
 }): Promise<{ content: string, usedTools: boolean }> {
   const messages: OpenAiChatMessage[] = [
     {
@@ -288,8 +303,17 @@ async function callOpenAiCompatible(input: {
         },
       }),
     },
-    ...chatLlmHistory(input.history, input.history.at(-1)),
+    ...chatLlmHistory(input.history, input.history.at(-1)).map(toOpenAiHistoryMessage),
   ]
+  await applyTriggeringVision({
+    messages,
+    trigger: input.history.at(-1),
+    modelId: input.resolved.modelIdFor(input.modelTier),
+    wake: input.wake,
+    artifactsDir: input.artifactsDir,
+    readArtifactBytes: input.readArtifactBytes,
+    encodeVisionJpeg: input.encodeVisionJpeg,
+  })
 
   let usedTools = false
 
@@ -385,7 +409,7 @@ const LLM_GATEWAY_ATTEMPTS = 2
 
 class LlmGatewayRequestError extends Error {
   constructor(
-    readonly failure: 'auth' | 'transient',
+    readonly failure: 'auth' | 'transient' | 'modality',
     /** Status class or transport label. Never a key, header, or provider body. */
     readonly detail: string,
     readonly status?: number,
@@ -406,13 +430,34 @@ async function postChatCompletion(input: {
   messages: OpenAiChatMessage[]
   tools?: OpenAiChatFunctionTool[]
 }): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
+  try {
+    return await postChatCompletionTransient(input)
+  } catch (error) {
+    if (!isGatewayRequestError(error) || error.failure !== 'modality') {
+      throw error
+    }
+    if (!stripVisionImageParts(input.messages)) {
+      throw new LlmGatewayRequestError('auth', error.detail, error.status)
+    }
+    logGatewayFailure('modality', 'retry')
+    return await postChatCompletionTransient(input)
+  }
+}
+
+async function postChatCompletionTransient(input: {
+  resolved: ResolvedLlmGateway
+  modelTier: ModelTier
+  fetchImpl: typeof fetch
+  messages: OpenAiChatMessage[]
+  tools?: OpenAiChatFunctionTool[]
+}): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
   let last: LlmGatewayRequestError | undefined
   for (let attempt = 1; attempt <= LLM_GATEWAY_ATTEMPTS; attempt += 1) {
     try {
       return await postChatCompletionAttempt(input)
     } catch (error) {
       if (!isGatewayRequestError(error) || error.failure !== 'transient') {
-        if (isGatewayRequestError(error)) {
+        if (isGatewayRequestError(error) && error.failure !== 'modality') {
           logGatewayFailure(error.detail, 'stop')
         }
         throw error
@@ -467,7 +512,7 @@ async function postChatCompletionAttempt(input: {
   }
 
   if (!response.ok) {
-    throw gatewayFailureForStatus(response.status)
+    throw await gatewayFailureForResponse(response)
   }
 
   let payload: {
@@ -482,10 +527,21 @@ async function postChatCompletionAttempt(input: {
   return payload.choices?.[0]?.message ?? {}
 }
 
-function gatewayFailureForStatus(status: number): LlmGatewayRequestError {
+async function gatewayFailureForResponse(response: Response): Promise<LlmGatewayRequestError> {
+  const status = response.status
   const detail = `HTTP ${status}`
   if (status === 429 || (status >= 500 && status <= 599)) {
     return new LlmGatewayRequestError('transient', detail, status)
+  }
+  if (status !== 401 && status !== 403 && status >= 400 && status <= 499) {
+    try {
+      const text = await response.text()
+      if (isModalityErrorText(text)) {
+        return new LlmGatewayRequestError('modality', 'modality', status)
+      }
+    } catch {
+      // Do not log the provider body.
+    }
   }
   return new LlmGatewayRequestError('auth', detail, status)
 }
@@ -543,4 +599,13 @@ function sanitizeGatewayError(message: string, apiKey: string | null): string {
 
 function logChatTool(name: string, outcome: 'ok' | 'fail' | 'skip'): void {
   console.warn(`Chat MCP tool ${name} ${outcome}`)
+}
+
+function toOpenAiHistoryMessage(
+  message: { role: 'user' | 'assistant' | 'system', content: string },
+): OpenAiChatMessage {
+  if (message.role === 'user') {
+    return { role: 'user', content: message.content }
+  }
+  return { role: message.role, content: message.content }
 }
