@@ -42,6 +42,7 @@ it('splits Settings into Providers and Other with a left nav', () => {
   expect(layout).toContain('settings.nav.backAria')
   expect(layout).toContain('to="/"')
   expect(layout).toContain('$t(\'settings.aria\')')
+  expect(layout).toContain('<HostUserMenu hide-settings />')
   expect(layout).not.toContain('HostSidebar')
   expect(layout).not.toContain('HostSearch')
   expect(read('pages/settings/index.vue')).toContain('redirect: \'/settings/providers\'')

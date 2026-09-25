@@ -50,6 +50,7 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   const account = read('app/components/HostUserMenu.vue')
   expect(account).toContain('to="/members"')
   expect(account).toContain('to="/settings/providers"')
+  expect(account).toContain('hideSettings')
   expect(account).toContain('HostLogoutButton')
   const settings = read('app/components/BotSettingsSheet.vue')
   expect(settings).toContain('KitSheet')

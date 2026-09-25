@@ -22,7 +22,11 @@ The Settings layout (`layouts/settings.vue`) is the primary
 chrome:
 
 - A **left Settings nav**: back row at the top, then the
-  existing Settings pages.
+  existing Settings pages, then the same Host user control
+  pinned at the bottom (`HostUserMenu` with `hideSettings`).
+  The menu omits Settings (the Owner is already there) and
+  keeps every other item the Host user menu already has
+  (Members and Sign out on day-1). Do not fork that menu.
 - A **right content column** that is the only scrollport.
   The section title (**Settings** / Locale equivalent) and
   the page forms live **inside** that column. There is no

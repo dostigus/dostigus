@@ -29,7 +29,7 @@
       role="menu"
     >
       <NuxtLink
-        v-if="isOwner"
+        v-if="isOwner && !hideSettings"
         to="/settings/providers"
         class="item"
         role="menuitem"
@@ -54,6 +54,7 @@
 <script setup lang="ts">
 defineProps<{
   collapsed?: boolean
+  hideSettings?: boolean
 }>()
 
 const { user, isOwner } = useHostAccount()

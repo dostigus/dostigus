@@ -23,6 +23,8 @@ it('gives Settings its own chrome without the Host Bot list', () => {
 
   expect(layout).toContain('class="rail"')
   expect(layout).toContain('class="pane"')
+  expect(layout).toContain('class="foot"')
+  expect(layout).toContain('<HostUserMenu hide-settings')
   expect(layout).toContain('overflow: auto')
   expect(layout).toContain('to="/"')
   expect(layout).toContain('settings.nav.back')
@@ -40,4 +42,20 @@ it('gives Settings its own chrome without the Host Bot list', () => {
   expect(tHost('en', 'settings.nav.backAria')).toBe('Back to Bots')
   expect(tHost('ru', 'settings.nav.back')).toBe('Боты')
   expect(tHost('ru', 'settings.nav.backAria')).toBe('Назад к Боты')
+})
+
+it('reuses HostUserMenu and omits Settings when hideSettings is set', () => {
+  const menu = read('components/HostUserMenu.vue')
+  const sidebar = read('components/HostSidebar.vue')
+  const layout = read('layouts/settings.vue')
+
+  expect(menu).toContain('hideSettings')
+  expect(menu).toContain('isOwner && !hideSettings')
+  expect(menu).toContain('to="/settings/providers"')
+  expect(menu).toContain('to="/members"')
+  expect(menu).toContain('HostLogoutButton')
+  expect(sidebar).toContain('<HostUserMenu :collapsed="rail" />')
+  expect(sidebar).not.toContain('hide-settings')
+  expect(layout).toContain('<HostUserMenu hide-settings />')
+  expect(layout.indexOf('class="items"')).toBeLessThan(layout.indexOf('class="foot"'))
 })

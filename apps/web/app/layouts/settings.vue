@@ -73,6 +73,10 @@
           </span>
         </NuxtLink>
       </div>
+
+      <div class="foot">
+        <HostUserMenu hide-settings />
+      </div>
     </nav>
 
     <div class="pane">
@@ -107,9 +111,9 @@ const current = computed(() => SETTINGS_PAGES.value.find((item) => route.path.st
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 0.85rem 0.7rem 1.1rem;
+  padding: 0.85rem 0.7rem 0;
   border-right: 1px solid var(--line-soft);
-  overflow: auto;
+  overflow: hidden;
 }
 
 .back {
@@ -156,9 +160,19 @@ const current = computed(() => SETTINGS_PAGES.value.find((item) => route.path.st
 }
 
 .items {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  overflow: auto;
+}
+
+.foot {
+  flex: none;
+  margin-top: auto;
+  padding: 0.45rem 0.15rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line-soft);
 }
 
 .item {
@@ -247,8 +261,32 @@ const current = computed(() => SETTINGS_PAGES.value.find((item) => route.path.st
   }
 
   .items {
+    flex: 1;
     flex-direction: row;
     gap: 0.35rem;
+  }
+
+  .foot {
+    margin-top: 0;
+    margin-left: auto;
+    padding: 0;
+    border-top: 0;
+  }
+
+  .foot :deep(.user-name) {
+    display: none;
+  }
+
+  .foot :deep(.user-btn) {
+    width: auto;
+  }
+
+  .foot :deep(.menu) {
+    top: calc(100% + 0.4rem);
+    bottom: auto;
+    left: auto;
+    right: 0;
+    width: 12rem;
   }
 
   .item {
