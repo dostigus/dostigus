@@ -51,7 +51,9 @@ _Avoid_: Host shell (prefer Host), mini-app, dashboard, admin (unqualified),
 per-bot SPA.
 
 **Settings**:
-Owner Host pages under `/settings` and `/settings/...`. Day-1 of
+Owner Host pages under `/settings` and `/settings/...`. Own
+chrome: left Settings nav + scrolling content, no Host Bot
+list ([ADR 0038](docs/adr/0038-settings-chrome.md)). Day-1 of
 the [ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)
 Settings amend: **Провайдеры** (Providers page — catalog, shelf,
 health) and **Прочее** (leftover Cluster settings, and the Host

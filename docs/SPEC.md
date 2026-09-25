@@ -75,8 +75,11 @@ What the running Cluster does today:
 - Host UI: Bot list (empty state + `+` picker), Chat (timeline + composer,
   unlabeled bubbles), Settings, and Members.   Settings presents a
   Providers list (OpenRouter, OpenAI, or OpenAI-compatible). Casual
-  OpenRouter is paste key → meta free / auto. Settings is multi-page
-  under `/settings/...` (**Провайдеры** and **Прочее**). The four-tier
+  OpenRouter is paste key → meta free / auto.   Settings is multi-page
+  under `/settings/...` (**Провайдеры** and **Прочее**). Those
+  routes use their own chrome (Settings nav + scrolling
+  content), not the Host Bot list
+  ([ADR 0038](adr/0038-settings-chrome.md)). The four-tier
   bind stays in the Store; the live catalog shelf, Advanced pin, and
   Settings health are
   [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md). **Прочее**

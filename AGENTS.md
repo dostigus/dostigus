@@ -206,25 +206,33 @@ Member signs in and uses Bot list and Chat. Settings stays with the Owner.
 
 ### Host UI / pane width
 
-At common viewports the Host sidebar plus the Settings left nav eat most
-of the window. Size container-query / two-column breakpoints against the
-**content pane**, not the full viewport.
+Chat, Threads, and Members sit in the Host sidebar + pane
+([`layouts/host.vue`](apps/web/app/layouts/host.vue)). Settings uses its
+own chrome ([ADR 0038](docs/adr/0038-settings-chrome.md),
+[`layouts/settings.vue`](apps/web/app/layouts/settings.vue)): a Settings
+left nav and a scrolling content column. There is no Host Bot list on
+`/settings/**`.
+
+Size container-query / two-column breakpoints against the **content
+pane**, not the full viewport.
 
 Measure from current CSS (16px root):
 
 - Host sidebar default is **280px / 17.5rem**
-  (`SIDEBAR_DEFAULT` in [`apps/web/app/utils/sidebar-width.ts`](apps/web/app/utils/sidebar-width.ts);
-  CSS fallback `--sidebar-width` on [`HostSidebar.vue`](apps/web/app/components/HostSidebar.vue)).
-- Settings left nav is **13rem**
-  ([`apps/web/app/pages/settings.vue`](apps/web/app/pages/settings.vue)).
-- Settings `.stage` adds **1.4rem** horizontal padding each side.
+ (`SIDEBAR_DEFAULT` in [`apps/web/app/utils/sidebar-width.ts`](apps/web/app/utils/sidebar-width.ts);
+ CSS fallback `--sidebar-width` on [`HostSidebar.vue`](apps/web/app/components/HostSidebar.vue)).
+- Settings left nav is **16rem**
+ ([`apps/web/app/layouts/settings.vue`](apps/web/app/layouts/settings.vue)).
+- Settings content (`.pane`) is the rest of the viewport and is the
+ scroll container (title + sections). Horizontal padding is **1.75rem**
+ each side on that column.
 
-At **1440px** that leaves about **54rem** of content width for
-`/settings/providers` (the Host `.pane` minus the Settings nav and stage
-padding). At **1280px** the same pane is closer to **46rem**. Below
-**52rem** the sidebar is a drawer
-([`host.vue`](apps/web/app/layouts/host.vue)), so the pane is the full
-viewport; Settings nav stacks at a **46rem** container query on `.page`.
+At **1440px** Settings content is about **70rem** (viewport minus the
+Settings nav and padding). At **1280px** the same column is closer to
+**60rem**. Below **46rem** the Settings nav stacks above the content
+(`max-width: 46rem` on the Settings layout). The Host drawer breakpoint
+(**52rem**) does not apply on Settings — that layout does not mount
+the Bot sidebar.
 
 Put `container-type` on a parent and `@container` rules on a **child**.
 CSS ignores `container-type` on the element that uses `@container` — the
@@ -232,8 +240,10 @@ queried element is not its own container.
 
 `/settings/providers` in [PR #132](https://github.com/dostigus/dostigus/pull/132)
 is the example that burned screenshot rounds: a **60rem** two-column
-breakpoint never fired at 1440px. The live query is
-`@container (min-width: 54rem)` on a child of `.providers`.
+breakpoint never fired at 1440px while Settings still sat inside the
+Host pane. The live query is `@container (min-width: 54rem)` on a child
+of `.providers`. With Settings as its own chrome that query fires at
+common desktop widths.
 
 ### Preview seed
 

@@ -269,6 +269,8 @@
     "cluster": "Cluster",
     "aria": "Settings",
     "nav": {
+      "back": "Bots",
+      "backAria": "Back to Bots",
       "providers": "Providers",
       "providersHint": "LLM for Bots",
       "other": "Other",
