@@ -1238,9 +1238,10 @@ async function onBotSaved() {
   z-index: 1;
   display: flex;
   gap: 0.25rem;
-  align-items: flex-end;
+  align-items: center;
   overflow: hidden;
-  padding: 0.3rem 0.4rem;
+  /* Equal on every side so each circle sits concentric with its end cap. */
+  padding: 0.3rem;
   /* A step lighter than the fill so the rim still reads on Chat black. */
   border: 1px solid color-mix(in srgb, var(--text) 8%, var(--composer));
   border-radius: 9999px;
@@ -1252,6 +1253,7 @@ async function onBotSaved() {
 }
 
 .composer-row.multiline {
+  align-items: flex-end;
   border-radius: var(--radius-card);
 }
 
@@ -1525,8 +1527,10 @@ textarea {
   border: 0;
   background: transparent;
   color: var(--text);
+  /* One line is exactly the 2.25rem button box: 1.45rem + 2 × 0.4rem. */
   padding: 0.4rem 0.25rem;
-  min-height: 1.6rem;
+  line-height: 1.45rem;
+  min-height: 2.25rem;
   max-height: 8rem;
   field-sizing: content;
 }
