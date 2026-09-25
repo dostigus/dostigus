@@ -42,7 +42,10 @@ per-bot SPA.
 The lines a person reads and writes on a Thread in the Host.
 **Chat LLM context** is the system prompt, Skill catalog, history
 window, and Chat tool allowlist the Host sends on one Bot turn
-([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)).
+([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)). The
+triggering user message may use OpenAI content parts when that
+line has image Artifacts
+([ADR 0035](docs/adr/0035-image-artifact-vision.md)).
 _Avoid_: messenger, inbox (unqualified), context window
 (unqualified), prompt dump.
 
@@ -277,7 +280,9 @@ volume (`cluster-data` → `/var/lib/dostigus/artifacts/<uuid>`). An
 **attachment** is that Artifact appearing on a Chat message (the join),
 not a second Store type. UI may say «файл» or show a chip. Person
 upload and Bot `dostigus_artifacts_put` both create Artifacts. There
-is no `dostigus_artifacts_get`. See
+is no `dostigus_artifacts_get`. Image Artifact vision on the
+triggering line is
+[ADR 0035](docs/adr/0035-image-artifact-vision.md). See
 [ADR 0034](docs/adr/0034-artifacts.md).
 _Avoid_: attachment (as a Store type), blob (unqualified), library
 file, S3 object (day-1 is volume + Store).

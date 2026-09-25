@@ -26,8 +26,8 @@ Settled now, even if this repo only scaffolds them:
 | Turn journal | Ops agents read Host Bot-turn meta (trigger, outcome, phases, tool names) through the MCP surface. See [ADR 0029](adr/0029-turn-journal.md). |
 | Host HTTP get | MCP surface tool `dostigus_http_get` on Chat and Wake. Cluster http allowlist in Store settings. See [ADR 0031](adr/0031-host-http-get.md). |
 | Cluster outbound | Two Cluster env paths: LLM uses `HTTPS_PROXY` / `HTTP_PROXY` when set; Bot HTTP egress uses `DOSTIGUS_HTTP_PROXY` (empty = direct). See [ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md). |
-| Artifacts | Persisted Cluster file objects: volume bytes + Store meta + message join. Composer **+** uploads; send takes `artifactIds[]`. Chat slim and Wake gain `dostigus_artifacts_put`. No get tool, no vision. See [ADR 0034](adr/0034-artifacts.md). |
-| Chat LLM context | System prompt is Manifest (including label and description) plus a Skill catalog (`id` + `description`). History is the last 40 lines. Chat tools start slim; keyword expand adds builder tools on that user turn only. Wake is narrower and has no expand. See [ADR 0032](adr/0032-chat-llm-context-assembly.md). |
+| Artifacts | Persisted Cluster file objects: volume bytes + Store meta + message join. Composer **+** uploads; send takes `artifactIds[]`. Chat slim and Wake gain `dostigus_artifacts_put`. No get tool. Image vision on the triggering line is [ADR 0035](adr/0035-image-artifact-vision.md). See [ADR 0034](adr/0034-artifacts.md). |
+| Chat LLM context | System prompt is Manifest (including label and description) plus a Skill catalog (`id` + `description`). History is the last 40 lines (string `content` + Artifact meta note). The triggering user message may use OpenAI content parts. Chat tools start slim; keyword expand adds builder tools on that user turn only. Wake is narrower and has no expand. See [ADR 0032](adr/0032-chat-llm-context-assembly.md) and [ADR 0035](adr/0035-image-artifact-vision.md). |
 | Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, appends one system Chat line (plain string, no parts). This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 
 ## This Host (create Bot + Chat)
@@ -494,13 +494,50 @@ contract. The impl PR lands the Host and Store change.
   ([ADR 0031](adr/0031-host-http-get.md),
   [ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
   Host auto-attaches to the current assistant message. No
-  `dostigus_artifacts_get`. No vision. Current-turn text/* (and
-  extractable PDF / text) injects ≤ 32 KiB or else meta.
+  `dostigus_artifacts_get`. Current-turn text/* (and
+  extractable PDF / text) injects ≤ 32 KiB or else meta. Image
+  vision on the triggering line is
+  [ADR 0035](adr/0035-image-artifact-vision.md).
 - **UI.** Composer **+** / drag-drop / paste → pending chips →
   Send. Window drop uses depth tracking. Empty `FileList` must not
   steal a text paste. Long paste → chip. `image/*` thumb via
   session GET; PDF / text chip. Optimistic local object URL while
   upload runs.
+
+## Image Artifact vision
+
+Decided in [ADR 0035](adr/0035-image-artifact-vision.md). This
+section is the contract. The impl PR lands the Host change.
+
+- **Mechanism.** On a configured Bot turn, when the triggering
+  line has image Artifacts, the Host may send native multimodal
+  content on that user message in the same OpenAI-compatible
+  `chat/completions` request. Wire: `{ type: "text", text }` plus
+  `{ type: "image_url", image_url: { url: "data:image/jpeg;base64,…", detail: "auto" } }`.
+  Not a describe-model call. Not `dostigus_artifacts_get`.
+- **Which bytes.** Only Artifacts joined to the current
+  triggering line (bot-thread user send, or a room mention that
+  triggers the turn). History stays string `content` plus the
+  Artifact meta note. Wake is unchanged.
+- **Tool loop.** Those text + image parts stay on every
+  completion round of that turn.
+- **Wire transform.** Admission mime (sniffed): `image/jpeg`,
+  `image/png`, `image/webp`, `image/gif`. Other `image/*` stay
+  meta-only. Original bytes stay on the volume. LLM wire uses
+  **sharp**: decode, max edge **2048**, JPEG quality **~80**. GIF
+  → first frame. Per-file: JPEG wire **> 1.5 MiB**, or
+  read/downscale failure → that Artifact is meta only; the turn
+  continues.
+- **Allowlist.** Case-insensitive substring on the resolved
+  model id: `gpt-4o`, `gpt-4.1`, `gpt-5`, `claude-3`,
+  `claude-4`, `claude-sonnet`, `claude-opus`, `gemini`,
+  `gemini-flash`. Miss: soft — no image parts; meta note plus
+  `Вложение-картинка есть; эта модель без vision — вижу только имя/размер.`
+  Allowlisted modality / image error: one retry of that
+  completion without image parts + that note; then the normal
+  error path.
+- **Text.** Meta note always stays in the text part. Empty user
+  content with image Artifacts uses `"(изображение)"`.
 
 ## Chat LLM context
 
@@ -516,10 +553,13 @@ then the running Host still injects full Skill bodies, remaps stored
   (1–200). Store shape is `{ id, description, instructions }` in
   `bots.skills_json`. A legacy Skill with no description catalogs as
   `Skill {id}` until upsert.
-- **History.** Last 40 messages (`role` + `content`). Always include
-  the triggering user or Wake line. Stored `system` stays
+- **History.** Last 40 messages (`role` + string `content`). Always
+  include the triggering user or Wake line. Stored `system` stays
   `role: system`. Chat Cards / `parts` and prior-turn tool
-  transcripts stay out of that window.
+  transcripts stay out of that window. History may append the
+  Artifact meta note. The triggering user message may use OpenAI
+  content parts (`text` + `image_url`)
+  ([ADR 0035](adr/0035-image-artifact-vision.md)).
 - **System prompt.** Manifest line includes name, label, description,
   modelTier, skillIds, modulePackageIds. Stay-on-Manifest /
   reply-briefly. Not «You are new. Ask and learn…». Short Host
@@ -829,12 +869,18 @@ and [`docs/deploy.md`](deploy.md)).
   Host ([ADR 0028](adr/0028-bot-self-settings-via-chat.md)).
 - Managed/cloud hosting (optional later; not the default)
 - Artifact S3 / remote blob store, signed or public download URLs,
-  gallery / lightbox, virus scan, vision, `dostigus_artifacts_get`,
+  gallery / lightbox, virus scan, `dostigus_artifacts_get`,
   sandbox materialize / path-attach, content-addressed blob layout,
   a Member file-share UI separate from the Thread, Office / audio
   mime, and forever retention without quota
   ([ADR 0034](adr/0034-artifacts.md)). Artifacts above are the
-  contract. The impl PR lands the Host change.
+  contract.
+- Image Artifact vision for history-window messages, a separate
+  describe-then-text model, Owner Settings «vision» toggle, signed
+  or public image URLs, raw unscaled bytes to the provider, and a
+  hard-fail when the model lacks vision
+  ([ADR 0035](adr/0035-image-artifact-vision.md)). Triggering-line
+  vision is in scope. The impl PR lands the Host change.
 
 ## Success for later MVPs (not this PR)
 

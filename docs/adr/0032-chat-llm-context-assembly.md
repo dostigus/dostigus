@@ -5,6 +5,12 @@
 - Amended: 2026-09-24 — Chat slim and Wake gain `dostigus_artifacts_put`.
   There is no `dostigus_artifacts_get`. Current-turn Artifact text /
   meta inject is [ADR 0034](0034-artifacts.md).
+- Amended: 2026-09-25 — The triggering user message may use OpenAI
+  content **parts** (text + `image_url`) per
+  [ADR 0035](0035-image-artifact-vision.md). History lines stay
+  string `content` plus the [ADR 0034](0034-artifacts.md) meta note.
+  Slim tools stay unchanged. There is still no
+  `dostigus_artifacts_get`.
 
 The tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). Gateway
 and Model tiers stay [ADR 0004](0004-llm-gateway-tiers.md). Schedules
@@ -12,7 +18,8 @@ and the Wake line stay [ADR 0027](0027-bot-schedules.md). Self-settings
 write rules stay [ADR 0028](0028-bot-self-settings-via-chat.md). Meta
 Skills stay [ADR 0030](0030-chat-cards-module-catalog.md). Host HTTP
 get stays [ADR 0031](0031-host-http-get.md). Artifacts stay
-[ADR 0034](0034-artifacts.md). This record is how the
+[ADR 0034](0034-artifacts.md). Image Artifact vision stays
+[ADR 0035](0035-image-artifact-vision.md). This record is how the
 Host builds the LLM request on one Bot turn: system prompt, Skill
 catalog, history window, and Chat tool allowlist.
 
@@ -82,6 +89,17 @@ Short always-on **Host rules** stay Host rules, not Skills:
 Each turn sends the **last 40** stored messages (`role` + `content`).
 There is no summary and no compaction in this record.
 
+History lines stay **string** `content`. When a historical line
+joins Artifacts, the Host may append the short Artifact meta note
+(name, mime, size, id) from
+[ADR 0034](0034-artifacts.md). History does **not** grow
+`image_url` parts.
+
+The **triggering user message** may use OpenAI content **parts**
+(`text` + `image_url`) when that line has image Artifacts
+([ADR 0035](0035-image-artifact-vision.md)). A Wake line stays
+string `content`.
+
 Always include the current triggering user line or Wake line when that
 line would otherwise fall outside the window.
 
@@ -141,7 +159,9 @@ Before expand, Owner Chat and a creator-Member Chat receive:
 #### Still never in Chat
 
 Unchanged: `dostigus_bots_delete`, Kitchen tools, Turn journal tools.
-There is no `dostigus_artifacts_get` ([ADR 0034](0034-artifacts.md)).
+There is no `dostigus_artifacts_get`
+([ADR 0034](0034-artifacts.md),
+[ADR 0035](0035-image-artifact-vision.md)).
 
 #### Keyword expand (this turn only)
 
@@ -261,6 +281,11 @@ already locked in [ADR 0031](0031-host-http-get.md) and
   `Skill {id}`.
 - Chat Cards and prior-turn tool transcripts stay out of the LLM
   history window.
+- The triggering user message may use OpenAI content parts when
+  that line has image Artifacts
+  ([ADR 0035](0035-image-artifact-vision.md)). History lines stay
+  string plus the Artifact meta note. There is still no
+  `dostigus_artifacts_get`.
 
 ### Out of scope
 
