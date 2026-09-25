@@ -1,85 +1,69 @@
 # Dostigus 🪿
 
-Self-host agent OS: portable bot packages + host UI sheets.
+Self-host household agent OS — Bots, Chat, and Schedules on your machine. Not another chatbot UI.
 
-## Intent
+![Chat with Skill and self-settings system lines](docs/images/chat-system.png)
 
-Run a **Cluster** on your machine. A **Bot** is a persona with a Manifest and
-bound Module packages (the Cluster is not a git repo). The **Host** is one app:
-Chat + Cards + Sheets from the Kit. Default path is self-host
-(`docker compose up`); managed hosting is optional and later.
+*Chat on the Host: a Bot thread with Skill and self-settings system lines.*
 
-## Docs
+![Providers shelf with OpenRouter catalog](docs/images/providers.png)
 
-| File | What |
-|------|------|
-| [`CONTEXT.md`](CONTEXT.md) | Glossary — keep terms stable |
-| [`docs/SPEC.md`](docs/SPEC.md) | MVP in / out of scope |
-| [`docs/deploy.md`](docs/deploy.md) | Self-host compose, GHCR, Store volume, MCP token |
-| [`docs/ui.md`](docs/ui.md) | Host tokens (Nunito, charcoal `#121212` + `#F25630`) |
-| [`docs/adr/`](docs/adr/) | Architecture decisions |
-| [`AGENTS.md`](AGENTS.md) | Agent rules + `CI=1 pnpm check` |
+*Settings → Providers: an OpenRouter key on the shelf, with Model tiers and the live catalog.*
 
-## Develop
+## Why
 
-```bash
-pnpm install
-pnpm --filter @dostigus/web dev   # http://localhost:3000/
-CI=1 pnpm check                   # lint → typecheck → test → build
-```
+Grok Bot and OpenClaw-style desktop agents keep the loop on someone else’s box, or on a laptop that has to stay awake. Dostigus is the other shape: **your Host**, a SQLite **Store**, and **your** keys.
 
-On a Cursor cloud agent VM, `nuxt dev` often listens on IPv6 only. Use
-`http://localhost:3000/`. `http://127.0.0.1:3000` refuses the connection.
+You run a **Cluster**. You add **Household** Members. Bots talk through an **MCP surface** against that Store. You pick **Providers** — OpenRouter first, plus OpenAI and OpenAI-compatible — and bind **Model tiers** instead of baking a model list into the repo.
 
-Host preview seed (Owner signed in, fixture Bot id `preview`, Chat open):
-`pnpm preview:host`, then GET `http://localhost:3000/preview-seed`
-(redirects to `/bots/preview`; `?tall=1` for a tall thread;
-`?parts=1` for a demo Sheet button; `?kitchen=1` for the Kitchen
-Sheet button; `?system=1` for three Skill / self-settings system lines;
-`?members=1` opens `/members`; `?threads=1` signs in the
-preview Owner at `/` with Bot `preview` (granted to the preview Member)
-and a Member-created Bot;
-`?threads=1&as=member` signs in the preview Member on `/bots/preview`;
-`?rooms=1` opens a room with that Member and Bot `preview` at
-`/threads/preview-room` (`?rooms=1&as=member` signs in the Member there)
-with Nuxt devtools off). Renaming
-that Bot does not change the id. HEAD is answered on that route and on
-`/health` (HEAD ignores `?members=1`). `pnpm smoke:preview` checks that
-HEAD, the fixture Bot, the tall thread, and the Members landing.
-`NUXT_AGENT_TOKEN=preview-agent pnpm preview:host`, then
-`pnpm smoke:turns`, checks the Turn journal write path and
-`dostigus_turns_list` / `dostigus_turns_get` without a screenshot. See
-[`AGENTS.md`](AGENTS.md).
+Portable Module packages, Apply, and a marketplace are the direction, not day-1 shipping. This Host already runs Chat, Skills, Schedules, Artifacts, and Household Members. Do not read that as a store you browse and install.
 
-A fresh Cluster opens **Create your Owner** (email or username + password).
-Later visits sign in. Then press **+**: the Chat pane becomes find or
-create (new Bots are named **New Bot**). The Bot greets, and a purpose Card
-offers Personal, Work, Learning, Other, or your own words. Messages persist in the Store
-(SQLite). An LLM key is optional (compose env or Host **Settings**) — see
-[`docs/deploy.md`](docs/deploy.md). With a key, Chat may call Cluster MCP
-surface tools in-process (same Store as the Host UI and `/mcp`).
-Host UI is dark by default: **Nunito**, deep charcoal canvas (`#121212`), black
-Chat pane, Sheet chrome `#212121`, firm coral-orange CTAs (`#F25630`), goose
-Brand from the Kit.
-See [`docs/ui.md`](docs/ui.md).
+## What you get
 
-The Cluster MCP surface is `/mcp` (`@nuxtjs/mcp-toolkit`). Set
-`NUXT_AGENT_TOKEN` (or `DOSTIGUS_MCP_TOKEN`) so a Cursor/MCP client can
-call Platform tools against the Store. Empty token → tools stay disabled.
-That Bearer is **not** the Host Owner session (`NUXT_SESSION_PASSWORD`).
-See [`docs/deploy.md`](docs/deploy.md).
+- **Cluster** — one Household’s running instance: Store, Bots, and settings. Not the git repo.
+- **Host** — the client app: Chat, Cards, and Sheets from the Kit.
+- **Bot** — a long-lived persona with Skills and MCP access. A Bot is not a Module package.
+- **Skill** — instructions a Bot follows. Not executable UI.
+- **Schedule** — a Store row that says when the Host wakes a Bot.
+- **Artifact** — a persisted Cluster file (upload or Bot put), joined onto a Chat line.
+- **Provider** — an Owner-connected LLM gateway instance (OpenRouter, OpenAI, or OpenAI-compatible).
+- **Model tier** — `cheap` / `strong` / `code` (plus `toy`): each binds to a Provider + Policy.
+- **Household** — the Owner and the Members on one Cluster.
+- **MCP surface** — the tools a Bot (and the Host) use to read and write the Store.
 
-## Self-host
+## Quick start
+
+Self-host is the intended path:
 
 ```bash
 docker compose -f docker/compose.yml up --build
 ```
 
-Host: [http://localhost:3000/](http://localhost:3000/). Cluster Store SQLite
-lives on named volume `cluster-data` (`DATABASE_URL=file:/var/lib/dostigus/cluster.sqlite`).
+Open [http://localhost:3000/](http://localhost:3000/). Create the Owner. In **Settings → Providers**, add an OpenRouter (or other) key. Env, Store volume, and MCP token: [`docs/deploy.md`](docs/deploy.md).
 
-Published image: `ghcr.io/dostigus/dostigus` (`:latest` on `main`, `:vX.Y.Z` on
-Platform tags). See [`docs/deploy.md`](docs/deploy.md).
+### Develop
+
+```bash
+pnpm install
+pnpm --filter @dostigus/web dev   # http://localhost:3000/
+CI=1 pnpm check
+```
+
+Preview seed, smoke, and `pnpm shoot:preview` live in [`AGENTS.md`](AGENTS.md).
+
+## Architecture
+
+The **Platform** is this git monorepo. A **Cluster** is a running instance plus its Store. They are not the same thing.
+
+The Host renders Kit Chat, Cards, and Sheets. Bots call the MCP surface against the Store. The LLM gateway is Providers + Policy + Model tiers ([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
+
+Scope: [`docs/SPEC.md`](docs/SPEC.md). Glossary: [`CONTEXT.md`](CONTEXT.md). Decisions: [`docs/adr/`](docs/adr/).
+
+## Status
+
+Early. Self-host first. MIT.
+
+Day-1 does **not** ship a Builder Apply marketplace, Share links or guests, a managed hosting product, or a weather Module seed as a product claim. Portable Module packages stay later. See [`docs/SPEC.md`](docs/SPEC.md).
 
 ## License
 
