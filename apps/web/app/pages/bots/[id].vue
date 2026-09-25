@@ -173,116 +173,118 @@
             Try again
           </button>
         </p>
-        <ul
-          v-if="pendingAttachments.length"
-          class="pending-chips"
-          aria-label="Attachments"
-        >
-          <li
-            v-for="item in pendingAttachments"
-            :key="item.localId"
-            class="pending-chip"
-            :class="[item.status, { image: item.previewUrl }]"
-            :title="item.error ?? item.filename"
-          >
-            <img
-              v-if="item.previewUrl"
-              :src="item.previewUrl"
-              :alt="item.filename"
-              class="pending-thumb"
-            >
-            <template v-else>
-              <span
-                class="pending-icon"
-                aria-hidden="true"
-              >
-                <svg viewBox="0 0 24 24">
-                  <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-                  <path d="M14 3v5h5" />
-                </svg>
-              </span>
-              <span class="pending-copy">
-                <span class="pending-name">{{ item.filename }}</span>
-                <span class="pending-meta">{{ pendingMeta(item) }}</span>
-              </span>
-            </template>
-            <span
-              v-if="item.previewUrl && item.status !== 'ready'"
-              class="pending-veil"
-            >{{ item.status === 'uploading' ? 'Uploading…' : 'Failed' }}</span>
-            <button
-              type="button"
-              class="pending-remove"
-              :aria-label="`Remove ${item.filename}`"
-              @click="removeAttachment(item.localId)"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M7 7l10 10M17 7L7 17" />
-              </svg>
-            </button>
-          </li>
-        </ul>
         <div class="composer-foot">
           <div
             ref="composerRowEl"
             class="composer-row"
             :class="{ multiline: composerMultiline }"
           >
-            <input
-              ref="fileInputEl"
-              type="file"
-              class="sr-only"
-              multiple
-              accept="image/*,application/pdf,text/plain,text/markdown,.md,.txt,.pdf"
-              @change="onFileInput"
+            <ul
+              v-if="pendingAttachments.length"
+              class="pending-chips"
+              aria-label="Attachments"
             >
-            <button
-              type="button"
-              class="attach"
-              :disabled="!bot"
-              aria-label="Attach"
-              title="Attach"
-              @click="pickFiles()"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
+              <li
+                v-for="item in pendingAttachments"
+                :key="item.localId"
+                class="pending-chip"
+                :class="[item.status, { image: item.previewUrl }]"
+                :title="item.error ?? item.filename"
               >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </button>
-            <label class="draft">
-              <span class="sr-only">Message</span>
-              <textarea
-                ref="draftEl"
-                v-model="draft"
-                rows="1"
-                maxlength="16000"
-                :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
+                <img
+                  v-if="item.previewUrl"
+                  :src="item.previewUrl"
+                  :alt="item.filename"
+                  class="pending-thumb"
+                >
+                <template v-else>
+                  <span
+                    class="pending-icon"
+                    aria-hidden="true"
+                  >
+                    <svg viewBox="0 0 24 24">
+                      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+                      <path d="M14 3v5h5" />
+                    </svg>
+                  </span>
+                  <span class="pending-copy">
+                    <span class="pending-name">{{ item.filename }}</span>
+                    <span class="pending-meta">{{ pendingMeta(item) }}</span>
+                  </span>
+                </template>
+                <span
+                  v-if="item.previewUrl && item.status !== 'ready'"
+                  class="pending-veil"
+                >{{ item.status === 'uploading' ? 'Uploading…' : 'Failed' }}</span>
+                <button
+                  type="button"
+                  class="pending-remove"
+                  :aria-label="`Remove ${item.filename}`"
+                  @click="removeAttachment(item.localId)"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 7l10 10M17 7L7 17" />
+                  </svg>
+                </button>
+              </li>
+            </ul>
+            <div class="composer-line">
+              <input
+                ref="fileInputEl"
+                type="file"
+                class="sr-only"
+                multiple
+                accept="image/*,application/pdf,text/plain,text/markdown,.md,.txt,.pdf"
+                @change="onFileInput"
+              >
+              <button
+                type="button"
+                class="attach"
                 :disabled="!bot"
-                @keydown.enter.exact.prevent="send"
-                @paste="onAttachPaste"
-                @focus="listening = true"
-                @blur="listening = false"
-              />
-            </label>
-            <button
-              v-if="draft.trim() || canSendAttachments"
-              type="submit"
-              class="send"
-              :disabled="sending || !bot || attachmentsUploading"
-              aria-label="Send"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
+                aria-label="Attach"
+                title="Attach"
+                @click="pickFiles()"
               >
-                <path d="M12 19V6M7 11l5-5 5 5" />
-              </svg>
-            </button>
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+              <label class="draft">
+                <span class="sr-only">Message</span>
+                <textarea
+                  ref="draftEl"
+                  v-model="draft"
+                  rows="1"
+                  maxlength="16000"
+                  :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
+                  :disabled="!bot"
+                  @keydown.enter.exact.prevent="send"
+                  @paste="onAttachPaste"
+                  @focus="listening = true"
+                  @blur="listening = false"
+                />
+              </label>
+              <button
+                v-if="draft.trim() || canSendAttachments"
+                type="submit"
+                class="send"
+                :disabled="sending || !bot || attachmentsUploading"
+                aria-label="Send"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 19V6M7 11l5-5 5 5" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </form>
@@ -548,7 +550,8 @@ function showMarkError() {
 }
 
 /**
- * Pill on one line; `--radius-card` once the field is taller than that.
+ * Pill on one line; `--radius-card` once the field is taller than that
+ * or the attachment tray sits inside it.
  * Easing `9999px` down to 28px stays a pill until the last moment, so the
  * transition is pinned to the corner already on screen (half the row).
  */
@@ -556,6 +559,10 @@ function measureComposer() {
   const el = draftEl.value
   if (!el) {
     setComposerMultiline(false)
+    return
+  }
+  if (pendingAttachments.value.length > 0) {
+    setComposerMultiline(true)
     return
   }
   const style = getComputedStyle(el)
@@ -753,7 +760,7 @@ onUnmounted(() => {
   }
 })
 
-watch(draft, () => {
+watch([draft, () => pendingAttachments.value.length], () => {
   nextTick(measureComposer)
 })
 
@@ -1237,8 +1244,8 @@ async function onBotSaved() {
   position: relative;
   z-index: 1;
   display: flex;
-  gap: 0.25rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.3rem;
   overflow: hidden;
   /* Equal on every side so each circle sits concentric with its end cap. */
   padding: 0.3rem;
@@ -1253,8 +1260,17 @@ async function onBotSaved() {
 }
 
 .composer-row.multiline {
-  align-items: flex-end;
   border-radius: var(--radius-card);
+}
+
+.composer-line {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.composer-row.multiline .composer-line {
+  align-items: flex-end;
 }
 
 .send-error {
@@ -1343,10 +1359,9 @@ async function onBotSaved() {
 }
 
 .pending-chips {
-  pointer-events: auto;
   list-style: none;
   margin: 0;
-  padding: 0 0.2rem;
+  padding: 0.25rem 0.25rem 0;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -1362,8 +1377,8 @@ async function onBotSaved() {
   height: 3.5rem;
   padding: 0 2rem 0 0.55rem;
   border-radius: var(--radius);
-  border: 1px solid color-mix(in srgb, var(--text) 10%, var(--composer));
-  background: var(--composer);
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  background: color-mix(in srgb, var(--text) 4%, transparent);
   font-size: 0.82rem;
 }
 
