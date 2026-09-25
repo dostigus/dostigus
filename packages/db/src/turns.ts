@@ -18,7 +18,8 @@ const ERROR_CODE = /^[a-z][a-z0-9_]{0,31}$/
 
 const TURN_COLUMNS = `
   id, thread_id, bot_id, person_id, trigger, outcome, started_at, ended_at,
-  schedule_id, error_code, phases_json, tools_json, model_id, model_tier, vision_parts
+  schedule_id, error_code, phases_json, tools_json, model_id, model_tier, vision_parts,
+  served_model_id, prompt_tokens, completion_tokens, total_tokens, llm_call_count
 `
 
 export const TURN_TRIGGERS = ['user', 'wake', 'mention'] as const
@@ -57,6 +58,11 @@ export type Turn = {
   modelId: string | null
   modelTier: ModelTier | null
   visionParts: boolean | null
+  servedModelId: string | null
+  promptTokens: number | null
+  completionTokens: number | null
+  totalTokens: number | null
+  llmCallCount: number | null
 }
 
 /** Early patch after resolveModelId and the vision needles gate. See ADR 0029. */
@@ -64,6 +70,14 @@ export type TurnObservability = {
   modelId: string
   modelTier: ModelTier
   visionParts: boolean
+}
+
+/** One LLM completion while the Turn is still running. See ADR 0029. */
+export type TurnUsageDelta = {
+  servedModelId?: string | null
+  promptTokens?: number | null
+  completionTokens?: number | null
+  totalTokens?: number | null
 }
 
 export type TurnFinish = {
@@ -88,6 +102,11 @@ type TurnSqlRow = {
   model_id: string | null
   model_tier: string | null
   vision_parts: number | null
+  served_model_id: string | null
+  prompt_tokens: number | null
+  completion_tokens: number | null
+  total_tokens: number | null
+  llm_call_count: number | null
 }
 
 function isTrigger(value: string): value is TurnTrigger {
@@ -220,6 +239,34 @@ function toModelId(value: string | null): string | null {
   return trimmed && trimmed.length <= ID_MAX ? trimmed : null
 }
 
+function toTokenCount(value: number | null | undefined): number | null {
+  if (value == null || !Number.isFinite(value) || value < 0 || !Number.isSafeInteger(value)) {
+    return null
+  }
+  return value
+}
+
+function addTokenCounts(current: number | null, add: number | null): number | null {
+  if (add == null) {
+    return current
+  }
+  return (current ?? 0) + add
+}
+
+function toDisplayTotalTokens(
+  promptTokens: number | null,
+  completionTokens: number | null,
+  providerTotal: number | null,
+): number | null {
+  if (providerTotal != null) {
+    return providerTotal
+  }
+  if (promptTokens != null && completionTokens != null) {
+    return promptTokens + completionTokens
+  }
+  return null
+}
+
 function toTurn(row: TurnSqlRow): Turn {
   const trigger = isTrigger(row.trigger) ? row.trigger : 'user'
   const outcome = isOutcome(row.outcome) ? row.outcome : 'error'
@@ -239,6 +286,15 @@ function toTurn(row: TurnSqlRow): Turn {
     modelId: toModelId(row.model_id),
     modelTier: row.model_tier && isModelTier(row.model_tier) ? row.model_tier : null,
     visionParts: toVisionParts(row.vision_parts),
+    servedModelId: toModelId(row.served_model_id),
+    promptTokens: toTokenCount(row.prompt_tokens),
+    completionTokens: toTokenCount(row.completion_tokens),
+    totalTokens: toDisplayTotalTokens(
+      toTokenCount(row.prompt_tokens),
+      toTokenCount(row.completion_tokens),
+      toTokenCount(row.total_tokens),
+    ),
+    llmCallCount: toTokenCount(row.llm_call_count),
   }
 }
 
@@ -355,6 +411,30 @@ export function patchTurnObservability(
     store.sqlite.prepare(`
       UPDATE turns SET model_id = ?, model_tier = ?, vision_parts = ? WHERE id = ?
     `).run(modelId, input.modelTier, input.visionParts ? 1 : 0, row.id)
+  })
+}
+
+export function accumulateTurnUsage(
+  store: OpenedStore,
+  id: string,
+  input: TurnUsageDelta,
+): void {
+  const servedModelId = toModelId(input.servedModelId ?? null)
+  const promptTokens = toTokenCount(input.promptTokens)
+  const completionTokens = toTokenCount(input.completionTokens)
+  const providerTotal = toTokenCount(input.totalTokens)
+  withTurn(store, id, (row) => {
+    const nextServed = servedModelId ?? toModelId(row.served_model_id)
+    const nextPrompt = addTokenCounts(toTokenCount(row.prompt_tokens), promptTokens)
+    const nextCompletion = addTokenCounts(toTokenCount(row.completion_tokens), completionTokens)
+    const nextProviderTotal = addTokenCounts(toTokenCount(row.total_tokens), providerTotal)
+    const nextCount = (toTokenCount(row.llm_call_count) ?? 0) + 1
+    store.sqlite.prepare(`
+      UPDATE turns
+      SET served_model_id = ?, prompt_tokens = ?, completion_tokens = ?,
+          total_tokens = ?, llm_call_count = ?
+      WHERE id = ?
+    `).run(nextServed, nextPrompt, nextCompletion, nextProviderTotal, nextCount, row.id)
   })
 }
 

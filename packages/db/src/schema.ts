@@ -191,6 +191,16 @@ export const turns = sqliteTable('turns', {
   modelTier: text('model_tier'),
   /** 1 when image parts went on the request. Integer 0/1, like schedules.paused. */
   visionParts: integer('vision_parts'),
+  /** Last non-empty provider response.model. Null until a completion reports one. */
+  servedModelId: text('served_model_id'),
+  /** Sum of prompt/input tokens. Null when no completion reported usage. */
+  promptTokens: integer('prompt_tokens'),
+  /** Sum of completion/output tokens. Null when no completion reported usage. */
+  completionTokens: integer('completion_tokens'),
+  /** Sum of provider totals. Display totalTokens may fall back to prompt+completion. */
+  totalTokens: integer('total_tokens'),
+  /** LLM completions in this Turn. Null when no LLM / not measured. */
+  llmCallCount: integer('llm_call_count'),
 }, (table) => [
   index('turns_started_at_idx').on(table.startedAt),
   index('turns_bot_started_idx').on(table.botId, table.startedAt),

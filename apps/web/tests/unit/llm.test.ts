@@ -18,6 +18,7 @@ import {
   completeAssistantReply,
   gatewayErrorReply,
   isLlmGatewayConfigured,
+  parseChatCompletionUsage,
   pingLlmGateway,
   readLlmGatewayEnv,
   stubAssistantReply,
@@ -69,6 +70,7 @@ it('returns a stub reply when the LLM gateway has no key', async () => {
 
   const phases: string[] = []
   const notes: Array<{ modelId: string, modelTier: string, visionParts: boolean }> = []
+  const usages: unknown[] = []
   const result = await completeAssistantReply({
     botName: 'New Bot',
     modelTier: 'strong',
@@ -85,12 +87,16 @@ it('returns a stub reply when the LLM gateway has no key', async () => {
     onObservability: (note) => {
       notes.push(note)
     },
+    onLlmCompletion: (usage) => {
+      usages.push(usage)
+    },
   })
   expect(result.via).toBe('stub')
   expect(result.content).toBe(stubAssistantReply())
   expect(invoked).toEqual([])
   expect(phases).toEqual([])
   expect(notes).toEqual([{ modelId: 'openai/gpt-4o', modelTier: 'strong', visionParts: false }])
+  expect(usages).toEqual([])
 })
 
 it('calls chat completions with greeting history and the Manifest system prompt', async () => {
@@ -1336,4 +1342,113 @@ it('does not attach image parts on a Wake', async () => {
   expect(payload.messages.at(-1)?.content).toBe('Morning briefing')
   expect(JSON.stringify(payload.messages)).not.toContain('image_url')
   expect(notes).toEqual([{ visionParts: false }])
+})
+
+it('parses OpenAI-compatible model and usage, including equivalents', () => {
+  expect(parseChatCompletionUsage({
+    model: 'openai/gpt-4o-2024-08-06',
+    usage: { prompt_tokens: 12, completion_tokens: 4, total_tokens: 16 },
+    choices: [{ message: { content: 'Hi' } }],
+  })).toEqual({
+    servedModelId: 'openai/gpt-4o-2024-08-06',
+    promptTokens: 12,
+    completionTokens: 4,
+    totalTokens: 16,
+  })
+  expect(parseChatCompletionUsage({
+    model: '  openrouter/auto  ',
+    usage: { input_tokens: 8, output_tokens: 2, totalTokens: 10 },
+  })).toEqual({
+    servedModelId: 'openrouter/auto',
+    promptTokens: 8,
+    completionTokens: 2,
+    totalTokens: 10,
+  })
+  expect(parseChatCompletionUsage({
+    model: '',
+    choices: [{ message: { content: 'Hi' } }],
+  })).toEqual({
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+  })
+  expect(parseChatCompletionUsage({
+    model: 'x'.repeat(200),
+    usage: { prompt_tokens: -1, completion_tokens: 1.5, total_tokens: '9' },
+  })).toEqual({
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+  })
+  expect(parseChatCompletionUsage({
+    model: 'openai/gpt-4o',
+    usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+  })).toEqual({
+    servedModelId: 'openai/gpt-4o',
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  })
+  expect(parseChatCompletionUsage(null)).toEqual({
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+  })
+})
+
+it('reports usage after each successful completion and skips failed retries', async () => {
+  let calls = 0
+  const usages: Array<{ servedModelId: string | null, promptTokens: number | null }> = []
+  const fetchImpl = (async () => {
+    calls += 1
+    if (calls === 1) {
+      return new Response(JSON.stringify({
+        model: 'openai/gpt-4o',
+        usage: { prompt_tokens: 10, completion_tokens: 2, total_tokens: 12 },
+        choices: [{
+          message: {
+            tool_calls: [{
+              id: 'call_1',
+              type: 'function',
+              function: { name: 'dostigus_messages_list', arguments: '{}' },
+            }],
+          },
+        }],
+      }), { status: 200 })
+    }
+    if (calls === 2) {
+      return new Response('unavailable', { status: 502 })
+    }
+    return new Response(JSON.stringify({
+      model: 'openai/gpt-4o-mini',
+      usage: { prompt_tokens: 20, completion_tokens: 6, total_tokens: 26 },
+      choices: [{ message: { content: 'Listed.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+
+  const result = await completeAssistantReply({
+    botName: 'New Bot',
+    modelTier: 'strong',
+    history: [],
+    env: GATEWAY_ENV,
+    fetchImpl,
+    invokeTool: async (name) => ({
+      ok: true,
+      name,
+      content: '{"messages":[]}',
+    }),
+    onLlmCompletion: (usage) => {
+      usages.push({ servedModelId: usage.servedModelId, promptTokens: usage.promptTokens })
+    },
+  })
+
+  expect(result).toEqual({ via: 'llm+tools', content: 'Listed.' })
+  expect(calls).toBe(3)
+  expect(usages).toEqual([
+    { servedModelId: 'openai/gpt-4o', promptTokens: 10 },
+    { servedModelId: 'openai/gpt-4o-mini', promptTokens: 20 },
+  ])
 })

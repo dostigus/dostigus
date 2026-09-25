@@ -26,6 +26,7 @@ import { flushScheduleWakes, runScheduleTick } from '../../server/utils/schedule
 import {
   beginChatTurn,
   noteChatTurnObservability,
+  noteChatTurnUsage,
   recordChatTurnTool,
   requestAborted,
   resetChatTurnJournal,
@@ -80,6 +81,11 @@ it('dual-writes Activity phases and tool names, and the poll stays in memory', (
   expect(turn?.modelId).toBeNull()
   expect(turn?.modelTier).toBeNull()
   expect(turn?.visionParts).toBeNull()
+  expect(turn?.servedModelId).toBeNull()
+  expect(turn?.promptTokens).toBeNull()
+  expect(turn?.completionTokens).toBeNull()
+  expect(turn?.totalTokens).toBeNull()
+  expect(turn?.llmCallCount).toBeNull()
 })
 
 it('patches observability while running and MCP returns null or set camelCase fields', () => {
@@ -147,6 +153,105 @@ it('patches observability while running and MCP returns null or set camelCase fi
       modelId: 'openai/gpt-4o',
       modelTier: 'strong',
       visionParts: false,
+    }),
+  })
+})
+
+it('accumulates usage while running and MCP returns camelCase fields', () => {
+  const store = memoryStore()
+  const bot = createBot(store, { name: 'Notes' }).bot
+  const threadId = 'thread-usage'
+  const unsetId = beginChatTurn(store, {
+    threadId,
+    botId: bot.id,
+    personId: 'person',
+    trigger: 'user',
+  })
+  settleChatTurn(store, unsetId, { outcome: 'ok' })
+
+  const setId = beginChatTurn(store, {
+    threadId,
+    botId: bot.id,
+    personId: 'person',
+    trigger: 'user',
+  })
+  noteChatTurnUsage(threadId, bot.id, {
+    servedModelId: 'openai/gpt-4o-mini',
+    promptTokens: 11,
+    completionTokens: 4,
+    totalTokens: 15,
+  })
+  noteChatTurnUsage(threadId, bot.id, {
+    servedModelId: '',
+    promptTokens: 3,
+    completionTokens: 2,
+    totalTokens: null,
+  })
+  expect(getTurn(store, setId)).toMatchObject({
+    outcome: 'running',
+    servedModelId: 'openai/gpt-4o-mini',
+    promptTokens: 14,
+    completionTokens: 6,
+    totalTokens: 15,
+    llmCallCount: 2,
+  })
+  settleChatTurn(store, setId, { outcome: 'abort' })
+  expect(getTurn(store, setId)).toMatchObject({
+    outcome: 'abort',
+    servedModelId: 'openai/gpt-4o-mini',
+    promptTokens: 14,
+    completionTokens: 6,
+    totalTokens: 15,
+    llmCallCount: 2,
+  })
+
+  const listed = platformToolSpec('dostigus_turns_list').run({ botId: bot.id }, store) as {
+    turns: Array<{
+      id: string
+      servedModelId: string | null
+      promptTokens: number | null
+      completionTokens: number | null
+      totalTokens: number | null
+      llmCallCount: number | null
+    }>
+  }
+  const unset = listed.turns.find((turn) => turn.id === unsetId)
+  const set = listed.turns.find((turn) => turn.id === setId)
+  expect(unset).toMatchObject({
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+    llmCallCount: null,
+  })
+  expect(set).toMatchObject({
+    servedModelId: 'openai/gpt-4o-mini',
+    promptTokens: 14,
+    completionTokens: 6,
+    totalTokens: 15,
+    llmCallCount: 2,
+  })
+  expect(JSON.stringify(listed)).not.toContain('served_model_id')
+  expect(JSON.stringify(listed)).not.toContain('prompt_tokens')
+
+  const gotUnset = platformToolSpec('dostigus_turns_get').run({ id: unsetId }, store)
+  const gotSet = platformToolSpec('dostigus_turns_get').run({ id: setId }, store)
+  expect(gotUnset).toEqual({
+    turn: expect.objectContaining({
+      id: unsetId,
+      servedModelId: null,
+      promptTokens: null,
+      llmCallCount: null,
+    }),
+  })
+  expect(gotSet).toEqual({
+    turn: expect.objectContaining({
+      id: setId,
+      servedModelId: 'openai/gpt-4o-mini',
+      promptTokens: 14,
+      completionTokens: 6,
+      totalTokens: 15,
+      llmCallCount: 2,
     }),
   })
 })
@@ -224,6 +329,11 @@ it('sets scheduleId on a Wake turn', async () => {
     modelId: 'openai/gpt-4o',
     modelTier: 'strong',
     visionParts: false,
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+    llmCallCount: null,
   })
   expect(turns[0]?.phases.map((phase) => phase.phase)).toEqual(['thinking'])
 })
@@ -278,6 +388,9 @@ it('starts a turn only for a Bot reply, including a room mention', () => {
   expect(botRoute).toContain('onObservability')
   expect(roomRoute).toContain('onObservability')
   expect(ticker).toContain('noteChatTurnObservability')
+  expect(botRoute).toContain('onLlmCompletion')
+  expect(roomRoute).toContain('onLlmCompletion')
+  expect(ticker).toContain('noteChatTurnUsage')
 
   const listTool = readFileSync(join(import.meta.dirname, '../../server/mcp/tools/dostigus_turns_list.ts'), 'utf8')
   const getTool = readFileSync(join(import.meta.dirname, '../../server/mcp/tools/dostigus_turns_get.ts'), 'utf8')

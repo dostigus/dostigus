@@ -180,6 +180,7 @@ export {
   type RoomBotAudience,
 } from './threads'
 export {
+  accumulateTurnUsage,
   appendTurnPhase,
   appendTurnTool,
   finishTurn,
@@ -204,4 +205,5 @@ export {
   type TurnTool,
   turnToolName,
   type TurnTrigger,
+  type TurnUsageDelta,
 } from './turns'

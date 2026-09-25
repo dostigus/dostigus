@@ -11,7 +11,8 @@
  * Bot `preview` (quiet reply, no LLM gateway key), then calls
  * `dostigus_turns_list` and `dostigus_turns_get`. The quiet path writes
  * trigger `user`, outcome `ok`, one `thinking` phase, no tools, a
- * resolved `modelId`, and `visionParts` false.
+ * resolved `modelId`, `visionParts` false, and null `servedModelId`
+ * / token fields (the quiet path is not an LLM completion).
  *
  *   NUXT_AGENT_TOKEN=preview-agent pnpm preview:host
  *   NUXT_AGENT_TOKEN=preview-agent pnpm smoke:turns
@@ -41,6 +42,11 @@ const TURN_KEYS = [
   'modelId',
   'modelTier',
   'visionParts',
+  'servedModelId',
+  'promptTokens',
+  'completionTokens',
+  'totalTokens',
+  'llmCallCount',
 ]
 const BODY_KEYS = [
   'content',
@@ -349,6 +355,15 @@ function assertTurnShape(turn, label) {
   if (turn.visionParts !== false) {
     fail(`${label} quiet path expected visionParts false, got ${JSON.stringify(turn.visionParts)}`)
   }
+  if (turn.servedModelId !== null) {
+    fail(`${label} quiet path expected servedModelId null, got ${JSON.stringify(turn.servedModelId)}`)
+  }
+  for (const key of ['promptTokens', 'completionTokens', 'totalTokens', 'llmCallCount']) {
+    const value = turn[key]
+    if (value !== null) {
+      fail(`${label} quiet path expected ${key} null, got ${JSON.stringify(value)}`)
+    }
+  }
 }
 
 function assertNoBodies(turn, userLine, assistantLine) {
@@ -512,7 +527,7 @@ async function main() {
     }
   }
   note('no bearer: Turn journal tools stay disabled')
-  note(`ok Turn ${turn.id} trigger=user outcome=ok phases=thinking tools=[] modelId=${turn.modelId} visionParts=${turn.visionParts}`)
+  note(`ok Turn ${turn.id} trigger=user outcome=ok phases=thinking tools=[] modelId=${turn.modelId} visionParts=${turn.visionParts} servedModelId=${turn.servedModelId} llmCallCount=${turn.llmCallCount}`)
 }
 
 main().catch((error) => {

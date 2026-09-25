@@ -13,6 +13,7 @@ import { getClusterBot, viewerFromUser } from '../../../utils/cluster-bots'
 import {
   beginChatTurn,
   noteChatTurnObservability,
+  noteChatTurnUsage,
   recordChatTurnTool,
   requestAborted,
   settleChatTurn,
@@ -90,6 +91,9 @@ export default defineEventHandler(async (event) => {
       },
       onObservability: (note) => {
         noteChatTurnObservability(activityThreadId, bot.id, note)
+      },
+      onLlmCompletion: (usage) => {
+        noteChatTurnUsage(activityThreadId, bot.id, usage)
       },
     })
     await waitPreviewQuietHold(previewQuietHoldMs({

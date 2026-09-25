@@ -21,6 +21,7 @@ import { viewerFromUser } from '../../../utils/cluster-bots'
 import {
   beginChatTurn,
   noteChatTurnObservability,
+  noteChatTurnUsage,
   recordChatTurnTool,
   requestAborted,
   settleChatTurn,
@@ -113,6 +114,9 @@ export default defineEventHandler(async (event) => {
       },
       onObservability: (note) => {
         noteChatTurnObservability(threadId, mentioned.bot.id, note)
+      },
+      onLlmCompletion: (usage) => {
+        noteChatTurnUsage(threadId, mentioned.bot.id, usage)
       },
     })
     const assistant = appendMessengerAssistantLine(store, {
