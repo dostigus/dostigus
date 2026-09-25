@@ -1,5 +1,7 @@
+import type { ModelTier } from '@dostigus/shared'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
+import { isModelTier } from '@dostigus/shared'
 import { StoreError } from './store-error'
 
 /** Rows older than this are deleted when a Turn is finalized. See ADR 0029. */
@@ -16,7 +18,7 @@ const ERROR_CODE = /^[a-z][a-z0-9_]{0,31}$/
 
 const TURN_COLUMNS = `
   id, thread_id, bot_id, person_id, trigger, outcome, started_at, ended_at,
-  schedule_id, error_code, phases_json, tools_json
+  schedule_id, error_code, phases_json, tools_json, model_id, model_tier, vision_parts
 `
 
 export const TURN_TRIGGERS = ['user', 'wake', 'mention'] as const
@@ -52,6 +54,16 @@ export type Turn = {
   errorCode: string | null
   phases: TurnPhase[]
   tools: TurnTool[]
+  modelId: string | null
+  modelTier: ModelTier | null
+  visionParts: boolean | null
+}
+
+/** Early patch after resolveModelId and the vision needles gate. See ADR 0029. */
+export type TurnObservability = {
+  modelId: string
+  modelTier: ModelTier
+  visionParts: boolean
 }
 
 export type TurnFinish = {
@@ -73,6 +85,9 @@ type TurnSqlRow = {
   error_code: string | null
   phases_json: string
   tools_json: string
+  model_id: string | null
+  model_tier: string | null
+  vision_parts: number | null
 }
 
 function isTrigger(value: string): value is TurnTrigger {
@@ -190,6 +205,21 @@ function parseTools(raw: string): TurnTool[] {
   }
 }
 
+function toVisionParts(value: number | null): boolean | null {
+  if (value == null) {
+    return null
+  }
+  return value !== 0
+}
+
+function toModelId(value: string | null): string | null {
+  if (value == null) {
+    return null
+  }
+  const trimmed = value.trim()
+  return trimmed && trimmed.length <= ID_MAX ? trimmed : null
+}
+
 function toTurn(row: TurnSqlRow): Turn {
   const trigger = isTrigger(row.trigger) ? row.trigger : 'user'
   const outcome = isOutcome(row.outcome) ? row.outcome : 'error'
@@ -206,6 +236,9 @@ function toTurn(row: TurnSqlRow): Turn {
     errorCode: row.error_code && ERROR_CODE.test(row.error_code) ? row.error_code : null,
     phases: parsePhases(row.phases_json),
     tools: parseTools(row.tools_json),
+    modelId: toModelId(row.model_id),
+    modelTier: row.model_tier && isModelTier(row.model_tier) ? row.model_tier : null,
+    visionParts: toVisionParts(row.vision_parts),
   }
 }
 
@@ -303,6 +336,25 @@ export function appendTurnPhase(
     store.sqlite.prepare(`
       UPDATE turns SET phases_json = ? WHERE id = ?
     `).run(JSON.stringify(phases), row.id)
+  })
+}
+
+export function patchTurnObservability(
+  store: OpenedStore,
+  id: string,
+  input: TurnObservability,
+): void {
+  const modelId = requireId(input.modelId, 'Model')
+  if (!isModelTier(input.modelTier)) {
+    throw new StoreError('Turn model tier is invalid', 400)
+  }
+  if (typeof input.visionParts !== 'boolean') {
+    throw new StoreError('Turn visionParts must be a boolean', 400)
+  }
+  withTurn(store, id, (row) => {
+    store.sqlite.prepare(`
+      UPDATE turns SET model_id = ?, model_tier = ?, vision_parts = ? WHERE id = ?
+    `).run(modelId, input.modelTier, input.visionParts ? 1 : 0, row.id)
   })
 }
 

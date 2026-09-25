@@ -68,6 +68,7 @@ it('returns a stub reply when the LLM gateway has no key', async () => {
   }) as typeof fetch
 
   const phases: string[] = []
+  const notes: Array<{ modelId: string, modelTier: string, visionParts: boolean }> = []
   const result = await completeAssistantReply({
     botName: 'New Bot',
     modelTier: 'strong',
@@ -81,11 +82,15 @@ it('returns a stub reply when the LLM gateway has no key', async () => {
     onActivity: (phase) => {
       phases.push(phase)
     },
+    onObservability: (note) => {
+      notes.push(note)
+    },
   })
   expect(result.via).toBe('stub')
   expect(result.content).toBe(stubAssistantReply())
   expect(invoked).toEqual([])
   expect(phases).toEqual([])
+  expect(notes).toEqual([{ modelId: 'openai/gpt-4o', modelTier: 'strong', visionParts: false }])
 })
 
 it('calls chat completions with greeting history and the Manifest system prompt', async () => {
@@ -1106,6 +1111,7 @@ function userContent(message: { content?: unknown }) {
 
 it('keeps image parts off an allowlist miss and adds the soft RU note', async () => {
   let body: unknown
+  const notes: Array<{ modelId: string, modelTier: string, visionParts: boolean }> = []
   const result = await completeAssistantReply({
     botName: 'Notes',
     modelTier: 'strong',
@@ -1126,6 +1132,9 @@ it('keeps image parts off an allowlist miss and adds the soft RU note', async ()
     }) as typeof fetch,
     readArtifactBytes: readTinyJpeg,
     encodeVisionJpeg: encodeTinyJpeg,
+    onObservability: (note) => {
+      notes.push(note)
+    },
   })
   expect(result.via).toBe('llm')
   const payload = body as { messages: Array<{ role: string, content: unknown }>, model: string }
@@ -1137,10 +1146,17 @@ it('keeps image parts off an allowlist miss and adds the soft RU note', async ()
   expect(trigger?.content).toContain('a1.jpg')
   expect(JSON.stringify(payload.messages)).not.toContain('image_url')
   expect(JSON.stringify(payload)).not.toContain('data:image')
+  expect(notes).toEqual([{
+    modelId: 'meta-llama/llama-3.1-70b',
+    modelTier: 'strong',
+    visionParts: false,
+  }])
 })
 
 it('sends JPEG image_url parts on the triggering user line only', async () => {
   let body: unknown
+  let notedBeforeFetch = false
+  const notes: Array<{ modelId: string, modelTier: string, visionParts: boolean }> = []
   await completeAssistantReply({
     botName: 'Notes',
     modelTier: 'strong',
@@ -1158,11 +1174,15 @@ it('sends JPEG image_url parts on the triggering user line only', async () => {
     ],
     env: GATEWAY_ENV,
     fetchImpl: (async (_url, init) => {
+      notedBeforeFetch = notes.length === 1
       body = JSON.parse(String(init?.body))
       return completionResponse('A red square.')
     }) as typeof fetch,
     readArtifactBytes: readTinyJpeg,
     encodeVisionJpeg: encodeTinyJpeg,
+    onObservability: (note) => {
+      notes.push(note)
+    },
   })
   const payload = body as { messages: Array<{ role: string, content: unknown }> }
   expect(payload.messages).toHaveLength(3)
@@ -1181,10 +1201,13 @@ it('sends JPEG image_url parts on the triggering user line only', async () => {
   expect(parts[1]?.type).toBe('image_url')
   expect(parts[1]?.image_url?.detail).toBe('auto')
   expect(parts[1]?.image_url?.url.startsWith(`data:${VISION_JPEG_MIME};base64,`)).toBe(true)
+  expect(notedBeforeFetch).toBe(true)
+  expect(notes).toEqual([{ modelId: 'openai/gpt-4o', modelTier: 'strong', visionParts: true }])
 })
 
 it('keeps those image parts on every tool-loop completion round', async () => {
   const bodies: unknown[] = []
+  const notes: Array<{ modelId: string, visionParts: boolean }> = []
   const result = await completeAssistantReply({
     botName: 'Notes',
     modelTier: 'strong',
@@ -1221,9 +1244,13 @@ it('keeps those image parts on every tool-loop completion round', async () => {
     }),
     readArtifactBytes: readTinyJpeg,
     encodeVisionJpeg: encodeTinyJpeg,
+    onObservability: (note) => {
+      notes.push({ modelId: note.modelId, visionParts: note.visionParts })
+    },
   })
   expect(result.content).toBe('Saw the photo.')
   expect(bodies).toHaveLength(2)
+  expect(notes).toEqual([{ modelId: 'openai/gpt-4o', visionParts: true }])
   for (const body of bodies) {
     const messages = (body as { messages: Array<{ role: string, content: unknown }> }).messages
     const user = messages.find((message) => message.role === 'user')
@@ -1280,6 +1307,7 @@ it('retries a modality error once without image parts', async () => {
 
 it('does not attach image parts on a Wake', async () => {
   let body: unknown
+  const notes: Array<{ visionParts: boolean }> = []
   await completeAssistantReply({
     botName: 'Notes',
     modelTier: 'strong',
@@ -1299,9 +1327,13 @@ it('does not attach image parts on a Wake', async () => {
     }) as typeof fetch,
     readArtifactBytes: readTinyJpeg,
     encodeVisionJpeg: encodeTinyJpeg,
+    onObservability: (note) => {
+      notes.push({ visionParts: note.visionParts })
+    },
   })
   const payload = body as { messages: Array<{ role: string, content: unknown }> }
   expect(payload.messages.at(-1)?.role).toBe('system')
   expect(payload.messages.at(-1)?.content).toBe('Morning briefing')
   expect(JSON.stringify(payload.messages)).not.toContain('image_url')
+  expect(notes).toEqual([{ visionParts: false }])
 })

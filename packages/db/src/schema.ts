@@ -185,6 +185,12 @@ export const turns = sqliteTable('turns', {
   errorCode: text('error_code'),
   phasesJson: text('phases_json').notNull().default('[]'),
   toolsJson: text('tools_json').notNull().default('[]'),
+  /** Id sent after resolveModelId. Null until that resolve. See ADR 0029. */
+  modelId: text('model_id'),
+  /** Bot Model tier for this Turn. Null until resolve. */
+  modelTier: text('model_tier'),
+  /** 1 when image parts went on the request. Integer 0/1, like schedules.paused. */
+  visionParts: integer('vision_parts'),
 }, (table) => [
   index('turns_started_at_idx').on(table.startedAt),
   index('turns_bot_started_idx').on(table.botId, table.startedAt),

@@ -115,6 +115,8 @@ export async function completeAssistantReply(input: {
   onActivity?: (phase: ChatActivityPhase) => void
   /** Tool name, ok, and duration only. Arguments and results stay off this hook. */
   onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
+  /** Resolved request model id, Bot tier, and whether vision parts went on the request. */
+  onObservability?: (note: { modelId: string, modelTier: ModelTier, visionParts: boolean }) => void
   /** Artifact volume dir for triggering-line vision. */
   artifactsDir?: string
   /** Test double. Production reads Cluster volume bytes. */
@@ -128,7 +130,13 @@ export async function completeAssistantReply(input: {
     env: input.env,
     stored: input.stored,
   })
+  const modelId = resolved.modelIdFor(input.modelTier)
   if (!resolved.configured) {
+    input.onObservability?.({
+      modelId,
+      modelTier: input.modelTier,
+      visionParts: false,
+    })
     return { content: stubAssistantReply(audience), via: 'stub' }
   }
 
@@ -167,6 +175,7 @@ export async function completeAssistantReply(input: {
       skills: input.skills,
       onActivity: input.onActivity,
       onTool: input.onTool,
+      onObservability: input.onObservability,
       artifactsDir: input.artifactsDir,
       readArtifactBytes: input.readArtifactBytes,
       encodeVisionJpeg: input.encodeVisionJpeg,
@@ -271,6 +280,7 @@ async function callOpenAiCompatible(input: {
   skills?: Skill[]
   onActivity?: (phase: ChatActivityPhase) => void
   onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
+  onObservability?: (note: { modelId: string, modelTier: ModelTier, visionParts: boolean }) => void
   artifactsDir?: string
   readArtifactBytes?: VisionReadFn
   encodeVisionJpeg?: VisionEncodeFn
@@ -305,7 +315,7 @@ async function callOpenAiCompatible(input: {
     },
     ...chatLlmHistory(input.history, input.history.at(-1)).map(toOpenAiHistoryMessage),
   ]
-  await applyTriggeringVision({
+  const visionParts = await applyTriggeringVision({
     messages,
     trigger: input.history.at(-1),
     modelId: input.resolved.modelIdFor(input.modelTier),
@@ -313,6 +323,11 @@ async function callOpenAiCompatible(input: {
     artifactsDir: input.artifactsDir,
     readArtifactBytes: input.readArtifactBytes,
     encodeVisionJpeg: input.encodeVisionJpeg,
+  })
+  input.onObservability?.({
+    modelId: input.resolved.modelIdFor(input.modelTier),
+    modelTier: input.modelTier,
+    visionParts,
   })
 
   let usedTools = false

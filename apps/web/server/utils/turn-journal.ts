@@ -1,7 +1,7 @@
 import type { OpenedStore, TurnTrigger } from '@dostigus/db'
-import type { AssistantReplyVia } from '@dostigus/shared'
+import type { AssistantReplyVia, ModelTier } from '@dostigus/shared'
 import type { ChatActivityPhase } from '../../app/utils/chat-activity'
-import { appendTurnPhase, appendTurnTool, finishTurn, startTurn } from '@dostigus/db'
+import { appendTurnPhase, appendTurnTool, finishTurn, patchTurnObservability, startTurn } from '@dostigus/db'
 import { setChatActivityPhaseListener } from './chat-activity-phase'
 
 type ActiveTurn = {
@@ -60,6 +60,22 @@ export function beginChatTurn(
   active.set(key, { store, turnId: turn.id })
   keyByTurn.set(turn.id, key)
   return turn.id
+}
+
+export function noteChatTurnObservability(
+  threadId: string,
+  botId: string,
+  note: { modelId: string, modelTier: ModelTier, visionParts: boolean },
+): void {
+  const current = active.get(phaseKey(threadId, botId))
+  if (!current) {
+    return
+  }
+  try {
+    patchTurnObservability(current.store, current.turnId, note)
+  } catch {
+    console.warn('Turn journal observability write failed')
+  }
 }
 
 export function recordChatTurnTool(

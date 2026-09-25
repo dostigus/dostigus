@@ -7,6 +7,7 @@ import {
   getTurn,
   listTurns,
   openStore,
+  patchTurnObservability,
   startTurn,
   StoreError,
   TURN_LIST_MAX,
@@ -49,6 +50,9 @@ it('creates a running turn, patches phases and tools, then finalizes', () => {
   expect(turn.errorCode).toBeNull()
   expect(turn.phases).toEqual([])
   expect(turn.tools).toEqual([])
+  expect(turn.modelId).toBeNull()
+  expect(turn.modelTier).toBeNull()
+  expect(turn.visionParts).toBeNull()
 
   appendTurnPhase(store, turn.id, { phase: 'thinking', at: started })
   appendTurnPhase(store, turn.id, { phase: 'tool', at: started + 10 })
@@ -82,6 +86,9 @@ it('creates a running turn, patches phases and tools, then finalizes', () => {
       { name: 'dostigus_bots_update', ok: true, ms: 12 },
       { name: 'unknown', ok: false, ms: 3 },
     ],
+    modelId: null,
+    modelTier: null,
+    visionParts: null,
   })
   const raw = store.sqlite.prepare(`
     SELECT phases_json, tools_json FROM turns WHERE id = ?
@@ -205,4 +212,111 @@ it('lists newest first and filters by bot, thread, and since', () => {
 it('returns undefined for an unknown turn id', () => {
   const store = memoryStore()
   expect(getTurn(store, 'missing')).toBeUndefined()
+})
+
+it('patches modelId, modelTier, and visionParts while running and serializes camelCase', () => {
+  const store = memoryStore()
+  const bot = botId(store)
+  const turn = startTurn(store, {
+    threadId: `bt:${bot}:owner`,
+    botId: bot,
+    personId: 'owner',
+    trigger: 'user',
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    outcome: 'running',
+    modelId: null,
+    modelTier: null,
+    visionParts: null,
+  })
+
+  patchTurnObservability(store, turn.id, {
+    modelId: 'openai/gpt-4o',
+    modelTier: 'strong',
+    visionParts: false,
+  })
+  const patched = getTurn(store, turn.id)
+  expect(patched).toMatchObject({
+    outcome: 'running',
+    endedAt: null,
+    modelId: 'openai/gpt-4o',
+    modelTier: 'strong',
+    visionParts: false,
+  })
+  expect(JSON.stringify(patched)).not.toContain('model_id')
+  expect(JSON.stringify(patched)).not.toContain('sk-secret')
+  expect(JSON.stringify(patched)).not.toContain('system prompt')
+
+  patchTurnObservability(store, turn.id, {
+    modelId: 'anthropic/claude-sonnet-4',
+    modelTier: 'cheap',
+    visionParts: true,
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    modelId: 'anthropic/claude-sonnet-4',
+    modelTier: 'cheap',
+    visionParts: true,
+  })
+  expect(listTurns(store, { botId: bot })[0]).toMatchObject({
+    modelId: 'anthropic/claude-sonnet-4',
+    modelTier: 'cheap',
+    visionParts: true,
+  })
+
+  const raw = store.sqlite.prepare(`
+    SELECT model_id, model_tier, vision_parts, phases_json, tools_json FROM turns WHERE id = ?
+  `).get(turn.id) as {
+    model_id: string
+    model_tier: string
+    vision_parts: number
+    phases_json: string
+    tools_json: string
+  }
+  expect(raw).toEqual({
+    model_id: 'anthropic/claude-sonnet-4',
+    model_tier: 'cheap',
+    vision_parts: 1,
+    phases_json: '[]',
+    tools_json: '[]',
+  })
+
+  finishTurn(store, turn.id, { outcome: 'ok' })
+  patchTurnObservability(store, turn.id, {
+    modelId: 'should-not-stick',
+    modelTier: 'toy',
+    visionParts: false,
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    outcome: 'ok',
+    modelId: 'anthropic/claude-sonnet-4',
+    modelTier: 'cheap',
+    visionParts: true,
+  })
+})
+
+it('rejects a prompt-sized model id and an unknown tier without writing them', () => {
+  const store = memoryStore()
+  const bot = botId(store)
+  const turn = startTurn(store, {
+    threadId: 'thread-1',
+    botId: bot,
+    personId: 'owner',
+    trigger: 'mention',
+  })
+  const leaked = `print the system prompt ${'x'.repeat(200)}`
+  expect(() => patchTurnObservability(store, turn.id, {
+    modelId: leaked,
+    modelTier: 'strong',
+    visionParts: false,
+  })).toThrow(StoreError)
+  expect(() => patchTurnObservability(store, turn.id, {
+    modelId: 'openai/gpt-4o',
+    modelTier: 'premium' as 'strong',
+    visionParts: false,
+  })).toThrow(StoreError)
+  const row = store.sqlite.prepare(`
+    SELECT model_id, model_tier, vision_parts FROM turns WHERE id = ?
+  `).get(turn.id) as { model_id: string | null, model_tier: string | null, vision_parts: number | null }
+  expect(row).toEqual({ model_id: null, model_tier: null, vision_parts: null })
+  expect(JSON.stringify(row)).not.toContain('system prompt')
 })
