@@ -4,7 +4,6 @@ import type {
   OpenRouterCatalogModel,
   OpenRouterCatalogPublic,
 } from '@dostigus/shared'
-import { createHash } from 'node:crypto'
 import process from 'node:process'
 import {
   defaultBaseUrlForKind,
@@ -60,11 +59,9 @@ function catalogProvider(stored: LlmGatewayStored, providerId: string): CatalogP
   return null
 }
 
+/** In-memory only, never returned. A new key or base URL misses the cache. */
 function fingerprintOf(provider: CatalogProvider): string {
-  return createHash('sha256')
-    .update(`${provider.id}\n${provider.baseUrl ?? ''}\n${provider.apiKey ?? ''}`)
-    .digest('hex')
-    .slice(0, 32)
+  return `${provider.baseUrl ?? ''}\n${provider.apiKey ?? ''}`
 }
 
 function publicFrom(input: {
@@ -173,7 +170,7 @@ export async function loadOpenRouterCatalog(input: {
     })
   }
 
-  const flightKey = `${providerId}:${fingerprint}`
+  const flightKey = `${providerId}\n${fingerprint}`
   const pending = inflight.get(flightKey)
   if (pending) {
     return pending
