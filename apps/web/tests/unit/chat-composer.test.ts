@@ -39,6 +39,8 @@ it('overlays a slim composer on one scrolling Chat pane', () => {
   const trayAt = chat.indexOf('class="pending-chips"')
   expect(trayAt).toBeGreaterThan(chat.indexOf('class="composer-row"'))
   expect(trayAt).toBeLessThan(chat.indexOf('class="composer-line"'))
+  expect(chat).toContain(`:placeholder="pendingAttachments.length > 0
+                    ? 'Добавьте сообщение или просто отправьте.'`)
   expect(row).not.toContain('safe-area')
   expect(thread).toContain('var(--composer-clearance)')
   expect(thread).toContain('var(--thread-end-gap)')

@@ -262,7 +262,9 @@
                   v-model="draft"
                   rows="1"
                   maxlength="16000"
-                  :placeholder="`Сообщение для ${bot?.name ?? 'Bot'}`"
+                  :placeholder="pendingAttachments.length > 0
+                    ? 'Добавьте сообщение или просто отправьте.'
+                    : `Сообщение для ${bot?.name ?? 'Bot'}`"
                   :disabled="!bot"
                   @keydown.enter.exact.prevent="send"
                   @paste="onAttachPaste"
