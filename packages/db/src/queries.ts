@@ -16,6 +16,7 @@ import {
   isLlmPolicyKind,
   isLlmProviderKind,
   isModelTier,
+  LEGACY_LLM_PROVIDER_ID,
   MODEL_TIERS,
   normalizeBotAccentHex,
   serializeChatParts,
@@ -991,6 +992,7 @@ type LlmProviderWrite = LlmProviderInstance & { clearApiKey?: boolean }
 function normalizeProviders(
   value: LlmProviderWrite[] | undefined,
   current: LlmProviderInstance[],
+  legacyApiKey: string | null = null,
 ): LlmProviderInstance[] {
   if (!value) {
     return current
@@ -1008,7 +1010,9 @@ function normalizeProviders(
       throw new StoreError('Provider kind must be openrouter, openai, or openai-compatible', 400)
     }
     const previous = currentById.get(id)
-    let apiKey = previous?.apiKey ?? null
+    // The legacy row's key moves onto the Provider the first time Settings saves it.
+    let apiKey = previous?.apiKey
+      ?? (id === LEGACY_LLM_PROVIDER_ID && current.length === 0 ? legacyApiKey : null)
     if (item.clearApiKey) {
       apiKey = null
     } else if (item.apiKey !== undefined) {
@@ -1128,7 +1132,7 @@ export function upsertLlmGatewaySettings(
     }
   }
 
-  const providers = normalizeProviders(input.providers, current.providers ?? [])
+  const providers = normalizeProviders(input.providers, current.providers ?? [], current.apiKey)
   let tierBinds = normalizeTierBinds(input.tierBinds, current.tierBinds ?? {}, providers)
   const firstProvider = providers[0]
   if ((current.providers ?? []).length === 0 && providers.length === 1 && firstProvider) {
