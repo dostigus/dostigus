@@ -870,6 +870,9 @@ async function deliver(raw: string, existing: TimelineLine | null, artifactIds: 
     pending: true,
     failed: false,
   }
+  if (!existing) {
+    clearAttachments()
+  }
   botPending.value = true
   resetMark()
   try {
@@ -884,7 +887,6 @@ async function deliver(raw: string, existing: TimelineLine | null, artifactIds: 
     if (botId.value !== targetId) {
       return
     }
-    clearAttachments()
     await Promise.all([refresh(), refreshBot(), refreshBots(), refreshThreads()])
     optimistic.value = null
     if (messages.value.length > before) {
