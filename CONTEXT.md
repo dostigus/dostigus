@@ -76,8 +76,11 @@ ops meta (outcome, phase times, tool names, modelId, modelTier,
 visionParts, servedModelId, promptTokens, completionTokens,
 totalTokens, llmCallCount). `modelId` is the id sent after resolve.
 `servedModelId` is the last non-empty provider `response.model`.
-Token fields are Turn aggregates. It is not a Chat line and not an
-Activity row.
+Token fields are Turn aggregates. Escalate
+([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md))
+is silent in Chat; the journal sees attempts via last successful
+(or last attempted) resolve plus `llmCallCount`. It is not a Chat
+line and not an Activity row.
 _Avoid_: trace, span, log (unqualified), transcript.
 
 **Turn journal**:
@@ -185,8 +188,9 @@ Platform git agent.
 _Avoid_: cloud agent (bare), codegen bot, authoring agent.
 
 **Skill**:
-Policy and instructions a Bot follows. Not executable UI and not a
-Module package. A Skill id is letters, digits, `_`, or `-`. A dotted
+Instructions a Bot follows. Not executable UI and not a
+Module package. Not a Model-tier Policy
+([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)). A Skill id is letters, digits, `_`, or `-`. A dotted
 id is not a Skill id. `parseSkillId` in
 `packages/shared/src/skill.ts` checks that charset. A Skill is
 `{ id, description, instructions }`. `description` is required on
@@ -310,8 +314,32 @@ package, and a Marketplace of packages, stay later. See
 _Avoid_: deploy, merge, ship (unqualified), Host-bundled Apply.
 
 **LLM gateway**:
-Cluster config mapping Model tiers to providers.
-_Avoid_: provider, model picker (the gateway owns tiers).
+Cluster capability for LLM calls: OpenAI-compatible shape and
+transient same-model retry
+([ADR 0004](docs/adr/0004-llm-gateway-tiers.md)). Provider
+instances, Model tier bind / resolve, and escalate are
+[ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md).
+_Avoid_: renaming the gateway per Provider, model picker
+(unqualified).
+
+**Provider**:
+An Owner-connected LLM gateway instance: kind (`openrouter` |
+`openai` | `openai-compatible`), API key, optional base URL. Not
+a frozen model list in Dostigus source. Several instances may
+exist on one Cluster.
+([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
+_Avoid_: vendor, engine, catalog (unqualified), treating a
+Provider as the whole LLM gateway.
+
+**Policy**:
+How a Model tier resolves a model id on a Provider. OpenRouter
+casual: `free` (meta free, intended `openrouter/free`) and `auto`
+(meta auto, intended `openrouter/auto`). Direct OpenAI /
+openai-compatible: one live-chosen model when that instance is
+sole. A later Advanced pin is a Policy, not day-1.
+([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
+_Avoid_: router, slug (unqualified), Skill text (a Skill is
+instructions, not this Policy).
 
 **Cluster timezone**:
 The one IANA timezone for the Cluster, stored as
@@ -356,8 +384,12 @@ _Avoid_: URL allowlist (unqualified), CORS, proxy list, per-Bot
 allowlist.
 
 **Model tier**:
-`cheap` | `strong` | `code` (and `toy` for unreliable free). MCP Bots pin
-strong/mid.
+`cheap` | `strong` | `code` (and `toy` for playground / explicit
+only). Each tier binds to a Provider + Policy, not a baked id
+([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
+Chat / `user` starts `strong`. Wake / Schedule starts `cheap`.
+`code` is escalate only on day-1. `toy` is outside the escalate
+chain. MCP Bots pin strong/mid.
 _Avoid_: fast, smart, opus (aliases).
 
 **Household**:
@@ -474,6 +506,8 @@ _Avoid_: public share, invite (unqualified).
   `parts_json`. Bot-threads, `dm`, `group`, and `room` are in the Host.
   Grant rows are in the Host
   ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md)).
-- LLM gateway maps Model tiers to providers for every Bot call.
+- LLM gateway maps Model tiers through Provider + Policy for
+  every Bot call. Escalate may upshift along `cheap` → `strong`
+  → `code` ([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
 - A Share link is a narrow public token to one object, not the Cluster.
   Share links and guests are later.

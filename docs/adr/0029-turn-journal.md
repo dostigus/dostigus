@@ -6,6 +6,7 @@
 - Amended: 2026-09-24 — Schedule detail lists wake Turns for that `scheduleId` ([ADR 0027](0027-bot-schedules.md)). That is not an Owner journal Sheet. No new runs table.
 - Amended: 2026-09-25 — Observability fields `modelId`, `modelTier`, `visionParts` (nullable). Patch early while `running`, after `resolveModelId` and the vision needles gate. MCP list/get always return them. Shipped in [#124](https://github.com/dostigus/dostigus/pull/124).
 - Amended: 2026-09-25 — Observability fields `servedModelId`, `promptTokens`, `completionTokens`, `totalTokens`, `llmCallCount` (nullable). Accumulate after each LLM completion while `running`. MCP list/get always return them. No list filters or usage.summary day-1. Impl + migration + `pnpm smoke:turns` extend land in a follow-up PR.
+- Amended: 2026-09-25 — Escalate (more than one Model-tier resolve per Turn) is [ADR 0036](0036-llm-providers-tier-resolve-escalate.md). The journal stays last successful resolve fields, or last attempted if the Turn errors, plus `llmCallCount`. No per-attempt rows day-1. Chat stays silent. Amend this record in the impl PR only if those aggregates are not enough.
 
 Activity phases stay [ADR 0021](0021-chat-activity-status.md). The Chat
 tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). A Wake stays
@@ -67,7 +68,10 @@ Patch `modelId`, `modelTier`, and `visionParts` early while
 `outcome` is still `running`, right after `resolveModelId` and the
 vision needles gate ([ADR 0004](0004-llm-gateway-tiers.md),
 [ADR 0035](0035-image-artifact-vision.md)). Do not wait for
-finalize. One resolve per Turn. The tool loop does not store a
+finalize. Day-1 of this record assumed one resolve per Turn.
+[ADR 0036](0036-llm-providers-tier-resolve-escalate.md) may
+resolve again on escalate; re-patch last successful resolve, or
+last attempted if the Turn errors. The tool loop does not store a
 per-call model array. Legacy rows and Turns that die before
 resolve stay null. There is no backfill.
 
