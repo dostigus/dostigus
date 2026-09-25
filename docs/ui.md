@@ -237,10 +237,13 @@ Host Settings. Delete is not on this Sheet. Members see the mark and
 may read the fields. Bubbles
 have no author label. An assistant bubble renders Markdown through
 `KitMarkdown`: bold, italic, inline code, fenced code (monospace, no
-highlighting), lists, and links. A link is only `http:` or `https:`, and
+highlighting), lists, links, and GFM tables (header row plus a `|---`
+separator). A link is only `http:` or `https:`, and
 it opens in a new tab with `rel="noopener noreferrer"`. A single newline
 outside a fence soft-joins; a blank line is a paragraph; a fence keeps
-its line breaks. Raw HTML, tables, Markdown images, and headings stay text. User
+its line breaks. A valid GFM table is a real table. A wide table scrolls
+horizontally in the bubble; cell text may wrap. A lone or malformed `|`
+stays text. Raw HTML, Markdown images, and headings stay text. User
 and system bubbles stay plain text with `white-space: pre-wrap`. See
 [ADR 0022](adr/0022-chat-assistant-markdown.md). An Artifact image
 preview is Kit + session GET, not Markdown `![]()` and not a raw
