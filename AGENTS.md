@@ -103,7 +103,10 @@ which applies the same gate (`members/index.get.ts`,
 `requireHostSession` / `withHostStore` so a Member can use them. Settings,
 Bot create/delete, and Members stay on the Owner gate. The page gate is
 [`apps/web/app/middleware/owner.global.ts`](apps/web/app/middleware/owner.global.ts):
-`/members` and `/settings` send a Member to `/`. Invite accept
+`/members`, `/settings`, and every `/settings/...` page send a Member to
+`/` (`isOwnerPath` in
+[`apps/web/app/utils/owner-paths.ts`](apps/web/app/utils/owner-paths.ts)).
+Invite accept
 (`/invite/…`, `/api/invites/:token`) stays public while logged out — those
 handlers do not call `requireOwnerSession`.
 [`apps/web/tests/unit/owner-routes.test.ts`](apps/web/tests/unit/owner-routes.test.ts)
@@ -187,9 +190,15 @@ often listens on IPv6 only: open **http://localhost:3000/**.
 **http://127.0.0.1:3000** refuses the connection.
 
 The Host is a Bot list + Chat. Press
-**+** to create a Bot (default **New Bot**). **Settings** holds Cluster
-Providers and Model tier → Provider + Policy binds, the Cluster
-timezone, and the Cluster http allowlist. Not a landing page. Store is SQLite
+**+** to create a Bot (default **New Bot**). **Settings** is multi-page
+with a left nav ([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
+`/settings` lands on **Провайдеры** (`/settings/providers`): Providers,
+the OpenRouter quality shelf, «Подробнее» (full live catalog, per-tier
+pins, raw Policy), and health. **Прочее** (`/settings/other`) holds the
+Cluster timezone and the Cluster http allowlist. Not a landing page.
+The OpenRouter catalog is
+`GET /api/settings/llm-gateway/providers/:id/catalog` (Owner session,
+`?refresh=1` bypasses the ~24h Host cache). Store is SQLite
 (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
 First visit creates the Cluster Owner; later visits sign in. The Owner opens
 **Members** to add a Member (display name, email or username, password). A
@@ -265,10 +274,23 @@ is set. **HEAD**
 ignores `?members=1` and still answers **204** or **302** to
 `/bots/preview` with no session cookie.
 
-For Settings (timezone and http allowlist), open
+For Settings, open
 **http://localhost:3000/preview-seed?settings=1**. That GET signs in the
-same preview Owner and redirects to `/settings`. `?members=1` still
+same preview Owner and redirects to `/settings/providers`. Timezone and
+http allowlist are on **Прочее** (`/settings/other`). `?members=1` still
 wins when both are set. **HEAD** ignores `?settings=1`.
+
+For the Providers page with a saved OpenRouter key, open
+**http://localhost:3000/preview-seed?providers=1**. When the Store has
+no Provider and no legacy key, that GET saves the fixture OpenRouter
+Provider (id `preview-openrouter`, key `sk-or-v1-preview-fixture`),
+then redirects to `/settings/providers`. On `nuxt dev` with
+`DOSTIGUS_PREVIEW_SEED=1`, the catalog route skips `GET /key` for that
+fixture id only, so health is green and the shelf ranks the real
+public OpenRouter list (the VM needs outbound HTTPS). The fixture key
+is not a working key: a configured Chat reply on it fails like any
+rejected key. Remove the Provider on the page to see the empty state.
+`?members=1` still wins. **HEAD** ignores `?providers=1`.
 
 For Bot grants and bot-threads, open
 **http://localhost:3000/preview-seed?threads=1**. That GET signs in the
@@ -349,7 +371,10 @@ that query, that `?kitchen=1` adds one Kitchen button once while
 HEAD ignores that query, that `?system=1` adds three system Skill /
 self-settings lines once while HEAD ignores that query, and that `?threads=1` lists Bot `preview` and the Member's Bot for the
 Owner while `?threads=1&as=member` opens a different bot-thread on Bot
-`preview`. HEAD ignores `?threads=1`.
+`preview`. HEAD ignores `?threads=1`. `?settings=1` and `?providers=1`
+land on `/settings/providers`; the catalog answers without the key; a
+Member gets 403 on the catalog and 302 `/` on every `/settings/...`
+page. HEAD ignores `?providers=1`.
 `?rooms=1` opens `/threads/preview-room` after seeding a direct message
 and that room. HEAD ignores `?rooms=1`.
 GET `?activity=typing` lands on `/bots/preview?activity=typing` while
