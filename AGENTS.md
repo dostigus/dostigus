@@ -204,6 +204,37 @@ First visit creates the Cluster Owner; later visits sign in. The Owner opens
 **Members** to add a Member (display name, email or username, password). A
 Member signs in and uses Bot list and Chat. Settings stays with the Owner.
 
+### Host UI / pane width
+
+At common viewports the Host sidebar plus the Settings left nav eat most
+of the window. Size container-query / two-column breakpoints against the
+**content pane**, not the full viewport.
+
+Measure from current CSS (16px root):
+
+- Host sidebar default is **280px / 17.5rem**
+  (`SIDEBAR_DEFAULT` in [`apps/web/app/utils/sidebar-width.ts`](apps/web/app/utils/sidebar-width.ts);
+  CSS fallback `--sidebar-width` on [`HostSidebar.vue`](apps/web/app/components/HostSidebar.vue)).
+- Settings left nav is **13rem**
+  ([`apps/web/app/pages/settings.vue`](apps/web/app/pages/settings.vue)).
+- Settings `.stage` adds **1.4rem** horizontal padding each side.
+
+At **1440px** that leaves about **54rem** of content width for
+`/settings/providers` (the Host `.pane` minus the Settings nav and stage
+padding). At **1280px** the same pane is closer to **46rem**. Below
+**52rem** the sidebar is a drawer
+([`host.vue`](apps/web/app/layouts/host.vue)), so the pane is the full
+viewport; Settings nav stacks at a **46rem** container query on `.page`.
+
+Put `container-type` on a parent and `@container` rules on a **child**.
+CSS ignores `container-type` on the element that uses `@container` — the
+queried element is not its own container.
+
+`/settings/providers` in [PR #132](https://github.com/dostigus/dostigus/pull/132)
+is the example that burned screenshot rounds: a **60rem** two-column
+breakpoint never fired at 1440px. The live query is
+`@container (min-width: 54rem)` on a child of `.providers`.
+
 ### Preview seed
 
 Skip Owner sign-in and Create Bot when you only need Chat for a screenshot
@@ -291,6 +322,13 @@ public OpenRouter list (the VM needs outbound HTTPS). The fixture key
 is not a working key: a configured Chat reply on it fails like any
 rejected key. Remove the Provider on the page to see the empty state.
 `?members=1` still wins. **HEAD** ignores `?providers=1`.
+
+When the Cloud Agent Secret `OPENROUTER_TEST_KEY` is present, prefer it
+over that `?providers=1` `trustKey` fixture skip for real key-accepted /
+key-rejected probes. The secret is test-only and rotatable. Never commit
+the value. Do not create the secret from an agent — Nick adds it in
+Cursor Cloud Secrets. A missing secret is expected until that lands
+([#133](https://github.com/dostigus/dostigus/issues/133)).
 
 For Bot grants and bot-threads, open
 **http://localhost:3000/preview-seed?threads=1**. That GET signs in the
@@ -387,6 +425,35 @@ Optional
 [`apps/web/tests/unit/preview-seed.test.ts`](apps/web/tests/unit/preview-seed.test.ts).
 A preview redirect regression fails CI there. `pnpm smoke:preview`
 stays the live HTTP check against a running preview Host.
+
+With `pnpm preview:host` already up, capture one named preview state
+(CDP against Chrome/Chromium already on the VM; no Playwright):
+
+```
+pnpm shoot:preview system
+```
+
+That opens `GET /preview-seed` with the state's query, waits for an
+explicit ready marker (not network idle), and writes a PNG under
+`.preview-shots/` (gitignored). One state per invocation. Named states:
+
+| State | Seed | Ready marker | Viewport |
+| --- | --- | --- | --- |
+| `chat` | `/preview-seed` | `.bubble` | 1440×900 |
+| `system` | `?system=1` | three `.bubble.system` | 1440×900 |
+| `providers-empty` | `?settings=1` | `.providers .add` | 1440×900 |
+| `providers-fixture` | `?providers=1` | `.provider` and the shelf (cards or miss banner) | 1440×900 |
+| `settings-other` | `?settings=1` then `/settings/other` | `.other input[name="timezone"]` | 1440×900 |
+| `narrow` | `?settings=1` | `.providers h1` | 390×844 |
+
+`providers-empty` needs a Store with no Provider (a prior
+`providers-fixture` on the same `DATABASE_URL` leaves the fixture;
+use a fresh file or remove the Provider on the page). Optional
+`PREVIEW_SMOKE_URL` (default `http://localhost:3000`),
+`PREVIEW_SHOOT_DIR` (default `.preview-shots`), `CHROME_PATH`.
+Missing Host prints a stderr hint to start `pnpm preview:host`.
+Do not invent another `/tmp` CDP capture
+([#106](https://github.com/dostigus/dostigus/issues/106)).
 
 Turn journal harness (no screenshots). The preview Host and the smoke
 share one MCP bearer. The fixed preview token is `preview-agent`:

@@ -33,6 +33,9 @@ node_modules/
 ### Tests ###
 /coverage/
 
+### Preview shots ###
+.preview-shots/
+
 ### IDE ###
 .vscode/*
 !.vscode/extensions.json
