@@ -2,21 +2,21 @@
   <HostAuthShell>
     <div v-if="phase === 'loading'">
       <p class="kicker">
-        Invite
+        {{ $t('auth.invite.kicker') }}
       </p>
-      <h1>Checking this link</h1>
+      <h1>{{ $t('auth.invite.loadingTitle') }}</h1>
       <p class="hint">
-        One moment.
+        {{ $t('auth.invite.loadingHint') }}
       </p>
     </div>
 
     <div v-else-if="phase === 'session'">
       <p class="kicker">
-        Invite
+        {{ $t('auth.invite.kicker') }}
       </p>
-      <h1>Sign out first</h1>
+      <h1>{{ $t('auth.invite.sessionTitle') }}</h1>
       <p class="hint">
-        Open this link while you are signed out. A Member is not created on the account that is already signed in.
+        {{ $t('auth.invite.sessionHint') }}
       </p>
       <p
         v-if="message"
@@ -30,23 +30,23 @@
         :disabled="busy"
         @click="signOutAndContinue"
       >
-        {{ busy ? 'Signing out…' : 'Sign out' }}
+        {{ busy ? $t('auth.invite.signOutBusy') : $t('auth.invite.signOut') }}
       </button>
     </div>
 
     <div v-else-if="phase === 'invalid'">
       <p class="kicker">
-        Invite
+        {{ $t('auth.invite.kicker') }}
       </p>
-      <h1>This link is invalid</h1>
+      <h1>{{ $t('auth.invite.invalidTitle') }}</h1>
       <p class="hint">
-        It may have expired or already been used.
+        {{ $t('auth.invite.invalidHint') }}
       </p>
       <NuxtLink
         class="text-link"
         to="/login"
       >
-        Sign in
+        {{ $t('auth.invite.signInLink') }}
       </NuxtLink>
     </div>
 
@@ -55,15 +55,15 @@
       @submit.prevent="submit"
     >
       <p class="kicker">
-        Invite
+        {{ $t('auth.invite.kicker') }}
       </p>
-      <h1>Join this Host</h1>
+      <h1>{{ $t('auth.invite.joinTitle') }}</h1>
       <p class="hint">
-        Choose a display name and a password. This email is your login.
+        {{ $t('auth.invite.joinHint') }}
       </p>
 
       <label class="field">
-        <span>Email</span>
+        <span>{{ $t('auth.field.email') }}</span>
         <input
           :value="email"
           type="email"
@@ -73,7 +73,7 @@
       </label>
 
       <label class="field">
-        <span>Display name</span>
+        <span>{{ $t('auth.field.displayName') }}</span>
         <input
           v-model="displayName"
           type="text"
@@ -83,7 +83,7 @@
       </label>
 
       <label class="field">
-        <span>Password</span>
+        <span>{{ $t('auth.field.password') }}</span>
         <input
           v-model="password"
           type="password"
@@ -91,11 +91,11 @@
           required
           minlength="8"
         >
-        <span class="field-hint">At least 8 characters</span>
+        <span class="field-hint">{{ $t('auth.field.passwordMin') }}</span>
       </label>
 
       <label class="field">
-        <span>Confirm password</span>
+        <span>{{ $t('auth.field.confirmPassword') }}</span>
         <input
           v-model="confirm"
           type="password"
@@ -117,7 +117,7 @@
         class="solid"
         :disabled="busy"
       >
-        {{ busy ? 'Joining…' : 'Join' }}
+        {{ busy ? $t('auth.invite.submitBusy') : $t('auth.invite.submit') }}
       </button>
     </form>
   </HostAuthShell>
@@ -126,7 +126,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
-useHead({ title: 'Dostigus · Invite' })
+const { t } = useI18n()
+useHead({ title: () => t('auth.invite.titleDoc') })
 
 const route = useRoute()
 const token = computed(() => {
@@ -182,7 +183,7 @@ async function signOutAndContinue() {
     rejected.value = false
     await refresh()
   } catch {
-    message.value = 'Could not sign out.'
+    message.value = t('auth.error.fallbackSignOut')
   } finally {
     busy.value = false
   }
@@ -191,7 +192,7 @@ async function signOutAndContinue() {
 async function submit() {
   message.value = ''
   if (password.value !== confirm.value) {
-    message.value = 'Passwords do not match.'
+    message.value = t('auth.error.passwordMismatch')
     return
   }
   busy.value = true
@@ -223,7 +224,7 @@ async function submit() {
       message.value = statusMessage
       return
     }
-    message.value = statusMessage || 'Could not join this Host.'
+    message.value = statusMessage || t('auth.error.fallbackJoin')
   } finally {
     busy.value = false
   }

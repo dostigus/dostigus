@@ -7,6 +7,7 @@
     :description="description"
     :title-align="titleAlign"
     :close="close"
+    :close-label="closeLabel"
   >
     <template
       v-if="$slots.media"
@@ -28,10 +29,12 @@ withDefaults(defineProps<{
   edge?: 'bottom' | 'end'
   titleAlign?: 'start' | 'center'
   close?: 'text' | 'icon'
+  closeLabel?: string
 }>(), {
   edge: 'bottom',
   titleAlign: 'start',
   close: 'text',
+  closeLabel: 'Close',
 })
 
 const open = defineModel<boolean>('open', { required: true })

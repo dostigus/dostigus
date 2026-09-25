@@ -4,7 +4,7 @@
       v-if="gone"
       class="gone"
     >
-      Этого расписания уже нет.
+      {{ $t('schedule.gone') }}
     </p>
     <p
       v-else-if="loadError"
@@ -17,7 +17,7 @@
       v-else-if="!creating && !schedule"
       class="muted"
     >
-      Загружаем…
+      {{ $t('schedule.loading') }}
     </p>
     <form
       v-else
@@ -28,7 +28,7 @@
         v-if="!creating"
         class="switch-row"
       >
-        <span>Активно</span>
+        <span>{{ $t('schedule.active') }}</span>
         <input
           type="checkbox"
           role="switch"
@@ -39,36 +39,36 @@
       </label>
 
       <label class="field">
-        <span>Имя (необязательно)</span>
+        <span>{{ $t('schedule.nameOptional') }}</span>
         <input
           v-model="name"
           type="text"
           :maxlength="SCHEDULE_NAME_MAX"
           autocomplete="off"
-          placeholder="Например, утренняя сводка"
+          :placeholder="$t('schedule.namePlaceholder')"
           :disabled="busy"
           @blur="onFieldCommit"
         >
       </label>
 
       <label class="field">
-        <span>Когда</span>
+        <span>{{ $t('schedule.whenLabel') }}</span>
         <select
           v-model="cadence"
           :disabled="busy"
           @change="onFieldCommit"
         >
           <option value="daily">
-            каждый день
+            {{ $t('schedule.daily') }}
           </option>
           <option value="weekly">
-            каждую неделю
+            {{ $t('schedule.weekly') }}
           </option>
         </select>
       </label>
 
       <label class="field">
-        <span>Время</span>
+        <span>{{ $t('schedule.time') }}</span>
         <input
           v-model="timeLocal"
           type="time"
@@ -83,7 +83,7 @@
         v-if="cadence === 'weekly'"
         class="days"
       >
-        <legend>Дни недели</legend>
+        <legend>{{ $t('schedule.daysOfWeek') }}</legend>
         <label
           v-for="day in SCHEDULE_WEEKDAYS"
           :key="day"
@@ -95,18 +95,18 @@
             :disabled="busy"
             @change="onFieldCommit"
           >
-          {{ SCHEDULE_WEEKDAY_LABELS[day] }}
+          {{ weekdayLabels[day] }}
         </label>
       </fieldset>
 
       <label class="field">
-        <span>Инструкция</span>
+        <span>{{ $t('schedule.instruction') }}</span>
         <textarea
           v-model="wakeText"
           rows="3"
           :maxlength="SCHEDULE_WAKE_MAX"
           required
-          placeholder="Что написать в пробуждении"
+          :placeholder="$t('schedule.wakePlaceholder')"
           :disabled="busy"
           @blur="onFieldCommit"
         />
@@ -116,7 +116,7 @@
         v-if="!creating && nextRunLabel"
         class="meta"
       >
-        <span>Следующий запуск</span>
+        <span>{{ $t('schedule.nextRun') }}</span>
         <span>{{ nextRunLabel }}</span>
       </p>
 
@@ -125,20 +125,20 @@
         type="submit"
         :disabled="busy || !wakeText.trim()"
       >
-        {{ busy ? 'Сохраняем…' : 'Добавить' }}
+        {{ busy ? $t('schedule.saving') : $t('schedule.add') }}
       </KitButton>
 
       <section
         v-if="!creating"
         class="history"
-        aria-label="История запусков"
+        :aria-label="$t('schedule.history')"
       >
-        <h2>История запусков</h2>
+        <h2>{{ $t('schedule.history') }}</h2>
         <p
           v-if="runs.length === 0"
           class="muted"
         >
-          Пока не было запусков
+          {{ $t('schedule.noRunsYet') }}
         </p>
         <ul
           v-else
@@ -148,9 +148,9 @@
             v-for="run in runs"
             :key="run.id"
           >
-            <span>{{ scheduleWhenLabel(run.startedAt, timeZone) }}</span>
+            <span>{{ scheduleWhenLabel(run.startedAt, timeZone, Date.now(), hostLocale) }}</span>
             <span :class="{ ok: run.outcome === 'ok', bad: run.outcome === 'error' || run.outcome === 'abort' }">
-              {{ scheduleRunOutcome(run.outcome) }}
+              {{ scheduleRunOutcome(run.outcome, hostLocale) }}
             </span>
           </li>
         </ul>
@@ -166,14 +166,14 @@
           :disabled="busy"
           @click="confirming = true"
         >
-          Удалить
+          {{ $t('schedule.delete') }}
         </button>
       </div>
       <div
         v-else-if="!creating"
         class="confirm"
       >
-        <p>Удалить это расписание?</p>
+        <p>{{ $t('schedule.confirmDelete') }}</p>
         <div class="actions">
           <button
             type="button"
@@ -181,7 +181,7 @@
             :disabled="busy"
             @click="remove"
           >
-            Удалить
+            {{ $t('schedule.delete') }}
           </button>
           <button
             type="button"
@@ -189,7 +189,7 @@
             :disabled="busy"
             @click="confirming = false"
           >
-            Отмена
+            {{ $t('common.cancel') }}
           </button>
         </div>
       </div>
@@ -210,10 +210,10 @@ import { KitButton } from '@dostigus/ui-kit'
 import {
   SCHEDULE_NAME_MAX,
   SCHEDULE_WAKE_MAX,
-  SCHEDULE_WEEKDAY_LABELS,
   SCHEDULE_WEEKDAYS,
   scheduleDisplayName,
   scheduleRunOutcome,
+  scheduleWeekdayLabels,
   scheduleWhenLabel,
 } from '../utils/schedule-copy'
 
@@ -254,6 +254,9 @@ const emit = defineEmits<{
 }>()
 
 const creating = computed(() => props.mode === 'create')
+const { locale, t } = useI18n()
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
+const weekdayLabels = computed(() => scheduleWeekdayLabels(hostLocale.value))
 
 const schedule = ref<ScheduleView | null>(null)
 const name = ref('')
@@ -275,7 +278,7 @@ const nextRunLabel = computed(() => {
   if (paused.value || !nextRunAt.value) {
     return ''
   }
-  return scheduleWhenLabel(nextRunAt.value, timeZone.value)
+  return scheduleWhenLabel(nextRunAt.value, timeZone.value, Date.now(), hostLocale.value)
 })
 
 watch(() => [props.scheduleId, props.mode, props.botId] as const, () => {
@@ -323,7 +326,7 @@ async function load() {
       paused: false,
     }
     resetDraft()
-    emit('titled', 'Новое расписание')
+    emit('titled', t('closet.newSchedule'))
     return
   }
   schedule.value = null
@@ -344,7 +347,7 @@ async function load() {
   } catch (error) {
     if (statusOf(error) === 404) {
       gone.value = true
-      emit('titled', 'Расписание')
+      emit('titled', t('closet.scheduleTitle'))
       return
     }
     loadError.value = messageOf(error)
@@ -387,11 +390,11 @@ async function persistFields() {
     return
   }
   if (cadence.value === 'weekly' && selectedDays.value.length === 0) {
-    saveError.value = 'Отметьте дни недели'
+    saveError.value = t('schedule.needDays')
     return
   }
   if (!wakeText.value.trim()) {
-    saveError.value = 'Напишите инструкцию'
+    saveError.value = t('schedule.needInstruction')
     return
   }
   busy.value = true
@@ -415,11 +418,11 @@ async function create() {
     return
   }
   if (cadence.value === 'weekly' && selectedDays.value.length === 0) {
-    saveError.value = 'Отметьте дни недели'
+    saveError.value = t('schedule.needDays')
     return
   }
   if (!wakeText.value.trim()) {
-    saveError.value = 'Напишите инструкцию'
+    saveError.value = t('schedule.needInstruction')
     return
   }
   busy.value = true
@@ -491,7 +494,7 @@ function messageOf(error: unknown): string {
       return status
     }
   }
-  return creating.value ? 'Не получилось добавить' : 'Не получилось сохранить'
+  return creating.value ? t('schedule.createFailed') : t('schedule.saveFailed')
 }
 </script>
 

@@ -5,10 +5,10 @@
         <HostMenuButton />
         <div>
           <p class="mark">
-            Members
+            {{ $t('members.title') }}
           </p>
           <p class="sub">
-            People on this Host
+            {{ $t('members.peopleOnHost') }}
           </p>
         </div>
       </div>
@@ -17,7 +17,7 @@
           type="button"
           @click="addOpen = true"
         >
-          Add Member
+          {{ $t('members.addShort') }}
         </KitButton>
       </div>
     </header>
@@ -25,18 +25,18 @@
     <main class="stage">
       <section
         class="invite"
-        aria-label="Invite"
+        :aria-label="$t('members.inviteAria')"
       >
-        <h2>Invite by email</h2>
+        <h2>{{ $t('members.inviteByEmail') }}</h2>
         <p class="hint">
-          They choose a name and password. Copy the link and send it yourself.
+          {{ $t('members.inviteHint') }}
         </p>
         <form
           class="invite-form"
           @submit.prevent="createInvite"
         >
           <label class="field">
-            <span>Email</span>
+            <span>{{ $t('auth.field.email') }}</span>
             <input
               v-model="inviteEmail"
               type="email"
@@ -48,7 +48,7 @@
             type="submit"
             :disabled="inviting"
           >
-            {{ inviting ? 'Creating…' : 'Create invite' }}
+            {{ inviting ? $t('members.addSheet.creatingInvite') : $t('members.addSheet.createInvite') }}
           </KitButton>
         </form>
 
@@ -57,13 +57,13 @@
           class="link-box"
         >
           <p class="hint">
-            Copy this link now. It is not shown again.
+            {{ $t('members.copyOnce') }}
           </p>
           <div class="copy-row">
             <input
               readonly
               :value="issuedUrl"
-              aria-label="Invite link"
+              :aria-label="$t('members.inviteLink')"
               @focus="selectLink"
             >
             <button
@@ -71,7 +71,7 @@
               class="ghost"
               @click="copyLink"
             >
-              {{ copied ? 'Copied' : 'Copy' }}
+              {{ copied ? $t('members.copied') : $t('members.copy') }}
             </button>
           </div>
         </div>
@@ -84,23 +84,23 @@
           {{ inviteMessage }}
         </p>
 
-        <h3>Pending invites</h3>
+        <h3>{{ $t('members.pending') }}</h3>
         <p
           v-if="inviteLoadError"
           class="banner"
         >
-          Could not load invites.
+          {{ $t('members.loadInvitesFailed') }}
         </p>
         <p
           v-else-if="invites.length === 0"
           class="meta"
         >
-          No pending invites
+          {{ $t('members.noPending') }}
         </p>
         <ul
           v-else
           class="people"
-          aria-label="Pending invites"
+          :aria-label="$t('members.pendingAria')"
         >
           <li
             v-for="invite in invites"
@@ -112,7 +112,7 @@
                 {{ invite.email }}
               </p>
               <p class="meta">
-                {{ isExpired(invite.expiresAt) ? 'Expired' : 'Expires' }}
+                {{ isExpired(invite.expiresAt) ? $t('members.expired') : $t('members.expires') }}
                 {{ formatExpiry(invite.expiresAt) }}
               </p>
             </div>
@@ -125,7 +125,7 @@
                 class="ghost"
                 @click="revokeConfirmId = ''"
               >
-                Cancel
+                {{ $t('common.cancel') }}
               </button>
               <button
                 type="button"
@@ -133,7 +133,7 @@
                 :disabled="busyInviteId === invite.id"
                 @click="revoke(invite.id)"
               >
-                {{ busyInviteId === invite.id ? 'Revoking…' : 'Revoke' }}
+                {{ busyInviteId === invite.id ? $t('members.revoking') : $t('members.revoke') }}
               </button>
             </div>
             <div
@@ -146,14 +146,14 @@
                 :disabled="busyInviteId === invite.id"
                 @click="rotate(invite.id)"
               >
-                {{ busyInviteId === invite.id ? 'Working…' : 'New link' }}
+                {{ busyInviteId === invite.id ? $t('members.working') : $t('members.newLink') }}
               </button>
               <button
                 type="button"
                 class="ghost"
                 @click="revokeConfirmId = invite.id"
               >
-                Revoke
+                {{ $t('members.revoke') }}
               </button>
             </div>
           </li>
@@ -164,7 +164,7 @@
         v-if="loadError"
         class="banner"
       >
-        Could not load Members.
+        {{ $t('members.loadFailed') }}
       </p>
 
       <section
@@ -177,17 +177,17 @@
           alt=""
         />
         <p class="kicker">
-          Members
+          {{ $t('members.title') }}
         </p>
-        <h1>No Members yet</h1>
+        <h1>{{ $t('members.empty') }}</h1>
         <p class="hint">
-          Add someone so they can sign in on this Host and open Chat.
+          {{ $t('members.emptyHint') }}
         </p>
         <KitButton
           type="button"
           @click="addOpen = true"
         >
-          Add Member
+          {{ $t('members.addShort') }}
         </KitButton>
       </section>
 
@@ -213,7 +213,7 @@
             v-if="member.disabledAt"
             class="meta"
           >
-            Sign-in off
+            {{ $t('members.disabled') }}
           </p>
           <div
             v-else-if="confirmId === member.id"
@@ -224,7 +224,7 @@
               class="ghost"
               @click="confirmId = ''"
             >
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
             <button
               type="button"
@@ -232,7 +232,7 @@
               :disabled="busyId === member.id"
               @click="turnOff(member.id)"
             >
-              {{ busyId === member.id ? 'Turning off…' : 'Turn off sign-in' }}
+              {{ busyId === member.id ? $t('members.turningOff') : $t('members.disable') }}
             </button>
           </div>
           <button
@@ -241,7 +241,7 @@
             class="ghost"
             @click="confirmId = member.id"
           >
-            Turn off sign-in
+            {{ $t('members.disable') }}
           </button>
         </li>
       </ul>
@@ -256,8 +256,8 @@
 
       <KitSheet
         v-model:open="addOpen"
-        title="Add a Member"
-        description="They sign in with this email or username and can Chat with Bots."
+        :title="$t('members.addSheet.title')"
+        :description="$t('members.addSheetDescription')"
       >
         <template #media>
           <GooseSticker
@@ -268,7 +268,7 @@
         </template>
         <form @submit.prevent="add">
           <label class="field">
-            <span>Display name</span>
+            <span>{{ $t('auth.field.displayName') }}</span>
             <input
               v-model="displayName"
               type="text"
@@ -278,7 +278,7 @@
           </label>
 
           <label class="field">
-            <span>Email or username</span>
+            <span>{{ $t('auth.field.login') }}</span>
             <input
               v-model="login"
               type="text"
@@ -288,7 +288,7 @@
           </label>
 
           <label class="field">
-            <span>Password</span>
+            <span>{{ $t('auth.field.password') }}</span>
             <input
               v-model="password"
               type="password"
@@ -296,11 +296,11 @@
               required
               minlength="8"
             >
-            <span class="field-hint">At least 8 characters</span>
+            <span class="field-hint">{{ $t('auth.field.passwordMin') }}</span>
           </label>
 
           <label class="field">
-            <span>Confirm password</span>
+            <span>{{ $t('auth.field.confirmPassword') }}</span>
             <input
               v-model="confirm"
               type="password"
@@ -324,13 +324,13 @@
               type="button"
               @click="addOpen = false"
             >
-              Cancel
+              {{ $t('common.cancel') }}
             </KitButton>
             <KitButton
               type="submit"
               :disabled="adding"
             >
-              {{ adding ? 'Adding…' : 'Add Member' }}
+              {{ adding ? $t('members.addSheet.submitBusy') : $t('members.addShort') }}
             </KitButton>
           </div>
         </form>
@@ -345,7 +345,8 @@ import { GooseSticker, KitButton, KitSheet } from '@dostigus/ui-kit'
 
 definePageMeta({ layout: 'host' })
 
-useHead({ title: 'Dostigus · Members' })
+const { t } = useI18n()
+useHead({ title: () => t('members.titleDoc') })
 
 const { data, error: loadError, refresh } = await useFetch<{ members: Member[] }>('/api/members')
 const members = computed(() => data.value?.members ?? [])
@@ -423,7 +424,7 @@ async function createInvite() {
     inviteEmail.value = ''
     await refreshInvites()
   } catch (error) {
-    inviteFailure(error, 'Could not create this invite.')
+    inviteFailure(error, t('members.inviteFailed'))
   } finally {
     inviting.value = false
   }
@@ -437,7 +438,7 @@ async function copyLink() {
     await navigator.clipboard.writeText(issuedUrl.value)
     copied.value = true
   } catch {
-    inviteMessage.value = 'Select the link and copy it.'
+    inviteMessage.value = t('members.selectAndCopy')
     inviteMessageError.value = true
   }
 }
@@ -455,7 +456,7 @@ async function revoke(id: string) {
     revokeConfirmId.value = ''
     await refreshInvites()
   } catch (error) {
-    inviteFailure(error, 'Could not revoke this invite.')
+    inviteFailure(error, t('members.revokeFailed'))
   } finally {
     busyInviteId.value = ''
   }
@@ -474,7 +475,7 @@ async function rotate(id: string) {
     issuedId.value = issued.invite.id
     await refreshInvites()
   } catch (error) {
-    inviteFailure(error, 'Could not make a new link.')
+    inviteFailure(error, t('members.rotateFailed'))
   } finally {
     busyInviteId.value = ''
   }
@@ -496,7 +497,7 @@ async function add() {
   message.value = ''
   messageError.value = false
   if (password.value !== confirm.value) {
-    message.value = 'Passwords do not match.'
+    message.value = t('auth.error.passwordMismatch')
     messageError.value = true
     return
   }
@@ -527,7 +528,7 @@ async function add() {
     const fetchError = error as { data?: { statusMessage?: string }, statusMessage?: string }
     message.value = fetchError.data?.statusMessage
       ?? fetchError.statusMessage
-      ?? 'Could not add this Member.'
+      ?? t('members.addFailed')
     messageError.value = true
   } finally {
     adding.value = false
@@ -543,7 +544,7 @@ async function turnOff(id: string) {
     confirmId.value = ''
     await refresh()
   } catch {
-    message.value = 'Could not turn off sign-in.'
+    message.value = t('members.disableFailed')
     messageError.value = true
   } finally {
     busyId.value = ''

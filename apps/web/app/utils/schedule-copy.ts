@@ -1,3 +1,6 @@
+import type { HostLocale } from '@dostigus/ui-kit/locale'
+import { DEFAULT_HOST_LOCALE, tHost } from '@dostigus/ui-kit/locale'
+
 export const SCHEDULE_NAME_MAX = 80
 export const SCHEDULE_WAKE_MAX = 2_000
 export const SCHEDULE_TITLE_FALLBACK_MAX = 42
@@ -5,40 +8,21 @@ export const SCHEDULE_TITLE_FALLBACK_MAX = 42
 export const SCHEDULE_WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 export type ScheduleWeekday = typeof SCHEDULE_WEEKDAYS[number]
 
-export const SCHEDULE_WEEKDAY_LABELS: Record<ScheduleWeekday, string> = {
-  sun: 'вс',
-  mon: 'пн',
-  tue: 'вт',
-  wed: 'ср',
-  thu: 'чт',
-  fri: 'пт',
-  sat: 'сб',
+const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
+
+export function scheduleWeekdayLabels(locale: HostLocale = DEFAULT_HOST_LOCALE): Record<ScheduleWeekday, string> {
+  return {
+    sun: tHost(locale, 'schedule.weekday.sun'),
+    mon: tHost(locale, 'schedule.weekday.mon'),
+    tue: tHost(locale, 'schedule.weekday.tue'),
+    wed: tHost(locale, 'schedule.weekday.wed'),
+    thu: tHost(locale, 'schedule.weekday.thu'),
+    fri: tHost(locale, 'schedule.weekday.fri'),
+    sat: tHost(locale, 'schedule.weekday.sat'),
+  }
 }
 
-const WEEKDAY_IN_RU = [
-  'В воскресенье',
-  'В понедельник',
-  'Во вторник',
-  'В среду',
-  'В четверг',
-  'В пятницу',
-  'В субботу',
-] as const
-
-const MONTHS_RU = [
-  'января',
-  'февраля',
-  'марта',
-  'апреля',
-  'мая',
-  'июня',
-  'июля',
-  'августа',
-  'сентября',
-  'октября',
-  'ноября',
-  'декабря',
-] as const
+export const SCHEDULE_WEEKDAY_LABELS = scheduleWeekdayLabels('ru')
 
 const WEEKDAY_EN: Record<string, number> = {
   Sun: 0,
@@ -67,36 +51,33 @@ export function scheduleCadenceLabel(schedule: {
   cadence: 'daily' | 'weekly'
   timeLocal: string
   daysOfWeek?: string[] | null
-}): string {
+}, locale: HostLocale = DEFAULT_HOST_LOCALE): string {
   if (schedule.cadence === 'daily') {
-    return `каждый день · ${schedule.timeLocal}`
+    return tHost(locale, 'schedule.cadenceDaily', { time: schedule.timeLocal })
   }
+  const labels = scheduleWeekdayLabels(locale)
   const days = (schedule.daysOfWeek ?? [])
-    .filter((day): day is ScheduleWeekday => day in SCHEDULE_WEEKDAY_LABELS)
-    .map((day) => SCHEDULE_WEEKDAY_LABELS[day])
+    .filter((day): day is ScheduleWeekday => day in labels)
+    .map((day) => labels[day])
     .join(', ')
   return days
-    ? `каждую неделю · ${days} · ${schedule.timeLocal}`
-    : `каждую неделю · ${schedule.timeLocal}`
+    ? tHost(locale, 'schedule.cadenceWeekly', { days, time: schedule.timeLocal })
+    : tHost(locale, 'schedule.cadenceWeeklyNoDays', { time: schedule.timeLocal })
 }
 
-export function scheduleRunOutcome(outcome: string): string {
-  if (outcome === 'ok') {
-    return 'Успешно'
-  }
-  if (outcome === 'error') {
-    return 'Ошибка'
-  }
-  if (outcome === 'abort') {
-    return 'Прервано'
-  }
-  if (outcome === 'running') {
-    return 'Идёт'
+export function scheduleRunOutcome(outcome: string, locale: HostLocale = DEFAULT_HOST_LOCALE): string {
+  if (outcome === 'ok' || outcome === 'error' || outcome === 'abort' || outcome === 'running') {
+    return tHost(locale, `schedule.outcome.${outcome}`)
   }
   return outcome
 }
 
-export function scheduleWhenLabel(iso: string, timeZone: string, now = Date.now()): string {
+export function scheduleWhenLabel(
+  iso: string,
+  timeZone: string,
+  now = Date.now(),
+  locale: HostLocale = DEFAULT_HOST_LOCALE,
+): string {
   const at = Date.parse(iso)
   if (Number.isNaN(at)) {
     return ''
@@ -106,18 +87,26 @@ export function scheduleWhenLabel(iso: string, timeZone: string, now = Date.now(
   const delta = here.dayIndex - today.dayIndex
   const time = `${here.hh}:${here.mm}`
   if (delta === 0) {
-    return `Сегодня в ${time}`
+    return tHost(locale, 'schedule.when.today', { time })
   }
   if (delta === -1) {
-    return `Вчера в ${time}`
+    return tHost(locale, 'schedule.when.yesterday', { time })
   }
   if (delta === 1) {
-    return `Завтра в ${time}`
+    return tHost(locale, 'schedule.when.tomorrow', { time })
   }
-  if (delta >= -6 && delta <= 6) {
-    return `${WEEKDAY_IN_RU[here.weekday] ?? 'В этот день'} в ${time}`
+  const weekdayKey = WEEKDAY_KEYS[here.weekday]
+  if (delta >= -6 && delta <= 6 && weekdayKey) {
+    return tHost(locale, 'schedule.when.weekday', {
+      day: tHost(locale, `schedule.weekdayLong.${weekdayKey}`),
+      time,
+    })
   }
-  return `${here.d} ${MONTHS_RU[here.m - 1] ?? ''} в ${time}`
+  return tHost(locale, 'schedule.when.date', {
+    day: String(here.d),
+    month: tHost(locale, `schedule.month.${here.m}`),
+    time,
+  })
 }
 
 function zonedParts(ms: number, timeZone: string): {

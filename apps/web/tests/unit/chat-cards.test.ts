@@ -34,7 +34,7 @@ afterEach(() => {
 
 const ACTIONS = [
   { label: 'Pause', action: { type: 'openSheet', sheetId: 'schedule' } },
-  { label: 'Изменить', action: { type: 'openSheet', sheetId: 'schedule' } },
+  { label: 'Edit', action: { type: 'openSheet', sheetId: 'schedule' } },
 ]
 
 function createDaily(input: {
@@ -96,7 +96,7 @@ it('injects one Schedule Card after create and replaces it on pause', () => {
       kind: 'card',
       card: 'schedule',
       title: 'daily 08:00',
-      body: 'На паузе',
+      body: 'Paused',
       tone: 'warn',
       targetId: schedule.id,
       actions: ACTIONS,
@@ -146,7 +146,7 @@ it('treats an enabled equivalent as already standing and leaves a paused clock f
   })
   expect(listSchedules(store, { botId: bot.id })).toHaveLength(1)
   expect(cards.parts()).toHaveLength(1)
-  expect(cards.parts()[0]).toMatchObject({ body: 'уже стоит', tone: 'ok', targetId: first.id })
+  expect(cards.parts()[0]).toMatchObject({ body: 'already exists', tone: 'ok', targetId: first.id })
 
   const duplicate = createDaily({
     store,
@@ -284,7 +284,7 @@ it('injects a delete Card with no actions and a gone Sheet', () => {
       kind: 'card',
       card: 'schedule',
       title: 'daily 08:00',
-      body: 'Удалено',
+      body: 'Deleted',
       tone: 'warn',
       targetId: schedule.id,
       actions: [],

@@ -4,20 +4,20 @@
       v-if="loadError"
       class="banner"
     >
-      Could not open this Chat.
+      {{ $t('chat.loadError') }}
     </p>
     <p
       v-else-if="thread?.kind === 'room' && gatewayUnset"
       class="quiet-banner"
     >
       <template v-if="isOwner">
-        Replies stay quiet until you add an OpenRouter key.
+        {{ $t('chat.quietOwnerShort') }}
         <NuxtLink to="/settings/providers">
-          Settings
+          {{ $t('host.menu.settings') }}
         </NuxtLink>
       </template>
       <template v-else>
-        Replies stay quiet until the Owner adds an OpenRouter key.
+        {{ $t('chat.quietMember') }}
       </template>
     </p>
 
@@ -44,7 +44,7 @@
       <ol
         ref="threadEl"
         class="thread"
-        aria-label="Chat"
+        :aria-label="$t('chat.ariaChat')"
       >
         <li
           v-for="message in timeline"
@@ -96,7 +96,7 @@
           v-else-if="replying"
           class="pending-mark"
           aria-live="polite"
-          aria-label="Replying"
+          :aria-label="$t('chat.aria.replying')"
         >
           <HostBotAvatar
             :name="replyBot?.name ?? 'Bot'"
@@ -112,10 +112,10 @@
           class="empty-chat"
         >
           <p class="empty-title">
-            Start the Chat
+            {{ $t('chat.emptyTitle') }}
           </p>
           <p class="empty-hint">
-            {{ thread?.kind === 'room' ? 'Mention a Bot with @Name so it replies.' : 'Say hello.' }}
+            {{ thread?.kind === 'room' ? $t('chat.emptyRoom') : $t('chat.emptyDm') }}
           </p>
         </li>
       </ol>
@@ -128,7 +128,7 @@
           v-if="thread?.kind === 'room'"
           class="mention-hint"
         >
-          Mention a Bot with @Name so it replies.
+          {{ $t('chat.mentionHint') }}
         </p>
         <p
           v-if="sendError"
@@ -139,12 +139,12 @@
         <div class="composer-foot">
           <div class="composer-row">
             <label class="draft">
-              <span class="sr-only">Message</span>
+              <span class="sr-only">{{ $t('chat.aria.message') }}</span>
               <textarea
                 v-model="draft"
                 rows="1"
                 maxlength="16000"
-                placeholder="Сообщение"
+                :placeholder="$t('chat.placeholder')"
                 :disabled="!thread || sending"
                 @keydown.enter.exact.prevent="send"
               />
@@ -154,7 +154,7 @@
               type="submit"
               class="send"
               :disabled="sending || !thread"
-              aria-label="Send"
+              :aria-label="$t('chat.aria.send')"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -169,7 +169,7 @@
     </div>
     <KitSheet
       v-model:open="sheetOpen"
-      :title="openSheet?.title ?? 'Sheet'"
+      :title="openSheet?.title ?? $t('chat.sheet.defaultTitle')"
     >
       <KitchenSheet v-if="openSheet?.kind === 'kitchen'" />
       <ScheduleSheet
@@ -251,6 +251,7 @@ const { phase: liveActivityPhase } = useChatActivityPhase({
   threadId,
   botId: replyBotId,
 })
+const { locale, t } = useI18n()
 const threadActivity = computed(() => chatActivityStatus({
   pending: replying.value && thread.value?.kind === 'room',
   gatewayConfigured: readyData.value?.configured === true,
@@ -259,6 +260,7 @@ const threadActivity = computed(() => chatActivityStatus({
   connectTarget: import.meta.dev && typeof route.query.target === 'string'
     ? route.query.target
     : null,
+  locale: locale.value === 'ru' ? 'ru' : 'en',
 }))
 const activityBot = computed(() => {
   if (replyBot.value) {
@@ -315,7 +317,7 @@ async function send() {
     await Promise.all([refresh(), refreshThreads()])
   } catch {
     draft.value = content
-    sendError.value = 'Could not send that message.'
+    sendError.value = t('chat.sendError')
   } finally {
     sending.value = false
     replying.value = false

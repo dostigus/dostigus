@@ -60,6 +60,7 @@ export default defineEventHandler(async (event) => {
       previewThreadsRequested(query.threads) || previewRoomsRequested(query.rooms)
     ) && previewThreadAsMember(query.as)
     await startOwnerSession(event, asMember && seeded.member ? seeded.member : seeded.user)
+    writeLocaleCookie(event, 'en')
     return sendRedirect(event, previewSeedRedirect({
       botId: seeded.botId,
       roomId: seeded.roomId,

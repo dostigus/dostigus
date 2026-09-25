@@ -7,15 +7,15 @@
       alt=""
     />
     <p class="kicker">
-      Threads
+      {{ $t('host.empty.title') }}
     </p>
-    <h1>No Threads yet</h1>
+    <h1>{{ $t('host.empty.none') }}</h1>
     <p class="hint">
       <template v-if="isOwner">
-        Create a Bot and start a Chat. You can tell it what it is for.
+        {{ $t('host.empty.ownerHint') }}
       </template>
       <template v-else>
-        Threads on this Host show up here. Open a Chat when one is here.
+        {{ $t('host.empty.memberHint') }}
       </template>
     </p>
     <div class="actions">
@@ -24,14 +24,14 @@
         type="button"
         @click="openCreate"
       >
-        Create a Bot
+        {{ $t('host.empty.createBot') }}
       </KitButton>
       <KitButton
         type="button"
         variant="ghost"
         @click="openThreadCreate('room')"
       >
-        Создать групповой чат
+        {{ $t('host.empty.createGroup') }}
       </KitButton>
     </div>
   </div>

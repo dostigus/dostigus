@@ -5,7 +5,10 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./brand": "./src/brand.ts"
+    "./locale": "./src/locale.ts",
+    "./brand": "./src/brand.ts",
+    "./locales/en.json": "./locales/en.json",
+    "./locales/ru.json": "./locales/ru.json"
   },
   "scripts": {
     "typecheck": "vue-tsc --noEmit"

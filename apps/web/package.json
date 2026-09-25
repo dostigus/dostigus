@@ -17,6 +17,7 @@
     "@dostigus/shared": "workspace:*",
     "@dostigus/ui-kit": "workspace:*",
     "@nuxt/fonts": "catalog:",
+    "@nuxtjs/i18n": "catalog:",
     "@nuxtjs/mcp-toolkit": "catalog:",
     "nuxt-auth-utils": "catalog:",
     "reka-ui": "catalog:",

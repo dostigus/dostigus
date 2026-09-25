@@ -11,20 +11,20 @@
       v-else-if="!kitchen"
       class="muted"
     >
-      Loading…
+      {{ $t('sheet.kitchen.loading') }}
     </p>
     <template v-else>
       <p class="xp">
         {{ kitchen.xp }} XP
       </p>
 
-      <section aria-label="Pantry">
-        <h2>Pantry</h2>
+      <section :aria-label="$t('sheet.kitchen.pantry')">
+        <h2>{{ $t('sheet.kitchen.pantry') }}</h2>
         <p
           v-if="kitchen.pantry.length === 0"
           class="muted"
         >
-          The pantry is empty.
+          {{ $t('sheet.kitchen.emptyPantry') }}
         </p>
         <ul
           v-else
@@ -46,7 +46,7 @@
           @submit.prevent="addPantry"
         >
           <label class="field">
-            <span>Name</span>
+            <span>{{ $t('sheet.kitchen.name') }}</span>
             <input
               v-model="pantryName"
               type="text"
@@ -57,7 +57,7 @@
             >
           </label>
           <label class="field">
-            <span>Qty</span>
+            <span>{{ $t('sheet.kitchen.qty') }}</span>
             <input
               v-model="pantryQty"
               type="text"
@@ -70,18 +70,18 @@
             type="submit"
             :disabled="busy || !pantryName.trim()"
           >
-            Add
+            {{ $t('sheet.kitchen.add') }}
           </KitButton>
         </form>
       </section>
 
-      <section aria-label="Cooked">
-        <h2>Cooked</h2>
+      <section :aria-label="$t('sheet.kitchen.cooked')">
+        <h2>{{ $t('sheet.kitchen.cooked') }}</h2>
         <p
           v-if="kitchen.cooked.length === 0"
           class="muted"
         >
-          Nothing cooked yet.
+          {{ $t('sheet.kitchen.emptyCooked') }}
         </p>
         <ul
           v-else
@@ -100,14 +100,14 @@
           :disabled="busy"
           @click="markCooked"
         >
-          Mark cooked
+          {{ $t('sheet.kitchen.markCooked') }}
         </KitButton>
       </section>
 
-      <section aria-label="Recipe">
-        <h2>Recipe</h2>
+      <section :aria-label="$t('sheet.kitchen.recipe')">
+        <h2>{{ $t('sheet.kitchen.recipe') }}</h2>
         <label class="field">
-          <span>Name</span>
+          <span>{{ $t('sheet.kitchen.name') }}</span>
           <input
             v-model="recipeName"
             type="text"
@@ -117,7 +117,7 @@
           >
         </label>
         <label class="field">
-          <span>Ingredients</span>
+          <span>{{ $t('sheet.kitchen.ingredients') }}</span>
           <textarea
             v-model="ingredients"
             rows="4"
@@ -130,7 +130,7 @@
           :disabled="busy || !recipeName.trim()"
           @click="saveRecipe"
         >
-          Save recipe
+          {{ $t('sheet.kitchen.saveRecipe') }}
         </KitButton>
       </section>
     </template>
@@ -144,6 +144,7 @@ import { KitButton } from '@dostigus/ui-kit'
 
 type KitchenBody = { kitchen: KitchenSnapshot }
 
+const { t } = useI18n()
 const kitchen = ref<KitchenSnapshot | null>(null)
 const loadError = ref('')
 const busy = ref(false)
@@ -249,7 +250,7 @@ function messageOf(error: unknown): string {
       return status
     }
   }
-  return 'Kitchen could not save'
+  return t('sheet.kitchen.saveFailed')
 }
 </script>
 

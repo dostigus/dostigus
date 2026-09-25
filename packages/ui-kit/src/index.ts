@@ -26,6 +26,19 @@ export { default as KitMarkdown } from './components/KitMarkdown.vue'
 export { default as KitSheet } from './components/KitSheet.vue'
 export { default as SheetShell } from './components/SheetShell.vue'
 export {
+  DEFAULT_HOST_LOCALE,
+  HOST_LOCALE_COOKIE,
+  HOST_LOCALE_MESSAGES,
+  HOST_LOCALES,
+  type HostLocale,
+  type HostLocaleMessages,
+  type HostTranslateParams,
+  isHostLocale,
+  localeMessageKeys,
+  resolveHostLocale,
+  tHost,
+} from './locale'
+export {
   assistantBubbleUsesMarkdown,
   renderChatMarkdown,
 } from './markdown'

@@ -1,8 +1,8 @@
 <template>
   <KitSheet
     v-model:open="open"
-    title="Добавить Member"
-    description="Они входят на этот Host и открывают Chat. Invite не выдаёт Bot."
+    :title="$t('members.addSheet.title')"
+    :description="$t('members.addSheetInviteHint')"
   >
     <template #media>
       <GooseSticker
@@ -16,12 +16,12 @@
       class="block"
       @submit.prevent="createInvite"
     >
-      <h3>Invite по почте</h3>
+      <h3>{{ $t('members.inviteByEmail') }}</h3>
       <p class="hint">
-        Человек сам выберет имя и пароль. Скопируйте ссылку и отправьте её сами.
+        {{ $t('members.inviteHint') }}
       </p>
       <label class="field">
-        <span>Почта</span>
+        <span>{{ $t('auth.field.email') }}</span>
         <input
           v-model="inviteEmail"
           type="email"
@@ -33,7 +33,7 @@
         type="submit"
         :disabled="inviting"
       >
-        {{ inviting ? 'Создаём…' : 'Создать Invite' }}
+        {{ inviting ? $t('members.addSheet.creatingInvite') : $t('members.addSheet.createInvite') }}
       </KitButton>
 
       <div
@@ -41,13 +41,13 @@
         class="link-box"
       >
         <p class="hint">
-          Скопируйте ссылку сейчас. Повторно она не показывается.
+          {{ $t('members.copyOnce') }}
         </p>
         <div class="copy-row">
           <input
             readonly
             :value="issuedUrl"
-            aria-label="Ссылка Invite"
+            :aria-label="$t('members.inviteLink')"
             @focus="selectLink"
           >
           <button
@@ -55,7 +55,7 @@
             class="ghost"
             @click="copyLink"
           >
-            {{ copied ? 'Скопировано' : 'Копировать' }}
+            {{ copied ? $t('members.copied') : $t('members.copy') }}
           </button>
         </div>
       </div>
@@ -72,9 +72,9 @@
       class="block"
       @submit.prevent="add"
     >
-      <h3>Или с паролем</h3>
+      <h3>{{ $t('members.orWithPassword') }}</h3>
       <label class="field">
-        <span>Имя</span>
+        <span>{{ $t('auth.field.displayName') }}</span>
         <input
           v-model="displayName"
           type="text"
@@ -83,7 +83,7 @@
         >
       </label>
       <label class="field">
-        <span>Почта или имя</span>
+        <span>{{ $t('auth.field.login') }}</span>
         <input
           v-model="login"
           type="text"
@@ -92,7 +92,7 @@
         >
       </label>
       <label class="field">
-        <span>Пароль</span>
+        <span>{{ $t('auth.field.password') }}</span>
         <input
           v-model="password"
           type="password"
@@ -100,10 +100,10 @@
           required
           minlength="8"
         >
-        <span class="field-hint">Минимум 8 символов</span>
+        <span class="field-hint">{{ $t('auth.field.passwordMin') }}</span>
       </label>
       <label class="field">
-        <span>Пароль ещё раз</span>
+        <span>{{ $t('auth.field.confirmPassword') }}</span>
         <input
           v-model="confirm"
           type="password"
@@ -125,13 +125,13 @@
           type="button"
           @click="open = false"
         >
-          Закрыть
+          {{ $t('kit.close') }}
         </KitButton>
         <KitButton
           type="submit"
           :disabled="adding"
         >
-          {{ adding ? 'Добавляем…' : 'Добавить Member' }}
+          {{ adding ? $t('members.addSheet.submitBusy') : $t('members.addSheet.submit') }}
         </KitButton>
       </div>
     </form>
@@ -144,6 +144,7 @@ import { GooseSticker, KitButton, KitSheet } from '@dostigus/ui-kit'
 
 const open = defineModel<boolean>('open', { required: true })
 const { noteMembersChanged } = useHostMemberAdd()
+const { t } = useI18n()
 
 const inviteEmail = ref('')
 const inviting = ref(false)
@@ -198,7 +199,7 @@ async function createInvite() {
     inviteEmail.value = ''
     noteMembersChanged()
   } catch (error) {
-    inviteMessage.value = failure(error, 'Не удалось создать Invite.')
+    inviteMessage.value = failure(error, t('members.addSheet.inviteFailed'))
     inviteMessageError.value = true
   } finally {
     inviting.value = false
@@ -213,7 +214,7 @@ async function copyLink() {
     await navigator.clipboard.writeText(issuedUrl.value)
     copied.value = true
   } catch {
-    inviteMessage.value = 'Выделите ссылку и скопируйте её.'
+    inviteMessage.value = t('members.selectAndCopy')
     inviteMessageError.value = true
   }
 }
@@ -222,7 +223,7 @@ async function add() {
   message.value = ''
   messageError.value = false
   if (password.value !== confirm.value) {
-    message.value = 'Пароли не совпадают.'
+    message.value = t('auth.error.passwordMismatch')
     messageError.value = true
     return
   }
@@ -240,12 +241,12 @@ async function add() {
     login.value = ''
     password.value = ''
     confirm.value = ''
-    message.value = 'Member добавлен.'
+    message.value = t('members.added')
     messageError.value = false
     noteMembersChanged()
     open.value = false
   } catch (error) {
-    message.value = failure(error, 'Не удалось добавить Member.')
+    message.value = failure(error, t('members.addSheet.addFailed'))
     messageError.value = true
   } finally {
     adding.value = false

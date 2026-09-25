@@ -1,3 +1,6 @@
+import type { HostLocale } from '@dostigus/ui-kit/locale'
+import { DEFAULT_HOST_LOCALE, tHost } from '@dostigus/ui-kit/locale'
+
 const SHORTCUT_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const
 
 export type HostSearchBot = {
@@ -46,30 +49,32 @@ function shortcutFor(index: number, needle: string): string | null {
 export function hostSettingsCatalog(input: {
   isOwner: boolean
   bot: { id: string, name: string } | null
+  locale?: HostLocale
 }): HostSearchSettingsEntry[] {
+  const locale = input.locale ?? DEFAULT_HOST_LOCALE
   const entries: HostSearchSettingsEntry[] = []
   if (input.isOwner) {
     entries.push(
       {
         id: 'settings',
-        title: 'Провайдеры',
-        subtitle: 'Settings · OpenRouter key, models, and Model tiers',
+        title: tHost(locale, 'host.search.settingsProviders'),
+        subtitle: tHost(locale, 'host.search.settingsProvidersHint'),
         keywords: ['settings', 'provider', 'openrouter', 'api key', 'model', 'model tier', 'gateway', 'провайдеры'],
         href: '/settings/providers',
         botId: null,
       },
       {
         id: 'settings-other',
-        title: 'Прочее',
-        subtitle: 'Settings · Cluster timezone and http allowlist',
+        title: tHost(locale, 'host.search.settingsOther'),
+        subtitle: tHost(locale, 'host.search.settingsOtherHint'),
         keywords: ['settings', 'timezone', 'allowlist', 'http', 'прочее'],
         href: '/settings/other',
         botId: null,
       },
       {
         id: 'members',
-        title: 'Members',
-        subtitle: 'Household on this Host',
+        title: tHost(locale, 'host.search.members'),
+        subtitle: tHost(locale, 'host.search.membersHint'),
         keywords: ['household', 'member'],
         href: '/members',
         botId: null,
@@ -79,8 +84,8 @@ export function hostSettingsCatalog(input: {
   if (input.bot) {
     entries.push({
       id: 'bot-settings',
-      title: 'Параметры',
-      subtitle: `${input.bot.name} name, label, and appearance`,
+      title: tHost(locale, 'host.search.botSettings'),
+      subtitle: tHost(locale, 'host.search.botSettingsHint', { name: input.bot.name }),
       keywords: ['appearance', 'rename', 'avatar', 'color', 'name', 'label', 'description', 'параметры'],
       href: null,
       botId: input.bot.id,
@@ -98,7 +103,9 @@ export function hostSearchHits(input: {
   bots: readonly HostSearchBot[]
   messages: readonly HostSearchMessage[]
   settings: readonly HostSearchSettingsEntry[]
+  locale?: HostLocale
 }): HostSearchHit[] {
+  const locale = input.locale ?? DEFAULT_HOST_LOCALE
   const needle = input.query.trim().toLowerCase()
   const bots = needle
     ? input.bots.filter((bot) => bot.name.toLowerCase().includes(needle))
@@ -124,7 +131,7 @@ export function hostSearchHits(input: {
       kind: 'message',
       title: message.botName,
       subtitle: message.content,
-      tag: 'Chat',
+      tag: tHost(locale, 'host.search.tagChat'),
       shortcut: null,
       botId: message.botId,
       href: message.href ?? (message.botId ? `/bots/${message.botId}` : null),
@@ -136,7 +143,7 @@ export function hostSearchHits(input: {
       kind: 'settings',
       title: entry.title,
       subtitle: entry.subtitle,
-      tag: 'Settings',
+      tag: tHost(locale, 'host.search.tagSettings'),
       shortcut: null,
       botId: entry.botId,
       href: entry.href,

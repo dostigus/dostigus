@@ -25,9 +25,18 @@ function memoryStore() {
   return store
 }
 
+function applyMemberLocale(sqlite: DatabaseSync) {
+  const migration = STORE_MIGRATIONS.find((item) => item.id === '0022_member_locale')
+  if (!migration) {
+    throw new Error('missing 0022_member_locale')
+  }
+  sqlite.exec(migration.sql)
+}
+
 function applyBeforeVisibility(sqlite: DatabaseSync) {
   for (const migration of STORE_MIGRATIONS) {
     if (migration.id === '0011_bot_visibility_threads') {
+      applyMemberLocale(sqlite)
       return
     }
     sqlite.exec(migration.sql)

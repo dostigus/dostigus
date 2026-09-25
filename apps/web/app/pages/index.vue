@@ -3,7 +3,7 @@
     <header class="top">
       <HostMenuButton />
       <p class="mark">
-        Threads
+        {{ $t('host.home.title') }}
       </p>
     </header>
     <main class="stage">
@@ -11,22 +11,22 @@
         v-if="pending && threads.length === 0"
         class="status"
       >
-        Loading Threads…
+        {{ $t('host.sidebar.loading') }}
       </p>
       <p
         v-else-if="error && threads.length === 0"
         class="status error"
       >
-        Could not load Threads.
+        {{ $t('host.sidebar.loadError') }}
       </p>
       <HostBotEmpty v-else-if="threads.length === 0" />
       <div
         v-else
         class="pick"
       >
-        <h1>Open a Thread</h1>
+        <h1>{{ $t('host.home.open') }}</h1>
         <p class="hint">
-          Choose a Thread from the list.
+          {{ $t('host.home.hint') }}
         </p>
       </div>
     </main>
@@ -36,7 +36,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'host' })
 
-useHead({ title: 'Dostigus · Threads' })
+const { t } = useI18n()
+useHead({ title: () => t('host.titleDoc') })
 
 const { threads, pending, error } = await useHostThreads()
 </script>

@@ -1,4 +1,5 @@
 import type { OpenedStore } from '@dostigus/db'
+import type { HostLocale } from '@dostigus/ui-kit/locale'
 import type { ChatToolInvokeResult } from './mcp-platform-tools'
 import type { OpenAiChatFunctionTool } from './openai-tools'
 import { ArtifactTurn } from './artifacts'
@@ -19,13 +20,14 @@ export function openChatTurn(input: {
   turnBotId: string
   expand?: boolean
   wake?: boolean
+  locale?: HostLocale
 }): {
   cards: ChatCardTurn
   artifacts: ArtifactTurn
   tools: () => OpenAiChatFunctionTool[]
   invokeTool: (name: string, args: unknown) => ChatToolInvokeResult | Promise<ChatToolInvokeResult>
 } {
-  const cards = new ChatCardTurn()
+  const cards = new ChatCardTurn(input.locale)
   const artifacts = new ArtifactTurn()
   const allowedTools = chatToolNamesForTurn({
     role: input.role,

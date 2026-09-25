@@ -1,7 +1,7 @@
 <template>
   <section
     class="shelf"
-    aria-label="Модели OpenRouter"
+    :aria-label="$t('settings.providers.shelf.aria')"
   >
     <button
       type="button"
@@ -17,27 +17,26 @@
       />
       <span class="route-copy">
         <span class="route-title">
-          {{ mode === 'meta' ? 'Маршрутизация OpenRouter' : 'Оставить маршрутизацию OpenRouter' }}
+          {{ mode === 'meta' ? $t('settings.providers.shelf.routingOn') : $t('settings.providers.shelf.routingOff') }}
           <span
             v-if="mode === 'meta'"
             class="now"
-          >Сейчас</span>
+          >{{ $t('settings.providers.shelf.now') }}</span>
         </span>
         <span class="route-detail">
-          OpenRouter сам выбирает модель: Free для Wake и песочницы, Auto для Chat.
-          Настраивать ничего не нужно.
+          {{ $t('settings.providers.shelf.routingDetail') }}
         </span>
       </span>
     </button>
 
     <div class="shelf-head">
       <p class="shelf-title">
-        Или закрепите модель
+        {{ $t('settings.providers.shelf.orPin') }}
       </p>
       <p class="shelf-sub">
         {{ ranking === 'fallback'
-          ? 'OpenRouter не прислал оценки качества — показаны самые новые модели.'
-          : 'Рейтинг из живого каталога OpenRouter по индексам Artificial Analysis и цене.' }}
+          ? $t('settings.providers.shelf.rankingFallback')
+          : $t('settings.providers.shelf.rankingBenchmarks') }}
       </p>
     </div>
 
@@ -63,12 +62,12 @@
       role="alert"
     >
       <p class="banner-title">
-        {{ catalogErrorCopy(catalog?.error ?? 'network') }}
+        {{ catalogErrorCopy(catalog?.error ?? 'network', hostLocale) }}
       </p>
       <p class="banner-detail">
         {{ catalog?.keyAccepted === false
-          ? 'Полка моделей появится, когда OpenRouter примет ключ.'
-          : 'Полка моделей недоступна. Bots продолжают думать через маршрутизацию OpenRouter.' }}
+          ? $t('settings.providers.shelf.bannerKey')
+          : $t('settings.providers.shelf.bannerGeneric') }}
       </p>
       <KitButton
         variant="ghost"
@@ -76,7 +75,7 @@
         :disabled="loading"
         @click="emit('refresh')"
       >
-        {{ loading ? 'Загружаем…' : 'Попробовать снова' }}
+        {{ loading ? $t('settings.providers.shelf.loading') : $t('common.retry') }}
       </KitButton>
     </div>
 
@@ -114,7 +113,7 @@
               {{ card.top.name }}
             </p>
             <p class="badges">
-              <span class="price">{{ modelPriceCopy(card.top) }}</span>
+              <span class="price">{{ modelPriceCopy(card.top, hostLocale) }}</span>
               <span
                 v-if="scoreOf(card.slot, card.top) != null"
                 class="badge"
@@ -123,8 +122,8 @@
               <span
                 v-if="card.top.vision"
                 class="badge vision"
-                title="Понимает изображения"
-              >Vision</span>
+                :title="$t('settings.providers.shelf.understandsImages')"
+              >{{ $t('settings.providers.shelf.vision') }}</span>
             </p>
             <p class="why">
               {{ SLOT_COPY[card.slot].why }}
@@ -137,13 +136,13 @@
             :disabled="busy || card.pinnedId === card.top.id"
             @click="emit('pin', card.slot, card.top.id)"
           >
-            {{ card.pinnedId === card.top.id ? '✓ Закреплено' : 'Закрепить' }}
+            {{ card.pinnedId === card.top.id ? $t('settings.providers.shelf.pinnedCheck') : $t('settings.providers.shelf.pin') }}
           </KitButton>
 
           <ul
             v-if="card.alts.length > 0"
             class="alts"
-            :aria-label="`Другие варианты ${OPENROUTER_SHELF_LABELS[card.slot]}`"
+            :aria-label="$t('settings.providers.shelf.alts', { slot: OPENROUTER_SHELF_LABELS[card.slot] })"
           >
             <li
               v-for="alt in card.alts"
@@ -156,14 +155,14 @@
                   :title="alt.id"
                 >{{ alt.name }}</span>
                 <span class="alt-meta">
-                  {{ modelPriceCopy(alt) }}<template v-if="alt.vision"> · Vision</template>
+                  {{ modelPriceCopy(alt, hostLocale) }}<template v-if="alt.vision"> · {{ $t('settings.providers.shelf.vision') }}</template>
                 </span>
               </span>
               <button
                 type="button"
                 class="alt-pin"
-                :aria-label="card.pinnedId === alt.id ? `${alt.name} закреплена` : `Закрепить ${alt.name}`"
-                :title="card.pinnedId === alt.id ? 'Закреплена' : 'Закрепить'"
+                :aria-label="card.pinnedId === alt.id ? $t('settings.providers.shelf.pinnedName', { name: alt.name }) : $t('settings.providers.shelf.pinName', { name: alt.name })"
+                :title="card.pinnedId === alt.id ? $t('settings.providers.shelf.pinned') : $t('settings.providers.shelf.pin')"
                 :disabled="busy || card.pinnedId === alt.id"
                 @click="emit('pin', card.slot, alt.id)"
               >
@@ -189,14 +188,14 @@
             v-if="card.pinnedId && !card.shown"
             class="pinned-elsewhere"
           >
-            Сейчас закреплена: {{ names[card.pinnedId] ?? card.pinnedId }}
+            {{ $t('settings.providers.shelf.currentlyPinned', { name: names[card.pinnedId] ?? card.pinnedId }) }}
           </p>
         </template>
         <p
           v-else
           class="none"
         >
-          Подходящих моделей в каталоге сейчас нет.
+          {{ $t('settings.providers.shelf.noModels') }}
         </p>
       </article>
     </div>
@@ -236,31 +235,34 @@ const emit = defineEmits<{
   refresh: []
 }>()
 
-const SLOT_COPY: Record<OpenRouterShelfSlot, {
+const { locale, t } = useI18n()
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
+
+const SLOT_COPY = computed<Record<OpenRouterShelfSlot, {
   use: string
   why: string
   scoreLabel: string
   scoreTitle: string
-}> = {
+}>>(() => ({
   free: {
-    use: 'Wake, Schedules и песочница',
-    why: 'Самая умная из бесплатных.',
-    scoreLabel: 'Интеллект',
-    scoreTitle: 'Artificial Analysis Intelligence Index',
+    use: t('settings.providers.shelf.useFree'),
+    why: t('settings.providers.shelf.whyFree'),
+    scoreLabel: t('settings.providers.shelf.scoreIntelligence'),
+    scoreTitle: t('settings.providers.shelf.scoreTitleIntelligence'),
   },
   smart: {
-    use: 'Каждый ответ в Chat',
-    why: 'Самая умная без премиальной цены.',
-    scoreLabel: 'Интеллект',
-    scoreTitle: 'Artificial Analysis Intelligence Index',
+    use: t('settings.providers.shelf.useSmart'),
+    why: t('settings.providers.shelf.whySmart'),
+    scoreLabel: t('settings.providers.shelf.scoreIntelligence'),
+    scoreTitle: t('settings.providers.shelf.scoreTitleIntelligence'),
   },
   coding: {
-    use: 'Вторая попытка, если ответ не вышел',
-    why: 'Лучшая в коде без премиальной цены.',
-    scoreLabel: 'Код',
-    scoreTitle: 'Artificial Analysis Coding Index',
+    use: t('settings.providers.shelf.useCoding'),
+    why: t('settings.providers.shelf.whyCoding'),
+    scoreLabel: t('settings.providers.shelf.scoreCoding'),
+    scoreTitle: t('settings.providers.shelf.scoreTitleCoding'),
   },
-}
+}))
 
 const mode = computed(() => openRouterRoutingMode(props.tierBinds, props.providerId))
 const ranking = computed(() => props.catalog?.ranking ?? 'benchmarks')

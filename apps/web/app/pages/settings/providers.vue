@@ -2,12 +2,11 @@
   <div class="providers">
     <header class="head">
       <p class="kicker">
-        Провайдеры
+        {{ $t('settings.providers.kicker') }}
       </p>
-      <h1>LLM для ваших Bots</h1>
+      <h1>{{ $t('settings.providers.title') }}</h1>
       <p class="lead">
-        Bots думают через LLM, а Provider её даёт. Вставьте ключ — и всё работает.
-        Модели и Model tiers можно тонко настроить в «Подробнее».
+        {{ $t('settings.providers.lead') }}
       </p>
     </header>
 
@@ -16,13 +15,13 @@
       class="banner error"
       role="alert"
     >
-      Could not load Settings.
+      {{ $t('settings.providers.loadError') }}
     </p>
     <p
       v-if="gateway?.envOverride"
       class="banner"
     >
-      На сервере уже задан ключ. Пока он там, ответы идут через него, а не через эти настройки.
+      {{ $t('settings.providers.envOverride') }}
     </p>
 
     <div
@@ -47,7 +46,7 @@
             :disabled="checking"
             @click="checkAll"
           >
-            {{ checking ? 'Проверяем…' : 'Проверить' }}
+            {{ checking ? $t('settings.providers.checking') : $t('settings.providers.check') }}
           </KitButton>
         </SettingsProviderHealth>
 
@@ -84,7 +83,9 @@
                 {{ LLM_PROVIDER_KIND_LABELS[provider.kind] }}
               </h2>
               <p class="p-meta">
-                <span>{{ provider.hasApiKey ? `Ключ ${provider.apiKeyMasked ?? 'сохранён'}` : 'Нет ключа' }}</span>
+                <span>{{ provider.hasApiKey
+                  ? $t('settings.providers.keyWithMask', { mask: provider.apiKeyMasked ?? $t('settings.providers.keySavedShort') })
+                  : $t('settings.providers.noKey') }}</span>
                 <span v-if="provider.kind === 'openrouter' && routingSummary(provider.id)">· {{ routingSummary(provider.id) }}</span>
                 <span v-else-if="provider.baseUrl && provider.kind === 'openai-compatible'">· {{ provider.baseUrl }}</span>
               </p>
@@ -96,7 +97,7 @@
                 :disabled="busy"
                 @click="startEdit(provider)"
               >
-                {{ provider.kind === 'openrouter' ? 'Заменить ключ' : 'Изменить' }}
+                {{ provider.kind === 'openrouter' ? $t('settings.providers.replaceKey') : $t('settings.providers.edit') }}
               </KitButton>
               <button
                 type="button"
@@ -104,7 +105,7 @@
                 :disabled="busy"
                 @click="removeId = provider.id"
               >
-                Удалить
+                {{ $t('settings.providers.delete') }}
               </button>
             </div>
           </header>
@@ -113,12 +114,12 @@
             v-if="removeId === provider.id"
             class="confirm"
             role="alertdialog"
-            :aria-label="`Удалить ${LLM_PROVIDER_KIND_LABELS[provider.kind]}`"
+            :aria-label="$t('settings.providers.deleteAria', { name: LLM_PROVIDER_KIND_LABELS[provider.kind] })"
           >
             <p>
               {{ providers.length > 1
-                ? 'Model tiers на этом Provider станут пустыми.'
-                : 'Bots перестанут думать, пока не появится новый ключ.' }}
+                ? $t('settings.providers.confirmEmptyTiers')
+                : $t('settings.providers.confirmLast') }}
             </p>
             <div class="row-actions">
               <KitButton
@@ -126,7 +127,7 @@
                 size="sm"
                 @click="removeId = ''"
               >
-                Отмена
+                {{ $t('common.cancel') }}
               </KitButton>
               <button
                 type="button"
@@ -134,7 +135,7 @@
                 :disabled="busy"
                 @click="removeProvider(provider.id)"
               >
-                Удалить Provider
+                {{ $t('settings.providers.deleteProvider') }}
               </button>
             </div>
           </div>
@@ -148,7 +149,7 @@
               v-if="provider.kind === 'openai-compatible'"
               class="field"
             >
-              <span>Base URL</span>
+              <span>{{ $t('settings.providers.add.baseUrl') }}</span>
               <input
                 v-model="editBaseUrl"
                 type="url"
@@ -158,11 +159,11 @@
               >
             </label>
             <label class="field">
-              <span>{{ provider.kind === 'openrouter' ? 'Новый ключ OpenRouter' : 'API key' }}</span>
+              <span>{{ provider.kind === 'openrouter' ? $t('settings.providers.newOpenRouterKey') : $t('settings.providers.add.apiKey') }}</span>
               <input
                 v-model="editKey"
                 type="password"
-                :placeholder="provider.apiKeyMasked ? `${provider.apiKeyMasked} — вставьте новый` : 'sk-…'"
+                :placeholder="provider.apiKeyMasked ? $t('settings.providers.pasteNew', { mask: provider.apiKeyMasked }) : 'sk-…'"
                 autocomplete="new-password"
                 spellcheck="false"
                 :required="provider.kind === 'openrouter'"
@@ -172,7 +173,7 @@
               v-if="provider.kind !== 'openrouter'"
               class="field"
             >
-              <span>Model</span>
+              <span>{{ $t('settings.providers.model') }}</span>
               <input
                 v-model="editModel"
                 type="text"
@@ -187,14 +188,14 @@
                 size="sm"
                 @click="editId = ''"
               >
-                Отмена
+                {{ $t('common.cancel') }}
               </KitButton>
               <KitButton
                 type="submit"
                 size="sm"
                 :disabled="busy || (provider.kind === 'openrouter' && !editKey.trim())"
               >
-                {{ busy ? 'Сохраняем…' : 'Сохранить' }}
+                {{ busy ? $t('common.saving') : $t('common.save') }}
               </KitButton>
             </div>
           </form>
@@ -217,8 +218,8 @@
               @toggle="onAdvancedToggle(provider.id, $event)"
             >
               <summary>
-                <span>Подробнее</span>
-                <span class="summary-hint">все модели, Model tiers, Policy</span>
+                <span>{{ $t('settings.providers.details') }}</span>
+                <span class="summary-hint">{{ $t('settings.providers.detailsSummaryHint') }}</span>
               </summary>
               <SettingsModelCatalog
                 :provider-id="provider.id"
@@ -237,9 +238,9 @@
             v-else-if="provider.kind !== 'openrouter'"
             class="p-model"
           >
-            Модель <code>{{ provider.defaultModel || (provider.kind === 'openai' ? OPENAI_SETTINGS_DEFAULT_MODEL : 'не задана') }}</code>
-            {{ providers.length === 1 ? 'на всех Model tiers.' : 'на Model tiers этого Provider.' }}
-            Живой каталог пока есть только у OpenRouter.
+            {{ $t('settings.providers.model') }} <code>{{ provider.defaultModel || (provider.kind === 'openai' ? OPENAI_SETTINGS_DEFAULT_MODEL : $t('settings.providers.modelUnset')) }}</code>
+            {{ providers.length === 1 ? $t('settings.providers.modelOnAllTiers') : $t('settings.providers.modelOnThisProvider') }}
+            {{ $t('settings.providers.catalogOpenRouterOnly') }}
           </p>
         </article>
 
@@ -257,7 +258,7 @@
           class="add-another"
           @click="adding = true"
         >
-          <span aria-hidden="true">+</span> Добавить Provider
+          <span aria-hidden="true">+</span> {{ $t('settings.providers.addProvider') }}
         </button>
 
         <details
@@ -265,8 +266,8 @@
           class="more page-more"
         >
           <summary>
-            <span>Model tiers по Provider</span>
-            <span class="summary-hint">какой Provider отвечает в каждой ситуации</span>
+            <span>{{ $t('settings.providers.tiersByProvider') }}</span>
+            <span class="summary-hint">{{ $t('settings.providers.tiersByProviderHint') }}</span>
           </summary>
           <div
             v-if="providers.length > 1"
@@ -286,13 +287,13 @@
                 </p>
               </div>
               <select
-                :aria-label="`Provider для ${row.tier}`"
+                :aria-label="$t('settings.providers.providerFor', { tier: row.tier })"
                 :value="effectiveBinds[row.tier]?.providerId ?? ''"
                 :disabled="busy"
                 @change="onTierProvider(row.tier, ($event.target as HTMLSelectElement).value)"
               >
                 <option value="">
-                  Не задан
+                  {{ $t('settings.providers.unset') }}
                 </option>
                 <option
                   v-for="provider in providers"
@@ -304,7 +305,7 @@
               </select>
               <select
                 v-if="providerKind(effectiveBinds[row.tier]?.providerId) === 'openrouter'"
-                :aria-label="`Policy для ${row.tier}`"
+                :aria-label="$t('settings.providers.policyFor', { tier: row.tier })"
                 :value="effectiveBinds[row.tier]?.policy.kind ?? 'auto'"
                 :disabled="busy"
                 @change="onTierPolicy(row.tier, ($event.target as HTMLSelectElement).value)"
@@ -331,10 +332,10 @@
             @submit.prevent="saveLegacyPins"
           >
             <p class="bind-title">
-              Stored model ids
+              {{ $t('settings.providers.catalog.legacyIds') }}
             </p>
             <p class="bind-detail">
-              Старые model id на Model tiers. Закреплённая модель выше их перекрывает.
+              {{ $t('settings.providers.legacyPinsHint') }}
             </p>
             <label
               v-for="tier in MODEL_TIERS"
@@ -355,7 +356,7 @@
                 size="sm"
                 :disabled="busy"
               >
-                Сохранить
+                {{ $t('common.save') }}
               </KitButton>
             </div>
           </form>
@@ -391,7 +392,7 @@ import {
   pinOpenRouterTiers,
 } from '@dostigus/shared'
 import { KitButton } from '@dostigus/ui-kit'
-import { providerHealth, TIER_SITUATIONS } from '../../utils/provider-settings'
+import { providerHealth, tierSituations } from '../../utils/provider-settings'
 
 type Binds = Partial<Record<ModelTier, LlmTierBind>>
 
@@ -400,6 +401,10 @@ const KIND_MARKS: Record<LlmProviderKind, string> = {
   'openai': 'AI',
   'openai-compatible': '{ }',
 }
+
+const { locale, t } = useI18n()
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
+const TIER_SITUATIONS = computed(() => tierSituations(hostLocale.value))
 
 const { data, error: loadError } = await useFetch<{ llmGateway: LlmGatewayPublic }>(
   '/api/settings/llm-gateway',
@@ -494,6 +499,7 @@ const health = computed(() => providerHealth({
   catalogs: catalogs.value,
   loading: new Set(loadingIds.value),
   pings: pings.value,
+  locale: hostLocale.value,
 }))
 
 function say(text: string, error = false) {
@@ -517,7 +523,7 @@ function providerOptionLabel(provider: LlmProviderPublic): string {
 /** Only the unusual case. The routing card already says meta vs pinned. */
 function routingSummary(providerId: string): string {
   return openRouterRoutingMode(effectiveBinds.value, providerId) === 'none'
-    ? 'не привязан к Model tier'
+    ? t('settings.providers.notBound')
     : ''
 }
 
@@ -557,7 +563,7 @@ async function writeBinds(binds: Binds, success: string) {
     await put(body)
     say(success)
   } catch (error) {
-    say(errorText(error, 'Could not save Settings.'), true)
+    say(errorText(error, t('settings.providers.saveFailed')), true)
   } finally {
     busy.value = false
   }
@@ -654,22 +660,22 @@ async function addProvider(input: { kind: LlmProviderKind, apiKey: string, baseU
     const sole = saved.providers.length === 1
     if (input.kind !== 'openrouter') {
       say(sole
-        ? 'Ключ сохранён. Нажмите «Проверить», чтобы убедиться, что он работает.'
-        : 'Provider добавлен. Назначьте ему Model tiers ниже, если нужно.')
+        ? t('settings.providers.flashKeySavedCheck')
+        : t('settings.providers.flashProviderAdded'))
       return
     }
-    say('Ключ сохранён. Проверяем…')
+    say(t('settings.providers.flashKeySavedChecking'))
     await loadCatalog(id)
     const accepted = catalogs.value[id]?.keyAccepted
     if (accepted === false) {
       flash.value = null
     } else if (sole) {
-      say('Ключ сохранён. Bots уже могут думать.')
+      say(t('settings.providers.flashKeySavedReady'))
     } else {
-      say('Provider добавлен. Назначьте ему Model tiers ниже, если нужно.')
+      say(t('settings.providers.flashProviderAdded'))
     }
   } catch (error) {
-    say(errorText(error, 'Could not save Settings.'), true)
+    say(errorText(error, t('settings.providers.saveFailed')), true)
   } finally {
     busy.value = false
   }
@@ -703,7 +709,7 @@ async function saveEdit(provider: LlmProviderPublic) {
     })
     editId.value = ''
     editKey.value = ''
-    say(key ? 'Ключ заменён.' : 'Сохранено.')
+    say(key ? t('settings.providers.flashKeyReplaced') : t('settings.providers.flashSaved'))
     if (provider.kind === 'openrouter' && key) {
       void loadCatalog(provider.id, true)
     } else if (provider.kind !== 'openrouter') {
@@ -712,7 +718,7 @@ async function saveEdit(provider: LlmProviderPublic) {
       pings.value = next
     }
   } catch (error) {
-    say(errorText(error, 'Could not save Settings.'), true)
+    say(errorText(error, t('settings.providers.saveFailed')), true)
   } finally {
     busy.value = false
   }
@@ -739,9 +745,9 @@ async function removeProvider(id: string) {
     delete next[id]
     catalogs.value = next
     removeId.value = ''
-    say('Provider удалён.')
+    say(t('settings.providers.flash.providerRemoved'))
   } catch (error) {
-    say(errorText(error, 'Could not save Settings.'), true)
+    say(errorText(error, t('settings.providers.saveFailed')), true)
   } finally {
     busy.value = false
   }
@@ -751,7 +757,7 @@ function pinShelf(providerId: string, slot: OpenRouterShelfSlot, modelId: string
   const name = names.value[modelId] ?? modelId
   void writeBinds(
     pinOpenRouterShelf(effectiveBinds.value, providerId, slot, modelId),
-    `${name} закреплена.`,
+    `${name} ${t('settings.providers.flash.pinned')}`,
   )
 }
 
@@ -759,7 +765,7 @@ function pinTier(providerId: string, tier: ModelTier, modelId: string | null) {
   const name = modelId ? (names.value[modelId] ?? modelId) : ''
   void writeBinds(
     pinOpenRouterTiers(effectiveBinds.value, providerId, [tier], modelId),
-    modelId ? `${name} закреплена на ${tier}.` : `${tier}: снова маршрутизация OpenRouter.`,
+    modelId ? t('settings.providers.flashPinnedOn', { name, tier }) : t('settings.providers.flashRoutingAgain', { tier }),
   )
 }
 
@@ -769,7 +775,7 @@ function restoreMeta(providerId: string) {
     clearOpenRouterPins(effectiveBinds.value, providerId, {
       fillEmpty: providers.value.length === 1 || mode === 'none',
     }),
-    'Модели снова выбирает OpenRouter.',
+    t('settings.providers.flashRoutingRestored'),
   )
 }
 
@@ -790,7 +796,7 @@ function onTierProvider(tier: ModelTier, providerId: string) {
   } else {
     next[tier] = { providerId, policy: defaultPolicyFor(tier, provider) }
   }
-  void writeBinds(next, 'Model tiers сохранены.')
+  void writeBinds(next, t('settings.providers.flash.tiersSaved'))
 }
 
 function onTierPolicy(tier: ModelTier, value: string) {
@@ -798,16 +804,16 @@ function onTierPolicy(tier: ModelTier, value: string) {
   if (!current || (value !== 'free' && value !== 'auto')) {
     return
   }
-  void writeBinds({ ...effectiveBinds.value, [tier]: { ...current, policy: { kind: value } } }, 'Model tiers сохранены.')
+  void writeBinds({ ...effectiveBinds.value, [tier]: { ...current, policy: { kind: value } } }, t('settings.providers.flash.tiersSaved'))
 }
 
 async function saveLegacyPins() {
   busy.value = true
   try {
     await put({ modelOverrides: modelOverrides.value })
-    say('Сохранено.')
+    say(t('settings.providers.flashSaved'))
   } catch (error) {
-    say(errorText(error, 'Could not save Settings.'), true)
+    say(errorText(error, t('settings.providers.saveFailed')), true)
   } finally {
     busy.value = false
   }

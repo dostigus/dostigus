@@ -10,7 +10,7 @@
       class="user-btn"
       :aria-expanded="menuOpen"
       aria-haspopup="menu"
-      :aria-label="`Account, ${label}`"
+      :aria-label="$t('host.menu.accountAria', { name: label })"
       @click="menuOpen = !menuOpen"
     >
       <HostBotAvatar
@@ -35,7 +35,7 @@
         role="menuitem"
         @click="choose"
       >
-        Settings
+        {{ $t('host.menu.settings') }}
       </NuxtLink>
       <NuxtLink
         v-if="isOwner"
@@ -44,7 +44,7 @@
         role="menuitem"
         @click="choose"
       >
-        Members
+        {{ $t('host.menu.members') }}
       </NuxtLink>
       <HostLogoutButton />
     </div>
@@ -62,7 +62,8 @@ const route = useRoute()
 const menuOpen = ref(false)
 const rootEl = ref<HTMLElement | null>(null)
 
-const label = computed(() => user.value?.displayName?.trim() || 'Account')
+const { t } = useI18n()
+const label = computed(() => user.value?.displayName?.trim() || t('host.menu.account'))
 
 watch(() => route.fullPath, () => {
   menuOpen.value = false

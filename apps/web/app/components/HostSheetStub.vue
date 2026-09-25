@@ -10,7 +10,7 @@
     :class="{ open }"
     role="dialog"
     aria-modal="true"
-    aria-label="Sheet"
+    :aria-label="$t('sheet.stub.aria')"
   >
     <div class="handle" />
     <header class="bar">
@@ -20,13 +20,13 @@
         class="close"
         @click="emit('close')"
       >
-        Close
+        {{ $t('kit.close') }}
       </button>
     </header>
     <div class="empty">
-      <p>Nothing in this Sheet yet.</p>
+      <p>{{ $t('sheet.stub.empty') }}</p>
       <p class="muted">
-        This space fills in when the Bot has something to show.
+        {{ $t('sheet.stub.hint') }}
       </p>
     </div>
   </aside>

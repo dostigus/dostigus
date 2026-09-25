@@ -14,9 +14,18 @@ import {
   STORE_MIGRATIONS,
 } from '../../src/index'
 
+function applyMemberLocale(sqlite: DatabaseSync) {
+  const migration = STORE_MIGRATIONS.find((item) => item.id === '0022_member_locale')
+  if (!migration) {
+    throw new Error('missing 0022_member_locale')
+  }
+  sqlite.exec(migration.sql)
+}
+
 function applyBeforeGrants(sqlite: DatabaseSync) {
   for (const migration of STORE_MIGRATIONS) {
     if (migration.id === '0013_bot_grants') {
+      applyMemberLocale(sqlite)
       return
     }
     sqlite.exec(migration.sql)

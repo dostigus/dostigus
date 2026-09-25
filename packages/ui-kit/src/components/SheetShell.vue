@@ -36,9 +36,9 @@
           <DialogClose
             class="kit-close"
             :class="{ 'kit-close--icon': close === 'icon' }"
-            aria-label="Close"
+            :aria-label="closeLabel"
           >
-            {{ close === 'icon' ? '×' : 'Close' }}
+            {{ close === 'icon' ? '×' : closeLabel }}
           </DialogClose>
         </header>
         <DialogTitle
@@ -85,6 +85,7 @@ const props = withDefaults(defineProps<{
   titleAlign?: 'start' | 'center'
   /** `text` says Close. `icon` is the Host ×. */
   close?: 'text' | 'icon'
+  closeLabel?: string
   /** `bare` keeps an accessible name and drops the title and close control. */
   chrome?: 'default' | 'bare'
 }>(), {
@@ -92,6 +93,7 @@ const props = withDefaults(defineProps<{
   wide: false,
   titleAlign: 'start',
   close: 'text',
+  closeLabel: 'Close',
   chrome: 'default',
 })
 

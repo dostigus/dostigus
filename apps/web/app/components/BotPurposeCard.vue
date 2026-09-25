@@ -1,15 +1,15 @@
 <template>
   <div class="card">
     <p class="prompt">
-      {{ BOT_PURPOSE_PROMPT }}
+      {{ $t('chat.purpose.prompt') }}
     </p>
     <p class="hint">
-      {{ BOT_PURPOSE_HINT }}
+      {{ $t('chat.purpose.hint') }}
     </p>
     <div
       class="chips"
       role="group"
-      :aria-label="BOT_PURPOSE_PROMPT"
+      :aria-label="$t('chat.purpose.prompt')"
     >
       <button
         v-for="option in BOT_PURPOSE_OPTIONS"
@@ -19,7 +19,7 @@
         :disabled="busy"
         @click="emit('answer', option)"
       >
-        {{ option }}
+        {{ purposeLabel(option) }}
       </button>
     </div>
     <form
@@ -27,12 +27,12 @@
       @submit.prevent="submit"
     >
       <label class="field">
-        <span class="sr-only">Or type your own</span>
+        <span class="sr-only">{{ $t('chat.purpose.own') }}</span>
         <input
           v-model="draft"
           type="text"
           maxlength="16000"
-          placeholder="Or type your own"
+          :placeholder="$t('chat.purpose.own')"
           :disabled="busy"
           autocomplete="off"
         >
@@ -42,7 +42,7 @@
         type="submit"
         class="send"
         :disabled="busy"
-        aria-label="Send"
+        :aria-label="$t('chat.purpose.send')"
       >
         <svg
           viewBox="0 0 24 24"
@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { BOT_PURPOSE_HINT, BOT_PURPOSE_OPTIONS, BOT_PURPOSE_PROMPT } from '@dostigus/shared'
+import { BOT_PURPOSE_OPTIONS } from '@dostigus/shared'
 
 defineProps<{
   busy?: boolean
@@ -65,6 +65,19 @@ defineProps<{
 const emit = defineEmits<{
   answer: [content: string]
 }>()
+
+const PURPOSE_KEYS = {
+  Personal: 'chat.purpose.personal',
+  Work: 'chat.purpose.work',
+  Learning: 'chat.purpose.learning',
+  Other: 'chat.purpose.other',
+} as const
+
+const { t } = useI18n()
+
+function purposeLabel(option: (typeof BOT_PURPOSE_OPTIONS)[number]): string {
+  return t(PURPOSE_KEYS[option])
+}
 
 const draft = ref('')
 

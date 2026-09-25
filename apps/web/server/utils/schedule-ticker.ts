@@ -4,6 +4,7 @@ import {
   decideScheduleFire,
   getBot,
   getLlmGatewaySettings,
+  getMember,
   insertMessage,
   listBotSkills,
   listBotThreadMessages,
@@ -18,6 +19,7 @@ import {
   SCHEDULE_TICK_MS,
   viewerForPerson,
 } from '@dostigus/db'
+import { resolveHostLocale } from '@dostigus/ui-kit/locale'
 import { annotateHistoryWithArtifacts, attachTurnArtifacts, gcArtifacts } from './artifacts'
 import {
   clearChatActivityPhase,
@@ -220,6 +222,8 @@ async function finishWake(
     return
   }
   const viewer = viewerForPerson(input.store, input.personId)
+  const member = role === 'member' ? getMember(input.store, input.personId) : undefined
+  const locale = resolveHostLocale({ memberLocale: member?.locale })
   const turn = openChatTurn({
     store: input.store,
     role,
@@ -227,6 +231,7 @@ async function finishWake(
     personId: input.personId,
     turnBotId: input.botId,
     wake: true,
+    locale,
   })
   let content: string
   let settle = settleFromReply({ via: 'error' })
@@ -242,6 +247,7 @@ async function finishWake(
       stored: getLlmGatewaySettings(input.store),
       audience: role,
       wake: true,
+      locale,
       tools: turn.tools(),
       invokeTool: turn.invokeTool,
       onActivity: (phase) => {
@@ -261,7 +267,7 @@ async function finishWake(
     settle = settleFromReply({ via: reply.via })
   } catch (error) {
     console.warn(`Schedule wake failed for Bot ${input.botId}`)
-    content = gatewayErrorReply(role)
+    content = gatewayErrorReply(role, 'transient', locale)
     settle = settleFromReply({ error })
   }
   try {

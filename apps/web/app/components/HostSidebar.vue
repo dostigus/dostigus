@@ -11,7 +11,7 @@
         <button
           type="button"
           class="chrome"
-          aria-label="Search"
+          :aria-label="$t('host.nav.search')"
           @click="openSearch"
         >
           <svg
@@ -32,25 +32,25 @@
       <nav
         class="list"
         :class="{ 'list-empty': threads.length === 0 && !pending && !error && !rail }"
-        aria-label="Threads"
+        :aria-label="$t('host.nav.threads')"
       >
         <p
           v-if="pending && threads.length === 0"
           class="status"
         >
-          Loading Threads…
+          {{ $t('host.sidebar.loading') }}
         </p>
         <p
           v-else-if="error && threads.length === 0"
           class="status error"
         >
-          Could not load Threads.
+          {{ $t('host.sidebar.loadError') }}
         </p>
         <p
           v-else-if="threads.length === 0 && !rail"
           class="status"
         >
-          No Threads yet
+          {{ $t('host.sidebar.empty') }}
         </p>
         <ul
           v-else
@@ -119,7 +119,7 @@
       <button
         type="button"
         class="fold"
-        :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+        :aria-label="collapsed ? $t('host.sidebar.expand') : $t('host.sidebar.collapse')"
         @click="toggleCollapsed"
       >
         <svg
@@ -133,7 +133,7 @@
         class="resize"
         role="separator"
         aria-orientation="vertical"
-        aria-label="Resize sidebar"
+        :aria-label="$t('host.sidebar.resize')"
         tabindex="0"
         :aria-valuenow="rail ? SIDEBAR_RAIL : width"
         :aria-valuemin="SIDEBAR_RAIL"
@@ -174,15 +174,17 @@ const frameStyle = computed(() => {
 
 let drag: { pointerId: number, startX: number, origin: number } | null = null
 
+const { t } = useI18n()
+
 function kindLabel(kind: ThreadListItem['kind']) {
   if (kind === 'dm') {
-    return 'DM'
+    return t('host.threadKind.dm')
   }
   if (kind === 'group') {
-    return 'Group'
+    return t('host.threadKind.group')
   }
   if (kind === 'room') {
-    return 'Room'
+    return t('host.threadKind.room')
   }
   return ''
 }
@@ -197,7 +199,7 @@ function threadLive(thread: ThreadListItem) {
 
 function threadAria(thread: ThreadListItem, live: boolean) {
   const kind = thread.kind === 'bot' ? '' : `, ${kindLabel(thread.kind)}`
-  return live ? `${thread.title}${kind}, online` : `${thread.title}${kind}`
+  return live ? `${thread.title}${kind}${t('host.threadAria.online')}` : `${thread.title}${kind}`
 }
 
 function onRow(href: string) {

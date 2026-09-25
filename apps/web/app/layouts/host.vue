@@ -4,7 +4,7 @@
       v-if="open && narrow"
       type="button"
       class="backdrop"
-      aria-label="Close"
+      :aria-label="$t('kit.close')"
       @click="close"
     />
     <HostSidebar />

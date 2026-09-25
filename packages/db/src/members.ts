@@ -30,7 +30,7 @@ function asMemberRecord(row: unknown): MemberRecord | undefined {
   return value
 }
 
-const MEMBER_COLUMNS = `id, display_name, email, username, password_hash, created_at, disabled_at`
+const MEMBER_COLUMNS = `id, display_name, email, username, password_hash, created_at, disabled_at, locale`
 
 function isUniqueViolation(error: unknown): boolean {
   if (!error || typeof error !== 'object' || !('code' in error)) {
@@ -153,9 +153,9 @@ export function createMember(
   try {
     store.sqlite.prepare(`
       INSERT INTO members (
-        id, display_name, email, username, password_hash, created_at, disabled_at
+        id, display_name, email, username, password_hash, created_at, disabled_at, locale
       )
-      VALUES (?, ?, ?, ?, ?, ?, NULL)
+      VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)
     `).run(id, displayName, email, username, hash, createdAt)
   } catch (error) {
     if (isUniqueViolation(error) || loginTaken(store, email, username)) {
@@ -169,6 +169,45 @@ export function createMember(
     throw new StoreError('Could not add the Member', 500)
   }
   return created
+}
+
+export function updateMemberLocale(store: OpenedStore, id: string, locale: string): Member {
+  if (locale !== 'en' && locale !== 'ru') {
+    throw new StoreError('Locale must be en or ru', 400)
+  }
+  const current = getMember(store, id)
+  if (!current) {
+    throw new StoreError('Member not found', 404)
+  }
+  store.sqlite.prepare(`
+    UPDATE members
+    SET locale = ?
+    WHERE id = ?
+  `).run(locale, id)
+  const updated = getMember(store, id)
+  if (!updated) {
+    throw new StoreError('Member not found', 404)
+  }
+  return updated
+}
+
+/** First login may copy `dostigus_locale` when Member.locale is still null. */
+export function seedMemberLocale(
+  store: OpenedStore,
+  id: string,
+  cookie: string | null | undefined,
+): Member {
+  const current = getMember(store, id)
+  if (!current) {
+    throw new StoreError('Member not found', 404)
+  }
+  if (current.locale != null) {
+    return current
+  }
+  if (cookie !== 'en' && cookie !== 'ru') {
+    return current
+  }
+  return updateMemberLocale(store, id, cookie)
 }
 
 export function disableMember(store: OpenedStore, id: string): Member {

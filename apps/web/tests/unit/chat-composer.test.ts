@@ -44,7 +44,7 @@ it('overlays a slim composer on one scrolling Chat pane', () => {
   expect(trayAt).toBeGreaterThan(chat.indexOf('class="composer-row"'))
   expect(trayAt).toBeLessThan(chat.indexOf('class="composer-line"'))
   expect(chat).toContain(`:placeholder="pendingAttachments.length > 0
-                    ? 'Добавьте сообщение или просто отправьте'`)
+                    ? $t('chat.placeholderOrSend')`)
   expect(row).not.toContain('safe-area')
   expect(thread).toContain('var(--composer-clearance)')
   expect(thread).toContain('var(--thread-end-gap)')
@@ -58,7 +58,7 @@ it('overlays a slim composer on one scrolling Chat pane', () => {
   const jump = chat.indexOf('class="to-latest"')
   expect(formEnd).toBeGreaterThan(-1)
   expect(jump).toBeGreaterThan(formEnd)
-  expect(chat).toContain('aria-label="Scroll to latest"')
+  expect(chat).toContain(':aria-label="$t(\'chat.aria.scrollLatest\')"')
   expect(chat).toContain('behavior: reduce ? \'auto\' : \'smooth\'')
 
   const control = block('.to-latest {', '.to-latest svg')

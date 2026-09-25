@@ -75,6 +75,8 @@ it('keeps Bot writes, Settings, and Members with the Owner', () => {
     'settings/timezone.put.ts',
     'settings/http-allowlist.get.ts',
     'settings/http-allowlist.put.ts',
+    'settings/locale.get.ts',
+    'settings/locale.put.ts',
     'members/index.get.ts',
     'members/index.post.ts',
     'members/[id]/disable.post.ts',

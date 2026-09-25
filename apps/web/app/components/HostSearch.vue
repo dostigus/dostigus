@@ -2,7 +2,7 @@
   <div class="search-root">
     <KitDialog
       v-model:open="open"
-      title="Поиск"
+      :title="$t('host.search.title')"
       wide
       chrome="bare"
     >
@@ -27,7 +27,7 @@
           <input
             v-model="query"
             type="search"
-            placeholder="Поиск"
+            :placeholder="$t('host.search.placeholder')"
             autocomplete="off"
           >
         </label>
@@ -35,14 +35,14 @@
           v-if="hits.length === 0"
           class="empty"
         >
-          {{ query.trim() ? 'No matches.' : 'No Bots yet' }}
+          {{ query.trim() ? $t('host.search.emptyResults') : $t('host.search.emptyQuery') }}
         </p>
         <ul
           v-else
           ref="listEl"
           class="hits"
           role="listbox"
-          aria-label="Search"
+          :aria-label="$t('host.search.aria')"
         >
           <li
             v-for="(hit, index) in hits"
@@ -128,15 +128,19 @@ const routeBot = computed(() => {
   return bots.value.find((bot) => bot.id === id) ?? null
 })
 
+const { locale } = useI18n()
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
 const hits = computed(() => hostSearchHits({
   query: query.value,
   bots: bots.value,
   messages: messages.value,
+  locale: hostLocale.value,
   settings: hostSettingsCatalog({
     isOwner: isOwner.value,
     bot: routeBot.value
       ? { id: routeBot.value.id, name: routeBot.value.name }
       : null,
+    locale: hostLocale.value,
   }),
 }))
 

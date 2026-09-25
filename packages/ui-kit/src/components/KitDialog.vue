@@ -7,6 +7,7 @@
     :wide="wide"
     :title-align="titleAlign"
     :close="close"
+    :close-label="closeLabel"
     :chrome="chrome"
   >
     <template
@@ -35,12 +36,14 @@ withDefaults(defineProps<{
   wide?: boolean
   titleAlign?: 'start' | 'center'
   close?: 'text' | 'icon'
+  closeLabel?: string
   /** `bare` keeps an accessible name and drops the title and close control. */
   chrome?: 'default' | 'bare'
 }>(), {
   wide: false,
   titleAlign: 'start',
   close: 'text',
+  closeLabel: 'Close',
   chrome: 'default',
 })
 

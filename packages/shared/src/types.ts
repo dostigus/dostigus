@@ -43,6 +43,8 @@ export type Member = {
   username: string | null
   createdAt: string
   disabledAt: string | null
+  /** Host UI Locale. Null until first login may seed from `dostigus_locale`. */
+  locale: string | null
 }
 
 /** Host shell is a synonym — prefer Host. */

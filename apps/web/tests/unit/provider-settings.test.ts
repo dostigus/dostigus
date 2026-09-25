@@ -42,6 +42,7 @@ function health(input: Partial<Parameters<typeof providerHealth>[0]> = {}) {
     catalogs: {},
     loading: new Set(),
     pings: {},
+    locale: 'ru',
     ...input,
   })
 }
@@ -97,12 +98,12 @@ describe('copy helpers', () => {
   })
 
   it('formats price per 1M tokens and context', () => {
-    expect(modelPriceCopy({ free: true, promptPerM: 0, completionPerM: 0 })).toBe('Бесплатно')
+    expect(modelPriceCopy({ free: true, promptPerM: 0, completionPerM: 0 }, 'ru')).toBe('Бесплатно')
     expect(modelPriceCopy({ free: false, promptPerM: 0.43, completionPerM: 0.87 })).toBe('$0.43 / $0.87')
     expect(modelPriceCopy({ free: false, promptPerM: 0.004, completionPerM: 15 })).toBe('$0.004 / $15')
-    expect(modelPriceCopy({ free: false, promptPerM: null, completionPerM: null })).toBe('Цена по запросу')
-    expect(contextCopy(262_144)).toBe('262K контекст')
-    expect(contextCopy(1_048_576)).toBe('1M контекст')
+    expect(modelPriceCopy({ free: false, promptPerM: null, completionPerM: null }, 'ru')).toBe('Цена по запросу')
+    expect(contextCopy(262_144, 'ru')).toBe('262K контекст')
+    expect(contextCopy(1_048_576, 'ru')).toBe('1M контекст')
     expect(contextCopy(null)).toBe('')
   })
 
@@ -126,9 +127,9 @@ describe('copy helpers', () => {
 
   it('says how old the catalog is', () => {
     const now = new Date('2026-09-25T12:00:00.000Z')
-    expect(fetchedAtCopy('2026-09-25T12:00:00.000Z', now)).toBe('обновлено только что')
-    expect(fetchedAtCopy('2026-09-25T11:45:00.000Z', now)).toBe('обновлено 15 мин назад')
-    expect(fetchedAtCopy('2026-09-25T09:00:00.000Z', now)).toBe('обновлено 3 ч назад')
+    expect(fetchedAtCopy('2026-09-25T12:00:00.000Z', now, 'ru')).toBe('обновлено только что')
+    expect(fetchedAtCopy('2026-09-25T11:45:00.000Z', now, 'ru')).toBe('обновлено 15 мин назад')
+    expect(fetchedAtCopy('2026-09-25T09:00:00.000Z', now, 'ru')).toBe('обновлено 3 ч назад')
     expect(fetchedAtCopy(null, now)).toBe('')
   })
 })

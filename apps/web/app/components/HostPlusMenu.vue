@@ -8,7 +8,7 @@
     <button
       type="button"
       class="chrome"
-      aria-label="Создать"
+      :aria-label="$t('host.plus.aria')"
       aria-haspopup="menu"
       :aria-expanded="open"
       @click="togglePlusMenu"
@@ -25,7 +25,7 @@
       ref="menuEl"
       class="plus-menu"
       role="menu"
-      aria-label="Создать"
+      :aria-label="$t('host.plus.aria')"
     >
       <button
         type="button"
@@ -33,8 +33,8 @@
         role="menuitem"
         @click="onFindBot"
       >
-        <span class="plus-label">Найти или создать Bot</span>
-        <span class="plus-hint">Список Bot</span>
+        <span class="plus-label">{{ $t('host.plus.findOrCreateBot') }}</span>
+        <span class="plus-hint">{{ $t('host.plus.botList') }}</span>
       </button>
       <button
         type="button"
@@ -42,8 +42,8 @@
         role="menuitem"
         @click="onThread('dm')"
       >
-        <span class="plus-label">Написать лично</span>
-        <span class="plus-hint">Один человек</span>
+        <span class="plus-label">{{ $t('host.plus.writeDm') }}</span>
+        <span class="plus-hint">{{ $t('host.plus.onePerson') }}</span>
       </button>
       <button
         type="button"
@@ -51,8 +51,8 @@
         role="menuitem"
         @click="onThread('room')"
       >
-        <span class="plus-label">Создать групповой чат</span>
-        <span class="plus-hint">Люди, Bot по желанию</span>
+        <span class="plus-label">{{ $t('host.plus.createGroup') }}</span>
+        <span class="plus-hint">{{ $t('host.plus.peopleOptionalBot') }}</span>
       </button>
       <button
         v-if="isOwner"
@@ -61,8 +61,8 @@
         role="menuitem"
         @click="onMember"
       >
-        <span class="plus-label">Добавить Member</span>
-        <span class="plus-hint">Invite или пароль</span>
+        <span class="plus-label">{{ $t('host.plus.addMember') }}</span>
+        <span class="plus-hint">{{ $t('host.plus.inviteOrPassword') }}</span>
       </button>
     </div>
   </div>

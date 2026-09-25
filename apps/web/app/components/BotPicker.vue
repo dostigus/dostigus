@@ -9,15 +9,15 @@
         id="bot-picker-title"
         class="sr-only"
       >
-        {{ isOwner ? 'Find or create a Bot' : 'Find a Bot' }}
+        {{ isOwner ? $t('host.botPicker.titleOwner') : $t('host.botPicker.titleMember') }}
       </h2>
       <label class="search">
-        <span class="to">To:</span>
+        <span class="to">{{ $t('host.botPicker.to') }}</span>
         <input
           ref="searchEl"
           v-model="query"
           type="search"
-          :placeholder="isOwner ? 'Find or create a Bot' : 'Find a Bot'"
+          :placeholder="isOwner ? $t('host.botPicker.titleOwner') : $t('host.botPicker.titleMember')"
           autocomplete="off"
           @keydown.enter.prevent
         >
@@ -25,7 +25,7 @@
       <button
         type="button"
         class="back"
-        aria-label="Back"
+        :aria-label="$t('host.botPicker.back')"
         @click="dismiss"
       >
         ×
@@ -42,7 +42,7 @@
 
       <ul
         class="rows"
-        aria-label="Bots"
+        :aria-label="$t('host.botPicker.bots')"
       >
         <li v-if="isOwner">
           <button
@@ -56,7 +56,7 @@
               aria-hidden="true"
             >+</span>
             <span class="copy">
-              <span class="name">{{ busy ? 'Creating…' : 'Create new Bot' }}</span>
+              <span class="name">{{ busy ? $t('host.botPicker.createBusy') : $t('host.botPicker.create') }}</span>
             </span>
           </button>
         </li>
@@ -72,7 +72,7 @@
               aria-hidden="true"
             >+</span>
             <span class="copy">
-              <span class="name">{{ busy ? 'Creating…' : 'Create new Bot' }}</span>
+              <span class="name">{{ busy ? $t('host.botPicker.createBusy') : $t('host.botPicker.create') }}</span>
             </span>
           </button>
         </li>
@@ -107,7 +107,7 @@
         v-if="visible.length === 0 && (query.trim() || !isOwner)"
         class="empty"
       >
-        {{ query.trim() ? 'No matching Bots.' : 'No Bots yet.' }}
+        {{ query.trim() ? $t('host.botPicker.emptyQuery') : $t('host.botPicker.empty') }}
       </p>
     </div>
   </section>
@@ -137,8 +137,9 @@ const searchEl = ref<HTMLInputElement | null>(null)
 
 const visible = computed(() => filterBotsByName(props.bots, query.value))
 
+const { t } = useI18n()
 useHead({
-  title: computed(() => isOwner.value ? 'Dostigus · Find or create a Bot' : 'Dostigus · Find a Bot'),
+  title: computed(() => isOwner.value ? t('host.botPicker.titleDocOwner') : t('host.botPicker.titleDocMember')),
 })
 
 function isCurrent(id: string): boolean {
@@ -170,7 +171,7 @@ async function createNew() {
     })
     emit('created', result.bot)
   } catch {
-    error.value = 'Could not create Bot.'
+    error.value = t('host.botPicker.createFailed')
     busy.value = false
   }
 }

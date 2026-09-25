@@ -1,34 +1,80 @@
 <template>
   <div class="other">
     <header class="head">
-      <h1>Прочее</h1>
-      <p>Остальные настройки Cluster.</p>
+      <h1>{{ $t('settings.other.title') }}</h1>
+      <p>{{ $t('settings.other.lead') }}</p>
     </header>
+
+    <form
+      class="card"
+      @submit.prevent="saveLocale"
+    >
+      <p class="mark">
+        {{ $t('settings.other.locale.title') }}
+      </p>
+      <p class="hint">
+        {{ $t('settings.other.locale.hint') }}
+      </p>
+      <fieldset class="locale-list">
+        <legend class="sr-only">
+          {{ $t('settings.other.locale.title') }}
+        </legend>
+        <label
+          v-for="item in HOST_LOCALES"
+          :key="item"
+          class="locale-option"
+        >
+          <input
+            v-model="localeInput"
+            type="radio"
+            name="locale"
+            :value="item"
+          >
+          <span>{{ $t(item === 'en' ? 'settings.other.locale.en' : 'settings.other.locale.ru') }}</span>
+        </label>
+      </fieldset>
+      <p
+        v-if="localeMessage"
+        class="flash"
+        :class="{ error: localeMessageError }"
+      >
+        {{ localeMessage }}
+      </p>
+      <div class="actions">
+        <button
+          type="submit"
+          class="solid"
+          :disabled="localeSaving || localeInput === currentLocale"
+        >
+          {{ localeSaving ? $t('common.saving') : $t('settings.other.locale.save') }}
+        </button>
+      </div>
+    </form>
 
     <form
       class="card"
       @submit.prevent="saveTimezone"
     >
       <p class="mark">
-        Cluster timezone
+        {{ $t('settings.other.timezone.title') }}
       </p>
       <p class="hint">
-        Schedules use this wall clock. An IANA name such as America/New_York or UTC.
+        {{ $t('settings.other.timezone.hint') }}
       </p>
       <p
         v-if="timezone?.source === 'env'"
         class="note"
       >
-        Using {{ timezone.effective }} from the server until you save a timezone here.
+        {{ $t('settings.other.timezone.fromEnv', { value: timezone.effective }) }}
       </p>
       <p
         v-else-if="timezone && !timezone.stored"
         class="note"
       >
-        Using UTC until you set a timezone.
+        {{ $t('settings.other.timezone.usingUtc') }}
       </p>
       <label class="field">
-        <span>IANA timezone</span>
+        <span>{{ $t('settings.other.timezone.label') }}</span>
         <input
           v-model="timezoneInput"
           type="text"
@@ -51,7 +97,7 @@
           class="solid"
           :disabled="timezoneSaving || !timezoneInput.trim()"
         >
-          {{ timezoneSaving ? 'Saving…' : 'Save timezone' }}
+          {{ timezoneSaving ? $t('common.saving') : $t('settings.other.timezone.save') }}
         </button>
       </div>
     </form>
@@ -61,21 +107,19 @@
       @submit.prevent="saveAllowlist"
     >
       <p class="mark">
-        Cluster http allowlist
+        {{ $t('settings.other.allowlist.title') }}
       </p>
       <p class="hint">
-        Hostnames Host HTTP get may reach. One hostname per line, exact match,
-        no wildcards. Empty allows every public host. Loopback and private
-        addresses stay blocked.
+        {{ $t('settings.other.allowlist.hint') }}
       </p>
       <p
         v-if="allowlist && allowlist.length === 0"
         class="note"
       >
-        Empty — Bots may GET any public host.
+        {{ $t('settings.other.allowlist.empty') }}
       </p>
       <label class="field">
-        <span>Hostnames</span>
+        <span>{{ $t('settings.other.allowlist.label') }}</span>
         <textarea
           v-model="allowlistInput"
           name="http-allowlist"
@@ -98,7 +142,7 @@
           class="solid"
           :disabled="allowlistSaving"
         >
-          {{ allowlistSaving ? 'Saving…' : 'Save allowlist' }}
+          {{ allowlistSaving ? $t('common.saving') : $t('settings.other.allowlist.save') }}
         </button>
       </div>
     </form>
@@ -106,11 +150,28 @@
 </template>
 
 <script setup lang="ts">
+import type { HostLocale } from '@dostigus/ui-kit/locale'
+import { HOST_LOCALES } from '@dostigus/ui-kit/locale'
+
 type ClusterTimezoneSettings = {
   stored: string | null
   effective: string
   source: 'store' | 'env' | 'utc'
 }
+
+const { t } = useI18n()
+const {
+  current: currentLocale,
+  saving: localeSaving,
+  message: localeMessage,
+  messageError: localeMessageError,
+  choose,
+} = useHostLocale()
+const localeInput = ref<HostLocale>(currentLocale.value)
+
+watch(currentLocale, (next) => {
+  localeInput.value = next
+})
 
 const { data: timezoneData, refresh: refreshTimezone } = await useFetch<{
   timezone: ClusterTimezoneSettings
@@ -145,7 +206,7 @@ function timezoneErrorText(error: unknown): string {
       return statusMessage
     }
   }
-  return 'Cluster timezone must be an IANA name.'
+  return t('settings.other.timezone.invalid')
 }
 
 function allowlistErrorText(error: unknown): string {
@@ -155,7 +216,7 @@ function allowlistErrorText(error: unknown): string {
       return statusMessage
     }
   }
-  return 'HTTP allowlist entries are hostnames only.'
+  return t('settings.other.allowlist.invalid')
 }
 
 function hostsFromInput(text: string): string[] {
@@ -174,8 +235,8 @@ async function saveAllowlist() {
     allowlistData.value = result
     allowlistInput.value = result.hosts.join('\n')
     allowlistMessage.value = result.hosts.length === 0
-      ? 'Allowlist cleared. Public hosts are allowed.'
-      : 'Allowlist saved.'
+      ? t('settings.other.allowlist.cleared')
+      : t('settings.other.allowlist.saved')
   } catch (error) {
     allowlistMessage.value = allowlistErrorText(error)
     allowlistMessageError.value = true
@@ -196,7 +257,7 @@ async function saveTimezone() {
     })
     timezoneData.value = result
     timezoneInput.value = result.timezone.stored ?? ''
-    timezoneMessage.value = 'Timezone saved.'
+    timezoneMessage.value = t('settings.other.timezone.saved')
   } catch (error) {
     timezoneMessage.value = timezoneErrorText(error)
     timezoneMessageError.value = true
@@ -204,6 +265,10 @@ async function saveTimezone() {
     timezoneSaving.value = false
     await refreshTimezone()
   }
+}
+
+async function saveLocale() {
+  await choose(localeInput.value)
 }
 </script>
 
@@ -307,5 +372,33 @@ textarea:focus {
 .solid:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.locale-list {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.locale-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

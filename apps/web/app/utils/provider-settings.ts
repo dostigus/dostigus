@@ -7,15 +7,25 @@ import type {
   OpenRouterCatalogPublic,
   OpenRouterRoutingMode,
 } from '@dostigus/shared'
+import type { HostLocale } from '@dostigus/ui-kit/locale'
 import { LLM_PROVIDER_KIND_LABELS, openRouterRoutingMode } from '@dostigus/shared'
+import { DEFAULT_HOST_LOCALE, tHost } from '@dostigus/ui-kit/locale'
 
 /** What each Model tier does for a Bot, in the order the Providers page lists them. */
-export const TIER_SITUATIONS: ReadonlyArray<{ tier: ModelTier, title: string, detail: string }> = [
-  { tier: 'strong', title: 'Chat и упоминания', detail: 'Каждый ответ Bot в Chat начинается здесь.' },
-  { tier: 'cheap', title: 'Wake и Schedules', detail: 'Сообщения по расписанию начинаются здесь.' },
-  { tier: 'code', title: 'Если ответ не вышел', detail: 'Host тихо пробует ещё раз на этом Model tier.' },
-  { tier: 'toy', title: 'Песочница', detail: 'Только для экспериментов, вне цепочки.' },
-]
+export function tierSituations(locale: HostLocale = DEFAULT_HOST_LOCALE): ReadonlyArray<{
+  tier: ModelTier
+  title: string
+  detail: string
+}> {
+  return [
+    { tier: 'strong', title: tHost(locale, 'settings.providers.tier.strongTitle'), detail: tHost(locale, 'settings.providers.tier.strongDetail') },
+    { tier: 'cheap', title: tHost(locale, 'settings.providers.tier.cheapTitle'), detail: tHost(locale, 'settings.providers.tier.cheapDetail') },
+    { tier: 'code', title: tHost(locale, 'settings.providers.tier.codeTitle'), detail: tHost(locale, 'settings.providers.tier.codeDetail') },
+    { tier: 'toy', title: tHost(locale, 'settings.providers.tier.toyTitle'), detail: tHost(locale, 'settings.providers.tier.toyDetail') },
+  ]
+}
+
+export const TIER_SITUATIONS = tierSituations()
 
 export type ProviderHealthTone = 'ok' | 'degraded' | 'error' | 'idle' | 'checking'
 
@@ -31,69 +41,79 @@ export type ProviderHealthInput = {
   catalogs: Readonly<Record<string, OpenRouterCatalogPublic | undefined>>
   /** Provider ids whose catalog request is still in flight. */
   loading: ReadonlySet<string>
-  /** Manual «Проверить» result for a Provider without a live catalog. */
+  /** Manual Check result for a Provider without a live catalog. */
   pings: Readonly<Record<string, boolean | undefined>>
+  locale?: HostLocale
 }
 
-export function routingModeCopy(mode: OpenRouterRoutingMode): string {
+export function routingModeCopy(
+  mode: OpenRouterRoutingMode,
+  locale: HostLocale = DEFAULT_HOST_LOCALE,
+): string {
   if (mode === 'pinned') {
-    return 'закреплённые модели'
+    return tHost(locale, 'settings.providers.routing.pinned')
   }
   if (mode === 'mixed') {
-    return 'OpenRouter + закреплённые модели'
+    return tHost(locale, 'settings.providers.routing.mixed')
   }
-  return 'OpenRouter'
+  return tHost(locale, 'settings.providers.routing.openrouter')
 }
 
-export function catalogErrorCopy(error: OpenRouterCatalogError | null): string {
+export function catalogErrorCopy(
+  error: OpenRouterCatalogError | null,
+  locale: HostLocale = DEFAULT_HOST_LOCALE,
+): string {
   if (error === 'auth') {
-    return 'OpenRouter не принял ключ.'
+    return tHost(locale, 'settings.providers.catalogError.auth')
   }
   if (error === 'empty') {
-    return 'OpenRouter вернул пустой список моделей.'
+    return tHost(locale, 'settings.providers.catalogError.empty')
   }
   if (error === 'no_key') {
-    return 'У этого Provider нет ключа.'
+    return tHost(locale, 'settings.providers.catalogError.noKey')
   }
   if (error === 'not_openrouter') {
-    return 'Каталог есть только у OpenRouter.'
+    return tHost(locale, 'settings.providers.catalogError.notOpenrouter')
   }
-  return 'Не удалось загрузить каталог OpenRouter.'
+  return tHost(locale, 'settings.providers.catalogError.generic')
 }
 
-function keyCopy(accepted: boolean | null): string {
+function keyCopy(accepted: boolean | null, locale: HostLocale): string {
   if (accepted === true) {
-    return 'Ключ принят'
+    return tHost(locale, 'settings.providers.key.accepted')
   }
   if (accepted === false) {
-    return 'Ключ не принят'
+    return tHost(locale, 'settings.providers.key.rejected')
   }
-  return 'Ключ не проверен'
+  return tHost(locale, 'settings.providers.key.unchecked')
 }
 
 function openRouterHealth(
   providerId: string,
   catalog: OpenRouterCatalogPublic,
   binds: Partial<Record<ModelTier, LlmTierBind>>,
+  locale: HostLocale,
 ): ProviderHealth {
-  const routing = `маршрутизация: ${routingModeCopy(openRouterRoutingMode(binds, providerId))}`
+  const routing = tHost(locale, 'settings.providers.health.routing', {
+    mode: routingModeCopy(openRouterRoutingMode(binds, providerId), locale),
+  })
   if (catalog.keyAccepted === false) {
     return {
       tone: 'error',
-      title: 'Ключ не принят',
-      detail: 'OpenRouter отклонил ключ. Вставьте новый, и Bots снова смогут думать.',
+      title: tHost(locale, 'settings.providers.health.rejectedTitle'),
+      detail: tHost(locale, 'settings.providers.health.rejectedDetail'),
     }
   }
   const catalogCopy = catalog.ok && !catalog.stale
-    ? 'каталог загружен'
+    ? tHost(locale, 'settings.providers.health.catalogLoaded')
     : catalog.ok
-      ? 'каталог из кэша'
-      : 'каталог не загрузился'
-  const detail = [keyCopy(catalog.keyAccepted), catalogCopy, routing].join(' · ')
+      ? tHost(locale, 'settings.providers.health.catalogCached')
+      : tHost(locale, 'settings.providers.health.catalogFailed')
+  const detail = [keyCopy(catalog.keyAccepted, locale), catalogCopy, routing].join(' · ')
   if (catalog.keyAccepted === true && catalog.ok && !catalog.stale) {
-    return { tone: 'ok', title: 'Работает', detail }
+    return { tone: 'ok', title: tHost(locale, 'settings.providers.health.ok'), detail }
   }
-  return { tone: 'degraded', title: 'Работает, но не всё проверено', detail }
+  return { tone: 'degraded', title: tHost(locale, 'settings.providers.health.degraded'), detail }
 }
 
 /**
@@ -101,12 +121,13 @@ function openRouterHealth(
  * catalog, or «Проверить» for a Provider without one). Never a Chat gate.
  */
 export function providerHealth(input: ProviderHealthInput): ProviderHealth {
+  const locale = input.locale ?? DEFAULT_HOST_LOCALE
   const keyed = input.providers.filter((provider) => provider.hasApiKey)
   if (keyed.length === 0) {
     return {
       tone: 'idle',
-      title: 'Нет Provider',
-      detail: 'Bots отвечают тихой заглушкой, пока нет ключа.',
+      title: tHost(locale, 'settings.providers.health.idleTitle'),
+      detail: tHost(locale, 'settings.providers.health.idleDetail'),
     }
   }
   const results: ProviderHealth[] = []
@@ -114,20 +135,36 @@ export function providerHealth(input: ProviderHealthInput): ProviderHealth {
     if (provider.kind === 'openrouter') {
       const catalog = input.catalogs[provider.id]
       if (catalog) {
-        results.push(openRouterHealth(provider.id, catalog, input.tierBinds))
+        results.push(openRouterHealth(provider.id, catalog, input.tierBinds, locale))
       } else if (input.loading.has(provider.id)) {
-        results.push({ tone: 'checking', title: 'Проверяем…', detail: 'Загружаем каталог OpenRouter.' })
+        results.push({
+          tone: 'checking',
+          title: tHost(locale, 'settings.providers.health.checkingTitle'),
+          detail: tHost(locale, 'settings.providers.health.checkingDetail'),
+        })
       }
       continue
     }
     const ping = input.pings[provider.id]
     const label = LLM_PROVIDER_KIND_LABELS[provider.kind]
     if (ping === true) {
-      results.push({ tone: 'ok', title: 'Работает', detail: `${label} · соединение проверено` })
+      results.push({
+        tone: 'ok',
+        title: tHost(locale, 'settings.providers.health.ok'),
+        detail: tHost(locale, 'settings.providers.health.openaiOk', { label }),
+      })
     } else if (ping === false) {
-      results.push({ tone: 'error', title: 'Нет соединения', detail: `${label} не ответил. Проверьте ключ и адрес.` })
+      results.push({
+        tone: 'error',
+        title: tHost(locale, 'settings.providers.health.noConnection'),
+        detail: tHost(locale, 'settings.providers.health.openaiError', { label }),
+      })
     } else {
-      results.push({ tone: 'degraded', title: 'Ключ сохранён', detail: `${label} · нажмите «Проверить», чтобы убедиться` })
+      results.push({
+        tone: 'degraded',
+        title: tHost(locale, 'settings.providers.health.keySavedTitle'),
+        detail: tHost(locale, 'settings.providers.health.openaiUnchecked', { label }),
+      })
     }
   }
   const order: ProviderHealthTone[] = ['ok', 'degraded', 'checking', 'error']
@@ -137,7 +174,11 @@ export function providerHealth(input: ProviderHealthInput): ProviderHealth {
       return hit
     }
   }
-  return { tone: 'checking', title: 'Проверяем…', detail: 'Загружаем каталог OpenRouter.' }
+  return {
+    tone: 'checking',
+    title: tHost(locale, 'settings.providers.health.checkingTitle'),
+    detail: tHost(locale, 'settings.providers.health.checkingDetail'),
+  }
 }
 
 function money(value: number): string {
@@ -151,24 +192,27 @@ function money(value: number): string {
 }
 
 /** `$0.43 / $0.87` per 1M tokens (in / out), or «Бесплатно». */
-export function modelPriceCopy(model: Pick<OpenRouterCatalogModel, 'free' | 'promptPerM' | 'completionPerM'>): string {
+export function modelPriceCopy(
+  model: Pick<OpenRouterCatalogModel, 'free' | 'promptPerM' | 'completionPerM'>,
+  locale: HostLocale = DEFAULT_HOST_LOCALE,
+): string {
   if (model.free) {
-    return 'Бесплатно'
+    return tHost(locale, 'settings.providers.price.free')
   }
   if (model.promptPerM == null || model.completionPerM == null) {
-    return 'Цена по запросу'
+    return tHost(locale, 'settings.providers.price.onRequest')
   }
   return `${money(model.promptPerM)} / ${money(model.completionPerM)}`
 }
 
-export function contextCopy(tokens: number | null): string {
+export function contextCopy(tokens: number | null, locale: HostLocale = DEFAULT_HOST_LOCALE): string {
   if (!tokens) {
     return ''
   }
   if (tokens >= 1_000_000) {
-    return `${Math.round(tokens / 100_000) / 10}M контекст`
+    return tHost(locale, 'settings.providers.context.m', { n: Math.round(tokens / 100_000) / 10 })
   }
-  return `${Math.round(tokens / 1000)}K контекст`
+  return tHost(locale, 'settings.providers.context.k', { n: Math.round(tokens / 1000) })
 }
 
 /** Short Policy text for one Model tier bind. Pinned ids show the catalog name when known. */
@@ -206,18 +250,22 @@ export function searchCatalogModels(
   })
 }
 
-export function fetchedAtCopy(iso: string | null, now: Date = new Date()): string {
+export function fetchedAtCopy(
+  iso: string | null,
+  now: Date = new Date(),
+  locale: HostLocale = DEFAULT_HOST_LOCALE,
+): string {
   if (!iso) {
     return ''
   }
   const at = new Date(iso)
   const minutes = Math.max(0, Math.round((now.getTime() - at.getTime()) / 60_000))
   if (minutes < 1) {
-    return 'обновлено только что'
+    return tHost(locale, 'settings.providers.fetched.justNow')
   }
   if (minutes < 60) {
-    return `обновлено ${minutes} мин назад`
+    return tHost(locale, 'settings.providers.fetched.minutes', { n: minutes })
   }
   const hours = Math.round(minutes / 60)
-  return `обновлено ${hours} ч назад`
+  return tHost(locale, 'settings.providers.fetched.hours', { n: hours })
 }

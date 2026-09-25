@@ -12,12 +12,12 @@
         {{ heading }}
       </h2>
       <label class="search">
-        <span class="to">Кому:</span>
+        <span class="to">{{ $t('host.threadCreate.to') }}</span>
         <input
           ref="searchEl"
           v-model="query"
           type="search"
-          :placeholder="kind === 'room' ? 'Найти человека или Bot' : 'Найти человека'"
+          :placeholder="kind === 'room' ? $t('host.threadCreate.findPersonOrBot') : $t('host.threadCreate.findPerson')"
           autocomplete="off"
           @keydown.enter.prevent
         >
@@ -25,7 +25,7 @@
       <button
         type="button"
         class="back"
-        aria-label="Назад"
+        :aria-label="$t('host.botPicker.back')"
         @click="dismiss"
       >
         ×
@@ -47,14 +47,14 @@
         v-if="kind !== 'dm'"
         class="field"
       >
-        <span>Название</span>
+        <span>{{ $t('host.threadCreate.titleLabel') }}</span>
         <input
           v-model="title"
           type="text"
           maxlength="80"
           required
           autocomplete="off"
-          placeholder="Название чата"
+          :placeholder="$t('host.threadCreate.titlePlaceholder')"
         >
       </label>
 
@@ -62,24 +62,24 @@
         v-if="kind === 'room'"
         class="hint"
       >
-        Bot можно не выбирать. Он попадает в чат, только если его уже видит каждый человек. Создать чат не выдаёт доступ.
+        {{ $t('host.threadCreate.botOptional') }}
       </p>
       <p
         v-if="others.length === 0"
         class="hint"
       >
-        В Household пока нет других людей.
+        {{ $t('host.threadCreate.noOtherPeople') }}
       </p>
       <p
         v-else
         class="hint"
       >
-        Вы уже в этом чате.
+        {{ $t('host.threadCreate.alreadyInChat') }}
       </p>
 
       <ul
         class="rows"
-        :aria-label="kind === 'room' ? 'Люди и Bot' : 'Люди'"
+        :aria-label="kind === 'room' ? $t('host.threadCreate.peopleAndBot') : $t('host.threadCreate.people')"
       >
         <li
           v-for="person in visiblePeople"
@@ -100,7 +100,7 @@
             <span class="copy">
               <span class="name-row">
                 <span class="name">{{ person.displayName }}</span>
-                <span class="tag">человек</span>
+                <span class="tag">{{ $t('host.threadCreate.person') }}</span>
               </span>
             </span>
             <span
@@ -144,7 +144,7 @@
               <span
                 v-if="botBlocked(bot.id)"
                 class="preview"
-              >Нет доступа у всех</span>
+              >{{ $t('host.threadCreate.noSharedAccess') }}</span>
             </span>
             <span
               class="tick"
@@ -166,7 +166,7 @@
         v-if="visiblePeople.length === 0 && visibleBots.length === 0"
         class="hint"
       >
-        {{ query.trim() ? 'Никого не нашлось.' : 'Некого добавить.' }}
+        {{ query.trim() ? $t('host.threadCreate.emptyPeople') : $t('host.threadCreate.emptyNone') }}
       </p>
 
       <button
@@ -175,7 +175,7 @@
         class="submit"
         :disabled="busy || !canSubmit"
       >
-        {{ busy ? 'Создаём…' : 'Создать' }}
+        {{ busy ? $t('host.threadCreate.submitBusy') : $t('host.threadCreate.submit') }}
       </button>
     </form>
   </section>
@@ -208,14 +208,16 @@ const busy = ref(false)
 const error = ref('')
 const searchEl = ref<HTMLInputElement | null>(null)
 
+const { t } = useI18n()
+
 const heading = computed(() => {
   if (kind.value === 'room') {
-    return 'Групповой чат'
+    return t('host.threadCreate.sheetRoom')
   }
   if (kind.value === 'group') {
-    return 'Группа'
+    return t('host.threadCreate.sheetGroup')
   }
-  return 'Личное сообщение'
+  return t('host.threadCreate.sheetDm')
 })
 
 const others = computed(() => {
@@ -346,24 +348,24 @@ async function createThread(
 function errorText(caught: unknown): string {
   const message = statusMessage(caught)
   if (message === 'Every person in the room must already have access to that Bot') {
-    return 'У каждого человека в чате уже должен быть доступ к этому Bot. Доступ сам не выдаётся.'
+    return t('host.threadCreate.needAccess')
   }
   if (message === 'A room needs a Bot') {
-    return 'Выберите Bot.'
+    return t('host.threadCreate.pickBot')
   }
   if (message === 'A room needs at least two people' || message === 'A group needs at least two people') {
-    return 'Выберите хотя бы одного человека.'
+    return t('host.threadCreate.pickPeople')
   }
   if (message === 'A direct message is one person and another person') {
-    return 'Выберите человека.'
+    return t('host.threadCreate.pickPerson')
   }
   if (message === 'Name this Thread') {
-    return 'Назовите чат.'
+    return t('host.threadCreate.nameThread')
   }
   if (message) {
     return message
   }
-  return 'Не удалось создать чат.'
+  return t('host.threadCreate.createFailed')
 }
 
 function statusMessage(caught: unknown): string {
