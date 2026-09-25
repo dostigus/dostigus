@@ -52,6 +52,8 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   expect(account).toContain('to="/dashboard/settings"')
   expect(account).toContain('hideSettings')
   expect(account).toContain('HostLogoutButton')
+  expect(account).toContain(':class="{ collapsed }"')
+  expect(account).not.toMatch(/\.rail \.(?:user-btn|menu)/)
   const settings = read('app/components/BotSettingsSheet.vue')
   expect(settings).toContain('KitSheet')
   expect(settings).toContain('edge="end"')
