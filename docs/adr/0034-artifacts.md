@@ -2,6 +2,10 @@
 
 - Status: accepted
 - Date: 2026-09-24
+- Amended: 2026-09-25 — Image Artifact vision is
+  [ADR 0035](0035-image-artifact-vision.md). This record keeps no get
+  tool, storage / ACL / limits, text extract ≤ 32 KiB, and the
+  history meta note.
 
 Session and Household stay [ADR 0010](0010-owner-auth-session.md) and
 [ADR 0012](0012-household-members.md). Thread ACL stays
@@ -9,7 +13,8 @@ Session and Household stay [ADR 0010](0010-owner-auth-session.md) and
 stays [ADR 0022](0022-chat-assistant-markdown.md). Kit parts stay
 [ADR 0025](0025-chat-bubble-parts.md). The Cluster volume stays
 [ADR 0005](0005-self-host-first.md). Chat LLM context stays
-[ADR 0032](0032-chat-llm-context-assembly.md). Host HTTP get and Bot
+[ADR 0032](0032-chat-llm-context-assembly.md). Image Artifact vision
+stays [ADR 0035](0035-image-artifact-vision.md). Host HTTP get and Bot
 HTTP egress stay [ADR 0031](0031-host-http-get.md) and
 [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md).
 
@@ -114,15 +119,17 @@ On a configured Bot turn the Host injects into that turn's context:
 - Otherwise: meta only (name, mime, size, id).
 
 That inject is **mandatory** for text/* and for extractable PDF /
-text on the **current triggering line**. Without vision and without
-a get tool, the Bot must not see only filenames. The history window
-stays `role` + `content`
+text on the **current triggering line**. Without a get tool, the
+Bot must not see only filenames. The history window stays `role` +
+`content`
 ([ADR 0032](0032-chat-llm-context-assembly.md)). The Host may add a
 short per-line Artifact note (name, mime, size, id) when assembling
 that window so a prior attach is visible. It does not re-send 32 KiB
 bodies for every historical file.
 
-**No vision** on day-1. **No `dostigus_artifacts_get`** tool.
+**No `dostigus_artifacts_get`** tool. Native multimodal image parts
+on the triggering user message are
+[ADR 0035](0035-image-artifact-vision.md).
 
 New MCP surface tool **`dostigus_artifacts_put`**: `filename`,
 `mime`, and either `bytesBase64` (≤ 1 MiB) **or** `sourceUrl`.
@@ -177,7 +184,8 @@ attachment as the join appearance, volume uuid paths, sniff
 allowlist, 10 MiB / 3 / 512 MiB / 507, pending 24h plus partial ~1h,
 session + message-capability GET, `artifactIds[]` on send,
 `dostigus_artifacts_put` with auto-attach, text extract ≤ 32 KiB,
-no vision, and no get tool.
+and no get tool. Image vision on the triggering line is
+[ADR 0035](0035-image-artifact-vision.md).
 
 Competitor notes (botato, OpenMausBot, rakazo; 2026-09-24) confirmed
 the wire (upload then `artifactIds`), idempotent `uploadId` + hash,
@@ -198,7 +206,9 @@ blocks.
   part kind. The join is the ref.
 - [ADR 0032](0032-chat-llm-context-assembly.md) slim and Wake gain
   `dostigus_artifacts_put`. There is no get tool. History stays
-  `role` + `content` plus the short Artifact note above.
+  `role` + `content` plus the short Artifact note above. Triggering
+  user-message image parts are
+  [ADR 0035](0035-image-artifact-vision.md).
 - Compose keeps one volume. Artifact bytes are another directory on
   it, not a second volume and not a new image path
   ([ADR 0005](0005-self-host-first.md)).
@@ -214,7 +224,6 @@ blocks.
 - Signed URLs and public `/api/artifacts/:id` without a session.
 - Gallery / lightbox.
 - Virus scan.
-- Vision / multimodal image parts to the LLM.
 - `dostigus_artifacts_get`.
 - Sandbox materialize and path-attach (later, when computers exist).
 - Content-addressed blob layout (hash stays in meta only).
@@ -240,8 +249,9 @@ blocks.
   rejected. HTTP 507.
 - Forever keep every committed upload (OpenMausBot) — rejected.
   Pending 24h, partial ~1h, orphan GC after unlink. No library.
-- Day-1 vision, or a `dostigus_artifacts_get` tool — rejected. Text
-  extract ≤ 32 KiB or meta. Bot `put` auto-attaches.
+- A `dostigus_artifacts_get` tool — rejected. Text extract ≤ 32 KiB
+  or meta. Bot `put` auto-attaches. Image vision on the triggering
+  line is [ADR 0035](0035-image-artifact-vision.md), not a get tool.
 - Trust client mime without sniff — rejected. Magic-byte sniff, then
   allowlist.
 - Content-addressed paths on day-1 — rejected. Hash in meta. Uuid

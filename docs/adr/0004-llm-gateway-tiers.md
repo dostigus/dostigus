@@ -4,6 +4,7 @@
 - Date: 2026-09-21
 - Amended: 2026-09-24
 - Amended: 2026-09-24 — Chat history window and system prompt assembly are [ADR 0032](0032-chat-llm-context-assembly.md). This record still owns the gateway, tiers, and retry.
+- Amended: 2026-09-25 — Triggering-line image Artifact vision (OpenAI content parts) is [ADR 0035](0035-image-artifact-vision.md). This record still owns the gateway, tiers, and transient retry.
 
 ## Decision
 
@@ -27,7 +28,10 @@ blur runtime and authoring.
   (`POST {base}/chat/completions`) with a bounded history window and a
   system prompt (Manifest including label and description, Skill
   catalog, stay-on-Manifest / reply-briefly). Assembly is
-  [ADR 0032](0032-chat-llm-context-assembly.md). When a key is set,
+  [ADR 0032](0032-chat-llm-context-assembly.md). The triggering user
+  message may use OpenAI content parts (`text` + `image_url`) when
+  that line has image Artifacts
+  ([ADR 0035](0035-image-artifact-vision.md)). When a key is set,
   that call includes Cluster MCP surface tools and a short tool loop
   ([ADR 0011](0011-chat-mcp-tool-loop.md)).
 - Cluster settings live in the Store (`llm_gateway`: base URL, key

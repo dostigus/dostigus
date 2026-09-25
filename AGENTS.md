@@ -412,7 +412,10 @@ Schedules are Store rows. Chat tools are `dostigus_schedules_list`,
 `dostigus_schedules_delete`, plus `dostigus_cluster_timezone_get`,
 `dostigus_http_get`, and `dostigus_artifacts_put`
 ([ADR 0034](docs/adr/0034-artifacts.md)). There is no
-`dostigus_artifacts_get`.
+`dostigus_artifacts_get`. On a configured turn, image Artifacts
+on the triggering line may go as OpenAI content parts
+([ADR 0035](docs/adr/0035-image-artifact-vision.md)). History
+stays string `content` plus the Artifact meta note.
 A Member may call those. `dostigus_cluster_timezone_set`,
 `dostigus_cluster_http_allowlist_get`, and
 `dostigus_cluster_http_allowlist_set` are Owner only.
