@@ -2,12 +2,18 @@
 
 - Status: accepted
 - Date: 2026-09-25
+- Amended: 2026-09-25 — Settings / OpenRouter catalog: casual key-only
+  path, Host-proxied live catalog (`kind=openrouter` only), quality
+  shelf Free / Smart / Coding as Policy pins, Advanced pin now day-1
+  of this amend. Escalate and meta free / auto stay. This docs PR
+  does not implement Host code.
 
 The OpenAI-compatible LLM gateway shape and transient *same-model*
 retry stay [ADR 0004](0004-llm-gateway-tiers.md). Model tier *names*
 stay `cheap` | `strong` | `code` | `toy`. This record owns how those
 tiers are **bound and resolved**, and how the Host **escalates** after
-a failed attempt.
+a failed attempt. Settings catalog and the OpenRouter quality shelf
+also live here. Do not mint a new ADR for that layer.
 
 Turn journal fields stay
 [ADR 0029](0029-turn-journal.md) (`modelId`, `servedModelId`, token
@@ -20,11 +26,14 @@ tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). Session and
 Household stay [ADR 0010](0010-owner-auth-session.md) and
 [ADR 0012](0012-household-members.md).
 
-This record is the decision. It does not change Host or Store code.
-The impl PR lands after this docs PR merges.
+This record is the decision. The first Host impl (Provider
+instances, tier bind, silent escalate) has landed. This amend
+does **not** change Host or Store code. The Settings / catalog
+Host impl lands after this docs PR merges.
 
-Nick locked the shape below on 2026-09-25 (grill «рекомендуемые» +
-«да погнали»).
+Nick locked the bind / escalate shape on 2026-09-25 (grill
+«рекомендуемые» + «да погнали»). Nick locked the Settings /
+OpenRouter catalog layer the same day (grill rounds 1–3).
 
 ## Decision
 
@@ -73,10 +82,13 @@ Direct OpenAI and `openai-compatible`: when that instance is the
 all tiers (Owner may later split). Day-1 does not require a
 per-tier pin on that sole instance.
 
-A later Advanced pin of a concrete catalog id is a Policy kind
-too. That pin is **not** day-1. When it exists, an optional steal
-from OpenMausBot is `allow_fallbacks: false` on a pinned concrete
-id. That steal is not required for meta free / meta auto.
+A pin of a concrete catalog id is a Policy kind too. Day-1 of
+this amend: OpenRouter Settings may write that pin (quality
+shelf or Advanced). OpenAI / `openai-compatible` live lists
+stay later. When a pin exists, an optional steal from
+OpenMausBot is `allow_fallbacks: false` on a pinned concrete
+id. That steal is not required for meta free / meta auto, and
+is still optional on a pin.
 
 ### Tier bind
 
@@ -187,10 +199,11 @@ transient; if the attempt still has no assistant answer, escalate.
 
 ### Live catalog
 
-Design for `GET /models` (or the Provider catalogue) with refresh
-and cache. Day-1 **does not** require a live catalog for casual
-OpenRouter resolve (meta Policies). Advanced **pin a specific
-id** from the catalog is later.
+Casual OpenRouter resolve still uses meta Policies and does
+**not** require a live catalog to succeed. Day-1 of this amend
+fetches the live OpenRouter list for Settings only (see
+Settings / OpenRouter catalog). OpenAI /
+`openai-compatible` catalogues stay later, same pattern.
 
 ### Settings UI (sketch)
 
@@ -199,14 +212,105 @@ model field; that stays
 [ADR 0020](0020-bot-closet.md) /
 [ADR 0028](0028-bot-self-settings-via-chat.md)).
 
-Day-1 sketch:
+The first day-1 sketch put a four-tier Provider + Policy grid
+in the face. This amend **supersedes** that for OpenRouter:
+paste key, meta routing by default, optional quality shelf,
+details under «Подробнее». The four-tier bind remains the
+Store model; it is not required in the casual face. No Bot
+closet model field.
 
-1. **Providers** list — add / edit / remove instances (`kind`,
-   key, optional `baseUrl`).
-2. **Tiers** — each of `cheap` | `strong` | `code` | `toy` shows
-   Provider + Policy. Casual auto-fill covers the empty case.
+### Settings / OpenRouter catalog (amend)
 
-No Bot closet model field. No Advanced pin UI on day-1.
+Nick locked this on 2026-09-25 after the Providers Port
+(grill rounds 1–3). This is a Settings / catalog layer on
+the same record. It does not mint ADR 0037. Escalate,
+situation start, and meta free / auto stay.
+
+#### Casual path
+
+The Owner adds OpenRouter and pastes the key. Save is enough.
+Chat and Wake work through the existing casual Policies
+(`cheap` + `toy` → meta **free**; `strong` + `code` → meta
+**auto**). The default face is «Маршрутизация OpenRouter».
+The four-tier matrix is **not** required in the face. Details
+live under «Подробнее» / Advanced.
+
+#### Catalog fetch
+
+After the key is saved, the Host `GET`s OpenRouter
+`/api/v1/models`. The Host uses the stored Provider key
+**server-side**. The UI never sees the key. The catalog is
+an Owner-session Host endpoint that returns the proxied /
+cached list for a Provider id.
+
+Cache is about **24 hours**, plus an explicit «Обновить» /
+Refresh in Settings. A Refresh bypasses the stale cache.
+
+Day-1 of this amend is `kind=openrouter` only. An OpenAI
+(or `openai-compatible`) list later uses the same Host
+proxy + cache pattern.
+
+#### Quality shelf
+
+Settings shows a short shelf of three ranked cards — **Free /
+Smart / Coding** — plus «Оставить маршрутизацию OpenRouter».
+Not four identical tier pickers.
+
+Rank from the **live** API (intelligence / price / free
+filter). **No model ids are baked into git.** Shelf labels
+are Settings quality slots. They are **not** Model tier
+names. `cheap` | `strong` | `code` | `toy` stay.
+
+| Shelf card | Policy pin |
+| --- | --- |
+| Free | `cheap` + `toy` |
+| Smart | `strong` |
+| Coding | `code` |
+
+That map matches the escalate chain. A pick writes Policy
+pins (concrete catalog ids) on those tiers through the
+existing Policy write path.
+
+«Оставить маршрутизацию OpenRouter» **clears** those pins
+and restores meta free / auto. Escalate is unchanged: soft
++ hard fail only. The shelf is not a quality judge and does
+not change escalate triggers.
+
+#### Catalog fail
+
+A catalog miss (auth, network, empty, cache miss + upstream
+error) is a red / info banner in Settings. The Cluster
+**still runs** on meta free / auto. The shelf is unavailable.
+That is not a blocker. Casual Chat does not wait on the
+catalog.
+
+#### Advanced
+
+Under «Подробнее» / Advanced:
+
+- searchable full live list («Все модели»)
+- optional per-tier pin (same Policy write as the shelf)
+- «Обновить список» (the same Refresh)
+- raw Policy view
+
+#### Vision badge
+
+Shelf and Advanced cards may show a vision badge from
+OpenRouter `architecture.modality`.
+[ADR 0035](0035-image-artifact-vision.md) vision needles,
+JPEG wire, and the modality-error retry stay unchanged on
+day-1 of this amend. The badge is Settings chrome, not a
+new gate.
+
+#### Host API (this amend)
+
+- Owner-session `GET` catalog for a Provider id → proxied
+  OpenRouter `GET /api/v1/models` plus the ~24h cache.
+- Policy write / clear already exist. A pin clear restores
+  meta free / auto.
+
+Do not invent other catalog routes in this record. Do not
+put the Provider key in the catalog response.
 
 ### Legacy compat
 
@@ -280,6 +384,12 @@ with max 3 attempts, soft + hard triggers without a quality
 judge, silent Chat, journal aggregates, and a compat read of
 legacy “tier = raw model string” as a pin on one Provider.
 
+A later grill the same day (rounds 1–3) found the four-tier
+Settings face too hard after that Port. Casual is key → works
+via meta free / auto. Live catalog + quality shelf + Advanced
+pin are Settings on top of the same bind. They are not a new
+ADR and not a change to escalate.
+
 Competitor notes (botato, OpenMausBot, rakazo; 2026-09-25)
 confirmed all three are **Owner-selected single model (or
 Provider + model) per bot / thread / space**. None implement
@@ -295,9 +405,13 @@ concrete id.
 
 ## Consequences
 
-- The impl PR adds Provider instances, tier → Provider + Policy
-  bind, casual auto-fill, situation start, escalate, and the
-  legacy compat read. This record does not.
+- The first impl PR added Provider instances, tier →
+  Provider + Policy bind, casual auto-fill, situation start,
+  escalate, and the legacy compat read. This amend does not
+  change that code.
+- A later Host impl PR adds the Owner-session catalog proxy
+  (~24h cache + Refresh), the OpenRouter quality shelf, and
+  the Advanced pin UI. This record does not.
 - [ADR 0004](0004-llm-gateway-tiers.md) still owns the
   OpenAI-compatible request shape, key masking, quiet / stub
   path when no key, Russian error copy, and one same-model
@@ -310,30 +424,39 @@ concrete id.
   per-attempt rows.
 - [ADR 0035](0035-image-artifact-vision.md) still owns vision
   parts, needles, and the modality-error retry on the current
-  attempt’s resolved id.
+  attempt’s resolved id. The Settings vision badge is chrome
+  on the live catalog. It does not replace those needles.
 - [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)
   still owns which proxy env the LLM client uses. Each Provider
-  call is still an LLM-path fetch.
-- Glossary terms **Provider** and **Policy** land in
+  call is still an LLM-path fetch. The catalog `GET` is an
+  LLM-path fetch too (stored Provider key, same proxy).
+- Glossary terms **Provider** and **Policy** stay in
   [`CONTEXT.md`](../../CONTEXT.md). **LLM gateway** stays the
   Cluster capability. Do not rename the gateway per Provider.
-- Settings grows a Providers list and a tier bind. The Bot
-  closet stays without a model field.
+  Shelf labels Free / Smart / Coding are not Model tier names.
+- Settings casual face is OpenRouter key → meta routing. The
+  four-tier bind stays in the Store and under Advanced. The
+  Bot closet stays without a model field.
 - No model-id allowlist is baked in Host source as the product
-  catalog.
+  catalog. The shelf is ranked from the live API.
 - Exact OpenRouter meta slugs are verified at impl time.
 
 ### Out of scope
 
-- Host or Store implementation. That is the impl PR.
+- Host or Store implementation for this amend. That is the
+  Settings / catalog impl PR.
+- OpenAI / `openai-compatible` live catalogs (later, same
+  Host proxy + cache pattern)
+- A baked model-id shortlist in Dostigus source
 - Bot override of Provider / Model tier / model
-- Advanced pin of a concrete catalog id in Settings
-- Host refresh + pick “best free slug” every resolve (policy C)
+- Host refresh + pick “best free slug” every resolve (the
+  shelf ranks when the Owner picks; resolve still uses the
+  bound Policy)
+- Turning escalate into a quality judge
 - Silent message-complexity classifier
 - Owner-visible escalate badge in Chat
 - Effectiveness / eval scores UI
 - Per-call attempt rows beyond existing Turn aggregates
-- A baked model-id catalog in Dostigus source
 - Dropping Cluster Model tiers for “one model per Bot”
 - Treating `modelId` as `response.model` under meta free
 - Marketplace, Share link, guests, agent runtime, Meal port,
@@ -368,8 +491,21 @@ concrete id.
   (or last attempted) resolve + `llmCallCount`.
 - Bot closet or Manifest `modelTier` as the day-1 start picker
   — rejected. Situation table. Bot override is later.
-- Live catalog + Advanced pin on day-1 — rejected. Meta
-  Policies cover casual OpenRouter. Pin is later.
+- Live catalog + Advanced pin on the first day-1 — rejected
+  **then** so casual OpenRouter could ship on meta Policies.
+  This amend **supersedes** “pin is later” for OpenRouter
+  Settings. Meta still covers casual without the catalog.
+  OpenAI / `openai-compatible` lists stay later.
+- Four identical tier pickers in the OpenRouter face —
+  rejected after the Providers Port. Key first. Shelf +
+  Advanced. The Store still binds each Model tier.
+- Mint ADR 0037 for Settings / catalog — rejected. Same
+  record. Bind, resolve, escalate, and Settings catalog are
+  one decision.
+- Rank a Host-baked shortlist — rejected. Live API only.
+  No model ids in git.
+- Catalog fail blocks Chat — rejected. Banner in Settings.
+  Cluster stays on meta free / auto.
 - Copy OpenMausBot many CLI engines into Cluster Settings —
   rejected. Gateway stays OpenAI-compatible kinds above.
 - Copy OpenMausBot `allow_fallbacks: false` onto meta free /

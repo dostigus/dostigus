@@ -317,7 +317,8 @@ _Avoid_: deploy, merge, ship (unqualified), Host-bundled Apply.
 Cluster capability for LLM calls: OpenAI-compatible shape and
 transient same-model retry
 ([ADR 0004](docs/adr/0004-llm-gateway-tiers.md)). Provider
-instances, Model tier bind / resolve, and escalate are
+instances, Model tier bind / resolve, escalate, and the
+OpenRouter Settings catalog are
 [ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md).
 _Avoid_: renaming the gateway per Provider, model picker
 (unqualified).
@@ -326,8 +327,10 @@ _Avoid_: renaming the gateway per Provider, model picker
 An Owner-connected LLM gateway instance: kind (`openrouter` |
 `openai` | `openai-compatible`), API key, optional base URL. Not
 a frozen model list in Dostigus source. Several instances may
-exist on one Cluster.
-([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
+exist on one Cluster. After an OpenRouter key is saved, the
+Host may proxy that instance’s live catalog for Settings
+(`kind=openrouter` day-1 of the [ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)
+Settings amend).
 _Avoid_: vendor, engine, catalog (unqualified), treating a
 Provider as the whole LLM gateway.
 
@@ -336,8 +339,11 @@ How a Model tier resolves a model id on a Provider. OpenRouter
 casual: `free` (meta free, intended `openrouter/free`) and `auto`
 (meta auto, intended `openrouter/auto`). Direct OpenAI /
 openai-compatible: one live-chosen model when that instance is
-sole. A later Advanced pin is a Policy, not day-1.
-([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
+sole. A concrete catalog id pin is also a Policy. Day-1 of the
+[ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)
+Settings amend: OpenRouter shelf or Advanced may write that
+pin. Clearing pins restores meta free / auto. OpenAI /
+openai-compatible live lists stay later.
 _Avoid_: router, slug (unqualified), Skill text (a Skill is
 instructions, not this Policy).
 
@@ -389,7 +395,8 @@ only). Each tier binds to a Provider + Policy, not a baked id
 ([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
 Chat / `user` starts `strong`. Wake / Schedule starts `cheap`.
 `code` is escalate only on day-1. `toy` is outside the escalate
-chain. MCP Bots pin strong/mid.
+chain. MCP Bots pin strong/mid. Settings shelf labels Free /
+Smart / Coding are quality slots, not Model tier names.
 _Avoid_: fast, smart, opus (aliases).
 
 **Household**:

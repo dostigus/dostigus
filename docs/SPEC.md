@@ -15,7 +15,7 @@ Settled now, even if this repo only scaffolds them:
 | In-cluster packages | Cluster Store holds Manifests, Module packages, data. Export/import between Clusters. |
 | Host | One app: Chat + Cards + Sheets from the Kit. Sheet shell on Reka UI, plus Brand. See [ADR 0002](adr/0002-host-ui-kit-and-sheets.md) and [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). |
 | MCP surface | Store and UI go through the same tools. See [ADR 0003](adr/0003-mcp-as-bot-store-contract.md). |
-| LLM gateway | User keys; Model tiers `cheap` \| `strong` \| `code` (plus `toy`). Gateway shape + same-model retry: [ADR 0004](adr/0004-llm-gateway-tiers.md). Provider bind, resolve, escalate: [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md). |
+| LLM gateway | User keys; Model tiers `cheap` \| `strong` \| `code` (plus `toy`). Gateway shape + same-model retry: [ADR 0004](adr/0004-llm-gateway-tiers.md). Provider bind, resolve, escalate, OpenRouter Settings catalog: [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md). |
 | Self-host first | `docker compose up` is the intended path. See [ADR 0005](adr/0005-self-host-first.md). |
 | Declarative modules | SQL + templated MCP before arbitrary sandbox. See [ADR 0006](adr/0006-day-1-declarative-modules.md). |
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
@@ -74,9 +74,12 @@ What the running Cluster does today:
   [ADR 0012](adr/0012-household-members.md).
 - Host UI: Bot list (empty state + `+` picker), Chat (timeline + composer,
   unlabeled bubbles), Settings, and Members.   Settings presents a
-  Providers list (OpenRouter, OpenAI, or OpenAI-compatible) and a
-  Model tier → Provider + Policy bind, the Cluster timezone,
-  the Cluster http allowlist, and stays with the Owner.
+  Providers list (OpenRouter, OpenAI, or OpenAI-compatible). Casual
+  OpenRouter is paste key → meta free / auto. The four-tier bind
+  stays in the Store; the live catalog shelf and Advanced pin are
+  [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md). Settings
+  also holds the Cluster timezone and the Cluster http allowlist, and
+  stays with the Owner.
   Legacy “tier = raw model string” Settings still resolve.
   The `+` replaces the Chat pane with a picker
   ([ADR 0019](adr/0019-bot-picker-and-chat-purpose.md)). Search there
@@ -260,7 +263,8 @@ What the running Cluster does today:
 - LLM gateway: OpenAI-compatible client, Model tiers mapped to
   OpenRouter-friendly default model ids (legacy / compat pin; live
   Clusters keep that read). Provider instances, tier bind / resolve,
-  and escalate are [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md).
+  escalate, and the OpenRouter Settings catalog are
+  [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md).
   The Owner sets Providers and Model tier binds in
   Host Settings (Store) or via compose env (env overrides Store). Chat
   LLM context assembly is [ADR 0032](adr/0032-chat-llm-context-assembly.md):

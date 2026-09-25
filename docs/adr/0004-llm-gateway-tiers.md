@@ -6,6 +6,7 @@
 - Amended: 2026-09-24 — Chat history window and system prompt assembly are [ADR 0032](0032-chat-llm-context-assembly.md). This record still owns the gateway, tiers, and retry.
 - Amended: 2026-09-25 — Triggering-line image Artifact vision (OpenAI content parts) is [ADR 0035](0035-image-artifact-vision.md). This record still owns the gateway, tiers, and transient retry.
 - Amended: 2026-09-25 — Binding, resolve, and escalate are [ADR 0036](0036-llm-providers-tier-resolve-escalate.md). This record still owns the OpenAI-compatible gateway shape and transient *same-model* retry (timeout / abort / network / HTTP 429 / HTTP 5xx on that one completion). Escalate is an upshift of Model tier / Provider after a soft or hard failure. [ADR 0036](0036-llm-providers-tier-resolve-escalate.md) supersedes the sentence that free / random model roulette is toy only: OpenRouter Policy `free` is allowed on `cheap` and `toy` for casual.
+- Amended: 2026-09-25 — OpenRouter Settings catalog, quality shelf, and Advanced pin stay [ADR 0036](0036-llm-providers-tier-resolve-escalate.md). This record still owns the gateway shape and the same-model retry.
 
 ## Decision
 
