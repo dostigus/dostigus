@@ -268,7 +268,8 @@ upload runs, a local object URL may preview the file (non-durable).
 A send arrow in a circle
 appears when the draft has text or pending Artifacts.
 
-Settings is the `/settings` page. Members is the `/members` page. Neither
+Settings is the `/dashboard/settings` page inside Dashboard.
+Members is the `/members` page. Neither
 opens as a Sheet over Chat. Bot settings are the right Sheet above.
 
 Narrow screens (under `52rem`) hide the sidebar behind a Bots control.

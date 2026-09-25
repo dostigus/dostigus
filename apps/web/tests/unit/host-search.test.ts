@@ -51,14 +51,14 @@ it('matches Chat lines and Host settings without opening Owner pages for a Membe
     messages: [],
     settings: hostSettingsCatalog({ isOwner: true, bot: null }),
   })
-  expect(owner.map((hit) => hit.href)).toEqual(['/settings/providers'])
+  expect(owner.map((hit) => hit.href)).toEqual(['/dashboard/providers'])
   const allowlist = hostSearchHits({
     query: 'allowlist',
     bots,
     messages: [],
     settings: hostSettingsCatalog({ isOwner: true, bot: null }),
   })
-  expect(allowlist.map((hit) => hit.href)).toEqual(['/settings/other'])
+  expect(allowlist.map((hit) => hit.href)).toEqual(['/dashboard/cluster'])
   expect(hostSearchShortcutIndex('1')).toBe(0)
   expect(hostSearchShortcutIndex('9')).toBe(8)
   expect(hostSearchShortcutIndex('0')).toBeNull()

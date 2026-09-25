@@ -2,7 +2,7 @@
   <div
     ref="rootEl"
     class="user"
-    :class="{ rail: collapsed }"
+    :class="{ collapsed }"
     @keydown.escape.stop="menuOpen = false"
   >
     <button
@@ -29,8 +29,8 @@
       role="menu"
     >
       <NuxtLink
-        v-if="isOwner"
-        to="/settings/providers"
+        v-if="isOwner && !hideSettings"
+        to="/dashboard/settings"
         class="item"
         role="menuitem"
         @click="choose"
@@ -54,6 +54,7 @@
 <script setup lang="ts">
 defineProps<{
   collapsed?: boolean
+  hideSettings?: boolean
 }>()
 
 const { user, isOwner } = useHostAccount()
@@ -126,7 +127,7 @@ onUnmounted(() => {
   outline-offset: 2px;
 }
 
-.user:not(.rail) :deep(.avatar) {
+.user:not(.collapsed) :deep(.avatar) {
   width: 2rem;
   height: 2rem;
   font-size: 0.68rem;
@@ -142,7 +143,7 @@ onUnmounted(() => {
   color: var(--text-muted);
 }
 
-.rail .user-btn {
+.user.collapsed .user-btn {
   justify-content: center;
   padding: 0.25rem;
 }
@@ -163,7 +164,7 @@ onUnmounted(() => {
   box-shadow: 0 14px 36px rgb(0 0 0 / 38%);
 }
 
-.rail .menu {
+.user.collapsed .menu {
   left: 0.2rem;
   right: auto;
   width: 12rem;

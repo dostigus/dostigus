@@ -60,7 +60,7 @@ export function hostSettingsCatalog(input: {
         title: tHost(locale, 'host.search.settingsProviders'),
         subtitle: tHost(locale, 'host.search.settingsProvidersHint'),
         keywords: ['settings', 'provider', 'openrouter', 'api key', 'model', 'model tier', 'gateway', 'провайдеры'],
-        href: '/settings/providers',
+        href: '/dashboard/providers',
         botId: null,
       },
       {
@@ -68,7 +68,7 @@ export function hostSettingsCatalog(input: {
         title: tHost(locale, 'host.search.settingsOther'),
         subtitle: tHost(locale, 'host.search.settingsOtherHint'),
         keywords: ['settings', 'timezone', 'allowlist', 'http', 'прочее'],
-        href: '/settings/other',
+        href: '/dashboard/cluster',
         botId: null,
       },
       {

@@ -47,19 +47,30 @@ treating Settings as a Member-visible switcher.
 **Host**:
 The single client app (web/PWA first): Chat + Cards + Sheets. **Host shell**
 is a synonym — prefer Host.
-_Avoid_: Host shell (prefer Host), mini-app, dashboard, admin (unqualified),
-per-bot SPA.
+_Avoid_: Host shell (prefer Host), mini-app, admin (unqualified),
+per-bot SPA. Dashboard is a separate Owner chrome, not a synonym
+for Host.
+
+**Dashboard**:
+Owner Host chrome under `/dashboard` and `/dashboard/...`. Own
+layout: left grouped nav + scrolling content, no Host Bot list
+([ADR 0038](docs/adr/0038-dashboard-chrome.md)). Day-1 pages:
+Overview (`/dashboard`), Cluster settings (`/dashboard/cluster`),
+Providers (`/dashboard/providers`), and Settings
+(`/dashboard/settings`). There are no `/settings` page
+routes. Not Member-visible.
+_Avoid_: admin panel, treating Dashboard as the Host messenger
+shell, treating Settings as the whole chrome.
 
 **Settings**:
-Owner Host pages under `/settings` and `/settings/...`. Day-1 of
-the [ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)
-Settings amend: **Провайдеры** (Providers page — catalog, shelf,
-health) and **Прочее** (leftover Cluster settings, and the Host
-Locale switcher
-([ADR 0037](docs/adr/0037-host-ui-i18n.md))). Not the Bot
+The Owner account page at `/dashboard/settings` inside
+Dashboard. The Host user-menu **Settings** item opens that
+page. Cluster leftover (timezone, http allowlist, Locale
+switcher) is **Cluster settings**, not this page. Not the Bot
 closet. Not Member-visible.
-_Avoid_: admin panel, dashboard, Preferences (unqualified), treating
-Settings as one monolithic page after this amend.
+_Avoid_: admin panel, Preferences (unqualified), treating
+Settings as a `/settings` chrome after
+[ADR 0038](docs/adr/0038-dashboard-chrome.md).
 
 **Locale**:
 Host UI language for chrome strings. Day-1 codes `en` and `ru`.

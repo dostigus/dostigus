@@ -16,6 +16,12 @@
 - Amended: 2026-09-25 — Settings / catalog impl notes: child slugs,
   the key-accepted signal, and the shelf ranking rule (see Settings
   impl notes). No decision above changes.
+- Amended: 2026-09-25 — Dashboard chrome
+  ([ADR 0038](0038-dashboard-chrome.md)) moved Providers to
+  `/dashboard/providers` and leftover Cluster settings to
+  `/dashboard/cluster`. There are no `/settings` page routes
+  and no HTTP/Nuxt redirects from the old slugs. Catalog /
+  shelf / health / two-column Providers story stay.
 
 The OpenAI-compatible LLM gateway shape and transient *same-model*
 retry stay [ADR 0004](0004-llm-gateway-tiers.md). Model tier *names*
@@ -333,27 +339,25 @@ Catalog fetch, cache, shelf pins, Advanced, vision badge, and
 
 #### Shell
 
-Settings is **multi-page** Host routes under `/settings/...`
-with a **left nav**, not one monolithic page. Pages are
-deep-linkable.
+Settings product pages are **multi-page** Owner routes, not
+one monolithic page. Pages are deep-linkable.
 
-Day-1 carve-out (two pages only):
+[ADR 0038](0038-dashboard-chrome.md) moved the chrome. Day-1
+Dashboard slugs (no `/settings` pages, no redirects):
 
-| Page | What it holds |
-| --- | --- |
-| **Провайдеры** | Providers page: story, configure, shelf, Advanced, health |
-| **Прочее** | Leftover existing Settings (Cluster timezone, Cluster http allowlist, and anything else already on `/settings`) without a full redesign of every section |
+| Page | Route | What it holds |
+| --- | --- | --- |
+| **Провайдеры** | `/dashboard/providers` | Providers page: story, configure, shelf, Advanced, health |
+| **Прочее** leftovers | `/dashboard/cluster` | Cluster timezone, Cluster http allowlist, Locale |
 
-A broader Settings redesign is later. `/settings` may land on
-**Провайдеры**. Exact child slugs are the impl PR. Do not add
-more Settings tabs on day-1 of this amend.
+A broader Settings redesign is later. Do not add more Settings
+tabs on day-1 of this amend.
 
 The Owner page gate stays
 [ADR 0010](0010-owner-auth-session.md) /
-[ADR 0012](0012-household-members.md). It must cover `/settings`
-and `/settings/...`. A Member still cannot open Settings.
-Today’s exact-path set that only lists `/settings` is not
-enough once child routes exist.
+[ADR 0012](0012-household-members.md). It must cover
+`/dashboard` and `/dashboard/...`. A Member still cannot
+open Dashboard.
 
 #### Providers page
 
@@ -392,8 +396,11 @@ That is the same rule as catalog fail: not a Chat blocker.
 
 The impl PR filled in what this record left open.
 
-- Slugs: `/settings` lands on `/settings/providers`
-  (**Провайдеры**). **Прочее** is `/settings/other`.
+- Slugs: Providers is `/dashboard/providers`
+  (**Провайдеры**). Cluster leftover is `/dashboard/cluster`.
+  There are no `/settings` page routes and no HTTP/Nuxt
+  redirects from the old slugs
+  ([ADR 0038](0038-dashboard-chrome.md)).
 - Catalog route: `GET /api/settings/llm-gateway/providers/:id/catalog`
   (Owner session). `?refresh=1` bypasses the cache. An upstream
   miss after a good load serves that list as stale.
@@ -493,11 +500,14 @@ pin are Settings on top of the same bind. They are not a new
 ADR and not a change to escalate.
 
 Q13–Q17 the same day locked Settings **information
-architecture**: `/settings/...` with a left nav, **Провайдеры**
-as the clear page, leftover settings under **Прочее**, a
-two-column Providers story (Bots need an LLM; Providers
-supply it), and a green health status from key + soft catalog
-probe. The probe is Settings chrome. It does not block Chat.
+architecture**: a left nav, **Провайдеры** as the clear page,
+leftover settings under **Прочее**, a two-column Providers
+story (Bots need an LLM; Providers supply it), and a green
+health status from key + soft catalog probe. The probe is
+Settings chrome. It does not block Chat.
+[ADR 0038](0038-dashboard-chrome.md) later that day moved
+those pages under `/dashboard/...` (no `/settings` routes,
+no redirects).
 
 Competitor notes (botato, OpenMausBot, rakazo; 2026-09-25)
 confirmed all three are **Owner-selected single model (or
@@ -520,8 +530,10 @@ concrete id.
   change that code.
 - A later Host impl PR adds the Owner-session catalog proxy
   (~24h cache + Refresh), the OpenRouter quality shelf, the
-  Advanced pin UI, multi-page Settings (`/settings/...` with
-  **Провайдеры** / **Прочее**), and Settings health chrome.
+  Advanced pin UI, multi-page Settings (later
+  `/dashboard/providers` / `/dashboard/cluster`
+  [ADR 0038](0038-dashboard-chrome.md)), and Settings health
+  chrome.
   This record does not.
 - [ADR 0004](0004-llm-gateway-tiers.md) still owns the
   OpenAI-compatible request shape, key masking, quiet / stub
@@ -622,7 +634,10 @@ concrete id.
   record. Bind, resolve, escalate, Settings catalog, and
   Settings information architecture are one decision.
 - Keep one monolithic `/settings` page — rejected. Multi-page
-  `/settings/...` with a left nav. Deep-linkable.
+  routes with a left nav. Deep-linkable.
+  [ADR 0038](0038-dashboard-chrome.md) later moved those
+  routes under `/dashboard/...` with no redirects from
+  `/settings`.
 - Redesign timezone, http allowlist, and every other Settings
   block on day-1 — rejected. Carve out **Провайдеры**; leftovers
   under **Прочее**.

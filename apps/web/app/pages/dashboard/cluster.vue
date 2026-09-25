@@ -1,8 +1,8 @@
 <template>
-  <div class="other">
+  <div class="cluster">
     <header class="head">
-      <h1>{{ $t('settings.other.title') }}</h1>
-      <p>{{ $t('settings.other.lead') }}</p>
+      <h1>{{ $t('dashboard.cluster.title') }}</h1>
+      <p>{{ $t('dashboard.cluster.lead') }}</p>
     </header>
 
     <form
@@ -273,7 +273,7 @@ async function saveLocale() {
 </script>
 
 <style scoped>
-.other {
+.cluster {
   max-width: 34rem;
   display: flex;
   flex-direction: column;
