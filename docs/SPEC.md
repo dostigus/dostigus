@@ -155,7 +155,10 @@ What the running Cluster does today:
   and chats. A later Invite does not receive those grants.
   [ADR 0024](adr/0024-threads-and-bot-visibility.md).
   Bubbles stay unlabeled. Assistant bubbles render a safe Markdown subset
-  (bold, italic, code, lists, and http(s) links) through `KitMarkdown`.
+  (bold, italic, code, lists, http(s) links, and GFM tables) through
+  `KitMarkdown`. A valid GFM table (header row plus a `|---` separator)
+  is a real table. A wide table scrolls horizontally in the bubble; cell
+  text may wrap. A lone or malformed `|` stays plain text.
   An assistant line may also carry Kit parts under that body: a button
   that opens a registered Sheet (`KitSheet`), and a status chip. User
   and system bubbles stay plain pre-wrap text and have no parts. See

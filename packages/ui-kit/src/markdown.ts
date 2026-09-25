@@ -14,6 +14,12 @@ const ALLOWED_TAGS = new Set([
   'p',
   'pre',
   'strong',
+  'table',
+  'tbody',
+  'td',
+  'th',
+  'thead',
+  'tr',
   'ul',
 ])
 
@@ -30,7 +36,6 @@ md.disable([
   'lheading',
   'blockquote',
   'hr',
-  'table',
   'strikethrough',
 ])
 
@@ -57,6 +62,16 @@ md.renderer.rules.image = (tokens, idx) => {
   const alt = token?.content ?? ''
   return md.utils.escapeHtml(`![${alt}](${src})`)
 }
+
+/** Alignment markers stay valid GFM; the Kit does not emit align styles. */
+md.renderer.rules.th_open = (tokens, idx, options, _env, self) => {
+  const token = tokens[idx]
+  if (token) {
+    token.attrs = null
+  }
+  return self.renderToken(tokens, idx, options)
+}
+md.renderer.rules.td_open = md.renderer.rules.th_open
 
 md.renderer.rules.fence = (tokens, idx) => renderCode(tokens[idx]?.content ?? '')
 md.renderer.rules.code_block = (tokens, idx) => renderCode(tokens[idx]?.content ?? '')

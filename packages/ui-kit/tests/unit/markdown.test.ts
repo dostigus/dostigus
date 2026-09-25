@@ -95,7 +95,63 @@ it('keeps a safe link when another link uses a rejected scheme', () => {
   expect(html.match(/<a /g)).toHaveLength(1)
 })
 
-it('does not execute or elevate raw HTML, images, headings, tables, or task checks', () => {
+it('renders a valid GFM table as a real table', () => {
+  const html = renderChatMarkdown('| Tool | When | How |\n| --- | --- | --- |\n| Knife | Cutting | **sharp** |')
+  expect(html).toContain('<table>')
+  expect(html).toContain('<thead>')
+  expect(html).toContain('<tbody>')
+  expect(html).toContain('<tr>')
+  expect(html).toContain('<th>Tool</th>')
+  expect(html).toContain('<th>When</th>')
+  expect(html).toContain('<th>How</th>')
+  expect(html).toContain('<td>Knife</td>')
+  expect(html).toContain('<td>Cutting</td>')
+  expect(html).toContain('<td><strong>sharp</strong></td>')
+  expect(html).not.toContain('| Tool |')
+  expect(html).not.toContain('style=')
+  expect(html).not.toContain('align=')
+
+  const aligned = renderChatMarkdown('| a | b |\n| :--- | ---: |\n| 1 | 2 |')
+  expect(aligned).toContain('<table>')
+  expect(aligned).toContain('<th>a</th>')
+  expect(aligned).toContain('<td>1</td>')
+  expect(aligned).not.toContain('style=')
+  expect(aligned).not.toContain('align=')
+
+  const chef = renderChatMarkdown([
+    '| Инструмент | Когда | Как |',
+    '| --- | --- | --- |',
+    '| Нож шеф | Нарезка | Вести лезвие, не пилить |',
+    '| Сотейник | Соус | Средний огонь, мешать |',
+  ].join('\n'))
+  expect(chef).toContain('<table>')
+  expect(chef).toContain('<th>Инструмент</th>')
+  expect(chef).toContain('<td>Нож шеф</td>')
+  expect(chef).toContain('<td>Вести лезвие, не пилить</td>')
+  expect(chef).not.toContain('| Инструмент |')
+})
+
+it('keeps lone and malformed pipes as literal text', () => {
+  const lone = renderChatMarkdown('price | qty')
+  expect(lone).not.toContain('<table')
+  expect(lone).toContain('price | qty')
+
+  const headerOnly = renderChatMarkdown('| a | b |')
+  expect(headerOnly).not.toContain('<table')
+  expect(headerOnly).toContain('| a | b |')
+
+  const noSeparator = renderChatMarkdown('| a | b |\n| 1 | 2 |')
+  expect(noSeparator).not.toContain('<table')
+  expect(noSeparator).toContain('| a | b |')
+  expect(noSeparator).toContain('| 1 | 2 |')
+
+  const brokenSeparator = renderChatMarkdown('| a | b |\n| not-a-sep | --- |\n| 1 | 2 |')
+  expect(brokenSeparator).not.toContain('<table')
+  expect(brokenSeparator).toContain('| a | b |')
+  expect(brokenSeparator).toContain('| not-a-sep |')
+})
+
+it('does not execute or elevate raw HTML, images, headings, or task checks', () => {
   const injected = renderChatMarkdown('**a** <script>alert(1)</script> <img src=x onerror=alert(1)> <b>no</b>')
   expect(injected).toContain('<strong>a</strong>')
   expect(injected).not.toContain('<script')
@@ -113,10 +169,6 @@ it('does not execute or elevate raw HTML, images, headings, tables, or task chec
   const heading = renderChatMarkdown('# Title')
   expect(heading).not.toContain('<h1')
   expect(heading).toContain('# Title')
-
-  const table = renderChatMarkdown('| a | b |\n| --- | --- |\n| 1 | 2 |')
-  expect(table).not.toContain('<table')
-  expect(table).toContain('| a | b |')
 
   const task = renderChatMarkdown('- [ ] milk')
   expect(task).toContain('<ul>')
@@ -138,6 +190,7 @@ it('does not execute or elevate raw HTML, images, headings, tables, or task chec
 
 it('rejects unsafe markup the renderer did not emit', () => {
   expect(chatHtmlIsSafe('<p>ok</p>')).toBe(true)
+  expect(chatHtmlIsSafe('<table><thead><tr><th>a</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table>')).toBe(true)
   expect(chatHtmlIsSafe('<script>alert(1)</script>')).toBe(false)
   expect(chatHtmlIsSafe('<img src=x onerror=alert(1)>')).toBe(false)
   expect(chatHtmlIsSafe('<a href="javascript:alert(1)" target="_blank" rel="noopener noreferrer">x</a>')).toBe(false)

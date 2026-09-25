@@ -24,6 +24,7 @@ const html = computed(() => renderChatMarkdown(props.source))
   line-height: 1.45;
   white-space: normal;
   overflow-wrap: anywhere;
+  overflow-x: auto;
   min-width: 0;
 }
 
@@ -102,5 +103,26 @@ const html = computed(() => renderChatMarkdown(props.source))
 
 .kit-markdown :deep(li > p) {
   margin: 0.2rem 0;
+}
+
+.kit-markdown :deep(table) {
+  margin: 0.45rem 0;
+  border-collapse: collapse;
+  width: max-content;
+  max-width: none;
+}
+
+.kit-markdown :deep(th),
+.kit-markdown :deep(td) {
+  padding: 0.28rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--text, #fff) 16%, transparent);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.kit-markdown :deep(th) {
+  font-weight: 700;
 }
 </style>

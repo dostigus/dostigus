@@ -1090,6 +1090,7 @@ async function onBotSaved() {
 
 .bubble {
   max-width: min(34rem, 86%);
+  min-width: 0;
   padding: 0.7rem 0.95rem;
   border-radius: var(--radius-bubble);
   border: 0;
