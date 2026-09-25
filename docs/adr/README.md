@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0036, so the next ADR
-is **0037**. Name it `0037-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0037, so the next ADR
+is **0038**. Name it `0038-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one.
 
@@ -68,3 +68,4 @@ English.
 | [0034](0034-artifacts.md) | Artifacts (amended 2026-09-25: image vision is [0035](0035-image-artifact-vision.md); no get tool stays) |
 | [0035](0035-image-artifact-vision.md) | Image Artifact vision |
 | [0036](0036-llm-providers-tier-resolve-escalate.md) | LLM Providers, tier resolve, and escalate (amended 2026-09-25: OpenRouter Settings catalog + quality shelf; Advanced pin is day-1 of this amend for `kind=openrouter`; amended 2026-09-25: Settings IA — `/settings/...` Провайдеры / Прочее, health from key + soft catalog probe) |
+| [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) |

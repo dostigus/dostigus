@@ -2,7 +2,9 @@
 
 Self-host agent OS: portable bot packages + host UI sheets. This file
 names the domain concepts. Keep these terms stable. Do not invent synonyms in
-code, docs, or UI copy.
+code, docs, or UI copy. Host chrome may be `en` or `ru`
+([ADR 0037](docs/adr/0037-host-ui-i18n.md)); the terms below stay
+Latin script in both Locales.
 
 > Scope lives in [`docs/SPEC.md`](docs/SPEC.md). Decisions live in
 > [`docs/adr/`](docs/adr/). Agent rules: [`AGENTS.md`](AGENTS.md).
@@ -29,8 +31,18 @@ _Avoid_: admin, user (unqualified).
 
 **Member**:
 A Household account on this Cluster, under the single Owner. Signs in on the
-Host for Bot list and Chat.
+Host for Bot list and Chat. **Member.locale** is this Member's Host UI
+Locale ([ADR 0037](docs/adr/0037-host-ui-i18n.md)).
 _Avoid_: user, guest, account (unqualified), invitee.
+
+**Member.locale**:
+Store column on the Member row for Host UI Locale
+(`en` | `ru` on day-1). Signed-out Host uses cookie
+`dostigus_locale`. On first login that cookie may seed this
+column when it is still null. Existing null migrates to `en`.
+Not Cluster timezone. Not a Skill field.
+_Avoid_: Accept-Language as the Store value, URL prefix,
+treating Settings as a Member-visible switcher.
 
 **Host**:
 The single client app (web/PWA first): Chat + Cards + Sheets. **Host shell**
@@ -42,10 +54,25 @@ per-bot SPA.
 Owner Host pages under `/settings` and `/settings/...`. Day-1 of
 the [ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)
 Settings amend: **Провайдеры** (Providers page — catalog, shelf,
-health) and **Прочее** (leftover Cluster settings). Not the Bot
+health) and **Прочее** (leftover Cluster settings, and the Host
+Locale switcher
+([ADR 0037](docs/adr/0037-host-ui-i18n.md))). Not the Bot
 closet. Not Member-visible.
 _Avoid_: admin panel, dashboard, Preferences (unqualified), treating
 Settings as one monolithic page after this amend.
+
+**Locale**:
+Host UI language for chrome strings. Day-1 codes `en` and `ru`.
+Default `en`. URLs have no `/en` or `/ru` prefix. Not Cluster
+timezone. Not the language of Chat bodies, Skills, MCP tool
+descriptions, or LLM replies. Product glossary terms in this
+file stay Latin script in every Locale; translate only the
+surrounding chrome words. See
+[ADR 0037](docs/adr/0037-host-ui-i18n.md).
+_Avoid_: language (unqualified), i18n (as a product noun),
+treating timezone as Locale, translating Bot / Host / Cluster /
+Skill / Schedule / Provider / Policy / Artifact / Member /
+Household.
 
 **Chat**:
 The lines a person reads and writes on a Thread in the Host.
@@ -145,8 +172,18 @@ _Avoid_: page, iframe, dialog (use Sheet; modal is a Sheet kind).
 
 **Kit**:
 Shared design system / building blocks the Host renders. Bots do not ship
-custom CSS apps.
+custom CSS apps. Locale dictionaries the Host uses live with the Kit
+([ADR 0037](docs/adr/0037-host-ui-i18n.md)).
 _Avoid_: theme, CSS app, per-bot design system.
+
+**Locale dictionary**:
+Central nested JSON for Host chrome and Kit strings the Host
+uses: `packages/ui-kit/locales/{en,ru}.json`. English is the
+key and type source. A new language is copy `en.json` →
+`xx.json` and translate. See
+[ADR 0037](docs/adr/0037-host-ui-i18n.md).
+_Avoid_: a second Host-only tree on day-1, one file per page,
+translating Chat bodies or MCP tool descriptions here.
 
 **Brand**:
 The goose logo, the stickers, and the Bot marks shipped with the Kit. The
@@ -203,7 +240,8 @@ Module package. Not a Model-tier Policy
 id is not a Skill id. `parseSkillId` in
 `packages/shared/src/skill.ts` checks that charset. A Skill is
 `{ id, description, instructions }`. `description` is required on
-upsert (1–200). There is no locale column. Skills live in
+upsert (1–200). There is no locale column (Host UI Locale is
+[ADR 0037](docs/adr/0037-host-ui-i18n.md), not a Skill field). Skills live in
 `bots.skills_json`. The Manifest lists that Bot's Skills. The system
 prompt is a catalog of `id` + `description`. Full `instructions`
 load through `dostigus_skills_read`. `dostigus_skills_list` returns
@@ -362,7 +400,8 @@ The one IANA timezone for the Cluster, stored as
 Host converts that clock for the next fire. The default is the
 `DOSTIGUS_TZ` env when set, otherwise `UTC`. The Owner sets it. A
 Member may read it.
-_Avoid_: user timezone, per-Bot timezone, locale, offset.
+_Avoid_: user timezone, per-Bot timezone, Host UI Locale
+([ADR 0037](docs/adr/0037-host-ui-i18n.md)), offset.
 
 **Host HTTP get**:
 The MCP surface tool `dostigus_http_get` the Host runs on a Bot turn
@@ -525,5 +564,13 @@ _Avoid_: public share, invite (unqualified).
 - LLM gateway maps Model tiers through Provider + Policy for
   every Bot call. Escalate may upshift along `cheap` → `strong`
   → `code` ([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
+- Host chrome Locale is `en` or `ru` (default `en`). A Member
+  stores it on `Member.locale`. Signed-out Host uses cookie
+  `dostigus_locale`. The Owner changes it on Settings →
+  **Прочее**. Dictionaries live at
+  `packages/ui-kit/locales/{en,ru}.json`. Chat bodies, Skills,
+  MCP tool descriptions, and LLM replies are not dictionaries.
+  See [ADR 0037](docs/adr/0037-host-ui-i18n.md). Cluster
+  timezone is a different setting.
 - A Share link is a narrow public token to one object, not the Cluster.
   Share links and guests are later.
