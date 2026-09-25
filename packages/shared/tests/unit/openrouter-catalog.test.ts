@@ -107,6 +107,7 @@ describe('rankOpenRouterShelf', () => {
   const rows: Row[] = [
     { id: 'lab/free-small', prompt: '0', completion: '0', intelligence: 12 },
     { id: 'lab/free-best', prompt: '0', completion: '0', intelligence: 30 },
+    { id: 'lab/free-coder', prompt: '0', completion: '0', coding: 80 },
     { id: 'lab/free-notools', prompt: '0', completion: '0', intelligence: 50, tools: false },
     { id: 'lab/cheap', prompt: '0.0000001', completion: '0.0000004', intelligence: 35, coding: 70 },
     { id: 'lab/mid', prompt: '0.000001', completion: '0.000004', intelligence: 44, coding: 65 },
@@ -118,10 +119,10 @@ describe('rankOpenRouterShelf', () => {
     { id: 'openrouter/free', prompt: '0', completion: '0' },
   ]
 
-  it('ranks Free by intelligence among free tools-capable models', () => {
+  it('ranks Free by intelligence among free tools-capable models, never by a Coding Index alone', () => {
     const { shelf, ranking } = rankOpenRouterShelf(catalog(rows))
     expect(ranking).toBe('benchmarks')
-    expect(shelf.free.map((model) => model.id)).toEqual(['lab/free-best', 'lab/free-small'])
+    expect(shelf.free.map((model) => model.id)).toEqual(['lab/free-best', 'lab/free-small', 'lab/free-coder'])
   })
 
   it('keeps the premium price quartile off Smart and Coding', () => {

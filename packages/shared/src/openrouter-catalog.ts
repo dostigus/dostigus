@@ -197,13 +197,15 @@ function quantile(sorted: number[], q: number): number {
 }
 
 function byScore(
-  score: (model: OpenRouterCatalogModel) => number | null,
+  ...scores: Array<(model: OpenRouterCatalogModel) => number | null>
 ): (a: OpenRouterCatalogModel, b: OpenRouterCatalogModel) => number {
   return (a, b) => {
-    const left = score(a)
-    const right = score(b)
-    if (left !== right) {
-      return (right ?? Number.NEGATIVE_INFINITY) - (left ?? Number.NEGATIVE_INFINITY)
+    for (const score of scores) {
+      const left = score(a)
+      const right = score(b)
+      if (left !== right) {
+        return (right ?? Number.NEGATIVE_INFINITY) - (left ?? Number.NEGATIVE_INFINITY)
+      }
     }
     const price = blendedPricePerM(a) - blendedPricePerM(b)
     if (price !== 0) {
@@ -249,18 +251,18 @@ export function rankOpenRouterShelf(
     }
   }
 
-  const freeRanked = [...free].sort(byScore((model) => model.intelligence ?? model.coding))
+  const freeRanked = [...free].sort(byScore((model) => model.intelligence, (model) => model.coding))
   return {
     ranking,
     shelf: {
       free: freeRanked.slice(0, size),
       smart: affordable
         .filter((model) => model.intelligence != null)
-        .sort(byScore((model) => model.intelligence))
+        .sort(byScore((model) => model.intelligence, (model) => model.coding))
         .slice(0, size),
       coding: affordable
-        .filter((model) => (model.coding ?? model.intelligence) != null)
-        .sort(byScore((model) => model.coding ?? model.intelligence))
+        .filter((model) => model.coding != null || model.intelligence != null)
+        .sort(byScore((model) => model.coding, (model) => model.intelligence))
         .slice(0, size),
     },
   }
