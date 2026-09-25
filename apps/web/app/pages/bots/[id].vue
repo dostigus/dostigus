@@ -1257,14 +1257,19 @@ async function onBotSaved() {
   overflow: hidden;
   /* Equal on every side so each circle sits concentric with its end cap. */
   padding: var(--composer-pad);
-  /* A step lighter than the fill so the rim still reads on Chat black. */
-  border: var(--composer-rim) solid color-mix(in srgb, var(--text) 8%, var(--composer));
+  border: var(--composer-rim) solid var(--composer-line);
   border-radius: 9999px;
   background: var(--composer);
-  /* Same clock for the corner, the rim, and the fill so the stroke does not hitch. */
+  /* Corner and fill share one clock so the stroke does not hitch; the rim
+     answers hover and focus on its own short step. */
   transition-property: border-radius, border-color, background-color;
-  transition-duration: 640ms;
+  transition-duration: 640ms, 160ms, 640ms;
   transition-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.composer-row:hover,
+.composer-row:focus-within {
+  border-color: var(--composer-line-strong);
 }
 
 .composer-row.multiline {
