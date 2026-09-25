@@ -23,14 +23,15 @@ it('keeps Create Owner and Sign in free of leftover technical copy', () => {
   expect(login).not.toContain('Password reset')
 })
 
-it('defaults Settings to OpenRouter and keeps custom URL collapsed', () => {
+it('defaults Settings to Providers and OpenRouter casual add', () => {
   const settings = read('pages/settings.vue')
   expect(settings).toContain('OPENROUTER_DEFAULT_BASE_URL')
-  expect(settings).toContain('baseUrlForLlmGatewayPreset')
-  expect(settings).toContain('llmGatewayPresetFromBaseUrl')
   expect(settings).toContain('Paste your OpenRouter key')
-  expect(settings).toContain('Custom OpenAI-compatible')
-  expect(settings).toContain('Add an OpenRouter key so Bots can reply')
+  expect(settings).toContain('openai-compatible')
+  expect(settings).toContain('LLM_PROVIDER_KIND_LABELS')
+  expect(settings).toContain('Add a Provider')
+  expect(settings).toContain('Model tiers')
+  expect(settings).toContain('Add a Provider so Bots can reply')
   expect(settings).not.toMatch(/Day-1|coming soon|Compose env|NUXT_|OPENAI_COMPATIBLE|LLM_API_KEY|stub reply/i)
   expect(settings).not.toContain('LLM gateway')
 })

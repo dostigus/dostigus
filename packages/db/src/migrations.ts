@@ -460,6 +460,13 @@ ALTER TABLE \`turns\` ADD \`total_tokens\` integer;
 ALTER TABLE \`turns\` ADD \`llm_call_count\` integer;
 `,
   },
+  {
+    id: '0021_llm_providers',
+    sql: `
+ALTER TABLE \`llm_gateway\` ADD \`providers_json\` text DEFAULT '[]' NOT NULL;
+ALTER TABLE \`llm_gateway\` ADD \`tier_binds_json\` text DEFAULT '{}' NOT NULL;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

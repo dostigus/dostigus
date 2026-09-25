@@ -1,8 +1,9 @@
-import type { Bot, BotAccentHex, BotAvatarShape, BotLastMessage, BotListItem, BotViewer, LlmGatewayStored, Message, MessageRole, ModelTier } from '@dostigus/shared'
+import type { Bot, BotAccentHex, BotAvatarShape, BotLastMessage, BotListItem, BotViewer, LlmGatewayStored, LlmPolicy, LlmProviderInstance, LlmProviderKind, LlmTierBind, Message, MessageRole, ModelTier } from '@dostigus/shared'
 import type { BotRecord, MessageRecord } from './map'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
 import {
+  autoFillEmptyTiers,
   botGreetingContent,
   botThreadPersonId,
   canSeeBot,
@@ -12,6 +13,8 @@ import {
   DEFAULT_MODEL_TIER,
   emptyLlmGatewayStored,
   isBotAvatarShape,
+  isLlmPolicyKind,
+  isLlmProviderKind,
   isModelTier,
   MODEL_TIERS,
   normalizeBotAccentHex,
@@ -803,6 +806,8 @@ type LlmGatewayRecord = {
   api_key: string | null
   default_tier: string
   models_json: string
+  providers_json: string
+  tier_binds_json: string
   updated_at: number
 }
 
@@ -825,12 +830,102 @@ function parseModelOverrides(raw: string): Partial<Record<ModelTier, string>> {
   }
 }
 
+function parseProviders(raw: string | null | undefined): LlmProviderInstance[] {
+  if (!raw) {
+    return []
+  }
+  try {
+    const value = JSON.parse(raw) as unknown
+    if (!Array.isArray(value)) {
+      return []
+    }
+    const out: LlmProviderInstance[] = []
+    for (const item of value) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        continue
+      }
+      const record = item as Record<string, unknown>
+      const id = typeof record.id === 'string' ? record.id.trim() : ''
+      const kind = typeof record.kind === 'string' ? record.kind : ''
+      if (!id || !isLlmProviderKind(kind)) {
+        continue
+      }
+      out.push({
+        id,
+        kind,
+        apiKey: typeof record.apiKey === 'string' && record.apiKey.trim()
+          ? record.apiKey
+          : null,
+        baseUrl: typeof record.baseUrl === 'string' && record.baseUrl.trim()
+          ? record.baseUrl.trim()
+          : null,
+        defaultModel: typeof record.defaultModel === 'string' && record.defaultModel.trim()
+          ? record.defaultModel.trim()
+          : null,
+      })
+    }
+    return out
+  } catch {
+    return []
+  }
+}
+
+function parsePolicy(value: unknown): LlmPolicy | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null
+  }
+  const record = value as Record<string, unknown>
+  const kind = typeof record.kind === 'string' ? record.kind : ''
+  if (!isLlmPolicyKind(kind)) {
+    return null
+  }
+  if (kind === 'model') {
+    const modelId = typeof record.modelId === 'string' ? record.modelId.trim() : ''
+    if (!modelId) {
+      return null
+    }
+    return { kind: 'model', modelId }
+  }
+  return { kind }
+}
+
+function parseTierBinds(raw: string | null | undefined): Partial<Record<ModelTier, LlmTierBind>> {
+  if (!raw) {
+    return {}
+  }
+  try {
+    const value = JSON.parse(raw) as unknown
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return {}
+    }
+    const out: Partial<Record<ModelTier, LlmTierBind>> = {}
+    for (const tier of MODEL_TIERS) {
+      const item = (value as Record<string, unknown>)[tier]
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        continue
+      }
+      const record = item as Record<string, unknown>
+      const providerId = typeof record.providerId === 'string' ? record.providerId.trim() : ''
+      const policy = parsePolicy(record.policy)
+      if (!providerId || !policy) {
+        continue
+      }
+      out[tier] = { providerId, policy }
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
 function toLlmGatewayStored(row: LlmGatewayRecord): LlmGatewayStored {
   return {
     baseUrl: row.base_url,
     apiKey: row.api_key,
     defaultTier: isModelTier(row.default_tier) ? row.default_tier : DEFAULT_MODEL_TIER,
     modelOverrides: parseModelOverrides(row.models_json),
+    providers: parseProviders(row.providers_json),
+    tierBinds: parseTierBinds(row.tier_binds_json),
   }
 }
 
@@ -874,9 +969,128 @@ function normalizeModelOverrides(
   return out
 }
 
+function normalizePolicy(value: LlmPolicy, kind: LlmProviderKind): LlmPolicy {
+  if (value.kind === 'free' || value.kind === 'auto') {
+    if (kind !== 'openrouter') {
+      throw new StoreError('Free and Auto Policies are OpenRouter only', 400)
+    }
+    return { kind: value.kind }
+  }
+  const modelId = trimOrUndefined(value.modelId)
+  if (!modelId) {
+    throw new StoreError('Pinned-model Policy needs a model id', 400)
+  }
+  if (modelId.length > MODEL_ID_MAX) {
+    throw new StoreError(`Model id must be ${MODEL_ID_MAX} characters or fewer`, 400)
+  }
+  return { kind: 'model', modelId }
+}
+
+type LlmProviderWrite = LlmProviderInstance & { clearApiKey?: boolean }
+
+function normalizeProviders(
+  value: LlmProviderWrite[] | undefined,
+  current: LlmProviderInstance[],
+): LlmProviderInstance[] {
+  if (!value) {
+    return current
+  }
+  const currentById = new Map(current.map((provider) => [provider.id, provider]))
+  const seen = new Set<string>()
+  const out: LlmProviderInstance[] = []
+  for (const item of value) {
+    const id = trimOrUndefined(item.id) ?? randomUUID()
+    if (seen.has(id)) {
+      throw new StoreError('Provider id must be unique', 400)
+    }
+    seen.add(id)
+    if (!isLlmProviderKind(item.kind)) {
+      throw new StoreError('Provider kind must be openrouter, openai, or openai-compatible', 400)
+    }
+    const previous = currentById.get(id)
+    let apiKey = previous?.apiKey ?? null
+    if (item.clearApiKey) {
+      apiKey = null
+    } else if (item.apiKey !== undefined) {
+      const trimmed = trimOrUndefined(item.apiKey) ?? null
+      if (trimmed) {
+        apiKey = trimmed
+      }
+    }
+    const baseUrl = item.kind === 'openai-compatible'
+      ? normalizeBaseUrl(item.baseUrl)
+      : (item.baseUrl !== undefined && item.baseUrl !== null
+          ? normalizeBaseUrl(item.baseUrl)
+          : previous?.baseUrl ?? null)
+    if (item.kind === 'openai-compatible' && !baseUrl) {
+      throw new StoreError('OpenAI-compatible Provider needs a base URL', 400)
+    }
+    const defaultModel = item.defaultModel !== undefined
+      ? (trimOrUndefined(item.defaultModel) ?? null)
+      : previous?.defaultModel ?? null
+    if (defaultModel && defaultModel.length > MODEL_ID_MAX) {
+      throw new StoreError(`Model id must be ${MODEL_ID_MAX} characters or fewer`, 400)
+    }
+    out.push({
+      id,
+      kind: item.kind,
+      apiKey,
+      baseUrl,
+      defaultModel,
+    })
+  }
+  return out
+}
+
+function normalizeTierBinds(
+  value: Partial<Record<ModelTier, LlmTierBind>> | undefined,
+  current: Partial<Record<ModelTier, LlmTierBind>>,
+  providers: LlmProviderInstance[],
+): Partial<Record<ModelTier, LlmTierBind>> {
+  if (!value) {
+    return current
+  }
+  const known = new Set(providers.map((provider) => provider.id))
+  const out: Partial<Record<ModelTier, LlmTierBind>> = {}
+  for (const tier of MODEL_TIERS) {
+    const item = value[tier]
+    if (!item) {
+      continue
+    }
+    const providerId = trimOrUndefined(item.providerId)
+    if (!providerId || !known.has(providerId)) {
+      throw new StoreError('Tier bind needs a Provider on this Cluster', 400)
+    }
+    const provider = providers.find((entry) => entry.id === providerId)
+    if (!provider) {
+      continue
+    }
+    out[tier] = {
+      providerId,
+      policy: normalizePolicy(item.policy, provider.kind),
+    }
+  }
+  return out
+}
+
+function syncLegacyFromProviders(input: {
+  providers: LlmProviderInstance[]
+  baseUrl: string | null
+  apiKey: string | null
+}): { baseUrl: string | null, apiKey: string | null } {
+  const first = input.providers[0]
+  if (!first) {
+    return { baseUrl: input.baseUrl, apiKey: input.apiKey }
+  }
+  return {
+    baseUrl: first.baseUrl ?? input.baseUrl,
+    apiKey: first.apiKey ?? input.apiKey,
+  }
+}
+
 export function getLlmGatewaySettings(store: OpenedStore): LlmGatewayStored {
   const row = store.sqlite.prepare(`
-    SELECT id, base_url, api_key, default_tier, models_json, updated_at
+    SELECT id, base_url, api_key, default_tier, models_json, providers_json, tier_binds_json, updated_at
     FROM llm_gateway
     WHERE id = ?
   `).get(LLM_GATEWAY_ID) as LlmGatewayRecord | undefined
@@ -891,10 +1105,12 @@ export function upsertLlmGatewaySettings(
     clearApiKey?: boolean
     defaultTier?: string
     modelOverrides?: Partial<Record<ModelTier, string>>
+    providers?: LlmProviderWrite[]
+    tierBinds?: Partial<Record<ModelTier, LlmTierBind>>
   },
 ): LlmGatewayStored {
   const current = getLlmGatewaySettings(store)
-  const baseUrl = input.baseUrl !== undefined ? normalizeBaseUrl(input.baseUrl) : current.baseUrl
+  let baseUrl = input.baseUrl !== undefined ? normalizeBaseUrl(input.baseUrl) : current.baseUrl
   const defaultTier = input.defaultTier !== undefined
     ? normalizeTier(input.defaultTier)
     : current.defaultTier
@@ -912,15 +1128,36 @@ export function upsertLlmGatewaySettings(
     }
   }
 
+  const providers = normalizeProviders(input.providers, current.providers ?? [])
+  let tierBinds = normalizeTierBinds(input.tierBinds, current.tierBinds ?? {}, providers)
+  const firstProvider = providers[0]
+  if ((current.providers ?? []).length === 0 && providers.length === 1 && firstProvider) {
+    tierBinds = autoFillEmptyTiers({
+      provider: firstProvider,
+      binds: tierBinds,
+      pins: modelOverrides,
+    })
+  }
+
+  if (input.providers !== undefined) {
+    const synced = syncLegacyFromProviders({ providers, baseUrl, apiKey })
+    baseUrl = synced.baseUrl
+    apiKey = synced.apiKey
+  }
+
   const updatedAt = nowMs()
   store.sqlite.prepare(`
-    INSERT INTO llm_gateway (id, base_url, api_key, default_tier, models_json, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO llm_gateway (
+      id, base_url, api_key, default_tier, models_json, providers_json, tier_binds_json, updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       base_url = excluded.base_url,
       api_key = excluded.api_key,
       default_tier = excluded.default_tier,
       models_json = excluded.models_json,
+      providers_json = excluded.providers_json,
+      tier_binds_json = excluded.tier_binds_json,
       updated_at = excluded.updated_at
   `).run(
     LLM_GATEWAY_ID,
@@ -928,6 +1165,8 @@ export function upsertLlmGatewaySettings(
     apiKey,
     defaultTier,
     JSON.stringify(modelOverrides),
+    JSON.stringify(providers),
+    JSON.stringify(tierBinds),
     updatedAt,
   )
 

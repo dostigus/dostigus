@@ -5,6 +5,7 @@ import type {
   Manifest,
   Message,
   ModelTier,
+  ResolvedLlmAttempt,
   ResolvedLlmGateway,
   Skill,
 } from '@dostigus/shared'
@@ -25,9 +26,12 @@ import {
   LLM_GATEWAY_TIMEOUT_MS,
   llmGatewayErrorReply,
   MEMBER_QUIET_ASSISTANT_REPLY,
+  planEscalateAttempts,
   readLlmGatewayEnv,
   redactSecrets,
+  resolveLlmAttempt,
   resolveLlmGateway,
+  startTierForSituation,
   STUB_ASSISTANT_REPLY,
 } from '@dostigus/shared'
 import { applyTriggeringVision, stripVisionImageParts } from './artifact-vision'
@@ -89,6 +93,41 @@ export function resolveClusterLlmGateway(input: {
     readLlmGatewayEnv(input.env ?? process.env),
     input.stored,
   )
+}
+
+function gatewayForAttempt(
+  resolved: ResolvedLlmGateway,
+  attempt: ResolvedLlmAttempt,
+): ResolvedLlmGateway {
+  return {
+    ...resolved,
+    configured: true,
+    baseUrl: attempt.baseUrl,
+    apiKey: attempt.apiKey,
+    modelIdFor: () => attempt.modelId,
+  }
+}
+
+function pingAttemptFor(
+  providerId: string | undefined,
+  env: ReturnType<typeof readLlmGatewayEnv>,
+  stored: LlmGatewayStored | null | undefined,
+  defaultTier: ModelTier,
+): ResolvedLlmAttempt | null {
+  const options = { env, stored }
+  if (providerId) {
+    for (const tier of [defaultTier, 'strong', 'cheap', 'code', 'toy'] as const) {
+      const attempt = resolveLlmAttempt(tier, options)
+      if (attempt && attempt.providerId === providerId) {
+        return attempt
+      }
+    }
+  }
+  return resolveLlmAttempt('strong', options)
+    ?? resolveLlmAttempt('cheap', options)
+    ?? resolveLlmAttempt(defaultTier, options)
+    ?? resolveLlmAttempt('code', options)
+    ?? resolveLlmAttempt('toy', options)
 }
 
 /** Provider completion meta for the Turn journal. Missing usage stays null. */
@@ -195,15 +234,21 @@ export async function completeAssistantReply(input: {
 }): Promise<{ content: string, via: AssistantReplyVia }> {
   const audience = input.audience === 'member' ? 'member' : 'owner'
   const creatorManifest = audience === 'member' && input.canEditManifest === true
+  const env = readLlmGatewayEnv(input.env ?? process.env)
   const resolved = resolveClusterLlmGateway({
     env: input.env,
     stored: input.stored,
   })
-  const modelId = resolved.modelIdFor(input.modelTier)
+  const startTier = startTierForSituation(input.wake ? 'wake' : 'chat')
+  const attempts = planEscalateAttempts(startTier, {
+    env,
+    stored: input.stored,
+  })
+  const modelId = attempts[0]?.modelId ?? resolved.modelIdFor(startTier)
   if (!resolved.configured) {
     input.onObservability?.({
       modelId,
-      modelTier: input.modelTier,
+      modelTier: startTier,
       visionParts: false,
     })
     return { content: stubAssistantReply(audience), via: 'stub' }
@@ -225,73 +270,99 @@ export async function completeAssistantReply(input: {
     }
   })
 
-  try {
-    const result = await callOpenAiCompatible({
-      botName: input.botName,
-      botId: input.botId,
-      modelTier: input.modelTier,
-      history: input.history,
-      manifest: input.manifest,
-      resolved,
-      fetchImpl: llmOutboundFetch(resolved.baseUrl, input.env ?? process.env, input.fetchImpl),
-      tools,
-      invokeTool,
-      audience,
-      messagesOnly: audience === 'member' && !creatorManifest,
-      creatorManifest,
-      expand,
-      wake,
-      skills: input.skills,
-      onActivity: input.onActivity,
-      onTool: input.onTool,
-      onObservability: input.onObservability,
-      onLlmCompletion: input.onLlmCompletion,
-      artifactsDir: input.artifactsDir,
-      readArtifactBytes: input.readArtifactBytes,
-      encodeVisionJpeg: input.encodeVisionJpeg,
+  if (attempts.length === 0) {
+    input.onObservability?.({
+      modelId,
+      modelTier: startTier,
+      visionParts: false,
     })
-    const trimmed = result.content.trim()
-    if (!trimmed) {
-      return { content: gatewayErrorReply(audience, 'empty'), via: 'error' }
-    }
-    return {
-      content: trimmed,
-      via: result.usedTools ? 'llm+tools' : 'llm',
-    }
-  } catch (error) {
-    const kind: LlmGatewayFailureKind = isGatewayRequestError(error) && error.failure === 'auth'
-      ? 'auth'
-      : 'transient'
-    if (!isGatewayRequestError(error)) {
-      // Do not log the key, headers, or provider body.
-      console.error('LLM gateway request failed')
-    }
-    return { content: gatewayErrorReply(audience, kind), via: 'error' }
+    return { content: gatewayErrorReply(audience, 'transient'), via: 'error' }
   }
+
+  let lastKind: LlmGatewayFailureKind = 'transient'
+  for (const [index, attempt] of attempts.entries()) {
+    const last = index === attempts.length - 1
+    try {
+      const result = await callOpenAiCompatible({
+        botName: input.botName,
+        botId: input.botId,
+        modelTier: attempt.modelTier,
+        modelId: attempt.modelId,
+        history: input.history,
+        manifest: input.manifest,
+        resolved: gatewayForAttempt(resolved, attempt),
+        fetchImpl: llmOutboundFetch(attempt.baseUrl, input.env ?? process.env, input.fetchImpl),
+        tools,
+        invokeTool,
+        audience,
+        messagesOnly: audience === 'member' && !creatorManifest,
+        creatorManifest,
+        expand,
+        wake,
+        skills: input.skills,
+        onActivity: input.onActivity,
+        onTool: input.onTool,
+        onObservability: input.onObservability,
+        onLlmCompletion: input.onLlmCompletion,
+        artifactsDir: input.artifactsDir,
+        readArtifactBytes: input.readArtifactBytes,
+        encodeVisionJpeg: input.encodeVisionJpeg,
+      })
+      const trimmed = result.content.trim()
+      if (result.fail === null && trimmed) {
+        return {
+          content: trimmed,
+          via: result.usedTools ? 'llm+tools' : 'llm',
+        }
+      }
+      lastKind = 'empty'
+      if (last) {
+        return { content: gatewayErrorReply(audience, 'empty'), via: 'error' }
+      }
+    } catch (error) {
+      lastKind = isGatewayRequestError(error) && error.failure === 'auth'
+        ? 'auth'
+        : 'transient'
+      if (!isGatewayRequestError(error)) {
+        // Do not log the key, headers, or provider body.
+        console.error('LLM gateway request failed')
+      }
+      if (last) {
+        return { content: gatewayErrorReply(audience, lastKind), via: 'error' }
+      }
+    }
+  }
+  return { content: gatewayErrorReply(audience, lastKind), via: 'error' }
 }
 
 export async function pingLlmGateway(input: {
   env?: NodeJS.ProcessEnv
   stored?: LlmGatewayStored | null
   fetchImpl?: typeof fetch
+  providerId?: string
 } = {}): Promise<{ ok: boolean, error?: string }> {
+  const env = readLlmGatewayEnv(input.env ?? process.env)
   const resolved = resolveClusterLlmGateway({
     env: input.env,
     stored: input.stored,
   })
-  if (!resolved.configured || !resolved.baseUrl || !resolved.apiKey) {
+  const attempt = pingAttemptFor(input.providerId, env, input.stored, resolved.defaultTier)
+  const baseUrl = attempt?.baseUrl ?? resolved.baseUrl
+  const apiKey = attempt?.apiKey ?? resolved.apiKey
+  const pingModel = attempt?.modelId ?? resolved.modelIdFor(resolved.defaultTier)
+  if (!resolved.configured || !baseUrl || !apiKey) {
     return { ok: false, error: 'LLM gateway is not configured' }
   }
 
   try {
     const fetchImpl = llmOutboundFetch(
-      resolved.baseUrl,
+      baseUrl,
       input.env ?? process.env,
       input.fetchImpl,
     )
-    const models = await fetchImpl(`${resolved.baseUrl.replace(/\/$/, '')}/models`, {
+    const models = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/models`, {
       method: 'GET',
-      headers: gatewayHeaders(resolved.apiKey),
+      headers: gatewayHeaders(apiKey),
       signal: AbortSignal.timeout(LLM_GATEWAY_PING_TIMEOUT_MS),
     })
     if (models.ok) {
@@ -300,15 +371,15 @@ export async function pingLlmGateway(input: {
     if (models.status !== 404) {
       return {
         ok: false,
-        error: sanitizeGatewayError(`HTTP ${models.status}`, resolved.apiKey),
+        error: sanitizeGatewayError(`HTTP ${models.status}`, apiKey),
       }
     }
 
-    const completion = await fetchImpl(`${resolved.baseUrl.replace(/\/$/, '')}/chat/completions`, {
+    const completion = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
-      headers: gatewayHeaders(resolved.apiKey),
+      headers: gatewayHeaders(apiKey),
       body: JSON.stringify({
-        model: resolved.modelIdFor(resolved.defaultTier),
+        model: pingModel,
         max_tokens: 1,
         messages: [{ role: 'user', content: 'ping' }],
       }),
@@ -317,7 +388,7 @@ export async function pingLlmGateway(input: {
     if (!completion.ok) {
       return {
         ok: false,
-        error: sanitizeGatewayError(`HTTP ${completion.status}`, resolved.apiKey),
+        error: sanitizeGatewayError(`HTTP ${completion.status}`, apiKey),
       }
     }
     return { ok: true }
@@ -326,7 +397,7 @@ export async function pingLlmGateway(input: {
       ok: false,
       error: sanitizeGatewayError(
         error instanceof Error ? error.message : 'LLM gateway ping failed',
-        resolved.apiKey,
+        apiKey,
       ),
     }
   }
@@ -336,6 +407,7 @@ async function callOpenAiCompatible(input: {
   botName: string
   botId?: string
   modelTier: ModelTier
+  modelId: string
   history: Message[]
   manifest?: Manifest
   resolved: ResolvedLlmGateway
@@ -355,7 +427,7 @@ async function callOpenAiCompatible(input: {
   artifactsDir?: string
   readArtifactBytes?: VisionReadFn
   encodeVisionJpeg?: VisionEncodeFn
-}): Promise<{ content: string, usedTools: boolean }> {
+}): Promise<{ content: string, usedTools: boolean, fail: null | 'empty' | 'refuse' | 'tool_loop' }> {
   const messages: OpenAiChatMessage[] = [
     {
       role: 'system',
@@ -389,14 +461,14 @@ async function callOpenAiCompatible(input: {
   const visionParts = await applyTriggeringVision({
     messages,
     trigger: input.history.at(-1),
-    modelId: input.resolved.modelIdFor(input.modelTier),
+    modelId: input.modelId,
     wake: input.wake,
     artifactsDir: input.artifactsDir,
     readArtifactBytes: input.readArtifactBytes,
     encodeVisionJpeg: input.encodeVisionJpeg,
   })
   input.onObservability?.({
-    modelId: input.resolved.modelIdFor(input.modelTier),
+    modelId: input.modelId,
     modelTier: input.modelTier,
     visionParts,
   })
@@ -407,7 +479,7 @@ async function callOpenAiCompatible(input: {
     input.onActivity?.('thinking')
     const message = await postChatCompletion({
       resolved: input.resolved,
-      modelTier: input.modelTier,
+      modelId: input.modelId,
       fetchImpl: input.fetchImpl,
       messages,
       tools: input.tools,
@@ -416,7 +488,15 @@ async function callOpenAiCompatible(input: {
     const toolCalls = collectToolCalls(message)
     if (toolCalls.length === 0) {
       input.onActivity?.('typing')
-      return { content: message.content ?? '', usedTools }
+      if (isExplicitRefuse(message)) {
+        return { content: message.content ?? '', usedTools, fail: 'refuse' }
+      }
+      const content = message.content ?? ''
+      return {
+        content,
+        usedTools,
+        fail: content.trim() ? null : 'empty',
+      }
     }
 
     usedTools = true
@@ -438,12 +518,20 @@ async function callOpenAiCompatible(input: {
   input.onActivity?.('typing')
   const finalMessage = await postChatCompletion({
     resolved: input.resolved,
-    modelTier: input.modelTier,
+    modelId: input.modelId,
     fetchImpl: input.fetchImpl,
     messages,
     onLlmCompletion: input.onLlmCompletion,
   })
-  return { content: finalMessage.content ?? '', usedTools }
+  if (isExplicitRefuse(finalMessage)) {
+    return { content: finalMessage.content ?? '', usedTools, fail: 'refuse' }
+  }
+  const content = finalMessage.content ?? ''
+  return {
+    content,
+    usedTools,
+    fail: content.trim() ? null : 'tool_loop',
+  }
 }
 
 async function appendToolResults(input: {
@@ -513,12 +601,17 @@ function isGatewayRequestError(error: unknown): error is LlmGatewayRequestError 
 
 async function postChatCompletion(input: {
   resolved: ResolvedLlmGateway
-  modelTier: ModelTier
+  modelId: string
   fetchImpl: typeof fetch
   messages: OpenAiChatMessage[]
   tools?: OpenAiChatFunctionTool[]
   onLlmCompletion?: (usage: LlmCompletionUsage) => void
-}): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
+}): Promise<{
+  content?: string | null
+  tool_calls?: OpenAiToolCall[]
+  finish_reason?: string | null
+  refusal?: string | null
+}> {
   try {
     return await postChatCompletionTransient(input)
   } catch (error) {
@@ -535,12 +628,17 @@ async function postChatCompletion(input: {
 
 async function postChatCompletionTransient(input: {
   resolved: ResolvedLlmGateway
-  modelTier: ModelTier
+  modelId: string
   fetchImpl: typeof fetch
   messages: OpenAiChatMessage[]
   tools?: OpenAiChatFunctionTool[]
   onLlmCompletion?: (usage: LlmCompletionUsage) => void
-}): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
+}): Promise<{
+  content?: string | null
+  tool_calls?: OpenAiToolCall[]
+  finish_reason?: string | null
+  refusal?: string | null
+}> {
   let last: LlmGatewayRequestError | undefined
   for (let attempt = 1; attempt <= LLM_GATEWAY_ATTEMPTS; attempt += 1) {
     try {
@@ -569,12 +667,17 @@ async function postChatCompletionTransient(input: {
 
 async function postChatCompletionAttempt(input: {
   resolved: ResolvedLlmGateway
-  modelTier: ModelTier
+  modelId: string
   fetchImpl: typeof fetch
   messages: OpenAiChatMessage[]
   tools?: OpenAiChatFunctionTool[]
   onLlmCompletion?: (usage: LlmCompletionUsage) => void
-}): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
+}): Promise<{
+  content?: string | null
+  tool_calls?: OpenAiToolCall[]
+  finish_reason?: string | null
+  refusal?: string | null
+}> {
   const { baseUrl, apiKey } = input.resolved
   if (!baseUrl || !apiKey) {
     throw new Error('LLM gateway is not configured')
@@ -582,7 +685,7 @@ async function postChatCompletionAttempt(input: {
 
   const url = `${baseUrl.replace(/\/$/, '')}/chat/completions`
   const body: Record<string, unknown> = {
-    model: input.resolved.modelIdFor(input.modelTier),
+    model: input.modelId,
     messages: input.messages,
   }
   if (input.tools?.length) {
@@ -609,7 +712,14 @@ async function postChatCompletionAttempt(input: {
   let payload: {
     model?: unknown
     usage?: unknown
-    choices?: Array<{ message?: { content?: string | null, tool_calls?: OpenAiToolCall[] } }>
+    choices?: Array<{
+      finish_reason?: string | null
+      message?: {
+        content?: string | null
+        tool_calls?: OpenAiToolCall[]
+        refusal?: string | null
+      }
+    }>
   }
   try {
     payload = await response.json() as typeof payload
@@ -618,7 +728,26 @@ async function postChatCompletionAttempt(input: {
     throw new LlmGatewayRequestError('transient', 'invalid')
   }
   input.onLlmCompletion?.(parseChatCompletionUsage(payload))
-  return payload.choices?.[0]?.message ?? {}
+  const choice = payload.choices?.[0]
+  return {
+    ...(choice?.message ?? {}),
+    finish_reason: choice?.finish_reason ?? null,
+    refusal: choice?.message?.refusal ?? null,
+  }
+}
+
+function isExplicitRefuse(message: {
+  finish_reason?: string | null
+  refusal?: string | null
+  tool_calls?: OpenAiToolCall[]
+}): boolean {
+  if (message.tool_calls && message.tool_calls.length > 0) {
+    return false
+  }
+  if (message.finish_reason === 'content_filter') {
+    return true
+  }
+  return Boolean(message.refusal?.trim())
 }
 
 async function gatewayFailureForResponse(response: Response): Promise<LlmGatewayRequestError> {

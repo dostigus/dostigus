@@ -1,4 +1,4 @@
-import type { ModelTier } from '@dostigus/shared'
+import type { LlmProviderInstance, LlmTierBind, ModelTier } from '@dostigus/shared'
 import { upsertLlmGatewaySettings } from '@dostigus/db'
 
 type PutBody = {
@@ -7,6 +7,8 @@ type PutBody = {
   clearApiKey?: boolean
   defaultTier?: string
   modelOverrides?: Partial<Record<ModelTier, string>>
+  providers?: Array<LlmProviderInstance & { clearApiKey?: boolean }>
+  tierBinds?: Partial<Record<ModelTier, LlmTierBind>>
 }
 
 export default defineEventHandler(async (event) => {
@@ -19,6 +21,8 @@ export default defineEventHandler(async (event) => {
       clearApiKey: body?.clearApiKey,
       defaultTier: body?.defaultTier,
       modelOverrides: body?.modelOverrides,
+      providers: body?.providers,
+      tierBinds: body?.tierBinds,
     })
     return { llmGateway: publicLlmGateway() }
   } catch (error) {

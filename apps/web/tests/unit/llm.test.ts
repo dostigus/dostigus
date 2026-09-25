@@ -798,6 +798,178 @@ it('does not retry an empty assistant body', async () => {
   expect(member.content).not.toBe(LLM_GATEWAY_EMPTY_ERROR_REPLY)
 })
 
+it('starts Chat on strong and a Wake on cheap', async () => {
+  const models: string[] = []
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    models.push(JSON.parse(String(init?.body)).model as string)
+    return completionResponse('ok')
+  }) as typeof fetch
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'cheap',
+    history: [],
+    env: GATEWAY_ENV,
+    fetchImpl,
+  })
+  await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    wake: true,
+    history: [],
+    env: GATEWAY_ENV,
+    fetchImpl,
+  })
+  expect(models).toEqual(['openai/gpt-4o', 'openai/gpt-4o-mini'])
+})
+
+it('escalates silently after an empty body onto the next Model tier', async () => {
+  const models: string[] = []
+  const notes: Array<{ modelId: string, modelTier: string }> = []
+  const usages: unknown[] = []
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body)) as { model: string }
+    models.push(body.model)
+    if (body.model === 'openrouter/free') {
+      return completionResponse('   ')
+    }
+    return new Response(JSON.stringify({
+      model: 'served-strong',
+      usage: { prompt_tokens: 3, completion_tokens: 2, total_tokens: 5 },
+      choices: [{ message: { content: 'Here you go.' } }],
+    }), { status: 200 })
+  }) as typeof fetch
+  const result = await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'cheap',
+    wake: true,
+    history: [],
+    env: {},
+    stored: {
+      baseUrl: null,
+      apiKey: 'sk-or',
+      defaultTier: 'strong',
+      modelOverrides: {},
+      providers: [{
+        id: 'or1',
+        kind: 'openrouter',
+        apiKey: 'sk-or',
+        baseUrl: null,
+        defaultModel: null,
+      }],
+      tierBinds: {
+        cheap: { providerId: 'or1', policy: { kind: 'free' } },
+        strong: { providerId: 'or1', policy: { kind: 'auto' } },
+        code: { providerId: 'or1', policy: { kind: 'auto' } },
+        toy: { providerId: 'or1', policy: { kind: 'free' } },
+      },
+    },
+    fetchImpl,
+    onObservability: (note) => {
+      notes.push({ modelId: note.modelId, modelTier: note.modelTier })
+    },
+    onLlmCompletion: (usage) => {
+      usages.push(usage)
+    },
+  })
+  expect(result).toEqual({ via: 'llm', content: 'Here you go.' })
+  expect(models).toEqual(['openrouter/free', 'openrouter/auto'])
+  expect(notes).toEqual([
+    { modelId: 'openrouter/free', modelTier: 'cheap' },
+    { modelId: 'openrouter/auto', modelTier: 'strong' },
+  ])
+  expect(usages).toHaveLength(2)
+  expect(result.content).not.toMatch(/escalat|tier|strong/i)
+})
+
+it('escalates after HTTP 500 and keeps the same-model retry on that attempt', async () => {
+  const models: string[] = []
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body)) as { model: string }
+    models.push(body.model)
+    if (body.model === 'cheap-model') {
+      return new Response('down', { status: 500 })
+    }
+    return completionResponse('Recovered.')
+  }) as typeof fetch
+  const result = await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'cheap',
+    wake: true,
+    history: [],
+    env: {},
+    stored: {
+      baseUrl: null,
+      apiKey: 'sk-or',
+      defaultTier: 'strong',
+      modelOverrides: {},
+      providers: [
+        {
+          id: 'a',
+          kind: 'openai-compatible',
+          apiKey: 'sk-a',
+          baseUrl: 'https://example.test/v1',
+          defaultModel: 'cheap-model',
+        },
+        {
+          id: 'b',
+          kind: 'openai-compatible',
+          apiKey: 'sk-b',
+          baseUrl: 'https://example.test/v1',
+          defaultModel: 'strong-model',
+        },
+      ],
+      tierBinds: {
+        cheap: { providerId: 'a', policy: { kind: 'model', modelId: 'cheap-model' } },
+        strong: { providerId: 'b', policy: { kind: 'model', modelId: 'strong-model' } },
+      },
+    },
+    fetchImpl,
+  })
+  expect(result).toEqual({ via: 'llm', content: 'Recovered.' })
+  expect(models).toEqual(['cheap-model', 'cheap-model', 'strong-model'])
+})
+
+it('escalates a detectable refuse and stays silent in Chat', async () => {
+  const models: string[] = []
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body)) as { model: string }
+    models.push(body.model)
+    if (body.model === 'openrouter/free') {
+      return new Response(JSON.stringify({
+        choices: [{ finish_reason: 'content_filter', message: { content: 'No.' } }],
+      }), { status: 200 })
+    }
+    return completionResponse('Allowed.')
+  }) as typeof fetch
+  const result = await completeAssistantReply({
+    botName: 'Notes',
+    modelTier: 'strong',
+    wake: true,
+    history: [],
+    env: {},
+    stored: {
+      baseUrl: null,
+      apiKey: 'sk-or',
+      defaultTier: 'strong',
+      modelOverrides: {},
+      providers: [{
+        id: 'or1',
+        kind: 'openrouter',
+        apiKey: 'sk-or',
+        baseUrl: null,
+        defaultModel: null,
+      }],
+      tierBinds: {
+        cheap: { providerId: 'or1', policy: { kind: 'free' } },
+        strong: { providerId: 'or1', policy: { kind: 'auto' } },
+      },
+    },
+    fetchImpl,
+  })
+  expect(result).toEqual({ via: 'llm', content: 'Allowed.' })
+  expect(models).toEqual(['openrouter/free', 'openrouter/auto'])
+})
+
 it('retries one completion inside a tool loop without repeating the tool', async () => {
   let calls = 0
   const invoked: string[] = []
