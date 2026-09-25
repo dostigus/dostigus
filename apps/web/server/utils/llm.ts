@@ -91,6 +91,73 @@ export function resolveClusterLlmGateway(input: {
   )
 }
 
+/** Provider completion meta for the Turn journal. Missing usage stays null. */
+export type LlmCompletionUsage = {
+  servedModelId: string | null
+  promptTokens: number | null
+  completionTokens: number | null
+  totalTokens: number | null
+}
+
+const SERVED_MODEL_ID_MAX = 128
+
+function emptyCompletionUsage(): LlmCompletionUsage {
+  return {
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+  }
+}
+
+function readUsageToken(usage: Record<string, unknown>, keys: readonly string[]): number | null {
+  for (const key of keys) {
+    const value = usage[key]
+    if (value == null) {
+      continue
+    }
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || !Number.isSafeInteger(value)) {
+      return null
+    }
+    return value
+  }
+  return null
+}
+
+function readServedModelId(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+  const trimmed = value.trim()
+  if (!trimmed || trimmed.length > SERVED_MODEL_ID_MAX) {
+    return null
+  }
+  return trimmed
+}
+
+/** OpenAI-compatible / OpenRouter `model` and `usage`. Equivalents accepted. */
+export function parseChatCompletionUsage(payload: unknown): LlmCompletionUsage {
+  if (!payload || typeof payload !== 'object') {
+    return emptyCompletionUsage()
+  }
+  const record = payload as Record<string, unknown>
+  const usage = record.usage && typeof record.usage === 'object' && !Array.isArray(record.usage)
+    ? record.usage as Record<string, unknown>
+    : null
+  return {
+    servedModelId: readServedModelId(record.model),
+    promptTokens: usage
+      ? readUsageToken(usage, ['prompt_tokens', 'input_tokens', 'promptTokens'])
+      : null,
+    completionTokens: usage
+      ? readUsageToken(usage, ['completion_tokens', 'output_tokens', 'completionTokens'])
+      : null,
+    totalTokens: usage
+      ? readUsageToken(usage, ['total_tokens', 'totalTokens'])
+      : null,
+  }
+}
+
 export async function completeAssistantReply(input: {
   botName: string
   botId?: string
@@ -117,6 +184,8 @@ export async function completeAssistantReply(input: {
   onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
   /** Resolved request model id, Bot tier, and whether vision parts went on the request. */
   onObservability?: (note: { modelId: string, modelTier: ModelTier, visionParts: boolean }) => void
+  /** After each successful LLM completion. Quiet / stub does not call this. */
+  onLlmCompletion?: (usage: LlmCompletionUsage) => void
   /** Artifact volume dir for triggering-line vision. */
   artifactsDir?: string
   /** Test double. Production reads Cluster volume bytes. */
@@ -176,6 +245,7 @@ export async function completeAssistantReply(input: {
       onActivity: input.onActivity,
       onTool: input.onTool,
       onObservability: input.onObservability,
+      onLlmCompletion: input.onLlmCompletion,
       artifactsDir: input.artifactsDir,
       readArtifactBytes: input.readArtifactBytes,
       encodeVisionJpeg: input.encodeVisionJpeg,
@@ -281,6 +351,7 @@ async function callOpenAiCompatible(input: {
   onActivity?: (phase: ChatActivityPhase) => void
   onTool?: (entry: { name: string, ok: boolean, ms: number }) => void
   onObservability?: (note: { modelId: string, modelTier: ModelTier, visionParts: boolean }) => void
+  onLlmCompletion?: (usage: LlmCompletionUsage) => void
   artifactsDir?: string
   readArtifactBytes?: VisionReadFn
   encodeVisionJpeg?: VisionEncodeFn
@@ -340,6 +411,7 @@ async function callOpenAiCompatible(input: {
       fetchImpl: input.fetchImpl,
       messages,
       tools: input.tools,
+      onLlmCompletion: input.onLlmCompletion,
     })
     const toolCalls = collectToolCalls(message)
     if (toolCalls.length === 0) {
@@ -369,6 +441,7 @@ async function callOpenAiCompatible(input: {
     modelTier: input.modelTier,
     fetchImpl: input.fetchImpl,
     messages,
+    onLlmCompletion: input.onLlmCompletion,
   })
   return { content: finalMessage.content ?? '', usedTools }
 }
@@ -444,6 +517,7 @@ async function postChatCompletion(input: {
   fetchImpl: typeof fetch
   messages: OpenAiChatMessage[]
   tools?: OpenAiChatFunctionTool[]
+  onLlmCompletion?: (usage: LlmCompletionUsage) => void
 }): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
   try {
     return await postChatCompletionTransient(input)
@@ -465,6 +539,7 @@ async function postChatCompletionTransient(input: {
   fetchImpl: typeof fetch
   messages: OpenAiChatMessage[]
   tools?: OpenAiChatFunctionTool[]
+  onLlmCompletion?: (usage: LlmCompletionUsage) => void
 }): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
   let last: LlmGatewayRequestError | undefined
   for (let attempt = 1; attempt <= LLM_GATEWAY_ATTEMPTS; attempt += 1) {
@@ -498,6 +573,7 @@ async function postChatCompletionAttempt(input: {
   fetchImpl: typeof fetch
   messages: OpenAiChatMessage[]
   tools?: OpenAiChatFunctionTool[]
+  onLlmCompletion?: (usage: LlmCompletionUsage) => void
 }): Promise<{ content?: string | null, tool_calls?: OpenAiToolCall[] }> {
   const { baseUrl, apiKey } = input.resolved
   if (!baseUrl || !apiKey) {
@@ -531,6 +607,8 @@ async function postChatCompletionAttempt(input: {
   }
 
   let payload: {
+    model?: unknown
+    usage?: unknown
     choices?: Array<{ message?: { content?: string | null, tool_calls?: OpenAiToolCall[] } }>
   }
   try {
@@ -539,6 +617,7 @@ async function postChatCompletionAttempt(input: {
     // A parse error can quote the provider body. Log only the label.
     throw new LlmGatewayRequestError('transient', 'invalid')
   }
+  input.onLlmCompletion?.(parseChatCompletionUsage(payload))
   return payload.choices?.[0]?.message ?? {}
 }
 

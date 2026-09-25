@@ -418,7 +418,7 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_turns_list: {
     name: 'dostigus_turns_list',
-    description: 'List Host Bot turns in this Cluster, newest first. Optional filters: botId, threadId, since (ISO-8601 or epoch milliseconds), and limit (default 50, cap 100). Each turn has id, threadId, botId, personId, trigger (user, wake, or mention), outcome (running, ok, error, or abort), startedAt, endedAt, scheduleId, errorCode, phases (thinking, tool, or typing, with at), tools (name, ok, ms), modelId, modelTier, and visionParts. modelId, modelTier, and visionParts may be null. No message bodies, tool arguments, or tool results. The ops token sees every turn. This tool is not a Chat tool.',
+    description: 'List Host Bot turns in this Cluster, newest first. Optional filters: botId, threadId, since (ISO-8601 or epoch milliseconds), and limit (default 50, cap 100). Each turn has id, threadId, botId, personId, trigger (user, wake, or mention), outcome (running, ok, error, or abort), startedAt, endedAt, scheduleId, errorCode, phases (thinking, tool, or typing, with at), tools (name, ok, ms), modelId, modelTier, visionParts, servedModelId, promptTokens, completionTokens, totalTokens, and llmCallCount. modelId, modelTier, visionParts, servedModelId, and the token fields may be null. No message bodies, tool arguments, or tool results. The ops token sees every turn. This tool is not a Chat tool.',
     annotations: { readOnlyHint: true },
     chat: false,
     inputSchema: {

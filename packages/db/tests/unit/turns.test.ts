@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from 'vitest'
 import {
+  accumulateTurnUsage,
   appendTurnPhase,
   appendTurnTool,
   createBot,
@@ -53,6 +54,11 @@ it('creates a running turn, patches phases and tools, then finalizes', () => {
   expect(turn.modelId).toBeNull()
   expect(turn.modelTier).toBeNull()
   expect(turn.visionParts).toBeNull()
+  expect(turn.servedModelId).toBeNull()
+  expect(turn.promptTokens).toBeNull()
+  expect(turn.completionTokens).toBeNull()
+  expect(turn.totalTokens).toBeNull()
+  expect(turn.llmCallCount).toBeNull()
 
   appendTurnPhase(store, turn.id, { phase: 'thinking', at: started })
   appendTurnPhase(store, turn.id, { phase: 'tool', at: started + 10 })
@@ -89,6 +95,11 @@ it('creates a running turn, patches phases and tools, then finalizes', () => {
     modelId: null,
     modelTier: null,
     visionParts: null,
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+    llmCallCount: null,
   })
   const raw = store.sqlite.prepare(`
     SELECT phases_json, tools_json FROM turns WHERE id = ?
@@ -319,4 +330,164 @@ it('rejects a prompt-sized model id and an unknown tier without writing them', (
   `).get(turn.id) as { model_id: string | null, model_tier: string | null, vision_parts: number | null }
   expect(row).toEqual({ model_id: null, model_tier: null, vision_parts: null })
   expect(JSON.stringify(row)).not.toContain('system prompt')
+})
+
+it('accumulates servedModelId and tokens after each completion while running', () => {
+  const store = memoryStore()
+  const bot = botId(store)
+  const turn = startTurn(store, {
+    threadId: `bt:${bot}:owner`,
+    botId: bot,
+    personId: 'owner',
+    trigger: 'user',
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    outcome: 'running',
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+    llmCallCount: null,
+  })
+
+  accumulateTurnUsage(store, turn.id, {
+    servedModelId: 'openai/gpt-4o-2024-08-06',
+    promptTokens: 10,
+    completionTokens: 5,
+    totalTokens: 16,
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    outcome: 'running',
+    servedModelId: 'openai/gpt-4o-2024-08-06',
+    promptTokens: 10,
+    completionTokens: 5,
+    totalTokens: 16,
+    llmCallCount: 1,
+  })
+
+  accumulateTurnUsage(store, turn.id, {
+    servedModelId: '  ',
+    promptTokens: 20,
+    completionTokens: 8,
+    totalTokens: null,
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    servedModelId: 'openai/gpt-4o-2024-08-06',
+    promptTokens: 30,
+    completionTokens: 13,
+    totalTokens: 16,
+    llmCallCount: 2,
+  })
+
+  accumulateTurnUsage(store, turn.id, {
+    servedModelId: 'openrouter/auto',
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: 4,
+  })
+  const summed = getTurn(store, turn.id)
+  expect(summed).toMatchObject({
+    servedModelId: 'openrouter/auto',
+    promptTokens: 30,
+    completionTokens: 13,
+    totalTokens: 20,
+    llmCallCount: 3,
+  })
+  expect(JSON.stringify(summed)).not.toContain('served_model_id')
+  expect(JSON.stringify(summed)).not.toContain('prompt_tokens')
+
+  const raw = store.sqlite.prepare(`
+    SELECT served_model_id, prompt_tokens, completion_tokens, total_tokens, llm_call_count
+    FROM turns WHERE id = ?
+  `).get(turn.id) as {
+    served_model_id: string
+    prompt_tokens: number
+    completion_tokens: number
+    total_tokens: number
+    llm_call_count: number
+  }
+  expect(raw).toEqual({
+    served_model_id: 'openrouter/auto',
+    prompt_tokens: 30,
+    completion_tokens: 13,
+    total_tokens: 20,
+    llm_call_count: 3,
+  })
+
+  finishTurn(store, turn.id, { outcome: 'abort' })
+  accumulateTurnUsage(store, turn.id, {
+    servedModelId: 'should-not-stick',
+    promptTokens: 99,
+    completionTokens: 99,
+    totalTokens: 198,
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    outcome: 'abort',
+    servedModelId: 'openrouter/auto',
+    promptTokens: 30,
+    completionTokens: 13,
+    totalTokens: 20,
+    llmCallCount: 3,
+  })
+})
+
+it('keeps missing usage null and falls back to prompt plus completion', () => {
+  const store = memoryStore()
+  const bot = botId(store)
+  const turn = startTurn(store, {
+    threadId: 'thread-1',
+    botId: bot,
+    personId: 'owner',
+    trigger: 'mention',
+  })
+
+  accumulateTurnUsage(store, turn.id, {
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    servedModelId: null,
+    promptTokens: null,
+    completionTokens: null,
+    totalTokens: null,
+    llmCallCount: 1,
+  })
+
+  accumulateTurnUsage(store, turn.id, {
+    promptTokens: 7,
+    completionTokens: 3,
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    promptTokens: 7,
+    completionTokens: 3,
+    totalTokens: 10,
+    llmCallCount: 2,
+  })
+
+  accumulateTurnUsage(store, turn.id, {
+    promptTokens: 2,
+    completionTokens: null,
+  })
+  expect(getTurn(store, turn.id)).toMatchObject({
+    promptTokens: 9,
+    completionTokens: 3,
+    totalTokens: 12,
+    llmCallCount: 3,
+  })
+
+  const oneSided = startTurn(store, {
+    threadId: 'thread-2',
+    botId: bot,
+    personId: 'owner',
+    trigger: 'user',
+  })
+  accumulateTurnUsage(store, oneSided.id, { promptTokens: 4 })
+  expect(getTurn(store, oneSided.id)).toMatchObject({
+    promptTokens: 4,
+    completionTokens: null,
+    totalTokens: null,
+    llmCallCount: 1,
+  })
 })
