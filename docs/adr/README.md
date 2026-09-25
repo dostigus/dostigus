@@ -60,7 +60,7 @@ English.
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
 | [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets; Wake tools [0032](0032-chat-llm-context-assembly.md)) |
 | [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat (amended 2026-09-24: closet Schedule list stays [0027](0027-bot-schedules.md); Skill `description` + catalog [0032](0032-chat-llm-context-assembly.md)) |
-| [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows) |
+| [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows; amended 2026-09-25: modelId / modelTier / visionParts observability) |
 | [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create; Card «Изменить» opens closet detail; meta Skills catalog + read [0032](0032-chat-llm-context-assembly.md)) |
 | [0031](0031-host-http-get.md) | Host HTTP get and Cluster http allowlist (amended 2026-09-24: allowlist Chat tools behind expand [0032](0032-chat-llm-context-assembly.md); Bot HTTP egress [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md); soft retry / pursue-result in tool text + `platform-meta-http-get`) |
 | [0032](0032-chat-llm-context-assembly.md) | Chat LLM context assembly (amended 2026-09-24: slim + Wake gain `dostigus_artifacts_put`; no get tool [0034](0034-artifacts.md); amended 2026-09-25: triggering user message may use content parts [0035](0035-image-artifact-vision.md)) |

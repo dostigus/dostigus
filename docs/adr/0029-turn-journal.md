@@ -4,6 +4,7 @@
 - Date: 2026-09-24
 - Amended: 2026-09-24 — harness smoke `pnpm smoke:turns`
 - Amended: 2026-09-24 — Schedule detail lists wake Turns for that `scheduleId` ([ADR 0027](0027-bot-schedules.md)). That is not an Owner journal Sheet. No new runs table.
+- Amended: 2026-09-25 — Observability fields `modelId`, `modelTier`, `visionParts` (nullable). Patch early while `running`, after `resolveModelId` and the vision needles gate. MCP list/get always return them. Impl + migration + `pnpm smoke:turns` assert land in a follow-up PR.
 
 Activity phases stay [ADR 0021](0021-chat-activity-status.md). The Chat
 tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). A Wake stays
@@ -48,16 +49,31 @@ second Bot is a second Turn.
 | `errorCode` | Short class, or null. `llm_error`, `tool_error`, or `aborted`. Never model text and never a stack |
 | `phases_json` | `[{ phase, at }]` in order. `phase` is `thinking`, `tool`, or `typing` ([ADR 0021](0021-chat-activity-status.md)) |
 | `tools_json` | `[{ name, ok, ms }]` in call order. Tool name only |
+| `modelId` | Id after `resolveModelId` (tier → env/store/default): the id sent in the LLM request ([ADR 0004](0004-llm-gateway-tiers.md)). Not `response.model` / a free-roulette served id. Nullable |
+| `modelTier` | Bot Model tier for this Turn (`cheap`, `strong`, `code`, or `toy`). Nullable |
+| `visionParts` | Whether image parts were actually included in the LLM request after the `VISION_MODEL_NEEDLES` gate ([ADR 0035](0035-image-artifact-vision.md)). Soft path / needles miss is `false` even if the person attached images. Nullable |
 
 Lifecycle: insert at start with `outcome` `running`, patch phases and
 tools as they happen, then set `endedAt` and the final outcome. On
 finalize, delete rows whose `startedAt` is older than 7 days.
+
+Patch `modelId`, `modelTier`, and `visionParts` early while
+`outcome` is still `running`, right after `resolveModelId` and the
+vision needles gate ([ADR 0004](0004-llm-gateway-tiers.md),
+[ADR 0035](0035-image-artifact-vision.md)). Do not wait for
+finalize. One resolve per Turn. The tool loop does not store a
+per-call model array. Legacy rows and Turns that die before
+resolve stay null. There is no backfill.
 
 `llm_error` is a gateway failure or an empty completion. `tool_error`
 is a tool failure that fails the Turn. A tool result with `ok: false`
 that the loop feeds back to the model stays on `tools_json` and does
 not by itself set `tool_error`. `aborted` is a Chat request that aborts
 before the Turn is finalized.
+
+A soft vision gate ([ADR 0035](0035-image-artifact-vision.md)) sets
+`visionParts` to `false` and leaves `outcome` `ok`. It does not add
+an `errorCode`. `vision_gated` is not a code.
 
 ### Activity
 
@@ -77,6 +93,9 @@ Cluster Turn. There is no per-person gate.
 
 List filters are optional `botId`, `threadId`, and `since`, plus
 `limit` (default 50, cap 100). Newest first. Get is by id.
+`dostigus_turns_list` and `dostigus_turns_get` always return
+`modelId`, `modelTier`, and `visionParts` (camelCase). Day-1 does
+not add list filters on those fields.
 
 These tools are not in the Owner Chat allowlist and not in the Member
 Chat allowlist ([ADR 0011](0011-chat-mcp-tool-loop.md)). Chat does not
@@ -93,7 +112,16 @@ runs table. Ops still list and get through MCP.
   detail Sheet in [ADR 0027](0027-bot-schedules.md), not a journal
   browser.
 - Evals
-- Storing message bodies, tool arguments, tool results, or prompts
+- Storing message bodies, tool arguments, tool results, prompts, or a
+  `promptSnippet`
+- Tokens, cost, or a usage ledger
+- Storing OpenRouter `response.model` / a served model id / the
+  free-roulette winner. `modelId` is the id sent after
+  `resolveModelId` ([ADR 0004](0004-llm-gateway-tiers.md))
+- MCP list filters by `modelId`, `modelTier`, or `visionParts`
+- A new `errorCode` for the soft vision path
+  ([ADR 0035](0035-image-artifact-vision.md))
+- A separate `pnpm smoke:vision` harness (later, a known vision id)
 - Replacing the Activity poll with a Store read
 - Schedule ticker debug tools
 - Weather payloads. This monorepo has no stock Weather tools
@@ -115,6 +143,14 @@ does not add a journal Sheet and does not put the tools on the Chat
 allowlist. Schedule detail may list wake Turns for one `scheduleId`
 ([ADR 0027](0027-bot-schedules.md)).
 
+The grill on 2026-09-25 adds nullable `modelId`, `modelTier`, and
+`visionParts` so ops can see which model id went on the request and
+whether vision parts were actually sent
+([ADR 0004](0004-llm-gateway-tiers.md),
+[ADR 0035](0035-image-artifact-vision.md)). It does not store tokens,
+`response.model`, or bodies. Impl, migration, and the harness assert
+land in a follow-up PR.
+
 ## Consequences
 
 - The code PR adds `turns`, the write path on the existing Chat loop
@@ -135,6 +171,13 @@ allowlist. Schedule detail may list wake Turns for one `scheduleId`
 - `pnpm smoke:turns` checks the quiet Chat write path and
   `dostigus_turns_list` / `dostigus_turns_get` on a running preview
   Host. It is not an Owner Sheet.
+- A follow-up PR lands the Store columns, the early patch after
+  `resolveModelId` and the vision needles gate, MCP camelCase
+  fields, and the migration. This record does not change Host or
+  Store code.
+- That follow-up extends `pnpm smoke:turns` to assert `modelId` and
+  `visionParts` on a fixture Turn. There is no separate
+  `pnpm smoke:vision` day-1.
 - Schedule detail reads those same journal rows for one Wake
   ([ADR 0027](0027-bot-schedules.md)). It does not add a runs table.
 
@@ -146,8 +189,20 @@ allowlist. Schedule detail may list wake Turns for one `scheduleId`
   later smoke is `pnpm smoke:turns`
   ([`scripts/turn-journal-smoke.mjs`](../../scripts/turn-journal-smoke.mjs),
   [#85](https://github.com/dostigus/dostigus/pull/85)).
-- Store the message body, the tool arguments, or the tool result —
-  rejected. That copies prompts and secrets into the journal.
+- Store the message body, the tool arguments, the tool result, or a
+  `promptSnippet` — rejected. That copies prompts and secrets into
+  the journal.
+- Store `response.model` or the free-roulette served id — rejected.
+  `modelId` is the id sent after `resolveModelId`
+  ([ADR 0004](0004-llm-gateway-tiers.md)).
+- Tokens or cost on the row — rejected for day-1.
+- MCP list filters on `modelId` or `visionParts` — rejected for
+  day-1. List and get always return the fields.
+- A new `errorCode` for soft vision — rejected. Soft path stays
+  [ADR 0035](0035-image-artifact-vision.md): `visionParts` false,
+  `outcome` ok.
+- A separate `pnpm smoke:vision` in this change — rejected. The
+  impl PR extends `pnpm smoke:turns`.
 - Read Activity from `turns` — rejected. The poll stays the in-memory
   map.
 - A Turn for every `/mcp` call — rejected. The journal is Host Bot Chat
