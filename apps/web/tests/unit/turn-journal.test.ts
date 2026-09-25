@@ -25,6 +25,7 @@ import {
 import { flushScheduleWakes, runScheduleTick } from '../../server/utils/schedule-ticker'
 import {
   beginChatTurn,
+  noteChatTurnObservability,
   recordChatTurnTool,
   requestAborted,
   resetChatTurnJournal,
@@ -76,6 +77,78 @@ it('dual-writes Activity phases and tool names, and the poll stays in memory', (
   expect(turn?.phases.map((phase) => phase.phase)).toEqual(['thinking', 'tool'])
   expect(turn?.tools).toEqual([{ name: 'dostigus_schedules_list', ok: true, ms: 8 }])
   expect(turn?.scheduleId).toBeNull()
+  expect(turn?.modelId).toBeNull()
+  expect(turn?.modelTier).toBeNull()
+  expect(turn?.visionParts).toBeNull()
+})
+
+it('patches observability while running and MCP returns null or set camelCase fields', () => {
+  const store = memoryStore()
+  const bot = createBot(store, { name: 'Notes' }).bot
+  const threadId = 'thread-obs'
+  const unsetId = beginChatTurn(store, {
+    threadId,
+    botId: bot.id,
+    personId: 'person',
+    trigger: 'user',
+  })
+  settleChatTurn(store, unsetId, { outcome: 'ok' })
+
+  const setId = beginChatTurn(store, {
+    threadId,
+    botId: bot.id,
+    personId: 'person',
+    trigger: 'user',
+  })
+  expect(getTurn(store, setId)).toMatchObject({
+    outcome: 'running',
+    modelId: null,
+    modelTier: null,
+    visionParts: null,
+  })
+  noteChatTurnObservability(threadId, bot.id, {
+    modelId: 'openai/gpt-4o',
+    modelTier: 'strong',
+    visionParts: false,
+  })
+  expect(getTurn(store, setId)).toMatchObject({
+    outcome: 'running',
+    modelId: 'openai/gpt-4o',
+    modelTier: 'strong',
+    visionParts: false,
+  })
+  settleChatTurn(store, setId, { outcome: 'ok' })
+
+  const listed = platformToolSpec('dostigus_turns_list').run({ botId: bot.id }, store) as {
+    turns: Array<{
+      id: string
+      modelId: string | null
+      modelTier: string | null
+      visionParts: boolean | null
+    }>
+  }
+  const unset = listed.turns.find((turn) => turn.id === unsetId)
+  const set = listed.turns.find((turn) => turn.id === setId)
+  expect(unset).toMatchObject({ modelId: null, modelTier: null, visionParts: null })
+  expect(set).toMatchObject({
+    modelId: 'openai/gpt-4o',
+    modelTier: 'strong',
+    visionParts: false,
+  })
+  expect(JSON.stringify(listed)).not.toContain('model_id')
+  expect(JSON.stringify(listed)).not.toContain('system prompt')
+
+  const gotUnset = platformToolSpec('dostigus_turns_get').run({ id: unsetId }, store)
+  const gotSet = platformToolSpec('dostigus_turns_get').run({ id: setId }, store)
+  expect(gotUnset).toEqual({ turn: expect.objectContaining({ id: unsetId, modelId: null, visionParts: null }) })
+  expect(gotSet).toEqual({
+    turn: expect.objectContaining({
+      id: setId,
+      modelId: 'openai/gpt-4o',
+      modelTier: 'strong',
+      visionParts: false,
+    }),
+  })
 })
 
 it('stores llm_error, tool_error, and aborted without the thrown text', () => {
@@ -148,6 +221,9 @@ it('sets scheduleId on a Wake turn', async () => {
     personId: owner.id,
     errorCode: null,
     tools: [],
+    modelId: 'openai/gpt-4o',
+    modelTier: 'strong',
+    visionParts: false,
   })
   expect(turns[0]?.phases.map((phase) => phase.phase)).toEqual(['thinking'])
 })
@@ -199,6 +275,9 @@ it('starts a turn only for a Bot reply, including a room mention', () => {
   const ticker = readFileSync(join(import.meta.dirname, '../../server/utils/schedule-ticker.ts'), 'utf8')
   expect(ticker).toContain('trigger: \'wake\'')
   expect(ticker).toContain('scheduleId: input.scheduleId')
+  expect(botRoute).toContain('onObservability')
+  expect(roomRoute).toContain('onObservability')
+  expect(ticker).toContain('noteChatTurnObservability')
 
   const listTool = readFileSync(join(import.meta.dirname, '../../server/mcp/tools/dostigus_turns_list.ts'), 'utf8')
   const getTool = readFileSync(join(import.meta.dirname, '../../server/mcp/tools/dostigus_turns_get.ts'), 'utf8')

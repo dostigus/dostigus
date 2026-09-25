@@ -10,7 +10,8 @@
  * The script signs in through `/preview-seed`, posts one Chat line on
  * Bot `preview` (quiet reply, no LLM gateway key), then calls
  * `dostigus_turns_list` and `dostigus_turns_get`. The quiet path writes
- * trigger `user`, outcome `ok`, one `thinking` phase, and no tools.
+ * trigger `user`, outcome `ok`, one `thinking` phase, no tools, a
+ * resolved `modelId`, and `visionParts` false.
  *
  *   NUXT_AGENT_TOKEN=preview-agent pnpm preview:host
  *   NUXT_AGENT_TOKEN=preview-agent pnpm smoke:turns
@@ -37,6 +38,9 @@ const TURN_KEYS = [
   'errorCode',
   'phases',
   'tools',
+  'modelId',
+  'modelTier',
+  'visionParts',
 ]
 const BODY_KEYS = [
   'content',
@@ -333,6 +337,18 @@ function assertTurnShape(turn, label) {
   if (!Array.isArray(turn.tools) || turn.tools.length !== 0) {
     fail(`${label} quiet path expected tools [], got ${JSON.stringify(turn.tools)}`)
   }
+  if (typeof turn.modelId !== 'string' || !turn.modelId.trim()) {
+    fail(`${label} modelId expected a non-empty id, got ${JSON.stringify(turn.modelId)}`)
+  }
+  if (typeof turn.modelTier !== 'string' || !turn.modelTier.trim()) {
+    fail(`${label} modelTier expected a tier, got ${JSON.stringify(turn.modelTier)}`)
+  }
+  if (typeof turn.visionParts !== 'boolean') {
+    fail(`${label} visionParts expected a boolean, got ${JSON.stringify(turn.visionParts)}`)
+  }
+  if (turn.visionParts !== false) {
+    fail(`${label} quiet path expected visionParts false, got ${JSON.stringify(turn.visionParts)}`)
+  }
 }
 
 function assertNoBodies(turn, userLine, assistantLine) {
@@ -496,7 +512,7 @@ async function main() {
     }
   }
   note('no bearer: Turn journal tools stay disabled')
-  note(`ok Turn ${turn.id} trigger=user outcome=ok phases=thinking tools=[]`)
+  note(`ok Turn ${turn.id} trigger=user outcome=ok phases=thinking tools=[] modelId=${turn.modelId} visionParts=${turn.visionParts}`)
 }
 
 main().catch((error) => {

@@ -118,13 +118,13 @@ export async function applyTriggeringVision(input: {
   artifactsDir?: string
   readArtifactBytes?: VisionReadFn
   encodeVisionJpeg?: VisionEncodeFn
-}): Promise<void> {
+}): Promise<boolean> {
   if (input.wake || input.trigger?.role !== 'user') {
-    return
+    return false
   }
   const artifacts = input.trigger.artifacts ?? []
   if (artifacts.length === 0) {
-    return
+    return false
   }
 
   const allowlisted = modelAllowsVision(input.modelId)
@@ -149,9 +149,10 @@ export async function applyTriggeringVision(input: {
   const content = visionUserContent(text, imageParts)
   const index = findTriggerUserMessageIndex(input.messages, input.trigger.content)
   if (index < 0) {
-    return
+    return false
   }
   input.messages[index] = { role: 'user', content }
+  return imageParts.length > 0
 }
 
 function findTriggerUserMessageIndex(

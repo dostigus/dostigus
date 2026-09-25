@@ -442,6 +442,14 @@ CREATE TABLE \`message_artifacts\` (
 CREATE INDEX \`message_artifacts_artifact_id_idx\` ON \`message_artifacts\` (\`artifact_id\`);
 `,
   },
+  {
+    id: '0019_turn_observability',
+    sql: `
+ALTER TABLE \`turns\` ADD \`model_id\` text;
+ALTER TABLE \`turns\` ADD \`model_tier\` text;
+ALTER TABLE \`turns\` ADD \`vision_parts\` integer;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

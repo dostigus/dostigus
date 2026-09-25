@@ -28,6 +28,7 @@ import { openChatTurn } from './chat-turn'
 import { completeAssistantReply, gatewayErrorReply } from './llm'
 import {
   beginChatTurn,
+  noteChatTurnObservability,
   recordChatTurnTool,
   settleChatTurn,
   settleFromReply,
@@ -247,6 +248,9 @@ async function finishWake(
       },
       onTool: (entry) => {
         recordChatTurnTool(input.threadId, input.botId, entry)
+      },
+      onObservability: (note) => {
+        noteChatTurnObservability(input.threadId, input.botId, note)
       },
     })
     content = reply.content

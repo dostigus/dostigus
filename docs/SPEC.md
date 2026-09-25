@@ -689,14 +689,20 @@ section above. Turn tools are not on those lists.
 - The row stores `threadId`, `botId`, `personId` (the viewer, and on a
   Wake the Schedule's person), `outcome` (`running`, then `ok`,
   `error`, or `abort`), `startedAt`, `endedAt`, optional `scheduleId`,
-  optional `errorCode`, `phases_json`, and `tools_json`. `errorCode` is
+  optional `errorCode`, `phases_json`, `tools_json`, and optional
+  `modelId`, `modelTier`, and `visionParts`. `errorCode` is
   a short class such as `llm_error`, `tool_error`, or `aborted`. It is
   never model text and never a stack. Phases are `thinking`, `tool`,
   and `typing` with a time. Tools are `{ name, ok, ms }` in call order.
-  The journal does not store message bodies, tool arguments, tool
-  results, or prompts.
+  `modelId` is the id sent after `resolveModelId`, not `response.model`.
+  `visionParts` is whether image parts were actually included after the
+  vision needles gate. The journal does not store message bodies, tool
+  arguments, tool results, or prompts.
 - The row is inserted at start (`running`), patched as phases and tools
-  happen, and finalized with `endedAt` and the outcome. Finalize
+  happen, and finalized with `endedAt` and the outcome. `modelId`,
+  `modelTier`, and `visionParts` are patched early while still
+  `running`, after `resolveModelId` and the vision needles gate. A
+  Turn that dies before that resolve leaves them null. Finalize
   deletes Turns whose start is older than 7 days.
 - Activity stays the in-memory poll
   ([ADR 0021](adr/0021-chat-activity-status.md)). Setting a phase also
@@ -704,7 +710,9 @@ section above. Turn tools are not on those lists.
 - MCP tools `dostigus_turns_list` and `dostigus_turns_get` use the same
   bearer as the other Host tools. Day-1 the token sees every Cluster
   Turn. List filters are `botId`, `threadId`, `since`, and `limit`
-  (default 50, cap 100), newest first. Get is by id.
+  (default 50, cap 100), newest first. Get is by id. Both always
+  return `modelId`, `modelTier`, and `visionParts` (null allowed).
+  Day-1 does not add list filters on those fields.
 - Schedule detail lists journal rows with `trigger` `wake` and that
   `scheduleId` ([ADR 0027](adr/0027-bot-schedules.md)). Empty copy:
   «Пока не было запусков». That is not an Owner journal Sheet. Day-1
@@ -714,7 +722,8 @@ section above. Turn tools are not on those lists.
   set to the same value the smoke sends. When that env is unset, the
   smoke sends Bearer `preview-agent`. It posts one quiet Chat line on
   Bot `preview` (no LLM gateway key) and reads that Turn through the
-  two tools. See [`AGENTS.md`](../AGENTS.md).
+  two tools, including `modelId` and `visionParts`. See
+  [`AGENTS.md`](../AGENTS.md).
 
 ## Chat Cards
 
