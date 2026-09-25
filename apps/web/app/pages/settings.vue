@@ -7,7 +7,7 @@
           Settings
         </p>
         <p class="sub">
-          OpenRouter
+          Providers
         </p>
       </div>
     </header>
@@ -50,70 +50,201 @@
         </p>
 
         <div
-          class="presets"
-          role="radiogroup"
-          aria-label="Provider"
+          v-if="providers.length > 0"
+          class="provider-list"
         >
-          <button
-            type="button"
-            class="preset"
-            :class="{ on: preset === 'openrouter' }"
-            :aria-checked="preset === 'openrouter'"
-            role="radio"
-            @click="choosePreset('openrouter')"
+          <article
+            v-for="provider in providers"
+            :key="provider.id"
+            class="provider"
           >
-            OpenRouter
-          </button>
-          <button
-            type="button"
-            class="preset"
-            :class="{ on: preset === 'custom' }"
-            :aria-checked="preset === 'custom'"
-            role="radio"
-            @click="choosePreset('custom')"
-          >
-            Custom OpenAI-compatible
-          </button>
+            <div class="status-row">
+              <span class="mask">{{ kindLabel(provider.kind) }}</span>
+              <span
+                v-if="provider.apiKeyMasked || provider.hasApiKey"
+                class="mask"
+              >
+                Key {{ provider.apiKeyMasked ?? 'stored' }}
+              </span>
+              <button
+                type="button"
+                class="ghost tiny"
+                :disabled="providers.length < 2 || busy"
+                @click="removeProvider(provider.id)"
+              >
+                Remove
+              </button>
+            </div>
+            <label class="field">
+              <span>Kind</span>
+              <select
+                :value="provider.kind"
+                @change="onProviderKind(provider.id, ($event.target as HTMLSelectElement).value)"
+              >
+                <option
+                  v-for="kind in kinds"
+                  :key="kind"
+                  :value="kind"
+                >
+                  {{ kindLabel(kind) }}
+                </option>
+              </select>
+            </label>
+            <label
+              v-if="provider.kind === 'openai-compatible'"
+              class="field"
+            >
+              <span>Base URL</span>
+              <input
+                v-model="provider.baseUrl"
+                type="url"
+                placeholder="https://api.example.com/v1"
+                autocomplete="off"
+              >
+            </label>
+            <label class="field">
+              <span>API key</span>
+              <input
+                v-model="provider.apiKey"
+                type="password"
+                :placeholder="providerKeyPlaceholder(provider)"
+                autocomplete="new-password"
+              >
+            </label>
+            <label
+              v-if="provider.kind !== 'openrouter'"
+              class="field"
+            >
+              <span>Model</span>
+              <input
+                v-model="provider.defaultModel"
+                type="text"
+                :placeholder="provider.kind === 'openai' ? 'gpt-4o' : 'Model id'"
+                autocomplete="off"
+              >
+            </label>
+          </article>
         </div>
 
-        <label
-          v-if="preset === 'custom'"
-          class="field"
+        <details
+          class="advanced"
+          :open="providers.length === 0"
         >
-          <span>Base URL</span>
-          <input
-            v-model="baseUrl"
-            type="url"
-            placeholder="https://api.example.com/v1"
-            autocomplete="off"
+          <summary>{{ providers.length === 0 ? 'Add a Provider' : 'Add another Provider' }}</summary>
+          <div
+            class="presets"
+            role="radiogroup"
+            aria-label="Provider kind"
           >
-        </label>
-
-        <label class="field">
-          <span>API key</span>
-          <input
-            v-model="apiKey"
-            type="password"
-            :placeholder="keyPlaceholder"
-            autocomplete="new-password"
-          >
-        </label>
-
-        <label class="field">
-          <span>Default Model tier</span>
-          <select v-model="defaultTier">
-            <option
-              v-for="tier in tiers"
-              :key="tier"
-              :value="tier"
+            <button
+              v-for="kind in kinds"
+              :key="kind"
+              type="button"
+              class="preset"
+              :class="{ on: addKind === kind }"
+              :aria-checked="addKind === kind"
+              role="radio"
+              @click="addKind = kind"
             >
-              {{ MODEL_TIER_LABELS[tier] }}
-            </option>
-          </select>
-        </label>
+              {{ kindLabel(kind) }}
+            </button>
+          </div>
+          <label
+            v-if="addKind === 'openai-compatible'"
+            class="field"
+          >
+            <span>Base URL</span>
+            <input
+              v-model="addBaseUrl"
+              type="url"
+              placeholder="https://api.example.com/v1"
+              autocomplete="off"
+            >
+          </label>
+          <label class="field">
+            <span>API key</span>
+            <input
+              v-model="addApiKey"
+              type="password"
+              :placeholder="addKind === 'openrouter' ? 'Paste your OpenRouter key' : 'Paste your API key'"
+              autocomplete="new-password"
+            >
+          </label>
+          <label
+            v-if="addKind !== 'openrouter'"
+            class="field"
+          >
+            <span>Model</span>
+            <input
+              v-model="addDefaultModel"
+              type="text"
+              :placeholder="addKind === 'openai' ? 'gpt-4o' : 'Model id'"
+              autocomplete="off"
+            >
+          </label>
+          <div class="actions">
+            <button
+              type="button"
+              class="ghost"
+              :disabled="busy || !addApiKey.trim()"
+              @click="addProvider"
+            >
+              Add Provider
+            </button>
+          </div>
+        </details>
 
-        <details class="advanced">
-          <summary>Model ids (optional)</summary>
+        <div
+          v-if="providers.length > 0"
+          class="tiers"
+        >
+          <p class="mark">
+            Model tiers
+          </p>
+          <p class="hint">
+            Chat starts on Strong. A Wake starts on Cheap. Code is an escalate step.
+          </p>
+          <label
+            v-for="tier in tiers"
+            :key="tier"
+            class="field"
+          >
+            <span>{{ MODEL_TIER_LABELS[tier] }}</span>
+            <select
+              :value="tierBinds[tier]?.providerId ?? ''"
+              @change="onTierProvider(tier, ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">
+                Unset
+              </option>
+              <option
+                v-for="provider in providers"
+                :key="provider.id"
+                :value="provider.id"
+              >
+                {{ kindLabel(provider.kind) }}
+              </option>
+            </select>
+            <select
+              v-if="tierBinds[tier] && providerKind(tierBinds[tier]?.providerId) === 'openrouter'"
+              :value="tierBinds[tier]?.policy.kind ?? 'auto'"
+              @change="onTierPolicy(tier, ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="free">
+                Free
+              </option>
+              <option value="auto">
+                Auto
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <details
+          v-if="hasLegacyPins"
+          class="advanced"
+        >
+          <summary>Stored model ids</summary>
           <label
             v-for="tier in tiers"
             :key="tier"
@@ -267,14 +398,28 @@
 </template>
 
 <script setup lang="ts">
-import type { LlmGatewayPreset, LlmGatewayPublic, ModelTier } from '@dostigus/shared'
+import type {
+  LlmGatewayPublic,
+  LlmPolicy,
+  LlmProviderKind,
+  LlmProviderPublic,
+  LlmTierBind,
+  ModelTier,
+} from '@dostigus/shared'
 import {
-  baseUrlForLlmGatewayPreset,
-  llmGatewayPresetFromBaseUrl,
+  inferLlmProviderKind,
+  LLM_PROVIDER_KIND_LABELS,
+  LLM_PROVIDER_KINDS,
   MODEL_TIER_LABELS,
   MODEL_TIERS,
   OPENROUTER_DEFAULT_BASE_URL,
 } from '@dostigus/shared'
+
+type DraftProvider = LlmProviderPublic & {
+  apiKey: string
+  defaultModel: string
+  baseUrl: string
+}
 
 definePageMeta({ layout: 'host' })
 
@@ -300,15 +445,21 @@ const { data: allowlistData, refresh: refreshAllowlist } = await useFetch<{
 }>('/api/settings/http-allowlist')
 
 const gateway = computed(() => data.value?.llmGateway)
-const preset = ref<LlmGatewayPreset>('openrouter')
-const baseUrl = ref('')
-const apiKey = ref('')
-const defaultTier = ref<ModelTier>('strong')
+const kinds = LLM_PROVIDER_KINDS
+const providers = ref<DraftProvider[]>([])
+const tierBinds = ref<Partial<Record<ModelTier, LlmTierBind>>>({})
 const modelOverrides = ref<Partial<Record<ModelTier, string>>>({})
+const addKind = ref<LlmProviderKind>('openrouter')
+const addApiKey = ref('')
+const addBaseUrl = ref('')
+const addDefaultModel = ref('')
 const saving = ref(false)
 const pinging = ref(false)
 const message = ref('')
 const messageError = ref(false)
+const hasLegacyPins = computed(() => MODEL_TIERS.some((tier) => {
+  return Boolean(modelOverrides.value[tier])
+}))
 const timezoneInput = ref('')
 const timezoneSaving = ref(false)
 const timezoneMessage = ref('')
@@ -322,42 +473,166 @@ const allowlist = computed(() => allowlistData.value?.hosts)
 
 const busy = computed(() => saving.value || pinging.value)
 const hint = computed(() => {
-  if (preset.value === 'custom') {
-    return 'Add a key so Bots can reply. You can skip this and still create Bots.'
+  if (providers.value.length > 0) {
+    return 'Map each Model tier to a Provider. You can skip this and still create Bots.'
   }
-  return 'Add an OpenRouter key so Bots can reply. You can skip this and still create Bots.'
+  return 'Add a Provider so Bots can reply. You can skip this and still create Bots.'
 })
-const keyPlaceholder = computed(() => {
-  if (gateway.value?.apiKeyMasked) {
-    return `${gateway.value.apiKeyMasked} — paste to replace`
+
+function kindLabel(kind: LlmProviderKind): string {
+  return LLM_PROVIDER_KIND_LABELS[kind]
+}
+
+function providerKeyPlaceholder(provider: DraftProvider): string {
+  if (provider.apiKeyMasked) {
+    return `${provider.apiKeyMasked} — paste to replace`
   }
-  return preset.value === 'openrouter' ? 'Paste your OpenRouter key' : 'Paste your API key'
-})
+  return provider.kind === 'openrouter' ? 'Paste your OpenRouter key' : 'Paste your API key'
+}
+
+function providerKind(providerId: string | undefined): LlmProviderKind | null {
+  if (!providerId) {
+    return null
+  }
+  return providers.value.find((provider) => provider.id === providerId)?.kind ?? null
+}
+
+function defaultPolicyFor(tier: ModelTier, kind: LlmProviderKind, provider: DraftProvider): LlmPolicy {
+  if (kind === 'openrouter') {
+    return (tier === 'cheap' || tier === 'toy') ? { kind: 'free' } : { kind: 'auto' }
+  }
+  const modelId = provider.defaultModel.trim() || (kind === 'openai' ? 'gpt-4o' : '')
+  return { kind: 'model', modelId }
+}
+
+function onProviderKind(id: string, value: string) {
+  const provider = providers.value.find((entry) => entry.id === id)
+  if (!provider || (value !== 'openrouter' && value !== 'openai' && value !== 'openai-compatible')) {
+    return
+  }
+  provider.kind = value
+  if (value === 'openrouter') {
+    provider.baseUrl = OPENROUTER_DEFAULT_BASE_URL
+  }
+  for (const tier of MODEL_TIERS) {
+    if (tierBinds.value[tier]?.providerId === id) {
+      tierBinds.value[tier] = {
+        providerId: id,
+        policy: defaultPolicyFor(tier, value, provider),
+      }
+    }
+  }
+}
+
+function onTierProvider(tier: ModelTier, providerId: string) {
+  if (!providerId) {
+    const next = { ...tierBinds.value }
+    delete next[tier]
+    tierBinds.value = next
+    return
+  }
+  const provider = providers.value.find((entry) => entry.id === providerId)
+  if (!provider) {
+    return
+  }
+  tierBinds.value = {
+    ...tierBinds.value,
+    [tier]: {
+      providerId,
+      policy: defaultPolicyFor(tier, provider.kind, provider),
+    },
+  }
+}
+
+function onTierPolicy(tier: ModelTier, value: string) {
+  const current = tierBinds.value[tier]
+  if (!current) {
+    return
+  }
+  if (value !== 'free' && value !== 'auto') {
+    return
+  }
+  tierBinds.value = {
+    ...tierBinds.value,
+    [tier]: { ...current, policy: { kind: value } },
+  }
+}
+
+function removeProvider(id: string) {
+  providers.value = providers.value.filter((provider) => provider.id !== id)
+  const next: Partial<Record<ModelTier, LlmTierBind>> = {}
+  for (const tier of MODEL_TIERS) {
+    const bind = tierBinds.value[tier]
+    if (bind && bind.providerId !== id) {
+      next[tier] = bind
+    }
+  }
+  tierBinds.value = next
+}
+
+function addProvider() {
+  const key = addApiKey.value.trim()
+  if (!key) {
+    return
+  }
+  const id = crypto.randomUUID()
+  const kind = addKind.value
+  const provider: DraftProvider = {
+    id,
+    kind,
+    baseUrl: kind === 'openrouter'
+      ? OPENROUTER_DEFAULT_BASE_URL
+      : addBaseUrl.value.trim(),
+    hasApiKey: true,
+    apiKeyMasked: null,
+    defaultModel: addDefaultModel.value.trim(),
+    apiKey: key,
+  }
+  providers.value = [...providers.value, provider]
+  addApiKey.value = ''
+  addBaseUrl.value = ''
+  addDefaultModel.value = ''
+  if (providers.value.length === 1) {
+    for (const tier of MODEL_TIERS) {
+      if (tierBinds.value[tier] || modelOverrides.value[tier]) {
+        continue
+      }
+      tierBinds.value = {
+        ...tierBinds.value,
+        [tier]: {
+          providerId: id,
+          policy: defaultPolicyFor(tier, kind, provider),
+        },
+      }
+    }
+  }
+}
 
 function applyGateway(next?: LlmGatewayPublic) {
   if (!next) {
     return
   }
-  preset.value = llmGatewayPresetFromBaseUrl(next.baseUrl)
-  baseUrl.value = next.baseUrl
-    ?? (preset.value === 'openrouter' ? OPENROUTER_DEFAULT_BASE_URL : '')
-  apiKey.value = ''
-  defaultTier.value = next.defaultTier
+  providers.value = (next.providers ?? []).map((provider) => ({
+    ...provider,
+    apiKey: '',
+    baseUrl: provider.baseUrl
+      ?? (provider.kind === 'openrouter' ? OPENROUTER_DEFAULT_BASE_URL : ''),
+    defaultModel: provider.defaultModel ?? '',
+  }))
+  if (providers.value.length === 0 && (next.hasStoredApiKey || next.baseUrl)) {
+    const kind = inferLlmProviderKind(next.baseUrl)
+    providers.value = [{
+      id: 'legacy',
+      kind,
+      baseUrl: next.baseUrl ?? (kind === 'openrouter' ? OPENROUTER_DEFAULT_BASE_URL : ''),
+      hasApiKey: next.hasStoredApiKey,
+      apiKeyMasked: next.apiKeyMasked,
+      defaultModel: '',
+      apiKey: '',
+    }]
+  }
+  tierBinds.value = { ...(next.tierBinds ?? {}) }
   modelOverrides.value = { ...next.modelOverrides }
-}
-
-function choosePreset(next: LlmGatewayPreset) {
-  if (preset.value === next) {
-    return
-  }
-  preset.value = next
-  if (next === 'openrouter') {
-    baseUrl.value = OPENROUTER_DEFAULT_BASE_URL
-    return
-  }
-  if (llmGatewayPresetFromBaseUrl(baseUrl.value) === 'openrouter') {
-    baseUrl.value = ''
-  }
 }
 
 watch(gateway, (next) => applyGateway(next), { immediate: true })
@@ -383,12 +658,29 @@ async function save() {
   message.value = ''
   messageError.value = false
   try {
+    const binds: Partial<Record<ModelTier, LlmTierBind>> = { ...tierBinds.value }
+    for (const tier of MODEL_TIERS) {
+      const bind = binds[tier]
+      const provider = providers.value.find((entry) => entry.id === bind?.providerId)
+      if (!bind || !provider || provider.kind === 'openrouter') {
+        continue
+      }
+      const modelId = provider.defaultModel.trim() || (provider.kind === 'openai' ? 'gpt-4o' : '')
+      if (modelId) {
+        binds[tier] = { providerId: provider.id, policy: { kind: 'model', modelId } }
+      }
+    }
     const result = await $fetch<{ llmGateway: LlmGatewayPublic }>('/api/settings/llm-gateway', {
       method: 'PUT',
       body: {
-        baseUrl: baseUrlForLlmGatewayPreset(preset.value, baseUrl.value),
-        apiKey: apiKey.value.trim() || undefined,
-        defaultTier: defaultTier.value,
+        providers: providers.value.map((provider) => ({
+          id: provider.id,
+          kind: provider.kind,
+          apiKey: provider.apiKey.trim() || undefined,
+          baseUrl: provider.baseUrl.trim() || null,
+          defaultModel: provider.defaultModel.trim() || null,
+        })),
+        tierBinds: binds,
         modelOverrides: modelOverrides.value,
       },
     })
@@ -490,7 +782,10 @@ async function ping() {
   try {
     const result = await $fetch<{ ok: boolean, error?: string }>(
       '/api/settings/llm-gateway/ping',
-      { method: 'POST' },
+      {
+        method: 'POST',
+        body: { providerId: providers.value[0]?.id === 'legacy' ? undefined : providers.value[0]?.id },
+      },
     )
     if (result.ok) {
       message.value = 'Connection works.'
@@ -562,6 +857,24 @@ async function ping() {
 
 .card.tz {
   margin-top: 1.25rem;
+}
+
+.provider-list,
+.tiers {
+  margin: 0 0 1.1rem;
+}
+
+.provider {
+  margin: 0 0 0.9rem;
+  padding: 0.75rem 0.95rem 0.15rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.tiny {
+  margin-left: auto;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
 }
 
 .status-row {

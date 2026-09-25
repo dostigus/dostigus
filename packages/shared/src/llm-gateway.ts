@@ -1,5 +1,6 @@
 /** LLM gateway: Model tier mapping, env/Store resolve, key masking. */
 
+import type { LlmProviderInstance, LlmProviderPublic, LlmTierBind } from './llm-providers'
 import type { ModelTier, Skill } from './types'
 import { DEFAULT_MODEL_TIER, isModelTier, MODEL_TIERS } from './types'
 
@@ -139,6 +140,8 @@ export type LlmGatewayStored = {
   apiKey: string | null
   defaultTier: ModelTier
   modelOverrides: Partial<Record<ModelTier, string>>
+  providers?: LlmProviderInstance[]
+  tierBinds?: Partial<Record<ModelTier, LlmTierBind>>
 }
 
 export type LlmGatewaySource = 'env' | 'store' | 'merged' | 'none'
@@ -166,6 +169,8 @@ export type LlmGatewayPublic = {
   defaultModels: Record<ModelTier, string>
   envOverride: boolean
   source: LlmGatewaySource
+  providers: LlmProviderPublic[]
+  tierBinds: Partial<Record<ModelTier, LlmTierBind>>
 }
 
 export function trimOrUndefined(value: string | undefined | null): string | undefined {
@@ -214,17 +219,22 @@ export function resolveLlmGateway(
 ): ResolvedLlmGateway {
   const storedBase = trimOrUndefined(stored?.baseUrl ?? undefined) ?? null
   const storedKey = trimOrUndefined(stored?.apiKey ?? undefined) ?? null
+  const firstProvider = (stored?.providers ?? []).find((provider) => {
+    return Boolean(trimOrUndefined(provider.apiKey))
+  })
+  const storedProviderKey = trimOrUndefined(firstProvider?.apiKey) ?? null
+  const storedProviderBase = trimOrUndefined(firstProvider?.baseUrl) ?? null
   const envBase = env.baseUrl ?? null
   const envKey = env.apiKey ?? null
 
-  const apiKey = envKey ?? storedKey
-  const explicitBase = envBase ?? storedBase
+  const apiKey = envKey ?? storedKey ?? storedProviderKey
+  const explicitBase = envBase ?? storedBase ?? storedProviderBase
   const baseUrl = explicitBase ?? (apiKey ? OPENROUTER_DEFAULT_BASE_URL : null)
   const defaultTier = env.defaultTier ?? stored?.defaultTier ?? DEFAULT_MODEL_TIER
   const configured = Boolean(baseUrl && apiKey)
 
   const envHasCreds = Boolean(envBase || envKey)
-  const storeHasCreds = Boolean(storedBase || storedKey)
+  const storeHasCreds = Boolean(storedBase || storedKey || storedProviderKey)
   let source: LlmGatewaySource = 'none'
   if (envHasCreds && storeHasCreds) {
     source = 'merged'
@@ -294,6 +304,15 @@ export function toPublicLlmGateway(input: {
     defaultModels: { ...DEFAULT_TIER_MODELS },
     envOverride: resolved.envOverride,
     source: resolved.source,
+    providers: (stored?.providers ?? []).map((provider) => ({
+      id: provider.id,
+      kind: provider.kind,
+      baseUrl: provider.baseUrl,
+      hasApiKey: Boolean(trimOrUndefined(provider.apiKey)),
+      apiKeyMasked: maskApiKey(provider.apiKey),
+      defaultModel: provider.defaultModel,
+    })),
+    tierBinds: stored?.tierBinds ?? {},
   }
 }
 
@@ -435,6 +454,8 @@ export function emptyLlmGatewayStored(): LlmGatewayStored {
     apiKey: null,
     defaultTier: DEFAULT_MODEL_TIER,
     modelOverrides: {},
+    providers: [],
+    tierBinds: {},
   }
 }
 

@@ -259,6 +259,45 @@ it('persists Cluster LLM gateway settings and keeps the key unless cleared', () 
   expect(cleared.apiKey).toBeNull()
 })
 
+it('persists Provider instances and auto-fills empty OpenRouter tiers', () => {
+  const store = memoryStore()
+  const saved = upsertLlmGatewaySettings(store, {
+    providers: [{
+      id: 'or1',
+      kind: 'openrouter',
+      apiKey: 'sk-or',
+      baseUrl: null,
+      defaultModel: null,
+    }],
+  })
+  expect(saved.providers).toEqual([{
+    id: 'or1',
+    kind: 'openrouter',
+    apiKey: 'sk-or',
+    baseUrl: null,
+    defaultModel: null,
+  }])
+  expect(saved.tierBinds).toEqual({
+    cheap: { providerId: 'or1', policy: { kind: 'free' } },
+    strong: { providerId: 'or1', policy: { kind: 'auto' } },
+    code: { providerId: 'or1', policy: { kind: 'auto' } },
+    toy: { providerId: 'or1', policy: { kind: 'free' } },
+  })
+  expect(saved.apiKey).toBe('sk-or')
+
+  const kept = upsertLlmGatewaySettings(store, {
+    providers: [{
+      id: 'or1',
+      kind: 'openrouter',
+      apiKey: null,
+      baseUrl: null,
+      defaultModel: null,
+    }],
+  })
+  expect(kept.apiKey).toBe('sk-or')
+  expect(kept.tierBinds?.cheap).toEqual({ providerId: 'or1', policy: { kind: 'free' } })
+})
+
 it('rejects a non-http LLM gateway base URL', () => {
   const store = memoryStore()
   expect(() => upsertLlmGatewaySettings(store, {

@@ -186,6 +186,8 @@ it('never returns the full key from mask or public JSON', () => {
   expect(pub.hasApiKey).toBe(true)
   expect(pub.hasStoredApiKey).toBe(true)
   expect(pub.apiKeyMasked).toBe('••••wxyz')
+  expect(pub.providers).toEqual([])
+  expect(pub.tierBinds).toEqual({})
   expect(JSON.stringify(pub).includes(key)).toBe(false)
   expect(pub).not.toHaveProperty('apiKey')
 })

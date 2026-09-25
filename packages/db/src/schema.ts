@@ -36,6 +36,8 @@ export const llmGateway = sqliteTable('llm_gateway', {
   apiKey: text('api_key'),
   defaultTier: text('default_tier').notNull().default('strong'),
   modelsJson: text('models_json').notNull().default('{}'),
+  providersJson: text('providers_json').notNull().default('[]'),
+  tierBindsJson: text('tier_binds_json').notNull().default('{}'),
   updatedAt: integer('updated_at').notNull(),
 })
 

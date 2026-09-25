@@ -54,7 +54,9 @@ What the running Cluster does today:
   optional person id), and `kitchen_recipe` (one name and ingredients
   text),
   `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
-  default Model tier, optional model overrides), `owners` (exactly one
+  default Model tier, optional model overrides, Provider instances
+  (`providers_json`) and Model tier → Provider + Policy binds
+  (`tier_binds_json`)), `owners` (exactly one
   Cluster Owner: unique email and/or username, password hash, createdAt),
   and `members` (Household Members: display name, unique email and/or
   username, password hash, createdAt, disabledAt), and `invites`
@@ -71,10 +73,11 @@ What the running Cluster does today:
   [ADR 0010](adr/0010-owner-auth-session.md) and
   [ADR 0012](adr/0012-household-members.md).
 - Host UI: Bot list (empty state + `+` picker), Chat (timeline + composer,
-  unlabeled bubbles), Settings, and Members.   Settings presents OpenRouter
-  as the default LLM path (API key + Model tier), the Cluster timezone,
+  unlabeled bubbles), Settings, and Members.   Settings presents a
+  Providers list (OpenRouter, OpenAI, or OpenAI-compatible) and a
+  Model tier → Provider + Policy bind, the Cluster timezone,
   the Cluster http allowlist, and stays with the Owner.
-  A collapsed custom OpenAI-compatible URL remains for other gateways.
+  Legacy “tier = raw model string” Settings still resolve.
   The `+` replaces the Chat pane with a picker
   ([ADR 0019](adr/0019-bot-picker-and-chat-purpose.md)). Search there
   filters Bots by name. The Owner and a Member both have a row **Create new Bot**.
@@ -255,7 +258,7 @@ What the running Cluster does today:
   OpenRouter-friendly default model ids (legacy / compat pin; live
   Clusters keep that read). Provider instances, tier bind / resolve,
   and escalate are [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md).
-  The Owner sets base URL + key in
+  The Owner sets Providers and Model tier binds in
   Host Settings (Store) or via compose env (env overrides Store). Chat
   LLM context assembly is [ADR 0032](adr/0032-chat-llm-context-assembly.md):
   last 40 messages (`role` + `content`, stored `system` stays `system`),

@@ -187,9 +187,9 @@ often listens on IPv6 only: open **http://localhost:3000/**.
 **http://127.0.0.1:3000** refuses the connection.
 
 The Host is a Bot list + Chat. Press
-**+** to create a Bot (default **New Bot**). **Settings** holds the Cluster
-LLM gateway (base URL + key), the Cluster timezone, and the Cluster
-http allowlist. Not a landing page. Store is SQLite
+**+** to create a Bot (default **New Bot**). **Settings** holds Cluster
+Providers and Model tier → Provider + Policy binds, the Cluster
+timezone, and the Cluster http allowlist. Not a landing page. Store is SQLite
 (`DATABASE_URL`, default `file:.data/cluster.sqlite` for local dev).
 First visit creates the Cluster Owner; later visits sign in. The Owner opens
 **Members** to add a Member (display name, email or username, password). A
