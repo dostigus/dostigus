@@ -1,5 +1,6 @@
+import { isOwnerPath } from '../utils/owner-paths'
+
 const AUTH_PATHS = new Set(['/login', '/onboarding'])
-const OWNER_PATHS = new Set(['/settings', '/members'])
 
 function isInvitePath(path: string): boolean {
   return path === '/invite' || path.startsWith('/invite/')
@@ -29,7 +30,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     if (isInvitePath(to.path)) {
       return
     }
-    if (user.value?.role === 'member' && OWNER_PATHS.has(to.path)) {
+    if (user.value?.role === 'member' && isOwnerPath(to.path)) {
       return navigateTo('/')
     }
     return

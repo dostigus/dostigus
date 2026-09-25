@@ -13,6 +13,9 @@
   health / confidence from key + soft catalog probe (not a Chat
   blocker). Catalog / shelf / Advanced / pin / cache / OpenRouter-only
   stay.
+- Amended: 2026-09-25 — Settings / catalog impl notes: child slugs,
+  the key-accepted signal, and the shelf ranking rule (see Settings
+  impl notes). No decision above changes.
 
 The OpenAI-compatible LLM gateway shape and transient *same-model*
 retry stay [ADR 0004](0004-llm-gateway-tiers.md). Model tier *names*
@@ -384,6 +387,32 @@ Copy like «Ключ принят · каталог загружен · марш
 If the probe fails, Settings shows a banner or a **degraded**
 status only. The Cluster **still runs** on meta free / auto.
 That is the same rule as catalog fail: not a Chat blocker.
+
+#### Settings impl notes
+
+The impl PR filled in what this record left open.
+
+- Slugs: `/settings` lands on `/settings/providers`
+  (**Провайдеры**). **Прочее** is `/settings/other`.
+- Catalog route: `GET /api/settings/llm-gateway/providers/:id/catalog`
+  (Owner session). `?refresh=1` bypasses the cache. An upstream
+  miss after a good load serves that list as stale.
+- Key accepted: OpenRouter `GET /models` answers without a valid
+  key, so the same catalog request also calls OpenRouter
+  `GET /key` with the stored key (LLM-path fetch). HTTP 401 / 403
+  there is “key not accepted”. Any other miss is “not checked”
+  (degraded, not red).
+- Shelf candidates: `tools` in `supported_parameters` (Chat runs
+  the tool loop), text output, not an `openrouter/` router, not a
+  `~` alias, not a `:batch` variant, no `expiration_date`.
+- Free: best Artificial Analysis Intelligence Index among free
+  candidates. Smart: best Intelligence Index, and Coding: best
+  Coding Index, among paid candidates at or below the catalog’s
+  75th-percentile blended price (3 prompt : 1 completion). The
+  shelf shows the top pick plus two runner-ups. With no indexes in
+  the payload, the shelf ranks the newest models instead.
+- Advanced lists every text-output model. A model without `tools`
+  cannot be pinned.
 
 ### Legacy compat
 

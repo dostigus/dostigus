@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { createBot, listBots, listBotThreadMessages, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, openStore, readKitchen, updateBot } from '@dostigus/db'
+import { createBot, getLlmGatewaySettings, listBots, listBotThreadMessages, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, openStore, readKitchen, updateBot } from '@dostigus/db'
 import { DEFAULT_BOT_NAME, mentionedRoomBot } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import { OwnerAuthError, registerClusterOwner } from '../../server/utils/owner-auth'
 import {
   ensurePreviewCluster,
+  ensurePreviewOpenRouterProvider,
   PREVIEW_BOT_ID,
   PREVIEW_DM_PREFIX,
   PREVIEW_DM_REPLY_PREFIX,
@@ -13,6 +14,8 @@ import {
   PREVIEW_KITCHEN_PREFIX,
   PREVIEW_MEMBER_LOGIN,
   PREVIEW_MEMBER_THREAD_PREFIX,
+  PREVIEW_OPENROUTER_KEY,
+  PREVIEW_OPENROUTER_PROVIDER_ID,
   PREVIEW_OWNER_LOGIN,
   PREVIEW_OWNER_PASSWORD,
   PREVIEW_OWNER_THREAD_PREFIX,
@@ -28,11 +31,13 @@ import {
   PREVIEW_SYSTEM_LINES,
   PREVIEW_TALL_LINE_COUNT,
   PREVIEW_TALL_PREFIX,
+  previewCatalogSkipsKeyProbe,
   previewKitchenParts,
   previewKitchenRequested,
   previewMembersRequested,
   previewParts,
   previewPartsRequested,
+  previewProvidersRequested,
   previewRoomsRequested,
   previewScheduleCard,
   previewSchedulesRequested,
@@ -463,8 +468,10 @@ it('redirects preview seed the way the live smoke checks', () => {
   expect(previewSeedRedirect(chat)).toBe(`/bots/${PREVIEW_BOT_ID}`)
   expect(previewSeedRedirect({ ...chat, members: '1', activity: 'typing', hold: '1' })).toBe('/members')
   expect(previewSeedRedirect({ ...chat, members: 1, rooms: '1', threads: '1' })).toBe('/members')
-  expect(previewSeedRedirect({ ...chat, settings: '1' })).toBe('/settings')
-  expect(previewSeedRedirect({ ...chat, settings: 1, activity: 'typing', hold: '1' })).toBe('/settings')
+  expect(previewSeedRedirect({ ...chat, settings: '1' })).toBe('/settings/providers')
+  expect(previewSeedRedirect({ ...chat, settings: 1, activity: 'typing', hold: '1' })).toBe('/settings/providers')
+  expect(previewSeedRedirect({ ...chat, providers: '1' })).toBe('/settings/providers')
+  expect(previewSeedRedirect({ ...chat, members: '1', providers: '1' })).toBe('/members')
   expect(previewSeedRedirect({ ...chat, members: '1', settings: '1' })).toBe('/members')
   expect(previewSeedRedirect({ ...chat, rooms: '1', as: 'member', activity: 'typing' })).toBe(`/threads/${PREVIEW_ROOM_THREAD_ID}`)
   expect(previewSeedRedirect({ ...chat, rooms: '1', roomId: null })).toBe(`/bots/${PREVIEW_BOT_ID}`)
@@ -485,6 +492,33 @@ it('treats settings=1 as Owner Settings', () => {
   expect(previewSettingsRequested('1')).toBe(true)
   expect(previewSettingsRequested(1)).toBe(true)
   expect(previewSettingsRequested(undefined)).toBe(false)
+})
+
+it('seeds the fixture OpenRouter Provider once and only on an empty gateway', () => {
+  expect(previewProvidersRequested('1')).toBe(true)
+  expect(previewProvidersRequested(undefined)).toBe(false)
+  const store = memoryStore()
+  ensurePreviewOpenRouterProvider(store)
+  ensurePreviewOpenRouterProvider(store)
+  const gateway = getLlmGatewaySettings(store)
+  expect(gateway.providers).toHaveLength(1)
+  expect(gateway.providers?.[0]).toMatchObject({
+    id: PREVIEW_OPENROUTER_PROVIDER_ID,
+    kind: 'openrouter',
+    apiKey: PREVIEW_OPENROUTER_KEY,
+  })
+  expect(gateway.tierBinds?.strong).toEqual({
+    providerId: PREVIEW_OPENROUTER_PROVIDER_ID,
+    policy: { kind: 'auto' },
+  })
+})
+
+it('skips the catalog key probe only for the preview fixture on nuxt dev', () => {
+  const open = { dev: true, flag: '1' }
+  expect(previewCatalogSkipsKeyProbe({ ...open, providerId: PREVIEW_OPENROUTER_PROVIDER_ID })).toBe(true)
+  expect(previewCatalogSkipsKeyProbe({ ...open, providerId: 'or1' })).toBe(false)
+  expect(previewCatalogSkipsKeyProbe({ dev: false, flag: '1', providerId: PREVIEW_OPENROUTER_PROVIDER_ID })).toBe(false)
+  expect(previewCatalogSkipsKeyProbe({ dev: true, flag: undefined, providerId: PREVIEW_OPENROUTER_PROVIDER_ID })).toBe(false)
 })
 
 it('seeds a direct message and a room with one stored mention reply', async () => {

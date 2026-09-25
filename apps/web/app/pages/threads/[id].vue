@@ -12,7 +12,7 @@
     >
       <template v-if="isOwner">
         Replies stay quiet until you add an OpenRouter key.
-        <NuxtLink to="/settings">
+        <NuxtLink to="/settings/providers">
           Settings
         </NuxtLink>
       </template>

@@ -296,6 +296,41 @@ it('persists Provider instances and auto-fills empty OpenRouter tiers', () => {
   })
   expect(kept.apiKey).toBe('sk-or')
   expect(kept.tierBinds?.cheap).toEqual({ providerId: 'or1', policy: { kind: 'free' } })
+
+  const pinned = upsertLlmGatewaySettings(store, {
+    tierBinds: {
+      ...kept.tierBinds,
+      strong: { providerId: 'or1', policy: { kind: 'model', modelId: 'lab/smart' } },
+    },
+  })
+  expect(pinned.providers?.[0]?.apiKey).toBe('sk-or')
+  expect(pinned.tierBinds?.strong).toEqual({
+    providerId: 'or1',
+    policy: { kind: 'model', modelId: 'lab/smart' },
+  })
+})
+
+it('moves a legacy key onto the legacy Provider on first Settings save', () => {
+  const store = memoryStore()
+  upsertLlmGatewaySettings(store, { apiKey: 'sk-legacy' })
+  const saved = upsertLlmGatewaySettings(store, {
+    providers: [{
+      id: 'legacy',
+      kind: 'openrouter',
+      apiKey: null,
+      baseUrl: null,
+      defaultModel: null,
+    }],
+  })
+  expect(saved.providers?.[0]).toMatchObject({ id: 'legacy', apiKey: 'sk-legacy' })
+  expect(saved.tierBinds?.strong).toEqual({ providerId: 'legacy', policy: { kind: 'auto' } })
+
+  const other = memoryStore()
+  upsertLlmGatewaySettings(other, { apiKey: 'sk-legacy' })
+  const fresh = upsertLlmGatewaySettings(other, {
+    providers: [{ id: 'or1', kind: 'openrouter', apiKey: null, baseUrl: null, defaultModel: null }],
+  })
+  expect(fresh.providers?.[0]?.apiKey).toBeNull()
 })
 
 it('rejects a non-http LLM gateway base URL', () => {

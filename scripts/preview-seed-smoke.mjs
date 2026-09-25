@@ -17,6 +17,11 @@
  * GET `?threads=1` lists Bot `preview` and the Member's Bot for the Owner.
  * GET `?threads=1&as=member` opens the Member bot-thread on Bot `preview`.
  * HEAD ignores `?threads=1`.
+ * GET `?settings=1` and `?providers=1` must 302 to `/settings/providers`.
+ * `?providers=1` leaves an OpenRouter Provider; its catalog answers 200
+ * without the key (a soft catalog miss is noted, not failed). A Member
+ * gets 403 on the catalog and 302 / on every `/settings/...` page.
+ * HEAD ignores `?providers=1`.
  * GET `?activity=typing` must 302 to `/bots/<id>?activity=typing`.
  * HEAD ignores `?activity=` and does not set a session cookie.
  *
@@ -49,6 +54,7 @@ const PRIVATE_BOT_ID = 'preview-private'
 const PRIVATE_THREAD_PREFIX = 'Member thread on the private Bot.'
 const OWNER_THREAD_PREFIX = 'Owner thread on the shared Bot.'
 const MEMBER_THREAD_PREFIX = 'Member thread on the shared Bot.'
+const PREVIEW_OPENROUTER_KEY = 'sk-or-v1-preview-fixture'
 const WAIT_MS = Number(process.env.PREVIEW_SMOKE_WAIT_MS ?? 120_000)
 const REQUEST_MS = 60_000
 
@@ -657,6 +663,56 @@ async function main() {
     fail(`Member list expected both Bots, got ${memberIds.join(', ') || '(none)'}`)
   }
   note('?threads=1 separates Owner and Member bot-threads; Owner sees the Member Bot on their own thread')
+
+  const settingsSeed = await request('/preview-seed?settings=1')
+  const settingsPath = locationPath(settingsSeed.response.headers.get('location'))
+  if (settingsSeed.response.status !== 302 || settingsPath !== '/settings/providers') {
+    fail(`GET /preview-seed?settings=1 expected 302 /settings/providers, got ${settingsSeed.response.status} ${settingsPath ?? ''}`)
+  }
+  const providersHead = assertPreviewHead(await request('/preview-seed?providers=1', { method: 'HEAD' }))
+  if (providersHead.status !== 302 || providersHead.location !== `/bots/${botId}`) {
+    fail(`HEAD /preview-seed?providers=1 expected 302 /bots/${botId}, got ${providersHead.status} ${providersHead.location ?? ''}`)
+  }
+  const providersSeed = await request('/preview-seed?providers=1')
+  const providersPath = locationPath(providersSeed.response.headers.get('location'))
+  if (providersSeed.response.status !== 302 || providersPath !== '/settings/providers') {
+    fail(`GET /preview-seed?providers=1 expected 302 /settings/providers, got ${providersSeed.response.status} ${providersPath ?? ''}`)
+  }
+  const providersSession = cookieHeader(providersSeed.response)
+  const gateway = await readJson('/api/settings/llm-gateway', providersSession)
+  const openrouter = gateway?.llmGateway?.providers?.find((provider) => provider.kind === 'openrouter' && provider.hasApiKey)
+  if (!openrouter) {
+    fail('GET /preview-seed?providers=1 left no OpenRouter Provider with a key')
+  }
+  const catalogPath = `/api/settings/llm-gateway/providers/${encodeURIComponent(openrouter.id)}/catalog`
+  const catalogHit = await request(catalogPath, { cookie: providersSession })
+  if (catalogHit.response.status !== 200) {
+    fail(`GET ${catalogPath} expected 200, got ${catalogHit.response.status} ${catalogHit.text.slice(0, 200)}`)
+  }
+  if (catalogHit.text.includes(PREVIEW_OPENROUTER_KEY)) {
+    fail('catalog response carries the Provider key')
+  }
+  const catalog = JSON.parse(catalogHit.text)?.catalog
+  if (catalog?.providerId !== openrouter.id) {
+    fail(`catalog providerId was ${catalog?.providerId}`)
+  }
+  if (catalog.ok) {
+    note(`catalog ${catalog.models.length} models; shelf free ${catalog.shelf.free.length} smart ${catalog.shelf.smart.length} coding ${catalog.shelf.coding.length} (${catalog.ranking})`)
+  } else {
+    note(`catalog soft-failed (${catalog.error}); Settings shows a banner and Chat is not blocked`)
+  }
+  const memberCatalog = await request(catalogPath, { cookie: memberSession })
+  if (memberCatalog.response.status !== 403) {
+    fail(`GET ${catalogPath} as Member expected 403, got ${memberCatalog.response.status}`)
+  }
+  for (const page of ['/settings', '/settings/providers', '/settings/other']) {
+    const hit = await request(page, { cookie: memberSession })
+    const where = locationPath(hit.response.headers.get('location'))
+    if (hit.response.status !== 302 || where !== '/') {
+      fail(`GET ${page} as Member expected 302 /, got ${hit.response.status} ${where ?? ''}`)
+    }
+  }
+  note('?settings=1 and ?providers=1 open /settings/providers; catalog is Owner-only; a Member cannot open /settings/...')
 
   note('ok')
 }

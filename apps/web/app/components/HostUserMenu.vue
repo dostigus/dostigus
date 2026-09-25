@@ -30,7 +30,7 @@
     >
       <NuxtLink
         v-if="isOwner"
-        to="/settings"
+        to="/settings/providers"
         class="item"
         role="menuitem"
         @click="choose"

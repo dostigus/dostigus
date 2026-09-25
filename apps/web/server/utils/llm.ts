@@ -47,7 +47,8 @@ import {
 
 export { readLlmGatewayEnv }
 
-function llmOutboundFetch(
+/** LLM-path fetch (ADR 0033): HTTPS_PROXY / HTTP_PROXY, never the Bot HTTP proxy. */
+export function llmOutboundFetch(
   targetUrl: string | null,
   env: NodeJS.ProcessEnv,
   fetchImpl?: typeof fetch,
@@ -800,7 +801,7 @@ function logGatewayFailure(detail: string, outcome: 'retry' | 'stop'): void {
   console.error(`LLM gateway request failed (${detail})`)
 }
 
-function gatewayHeaders(apiKey: string): Record<string, string> {
+export function gatewayHeaders(apiKey: string): Record<string, string> {
   return {
     'Authorization': `Bearer ${apiKey}`,
     'Content-Type': 'application/json',
