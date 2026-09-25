@@ -348,9 +348,9 @@ more Settings tabs on day-1 of this amend.
 The Owner page gate stays
 [ADR 0010](0010-owner-auth-session.md) /
 [ADR 0012](0012-household-members.md). It must cover `/settings`
-and `/settings/...`. A Member still cannot open Settings. The
-today exact-path set that only lists `/settings` is not enough
-once child routes exist.
+and `/settings/...`. A Member still cannot open Settings.
+Today’s exact-path set that only lists `/settings` is not
+enough once child routes exist.
 
 #### Providers page
 
