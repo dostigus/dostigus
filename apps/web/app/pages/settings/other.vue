@@ -16,7 +16,9 @@
         {{ $t('settings.other.locale.hint') }}
       </p>
       <fieldset class="locale-list">
-        <legend class="sr-only">{{ $t('settings.other.locale.title') }}</legend>
+        <legend class="sr-only">
+          {{ $t('settings.other.locale.title') }}
+        </legend>
         <label
           v-for="item in HOST_LOCALES"
           :key="item"

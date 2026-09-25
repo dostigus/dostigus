@@ -24,9 +24,18 @@ function memoryStore() {
   return openStore('file::memory:')
 }
 
+function applyMemberLocale(sqlite: DatabaseSync) {
+  const migration = STORE_MIGRATIONS.find((item) => item.id === '0022_member_locale')
+  if (!migration) {
+    throw new Error('missing 0022_member_locale')
+  }
+  sqlite.exec(migration.sql)
+}
+
 function applyBeforeMessenger(sqlite: DatabaseSync) {
   for (const migration of STORE_MIGRATIONS) {
     if (migration.id === '0012_messenger_threads') {
+      applyMemberLocale(sqlite)
       return
     }
     sqlite.exec(migration.sql)

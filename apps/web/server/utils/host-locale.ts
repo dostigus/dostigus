@@ -1,5 +1,6 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { HostLocale } from '@dostigus/ui-kit/locale'
+import process from 'node:process'
 import { getMember } from '@dostigus/db'
 import {
   DEFAULT_HOST_LOCALE,

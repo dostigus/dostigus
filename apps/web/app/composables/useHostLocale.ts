@@ -37,12 +37,10 @@ export function useHostLocale() {
       }
       await setLocale(localeToWrite)
       message.value = t('settings.other.locale.saved')
-    }
-    catch {
+    } catch {
       messageError.value = true
       message.value = t('settings.providers.saveFailed')
-    }
-    finally {
+    } finally {
       saving.value = false
     }
   }

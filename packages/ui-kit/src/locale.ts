@@ -54,8 +54,7 @@ export function localeMessageKeys(messages: unknown, prefix = ''): string[] {
     const path = prefix ? `${prefix}.${key}` : key
     if (typeof value === 'string') {
       keys.push(path)
-    }
-    else {
+    } else {
       keys.push(...localeMessageKeys(value, path))
     }
   }

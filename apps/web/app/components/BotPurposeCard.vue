@@ -58,6 +58,14 @@
 <script setup lang="ts">
 import { BOT_PURPOSE_OPTIONS } from '@dostigus/shared'
 
+defineProps<{
+  busy?: boolean
+}>()
+
+const emit = defineEmits<{
+  answer: [content: string]
+}>()
+
 const PURPOSE_KEYS = {
   Personal: 'chat.purpose.personal',
   Work: 'chat.purpose.work',
@@ -70,14 +78,6 @@ const { t } = useI18n()
 function purposeLabel(option: (typeof BOT_PURPOSE_OPTIONS)[number]): string {
   return t(PURPOSE_KEYS[option])
 }
-
-defineProps<{
-  busy?: boolean
-}>()
-
-const emit = defineEmits<{
-  answer: [content: string]
-}>()
 
 const draft = ref('')
 

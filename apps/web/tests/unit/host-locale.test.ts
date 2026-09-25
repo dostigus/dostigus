@@ -52,7 +52,7 @@ it('wires Owner Settings Locale and preview seed to the cookie', () => {
   expect(login).toContain('readLocaleCookie')
   expect(other).toContain('settings.other.locale.title')
   expect(composable).toContain('/api/settings/locale')
-  expect(preview).toContain("writeLocaleCookie(event, 'en')")
+  expect(preview).toContain('writeLocaleCookie(event, \'en\')')
   expect(nuxt).toContain('strategy: \'no_prefix\'')
   expect(nuxt).toContain('@nuxtjs/i18n')
   expect(nuxt).toContain('previewSeed')
