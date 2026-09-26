@@ -3,6 +3,11 @@
 - Status: accepted
 - Date: 2026-09-22
 
+Amended 2026-09-26: the Owner **Members** page is
+`/dashboard/members` inside Dashboard
+([ADR 0038](0038-dashboard-chrome.md)). A Member still cannot
+open it. Old `/members` bookmarks 404.
+
 The sidebar `+` also opens a finder for a Member. See
 [ADR 0019](0019-bot-picker-and-chat-purpose.md).
 
@@ -33,8 +38,9 @@ supersedes both. Bot visibility there is a personal Bot plus explicit
 grants: the creator, the Owner always, and a grant row (`bot_id` and
 `person_id`) for anyone else. The creator and the Owner may delete
 the Bot. A grantee does not delete it. The Owner alone opens
-**Members** and changes the LLM gateway in Settings. A Member does
-not open **Members** or Settings.
+**Members** (`/dashboard/members` inside Dashboard,
+[ADR 0038](0038-dashboard-chrome.md)) and changes the LLM gateway
+in Settings. A Member does not open **Members** or Settings.
 
 Owner Chat keeps the full Chat tool surface from
 [ADR 0011](0011-chat-mcp-tool-loop.md) (`dostigus_bots_list` / `get` /

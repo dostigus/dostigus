@@ -56,9 +56,10 @@ Owner Host chrome under `/dashboard` and `/dashboard/...`. Own
 layout: left grouped nav + scrolling content, no Host Bot list
 ([ADR 0038](docs/adr/0038-dashboard-chrome.md)). Day-1 pages:
 Overview (`/dashboard`), Cluster settings (`/dashboard/cluster`),
-Providers (`/dashboard/providers`), and Settings
-(`/dashboard/settings`). There are no `/settings` page
-routes. Not Member-visible.
+Providers (`/dashboard/providers`), Members
+(`/dashboard/members`), and Settings
+(`/dashboard/settings`). There are no `/settings` or
+`/members` page routes. Not Member-visible.
 _Avoid_: admin panel, treating Dashboard as the Host messenger
 shell, treating Settings as the whole chrome.
 

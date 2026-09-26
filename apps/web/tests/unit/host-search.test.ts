@@ -59,6 +59,13 @@ it('matches Chat lines and Host settings without opening Owner pages for a Membe
     settings: hostSettingsCatalog({ isOwner: true, bot: null }),
   })
   expect(allowlist.map((hit) => hit.href)).toEqual(['/dashboard/cluster'])
+  const members = hostSearchHits({
+    query: 'household',
+    bots,
+    messages: [],
+    settings: hostSettingsCatalog({ isOwner: true, bot: null }),
+  })
+  expect(members.map((hit) => hit.href)).toEqual(['/dashboard/members'])
   expect(hostSearchShortcutIndex('1')).toBe(0)
   expect(hostSearchShortcutIndex('9')).toBe(8)
   expect(hostSearchShortcutIndex('0')).toBeNull()

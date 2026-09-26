@@ -269,7 +269,7 @@ A send arrow in a circle
 appears when the draft has text or pending Artifacts.
 
 Settings is the `/dashboard/settings` page inside Dashboard.
-Members is the `/members` page. Neither
+Members is the `/dashboard/members` page. Neither
 opens as a Sheet over Chat. Bot settings are the right Sheet above.
 
 Narrow screens (under `52rem`) hide the sidebar behind a Bots control.

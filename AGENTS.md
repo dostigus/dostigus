@@ -103,7 +103,7 @@ which applies the same gate (`members/index.get.ts`,
 `requireHostSession` / `withHostStore` so a Member can use them. Settings,
 Bot create/delete, and Members stay on the Owner gate. The page gate is
 [`apps/web/app/middleware/owner.global.ts`](apps/web/app/middleware/owner.global.ts):
-`/members`, `/dashboard`, and every `/dashboard/...` page send a Member to
+`/dashboard` and every `/dashboard/...` page send a Member to
 `/` (`isOwnerPath` in
 [`apps/web/app/utils/owner-paths.ts`](apps/web/app/utils/owner-paths.ts)).
 Invite accept
@@ -192,11 +192,11 @@ often listens on IPv6 only: open **http://localhost:3000/**.
 The Host is a Bot list + Chat. Press
 **+** to create a Bot (default **New Bot**). **Dashboard** is Owner
 chrome under `/dashboard/**` ([ADR 0038](docs/adr/0038-dashboard-chrome.md)):
-Overview, Cluster settings, Providers, and Settings. Providers
+Overview, Cluster settings, Providers, Members, and Settings. Providers
 (`/dashboard/providers`) holds the OpenRouter quality shelf, «Подробнее»
 (full live catalog, per-tier pins, raw Policy), and health. Cluster
 settings (`/dashboard/cluster`) holds the Cluster timezone, the Cluster
-http allowlist, and the Locale switcher. There are no `/settings`
+http allowlist, and the Locale switcher. There are no `/settings` or `/members`
 page routes. The OpenRouter catalog is
 `GET /api/settings/llm-gateway/providers/:id/catalog` (Owner session,
 `?refresh=1` bypasses the ~24h Host cache). Store is SQLite
@@ -301,7 +301,7 @@ a direct message between them, and a room titled **Preview room** with
 the shared preview Bot. The room line mentions that Bot (`@` plus its
 name) and stores one assistant reply. It redirects to
 `/threads/preview-room`. `?rooms=1&as=member` signs in the Member on
-that same room. `?members=1` still wins and opens `/members`. **HEAD**
+that same room. `?members=1` still wins and opens `/dashboard/members`. **HEAD**
 ignores `?rooms=1`. In a room, a Bot replies only when a line mentions
 it: `@` plus the Bot's name. A line with no mention is stored and does
 not call the LLM gateway. See
@@ -309,7 +309,7 @@ not call the LLM gateway. See
 
 For Members and Invite screenshots, open
 **http://localhost:3000/preview-seed?members=1**. That GET signs in the
-same preview Owner and redirects to `/members` (a Member session cannot
+same preview Owner and redirects to `/dashboard/members` (a Member session cannot
 open that page). `?hold=1` and `?activity=` are ignored when `members=1`
 is set. **HEAD**
 ignores `?members=1` and still answers **204** or **302** to
@@ -414,7 +414,7 @@ With `pnpm preview:host` already up, `pnpm smoke:preview` checks those
 HEAD responses, that GET lands on `/bots/preview` (not a Bot chosen by
 the name **New Bot**), that renaming the Bot does not create another
 Bot, that `?tall=1` adds the tall thread once, that GET
-`?members=1` lands on `/members` while HEAD ignores that query, and that
+`?members=1` lands on `/dashboard/members` while HEAD ignores that query, and that
 `?parts=1` adds one assistant line with a button once while HEAD ignores
 that query, that `?kitchen=1` adds one Kitchen button once while
 HEAD ignores that query, that `?system=1` adds three system Skill /
@@ -455,6 +455,7 @@ explicit ready marker (not network idle), and writes a PNG under
 | `providers-empty` | `?settings=1` then `/dashboard/providers` | `.providers .add` | 1440×900 |
 | `providers-fixture` | `?providers=1` | `.provider` and the shelf (cards or miss banner) | 1440×900 |
 | `settings-other` | `?settings=1` then `/dashboard/cluster` | `.cluster input[name="timezone"]` | 1440×900 |
+| `members` | `?members=1` | `.members h1` | 1440×900 |
 | `narrow` | `?settings=1` then `/dashboard/providers` | `.providers h1` | 390×844 |
 
 `providers-empty` needs a Store with no Provider (a prior

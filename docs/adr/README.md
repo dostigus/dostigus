@@ -69,4 +69,4 @@ English.
 | [0035](0035-image-artifact-vision.md) | Image Artifact vision |
 | [0036](0036-llm-providers-tier-resolve-escalate.md) | LLM Providers, tier resolve, and escalate (amended 2026-09-25: OpenRouter Settings catalog + quality shelf; Advanced pin is day-1 of this amend for `kind=openrouter`; amended 2026-09-25: Settings IA — Провайдеры / Прочее, health from key + soft catalog probe; amended 2026-09-25: chrome slugs `/dashboard/providers` and `/dashboard/cluster`, no `/settings` redirects [0038](0038-dashboard-chrome.md)) |
 | [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) |
-| [0038](0038-dashboard-chrome.md) | Dashboard chrome (own layout; Settings is one page; no `/settings` redirects) |
+| [0038](0038-dashboard-chrome.md) | Dashboard chrome (own layout; Settings is one page; Members under Account; no `/settings` or `/members` redirects) |

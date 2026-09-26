@@ -76,7 +76,7 @@ What the running Cluster does today:
   unlabeled bubbles), Settings, and Members.   Settings presents a
   Providers list (OpenRouter, OpenAI, or OpenAI-compatible). Casual
   OpenRouter is paste key → meta free / auto.   Dashboard is Owner chrome under `/dashboard/...`
-  (Overview, Cluster settings, Providers, Settings). Those
+  (Overview, Cluster settings, Providers, Members, Settings). Those
   routes use their own chrome (grouped nav + scrolling
   content), not the Host Bot list
   ([ADR 0038](adr/0038-dashboard-chrome.md)). There are no
@@ -138,7 +138,7 @@ What the running Cluster does today:
   The `+` opens that menu. **Найти или создать Bot** opens
   the Bot picker. A user button opens Settings
   (`/dashboard/settings`), Members
-  (`/members`), and Sign out. Chat overlays a centered pill on the thread:
+  (`/dashboard/members`), and Sign out. Chat overlays a centered pill on the thread:
   avatar and name, translucent, so lines scroll under it. A top inset about
   the pill’s height keeps the first line clear of the pill when the thread
   is at the top. There is no full-width header bar. At rest the pill is

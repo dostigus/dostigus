@@ -466,13 +466,13 @@ it('seeds a Member private Bot and separate shared bot-threads once', async () =
 it('redirects preview seed the way the live smoke checks', () => {
   const chat = { botId: PREVIEW_BOT_ID, roomId: PREVIEW_ROOM_THREAD_ID }
   expect(previewSeedRedirect(chat)).toBe(`/bots/${PREVIEW_BOT_ID}`)
-  expect(previewSeedRedirect({ ...chat, members: '1', activity: 'typing', hold: '1' })).toBe('/members')
-  expect(previewSeedRedirect({ ...chat, members: 1, rooms: '1', threads: '1' })).toBe('/members')
+  expect(previewSeedRedirect({ ...chat, members: '1', activity: 'typing', hold: '1' })).toBe('/dashboard/members')
+  expect(previewSeedRedirect({ ...chat, members: 1, rooms: '1', threads: '1' })).toBe('/dashboard/members')
   expect(previewSeedRedirect({ ...chat, settings: '1' })).toBe('/dashboard')
   expect(previewSeedRedirect({ ...chat, settings: 1, activity: 'typing', hold: '1' })).toBe('/dashboard')
   expect(previewSeedRedirect({ ...chat, providers: '1' })).toBe('/dashboard/providers')
-  expect(previewSeedRedirect({ ...chat, members: '1', providers: '1' })).toBe('/members')
-  expect(previewSeedRedirect({ ...chat, members: '1', settings: '1' })).toBe('/members')
+  expect(previewSeedRedirect({ ...chat, members: '1', providers: '1' })).toBe('/dashboard/members')
+  expect(previewSeedRedirect({ ...chat, members: '1', settings: '1' })).toBe('/dashboard/members')
   expect(previewSeedRedirect({ ...chat, rooms: '1', as: 'member', activity: 'typing' })).toBe(`/threads/${PREVIEW_ROOM_THREAD_ID}`)
   expect(previewSeedRedirect({ ...chat, rooms: '1', roomId: null })).toBe(`/bots/${PREVIEW_BOT_ID}`)
   expect(previewSeedRedirect({ ...chat, threads: '1' })).toBe('/')
