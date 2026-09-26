@@ -22,6 +22,16 @@
   `/dashboard/cluster`. There are no `/settings` page routes
   and no HTTP/Nuxt redirects from the old slugs. Catalog /
   shelf / health / two-column Providers story stay.
+- Amended: 2026-09-26 — Provider `apiKey` is the only Store
+  source of truth for an LLM key. One-shot migrate on Store
+  open copies leftover `llm_gateway.api_key` onto Provider id
+  `legacy` (or the OpenRouter Provider) when that instance has
+  no key, never overwrites a Provider that already has a key,
+  then drops the column. Resolve, Settings, catalog, and save
+  read and write only `providers[].apiKey`. Env
+  `LLM_API_KEY` / `OPENROUTER_API_KEY` stay the
+  [ADR 0004](0004-llm-gateway-tiers.md) compose override; they
+  do not write the deleted field. Provider id `legacy` stays.
 
 The OpenAI-compatible LLM gateway shape and transient *same-model*
 retry stay [ADR 0004](0004-llm-gateway-tiers.md). Model tier *names*
@@ -67,7 +77,7 @@ A **Provider** is an Owner-connected gateway instance:
 | Field | Day-1 |
 | --- | --- |
 | `kind` | `openrouter` \| `openai` \| `openai-compatible` |
-| API key | required to call that instance |
+| API key | required to call that instance; stored only on the Provider (`providers[].apiKey`) |
 | `baseUrl` | optional; required in practice for `openai-compatible` |
 
 It is not a frozen model list in this monorepo. Several instances
@@ -423,35 +433,57 @@ The impl PR filled in what this record left open.
 
 ### Legacy compat
 
-Live Clusters today store one LLM gateway row: base URL, key,
-default Model tier, and optional **per-tier raw model strings**
+Live Clusters may still store **per-tier raw model strings**
 (`llm_gateway.modelOverrides`, env `LLM_MODEL` /
-`LLM_MODEL_*`). Settings treats “tier = raw model string”.
-
-The impl PR **must** read that shape so a live Cluster does not
+`LLM_MODEL_*`). Settings treats “tier = raw model string” as a
+pin. The Host still reads that shape so a live Cluster does not
 brick:
 
-- Treat the existing row as **one** Provider instance. Infer
-  `kind`: `openrouter` when the base is OpenRouter (including
-  the [ADR 0004](0004-llm-gateway-tiers.md) default
+- Treat the existing row as **one** Provider instance when
+  Providers were never saved. Infer `kind`: `openrouter` when
+  the base is OpenRouter (including the
+  [ADR 0004](0004-llm-gateway-tiers.md) default
   `https://openrouter.ai/api/v1` when a key is set and no base
   is stored); otherwise `openai-compatible` (or `openai` when
-  the base is the official OpenAI URL).
+  the base is the official OpenAI URL). Provider id `legacy`
+  stays. Do not rename it to `openrouter`.
 - Treat each stored / env model string as a **pinned-model
   Policy** on that single Provider for that tier.
 - An empty override keeps today’s
   [ADR 0004](0004-llm-gateway-tiers.md) default id until the
-  Owner adds a Provider through the new Settings and casual
-  auto-fill runs. Auto-fill does not wipe a non-empty pin.
+  Owner adds a Provider through Settings and casual auto-fill
+  runs. Auto-fill does not wipe a non-empty pin.
 - Env override / bootstrap
   (`OPENAI_COMPATIBLE_BASE_URL`, `LLM_API_KEY` /
   `OPENROUTER_API_KEY`, `LLM_MODEL` / `LLM_MODEL_*`) stays the
-  [ADR 0004](0004-llm-gateway-tiers.md) bootstrap path until
-  the impl migrates it onto the same Provider + pin read.
+  [ADR 0004](0004-llm-gateway-tiers.md) compose path at resolve
+  time. It does not write a Store key.
 
-Write path after the impl: persist Provider instances and
-tier → Provider + Policy. The compat read remains for Stores
-that have not been saved through the new Settings.
+#### Provider key (sole Store SoT)
+
+A leftover `llm_gateway.api_key` beside `providers[].apiKey`
+was a dual source. Resolve preferred the Provider, so a null
+Provider key plus a leftover field key meant zero LLM attempts
+while Settings showed «Нет ключа».
+
+On Store open / Host boot, **before** any LLM resolve or
+Providers UI, a one-shot migrate:
+
+1. If Provider id `legacy` (or the OpenRouter Provider) has an
+   empty or null `apiKey` and the old field still has a
+   non-empty key → copy into that Provider’s `apiKey`.
+2. If that Provider already has a key (even if the old field
+   differs) → never overwrite the Provider; wipe the old field.
+3. After migrate, or if nothing to copy → drop
+   `llm_gateway.api_key` from the Store permanently.
+
+After this amend every resolve / UI / save path reads and
+writes **only** `providers[].apiKey`. There is no fallback to
+the deleted field.
+
+Write path: persist Provider instances and tier → Provider +
+Policy. Compat pins remain for Stores that still have raw
+model strings.
 
 ### Vision
 
@@ -526,8 +558,11 @@ concrete id.
 
 - The first impl PR added Provider instances, tier →
   Provider + Policy bind, casual auto-fill, situation start,
-  escalate, and the legacy compat read. This amend does not
-  change that code.
+  escalate, and the legacy compat read.
+- The 2026-09-26 Host impl drops `llm_gateway.api_key` after
+  the one-shot migrate above. Provider `apiKey` is the only
+  Store copy of a key. Env compose override stays
+  [ADR 0004](0004-llm-gateway-tiers.md).
 - A later Host impl PR adds the Owner-session catalog proxy
   (~24h cache + Refresh), the OpenRouter quality shelf, the
   Advanced pin UI, multi-page Settings (later
@@ -647,6 +682,11 @@ concrete id.
   No model ids in git.
 - Catalog fail blocks Chat — rejected. Banner in Settings.
   Cluster stays on meta free / auto.
+- Keep `llm_gateway.api_key` as a second Store source beside
+  Provider `apiKey` — rejected. Dual-path caused a Wake with
+  `llmCallCount=0` while Settings showed «Нет ключа».
+- Rename Provider id `legacy` to `openrouter` during the key
+  migrate — rejected. Id stays.
 - Copy OpenMausBot many CLI engines into Cluster Settings —
   rejected. Gateway stays OpenAI-compatible kinds above.
 - Copy OpenMausBot `allow_fallbacks: false` onto meta free /

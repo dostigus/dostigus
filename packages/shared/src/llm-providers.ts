@@ -309,14 +309,12 @@ function hostnameOf(url: string): string {
 
 function normalizeStored(stored?: LlmGatewayStored | null): {
   baseUrl: string | null
-  apiKey: string | null
   modelOverrides: Partial<Record<ModelTier, string>>
   providers: LlmProviderInstance[]
   tierBinds: Partial<Record<ModelTier, LlmTierBind>>
 } {
   return {
     baseUrl: stored?.baseUrl ?? null,
-    apiKey: stored?.apiKey ?? null,
     modelOverrides: stored?.modelOverrides ?? {},
     providers: stored?.providers ?? [],
     tierBinds: stored?.tierBinds ?? {},
@@ -338,7 +336,6 @@ function envOrLegacyProvider(
   env: LlmGatewayEnv | undefined,
   stored: {
     baseUrl: string | null
-    apiKey: string | null
     providers: LlmProviderInstance[]
   },
 ): LlmProviderInstance | undefined {
@@ -353,18 +350,9 @@ function envOrLegacyProvider(
       defaultModel: null,
     }
   }
-  const storedKey = trimOrUndefined(stored.apiKey)
-  if (storedKey) {
-    const kind = inferLlmProviderKind(stored.baseUrl)
-    return {
-      id: LEGACY_LLM_PROVIDER_ID,
-      kind,
-      apiKey: storedKey,
-      baseUrl: defaultBaseUrlForKind(kind, stored.baseUrl),
-      defaultModel: null,
-    }
-  }
   return stored.providers.find((provider) => trimOrUndefined(provider.apiKey))
+    ?? providerById(stored.providers, LEGACY_LLM_PROVIDER_ID)
+    ?? stored.providers[0]
 }
 
 function configuredAttempt(
