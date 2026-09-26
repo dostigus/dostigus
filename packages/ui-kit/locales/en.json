@@ -620,6 +620,28 @@
     "needName": "Enter a name.",
     "saveAvatarFailed": "Could not save the avatar."
   },
+  "pack": {
+    "title": "Pack",
+    "hint": "Share a recipe, not Chat or secrets.",
+    "export": "Export Pack",
+    "exportBusy": "Exporting…",
+    "apply": "Apply Pack",
+    "folder": "Folder",
+    "previewTitle": "Apply Pack",
+    "target": "Apply onto",
+    "targetThis": "This Bot",
+    "targetNew": "New Bot",
+    "confirm": "Apply",
+    "confirmBusy": "Applying…",
+    "skills": "Skills",
+    "schedules": "Schedules (paused)",
+    "unbound": "Unbound stubs will not start tools.",
+    "chatKept": "Chat stays on this Bot.",
+    "engineWarn": "This Host is outside engines.dostigus ({range}).",
+    "exportFailed": "Could not export the Pack.",
+    "previewFailed": "Could not read this Pack.",
+    "applyFailed": "Could not Apply the Pack."
+  },
   "schedule": {
     "gone": "This Schedule is gone.",
     "loading": "Loading…",

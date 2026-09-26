@@ -83,6 +83,7 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   expect(settings).toContain('closet.description')
   expect(settings).toContain('closet.schedules')
   expect(settings).toContain('closet.add')
+  expect(settings).toContain('PackClosetActions')
   expect(settings).toContain('<ScheduleSheet')
   expect(settings).toContain('mode="create"')
   expect(settings).toContain('schedule-row')

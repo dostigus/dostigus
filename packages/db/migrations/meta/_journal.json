@@ -169,6 +169,13 @@
       "when": 1760162400000,
       "tag": "0023_drop_llm_gateway_api_key",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1760248800000,
+      "tag": "0024_installed_packs",
+      "breakpoints": true
     }
   ]
 }

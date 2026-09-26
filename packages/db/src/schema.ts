@@ -14,7 +14,23 @@ export const bots = sqliteTable('bots', {
   createdAt: integer('created_at').notNull(),
   /** Owner or Member id. Access beyond the creator is a grant row, not a flag. */
   createdBy: text('created_by'),
+  /** Installed Pack snapshot `author.slug@version`. See ADR 0039. */
+  installedPackId: text('installed_pack_id'),
 })
+
+/**
+ * Immutable installed Pack snapshot. The Bot holds a ref. See ADR 0039.
+ * A Pack is not a Bot and not a Module package.
+ */
+export const installedPacks = sqliteTable('installed_packs', {
+  id: text('id').primaryKey(),
+  packId: text('pack_id').notNull(),
+  version: text('version').notNull(),
+  snapshotJson: text('snapshot_json').notNull(),
+  installedAt: integer('installed_at').notNull(),
+}, (table) => [
+  index('installed_packs_pack_id_version_idx').on(table.packId, table.version),
+])
 
 /**
  * One explicit Bot grant. The creator and the Owner do not need a row.
@@ -250,6 +266,7 @@ export const messageArtifacts = sqliteTable('message_artifacts', {
   index('message_artifacts_artifact_id_idx').on(table.artifactId),
 ])
 
+export type InstalledPackRow = typeof installedPacks.$inferSelect
 export type BotRow = typeof bots.$inferSelect
 export type BotGrantRow = typeof botGrants.$inferSelect
 export type MessageRow = typeof messages.$inferSelect

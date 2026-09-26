@@ -150,6 +150,12 @@
           </li>
         </ul>
       </section>
+      <PackClosetActions
+        v-if="bot"
+        :bot-id="bot.id"
+        :can-update="canEdit"
+        @applied="onPackApplied"
+      />
       <div
         v-if="canEdit"
         class="field"
@@ -327,6 +333,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   saved: []
+  applied: [botId: string]
 }>()
 
 const { locale, t } = useI18n()
@@ -455,6 +462,12 @@ function onScheduleCreated() {
 function onScheduleDeleted() {
   detailOpen.value = false
   detailId.value = ''
+  void loadSchedules()
+}
+
+function onPackApplied(botId: string) {
+  emit('applied', botId)
+  emit('saved')
   void loadSchedules()
 }
 

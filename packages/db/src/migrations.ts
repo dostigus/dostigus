@@ -481,6 +481,20 @@ UPDATE \`members\` SET \`locale\` = 'en' WHERE \`locale\` IS NULL;
 ALTER TABLE \`llm_gateway\` DROP COLUMN \`api_key\`;
 `,
   },
+  {
+    id: '0024_installed_packs',
+    sql: `
+CREATE TABLE \`installed_packs\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`pack_id\` text NOT NULL,
+  \`version\` text NOT NULL,
+  \`snapshot_json\` text NOT NULL,
+  \`installed_at\` integer NOT NULL
+);
+CREATE INDEX \`installed_packs_pack_id_version_idx\` ON \`installed_packs\` (\`pack_id\`, \`version\`);
+ALTER TABLE \`bots\` ADD \`installed_pack_id\` text;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

@@ -121,6 +121,11 @@ export type Bot = {
   createdAt: string
   /** Owner or Member who created the Bot. */
   createdBy: string | null
+  /**
+   * Installed Pack snapshot id (`author.slug@version`). Null when this
+   * Bot has no Pack ref. See ADR 0039.
+   */
+  installedPackId: string | null
   manifest: Manifest
 }
 

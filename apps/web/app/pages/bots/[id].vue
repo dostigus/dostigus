@@ -311,6 +311,7 @@
       v-model:open="settingsOpen"
       :bot="bot"
       @saved="onBotSaved"
+      @applied="onPackApplied"
     />
     <KitSheet
       v-model:open="sheetOpen"
@@ -920,6 +921,15 @@ async function deliver(raw: string, existing: TimelineLine | null, artifactIds: 
 
 async function onBotSaved() {
   await Promise.all([refreshBot(), refreshBots(), refreshThreads()])
+}
+
+async function onPackApplied(id: string) {
+  settingsOpen.value = false
+  if (id !== botId.value) {
+    await navigateTo(`/bots/${id}`)
+    return
+  }
+  await onBotSaved()
 }
 </script>
 

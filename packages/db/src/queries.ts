@@ -151,9 +151,28 @@ function normalizeContent(content: string | undefined, allowEmpty = false): stri
 
 const BOT_SELECT = `id, name, model_tier, avatar_shape, avatar_color, label, description, skills_json, modules_json, created_at, created_by`
 
+const installedPackColumn = new WeakMap<object, boolean>()
+
+function botsHaveInstalledPackId(store: OpenedStore): boolean {
+  const cached = installedPackColumn.get(store.sqlite)
+  if (cached != null) {
+    return cached
+  }
+  const row = store.sqlite.prepare(`
+    SELECT 1 AS ok FROM pragma_table_info('bots') WHERE name = 'installed_pack_id'
+  `).get() as { ok?: number } | undefined
+  const present = Boolean(row)
+  installedPackColumn.set(store.sqlite, present)
+  return present
+}
+
+function botSelect(store: OpenedStore): string {
+  return botsHaveInstalledPackId(store) ? `${BOT_SELECT}, installed_pack_id` : BOT_SELECT
+}
+
 function selectBot(store: OpenedStore, id: string): BotRecord | undefined {
   return store.sqlite.prepare(`
-    SELECT ${BOT_SELECT}
+    SELECT ${botSelect(store)}
     FROM bots
     WHERE id = ?
   `).get(id) as BotRecord | undefined
@@ -180,7 +199,7 @@ export function listBots(store: OpenedStore, viewer?: BotViewer): BotListItem[] 
   }
   const rows = store.sqlite.prepare(`
     SELECT
-      ${BOT_SELECT},
+      ${botSelect(store)},
       (
         SELECT content
         FROM messages
@@ -218,7 +237,7 @@ export function viewerMaySeeBot(store: OpenedStore, bot: Bot, viewer: BotViewer)
 /** Sidebar preview is the bot-thread this person would open, not another person's lines. */
 function listBotsForViewer(store: OpenedStore, viewer: BotViewer): BotListItem[] {
   const rows = store.sqlite.prepare(`
-    SELECT ${BOT_SELECT}
+    SELECT ${botSelect(store)}
     FROM bots
     WHERE ? = 'owner'
       OR created_by = ?

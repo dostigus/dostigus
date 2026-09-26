@@ -20,6 +20,7 @@ export type BotRecord = {
   modules_json: string
   created_at: number
   created_by: string | null
+  installed_pack_id?: string | null
 }
 
 export type MessageRecord = {
@@ -119,6 +120,7 @@ export function toBot(row: BotRecord): Bot {
     name: row.name,
     createdAt: new Date(row.created_at).toISOString(),
     createdBy: row.created_by ?? null,
+    installedPackId: row.installed_pack_id ?? null,
     manifest: {
       name: row.name,
       modelTier: modelTierFromRow(row.model_tier),

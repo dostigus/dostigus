@@ -75,6 +75,18 @@ export function upsertBotSkill(
   return skills
 }
 
+/** Pack update owns Skills: replace the Bot list from the Pack snapshot. */
+export function replaceBotSkills(store: OpenedStore, botId: string, skills: Skill[]): Skill[] {
+  requireBot(store, botId)
+  const next = skills.map((skill) => ({
+    id: asSkillInput(() => parseSkillId(skill.id)),
+    description: asSkillInput(() => parseSkillDescription(skill.description)),
+    instructions: asSkillInput(() => parseSkillInstructions(skill.instructions)),
+  }))
+  writeSkills(store, botId, next)
+  return next
+}
+
 export function deleteBotSkill(
   store: OpenedStore,
   botId: string,

@@ -105,6 +105,15 @@ export {
   ownerExists,
   type OwnerSecret,
 } from './owners'
+export {
+  applyPack,
+  exportBotPack,
+  getInstalledPack,
+  previewPackApply,
+  putInstalledPack,
+  setBotInstalledPack,
+  validatePackTree,
+} from './packs'
 export { artifactsDirFromStoreUrl, COMPOSE_STORE_URL, DEFAULT_STORE_URL, storeFilePath } from './path'
 export {
   botThreadIdFor,
@@ -166,11 +175,12 @@ export {
   updateSchedule,
   viewerForPerson,
 } from './schedules'
-export { type ArtifactRow, artifacts, type BotGrantRow, botGrants, type BotRow, bots, clusterSettings, type ClusterSettingsRow, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageArtifactRow, messageArtifacts, type MessageRow, messages, type OwnerRow, owners, type ScheduleRow, schedules, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads, type TurnRow, turns } from './schema'
+export { type ArtifactRow, artifacts, type BotGrantRow, botGrants, type BotRow, bots, clusterSettings, type ClusterSettingsRow, type InstalledPackRow, installedPacks, type InviteRow, invites, kitchenCooked, kitchenPantry, kitchenRecipe, llmGateway, type LlmGatewayRow, type MemberRow, members, type MessageArtifactRow, messageArtifacts, type MessageRow, messages, type OwnerRow, owners, type ScheduleRow, schedules, type ThreadParticipantRow, threadParticipants, type ThreadRow, threads, type TurnRow, turns } from './schema'
 export {
   deleteBotSkill,
   getBotSkill,
   listBotSkills,
+  replaceBotSkills,
   upsertBotSkill,
 } from './skills'
 export { type OpenedStore, openStore } from './store'

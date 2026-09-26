@@ -88,6 +88,8 @@ export type ScheduleWrite = {
   timeLocal: string
   daysOfWeek?: ScheduleWeekday[] | null
   wakeText: string
+  /** Pack import always lands paused. See ADR 0039. */
+  paused?: boolean
 }
 
 function clockNow(clock?: ScheduleClock): number {
@@ -334,8 +336,21 @@ export function createSchedule(
     INSERT INTO schedules (
       id, bot_id, person_id, name, cadence, time_local, days_of_week_json, wake_text,
       paused, next_run_at, last_run_at, last_run_status, defer_count, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NULL, NULL, 0, ?, ?)
-  `).run(id, botId, personId, name, cadence, timeLocal, daysJson(days), wakeText, nextRunAt, now, now)
+    )     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)
+  `).run(
+    id,
+    botId,
+    personId,
+    name,
+    cadence,
+    timeLocal,
+    daysJson(days),
+    wakeText,
+    input.paused ? 1 : 0,
+    nextRunAt,
+    now,
+    now,
+  )
   return toSchedule(requireSchedule(store, id))
 }
 
