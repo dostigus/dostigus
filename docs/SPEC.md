@@ -53,10 +53,11 @@ What the running Cluster does today:
   `kitchen_pantry` (name, optional qty), `kitchen_cooked` (label, XP,
   optional person id), and `kitchen_recipe` (one name and ingredients
   text),
-  `llm_gateway` (Cluster LLM gateway: base URL, key server-side only,
-  default Model tier, optional model overrides, Provider instances
-  (`providers_json`) and Model tier → Provider + Policy binds
-  (`tier_binds_json`)), `owners` (exactly one
+  `llm_gateway` (Cluster LLM gateway: base URL, default Model
+  tier, optional model overrides, Provider instances
+  (`providers_json`; each holds its API key server-side) and
+  Model tier → Provider + Policy binds
+  (`tier_binds_json`)), `owners` (exactly one)
   Cluster Owner: unique email and/or username, password hash, createdAt),
   and `members` (Household Members: display name, unique email and/or
   username, password hash, createdAt, disabledAt), and `invites`

@@ -234,29 +234,26 @@ it('rejects an unknown Model tier', () => {
   expect(() => createBot(store, { modelTier: 'smart' })).toThrow(/Model tier/)
 })
 
-it('persists Cluster LLM gateway settings and keeps the key unless cleared', () => {
+it('persists Cluster LLM gateway settings without a row-level key', () => {
   const store = memoryStore()
-  expect(getLlmGatewaySettings(store).apiKey).toBeNull()
+  expect(getLlmGatewaySettings(store).providers).toEqual([])
 
   const saved = upsertLlmGatewaySettings(store, {
     baseUrl: 'https://openrouter.ai/api/v1/',
-    apiKey: 'sk-store-secret',
     defaultTier: 'cheap',
     modelOverrides: { cheap: 'openai/gpt-4.1-mini' },
   })
   expect(saved.baseUrl).toBe('https://openrouter.ai/api/v1')
-  expect(saved.apiKey).toBe('sk-store-secret')
   expect(saved.defaultTier).toBe('cheap')
   expect(saved.modelOverrides).toEqual({ cheap: 'openai/gpt-4.1-mini' })
+  expect(saved.providers).toEqual([])
+  expect(saved).not.toHaveProperty('apiKey')
 
   const kept = upsertLlmGatewaySettings(store, {
     defaultTier: 'strong',
   })
-  expect(kept.apiKey).toBe('sk-store-secret')
   expect(kept.defaultTier).toBe('strong')
-
-  const cleared = upsertLlmGatewaySettings(store, { clearApiKey: true })
-  expect(cleared.apiKey).toBeNull()
+  expect(kept.modelOverrides).toEqual({ cheap: 'openai/gpt-4.1-mini' })
 })
 
 it('persists Provider instances and auto-fills empty OpenRouter tiers', () => {
@@ -283,7 +280,7 @@ it('persists Provider instances and auto-fills empty OpenRouter tiers', () => {
     code: { providerId: 'or1', policy: { kind: 'auto' } },
     toy: { providerId: 'or1', policy: { kind: 'free' } },
   })
-  expect(saved.apiKey).toBe('sk-or')
+  expect(saved).not.toHaveProperty('apiKey')
 
   const kept = upsertLlmGatewaySettings(store, {
     providers: [{
@@ -294,7 +291,7 @@ it('persists Provider instances and auto-fills empty OpenRouter tiers', () => {
       defaultModel: null,
     }],
   })
-  expect(kept.apiKey).toBe('sk-or')
+  expect(kept.providers?.[0]?.apiKey).toBe('sk-or')
   expect(kept.tierBinds?.cheap).toEqual({ providerId: 'or1', policy: { kind: 'free' } })
 
   const pinned = upsertLlmGatewaySettings(store, {
@@ -308,29 +305,6 @@ it('persists Provider instances and auto-fills empty OpenRouter tiers', () => {
     providerId: 'or1',
     policy: { kind: 'model', modelId: 'lab/smart' },
   })
-})
-
-it('moves a legacy key onto the legacy Provider on first Settings save', () => {
-  const store = memoryStore()
-  upsertLlmGatewaySettings(store, { apiKey: 'sk-legacy' })
-  const saved = upsertLlmGatewaySettings(store, {
-    providers: [{
-      id: 'legacy',
-      kind: 'openrouter',
-      apiKey: null,
-      baseUrl: null,
-      defaultModel: null,
-    }],
-  })
-  expect(saved.providers?.[0]).toMatchObject({ id: 'legacy', apiKey: 'sk-legacy' })
-  expect(saved.tierBinds?.strong).toEqual({ providerId: 'legacy', policy: { kind: 'auto' } })
-
-  const other = memoryStore()
-  upsertLlmGatewaySettings(other, { apiKey: 'sk-legacy' })
-  const fresh = upsertLlmGatewaySettings(other, {
-    providers: [{ id: 'or1', kind: 'openrouter', apiKey: null, baseUrl: null, defaultModel: null }],
-  })
-  expect(fresh.providers?.[0]?.apiKey).toBeNull()
 })
 
 it('rejects a non-http LLM gateway base URL', () => {

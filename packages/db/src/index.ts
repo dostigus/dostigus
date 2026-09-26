@@ -53,6 +53,11 @@ export {
   saveKitchenRecipe,
 } from './kitchen'
 export {
+  LLM_GATEWAY_API_KEY_DROP_ID,
+  llmGatewayHasApiKeyColumn,
+  migrateLegacyLlmGatewayApiKey,
+} from './llm-gateway-key'
+export {
   type ArtifactRecord,
   avatarColorFromRow,
   avatarShapeFromRow,

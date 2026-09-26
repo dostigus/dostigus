@@ -1,4 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite'
+import { LLM_GATEWAY_API_KEY_DROP_ID, migrateLegacyLlmGatewayApiKey } from './llm-gateway-key'
 
 /** Drizzle-kit style SQL (see migrations/0000_bots_and_messages.sql). Embedded so Host can migrate without a folder path. */
 export const STORE_MIGRATIONS = [
@@ -474,6 +475,12 @@ ALTER TABLE \`members\` ADD \`locale\` text;
 UPDATE \`members\` SET \`locale\` = 'en' WHERE \`locale\` IS NULL;
 `,
   },
+  {
+    id: '0023_drop_llm_gateway_api_key',
+    sql: `
+ALTER TABLE \`llm_gateway\` DROP COLUMN \`api_key\`;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {
@@ -497,6 +504,9 @@ export function applyStoreMigrations(sqlite: DatabaseSync): void {
   for (const migration of STORE_MIGRATIONS) {
     if (applied.has(migration.id)) {
       continue
+    }
+    if (migration.id === LLM_GATEWAY_API_KEY_DROP_ID) {
+      migrateLegacyLlmGatewayApiKey(sqlite)
     }
     sqlite.exec(migration.sql)
     insert.run(migration.id, Date.now())

@@ -8,8 +8,6 @@ import process from 'node:process'
 import {
   defaultBaseUrlForKind,
   emptyOpenRouterShelf,
-  inferLlmProviderKind,
-  LEGACY_LLM_PROVIDER_ID,
   OPENROUTER_CATALOG_CACHE_MS,
   OPENROUTER_CATALOG_TIMEOUT_MS,
   parseOpenRouterModels,
@@ -45,15 +43,6 @@ function catalogProvider(stored: LlmGatewayStored, providerId: string): CatalogP
       kind: provider.kind,
       apiKey: trimOrUndefined(provider.apiKey) ?? null,
       baseUrl: defaultBaseUrlForKind(provider.kind, provider.baseUrl),
-    }
-  }
-  if (providerId === LEGACY_LLM_PROVIDER_ID && (stored.providers ?? []).length === 0) {
-    const kind = inferLlmProviderKind(stored.baseUrl)
-    return {
-      id: providerId,
-      kind,
-      apiKey: trimOrUndefined(stored.apiKey) ?? null,
-      baseUrl: defaultBaseUrlForKind(kind, stored.baseUrl),
     }
   }
   return null

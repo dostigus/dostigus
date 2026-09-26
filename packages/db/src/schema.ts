@@ -29,11 +29,10 @@ export const botGrants = sqliteTable('bot_grants', {
   index('bot_grants_person_id_idx').on(table.personId),
 ])
 
-/** Cluster LLM gateway settings. The API key stays in the Store (server-side only). */
+/** Cluster LLM gateway settings. Provider `apiKey` is the only Store SoT. */
 export const llmGateway = sqliteTable('llm_gateway', {
   id: text('id').primaryKey(),
   baseUrl: text('base_url'),
-  apiKey: text('api_key'),
   defaultTier: text('default_tier').notNull().default('strong'),
   modelsJson: text('models_json').notNull().default('{}'),
   providersJson: text('providers_json').notNull().default('[]'),

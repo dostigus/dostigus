@@ -234,7 +234,7 @@ export function resolveLlmAttempt(
   const env = options.env
   const envPin = trimOrUndefined(env?.model) ?? trimOrUndefined(env?.modelOverrides?.[tier])
   if (envPin) {
-    const provider = envOrLegacyProvider(env, stored)
+    const provider = envOrStoredProvider(env, stored)
     if (!provider) {
       return null
     }
@@ -244,9 +244,6 @@ export function resolveLlmAttempt(
   const bind = stored.tierBinds[tier]
   if (bind) {
     const provider = providerById(stored.providers, bind.providerId)
-      ?? (bind.providerId === LEGACY_LLM_PROVIDER_ID
-        ? envOrLegacyProvider(env, stored)
-        : undefined)
     if (!provider) {
       return null
     }
@@ -254,7 +251,7 @@ export function resolveLlmAttempt(
   }
 
   const storePin = trimOrUndefined(stored.modelOverrides[tier])
-  const fallback = envOrLegacyProvider(env, stored) ?? stored.providers[0]
+  const fallback = envOrStoredProvider(env, stored)
   if (storePin && fallback) {
     return configuredAttempt(tier, policyFromLegacyModel(storePin), fallback, env)
   }
@@ -309,14 +306,12 @@ function hostnameOf(url: string): string {
 
 function normalizeStored(stored?: LlmGatewayStored | null): {
   baseUrl: string | null
-  apiKey: string | null
   modelOverrides: Partial<Record<ModelTier, string>>
   providers: LlmProviderInstance[]
   tierBinds: Partial<Record<ModelTier, LlmTierBind>>
 } {
   return {
     baseUrl: stored?.baseUrl ?? null,
-    apiKey: stored?.apiKey ?? null,
     modelOverrides: stored?.modelOverrides ?? {},
     providers: stored?.providers ?? [],
     tierBinds: stored?.tierBinds ?? {},
@@ -334,11 +329,10 @@ function providerById(
   return providers.find((provider) => provider.id === id)
 }
 
-function envOrLegacyProvider(
+function envOrStoredProvider(
   env: LlmGatewayEnv | undefined,
   stored: {
     baseUrl: string | null
-    apiKey: string | null
     providers: LlmProviderInstance[]
   },
 ): LlmProviderInstance | undefined {
@@ -350,17 +344,6 @@ function envOrLegacyProvider(
       kind,
       apiKey: envKey,
       baseUrl: defaultBaseUrlForKind(kind, env?.baseUrl ?? stored.baseUrl),
-      defaultModel: null,
-    }
-  }
-  const storedKey = trimOrUndefined(stored.apiKey)
-  if (storedKey) {
-    const kind = inferLlmProviderKind(stored.baseUrl)
-    return {
-      id: LEGACY_LLM_PROVIDER_ID,
-      kind,
-      apiKey: storedKey,
-      baseUrl: defaultBaseUrlForKind(kind, stored.baseUrl),
       defaultModel: null,
     }
   }

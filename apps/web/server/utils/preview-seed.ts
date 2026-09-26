@@ -151,7 +151,7 @@ export function previewProvidersRequested(value: unknown): boolean {
 
 export function ensurePreviewOpenRouterProvider(store: OpenedStore): void {
   const current = getLlmGatewaySettings(store)
-  if ((current.providers ?? []).length > 0 || current.apiKey) {
+  if ((current.providers ?? []).length > 0) {
     return
   }
   upsertLlmGatewaySettings(store, {
