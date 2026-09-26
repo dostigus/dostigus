@@ -291,7 +291,7 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
   },
   dostigus_schedules_create: {
     name: 'dostigus_schedules_create',
-    description: 'Create a Schedule that wakes this Bot on this person\'s bot-thread. Optional name is a short display title (empty stores empty). cadence is daily or weekly. timeLocal is HH:MM 24-hour wall clock in the Cluster timezone. daysOfWeek is required for weekly and omitted for daily (sun, mon, tue, wed, thu, fri, sat). wakeText is the Wake line. The Host sets the next fire. A sentence such as every morning at 08:00 is this call. Do not pass nextRunAt. If an enabled Schedule already has the same cadence, timeLocal, and daysOfWeek, the result is already true, wakeText is unchanged, and no second row is inserted. A paused row with that clock is not already standing; resume it.',
+    description: 'Create a Schedule that wakes this Bot on this person\'s bot-thread. Optional name is a short display title (empty stores empty). cadence is daily or weekly. timeLocal is HH:MM 24-hour wall clock in the Cluster timezone. daysOfWeek is required for weekly and omitted for daily (sun, mon, tue, wed, thu, fri, sat). wakeText is the instruction the Host sends to the LLM when this Schedule fires. Chat shows the Schedule name, not wakeText. The Host sets the next fire. A sentence such as every morning at 08:00 is this call. Do not pass nextRunAt. If an enabled Schedule already has the same cadence, timeLocal, and daysOfWeek, the result is already true, wakeText is unchanged, and no second row is inserted. A paused row with that clock is not already standing; resume it.',
     chat: true,
     inputSchema: {
       botId: z.string().min(1),

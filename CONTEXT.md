@@ -99,13 +99,16 @@ _Avoid_: messenger, inbox (unqualified), context window
 
 **Wake**:
 A visible system Chat line the Host writes on a bot-thread when a
-Schedule fires. The line carries the wake text the Bot supplied. The
-Host then runs a Bot turn. The Skill catalog matches a user turn.
-Wake tools are narrower than user slim, and there is no keyword
-expand ([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)). The
-line is stored as `system` and sent to the LLM as `role: system`.
+Schedule fires. The line is the Schedule display name (the same
+string the Schedules list shows). It is not the wake prompt. The
+Host sends `wakeText` to the LLM on that turn only
+([ADR 0027](docs/adr/0027-bot-schedules.md)). The Host then runs a
+Bot turn. The Skill catalog matches a user turn. Wake tools are
+narrower than user slim, and there is no keyword expand
+([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)). The stored
+line is `system`. Later history sends that name as `role: system`.
 Not an Activity row.
-_Avoid_: notification, push, ping, user line.
+_Avoid_: notification, push, ping, user line, prompt dump.
 
 **Activity**:
 Ephemeral Chat status for an in-flight Bot reply on a Thread. One row

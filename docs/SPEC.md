@@ -374,21 +374,24 @@ them on the assistant line.
   bot-thread with that Bot. Many rows per person and Bot are allowed.
   Cadence is `daily` or `weekly`. `timeLocal` is `HH:MM` wall clock in
   the Cluster timezone. `daysOfWeek` is omitted for `daily` and lists
-  the weekdays for `weekly`. `name` is optional. `wakeText` is the
-  string the Bot supplies. Empty name: the Host list falls back to
-  truncated `wakeText`. The row is paused or enabled. The Host owns
+  the weekdays for `weekly`.   `name` is optional. `wakeText` is the
+  string the Bot supplies (the current-turn LLM prompt). Empty name:
+  the Host list falls back to truncated `wakeText`. The row is paused
+  or enabled. The Host owns
   `next_run_at` and last-run metadata, and recomputes `next_run_at`
   after create, update, and fire.
 - **Fire.** The Host writes a visible system Wake on that bot-thread
-  with `wakeText`, then starts a Bot turn
+  whose text is the Schedule display name (same as the Schedules
+  list). `wakeText` is sent to the LLM on that turn only and is not
+  stored as Chat content. Then the Host starts a Bot turn
   ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)). The Skill catalog
   matches a user turn. Wake tools are narrower than user slim (HTTP
   get, `dostigus_artifacts_put`, Skills list/read, Schedule list,
   messages list/create, timezone get). No Schedule writes, no
   `dostigus_bots_*`, no
   keyword expand ([ADR 0032](adr/0032-chat-llm-context-assembly.md)).
-  The line is stored as `system` and sent as `role: system`.
-  Activity phases apply
+  The stored line is `system`. Later history sends that name as
+  `role: system`. Activity phases apply
   ([ADR 0021](adr/0021-chat-activity-status.md)). Day-1 fires on a
   bot-thread only.
 - **Catch-up.** If the Host was down or late, it fires once when
@@ -574,7 +577,10 @@ then the running Host still injects full Skill bodies, remaps stored
   `bots.skills_json`. A legacy Skill with no description catalogs as
   `Skill {id}` until upsert.
 - **History.** Last 40 messages (`role` + string `content`). Always
-  include the triggering user or Wake line. Stored `system` stays
+  include the triggering user or Wake line. On a firing turn the
+  Wake line sent to the LLM is `wakeText`; stored Chat content is
+  the Schedule display name
+  ([ADR 0027](adr/0027-bot-schedules.md)). Stored `system` stays
   `role: system`. Chat Cards / `parts` and prior-turn tool
   transcripts stay out of that window. History may append the
   Artifact meta note. The triggering user message may use OpenAI
