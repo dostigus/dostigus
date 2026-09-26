@@ -3,6 +3,7 @@ import {
   DEFAULT_HOST_LOCALE,
   HOST_LOCALE_COOKIE,
   isHostLocale,
+  localizeGatewayErrorReply,
   resolveHostLocale,
   tHost,
 } from '../../src/locale'
@@ -33,4 +34,13 @@ it('falls back to EN and never returns a raw key path', () => {
   expect(tHost('en', 'kit.close')).toBe('Close')
   expect(tHost('ru', 'no.such.key')).toBe('')
   expect(tHost('en', 'chat.placeholderFor', { name: 'Notes' })).toBe('Message for Notes')
+})
+
+it('remaps a stored gateway error bubble onto the current Locale', () => {
+  const english = tHost('en', 'chat.errorGateway.owner.transient')
+  const russian = tHost('ru', 'chat.errorGateway.owner.transient')
+  expect(english).toContain('Could not reach the model')
+  expect(localizeGatewayErrorReply(english, 'ru')).toBe(russian)
+  expect(localizeGatewayErrorReply(russian, 'en')).toBe(english)
+  expect(localizeGatewayErrorReply('A normal Chat line', 'ru')).toBe('A normal Chat line')
 })

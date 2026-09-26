@@ -1,3 +1,7 @@
+import {
+  LLM_GATEWAY_FAILURE_KINDS,
+  llmGatewayErrorReply,
+} from '@dostigus/shared'
 import en from '../locales/en.json'
 import ru from '../locales/ru.json'
 
@@ -97,4 +101,32 @@ export function tHost(
     return ''
   }
   return interpolate(raw, params)
+}
+
+/**
+ * Map a stored gateway error bubble onto the current Locale.
+ * Matches EN, RU, and the shared fallback constants so an older
+ * English line follows Locale without rewriting Chat bodies.
+ */
+export function localizeGatewayErrorReply(
+  content: string,
+  locale: HostLocale,
+): string {
+  const trimmed = content.trim()
+  if (!trimmed) {
+    return content
+  }
+  for (const audience of ['owner', 'member'] as const) {
+    for (const kind of LLM_GATEWAY_FAILURE_KINDS) {
+      const key = `chat.errorGateway.${audience}.${kind}`
+      if (
+        trimmed === tHost('en', key)
+        || trimmed === tHost('ru', key)
+        || trimmed === llmGatewayErrorReply(audience, kind)
+      ) {
+        return tHost(locale, key)
+      }
+    }
+  }
+  return content
 }

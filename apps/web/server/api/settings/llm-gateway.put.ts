@@ -3,8 +3,6 @@ import { upsertLlmGatewaySettings } from '@dostigus/db'
 
 type PutBody = {
   baseUrl?: string | null
-  apiKey?: string | null
-  clearApiKey?: boolean
   defaultTier?: string
   modelOverrides?: Partial<Record<ModelTier, string>>
   providers?: Array<LlmProviderInstance & { clearApiKey?: boolean }>
@@ -17,8 +15,6 @@ export default defineEventHandler(async (event) => {
   try {
     upsertLlmGatewaySettings(useStore(), {
       baseUrl: body?.baseUrl,
-      apiKey: body?.apiKey,
-      clearApiKey: body?.clearApiKey,
       defaultTier: body?.defaultTier,
       modelOverrides: body?.modelOverrides,
       providers: body?.providers,

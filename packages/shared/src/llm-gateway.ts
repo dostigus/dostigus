@@ -137,7 +137,6 @@ export type LlmGatewayEnv = {
 
 export type LlmGatewayStored = {
   baseUrl: string | null
-  apiKey: string | null
   defaultTier: ModelTier
   modelOverrides: Partial<Record<ModelTier, string>>
   providers?: LlmProviderInstance[]
@@ -218,7 +217,6 @@ export function resolveLlmGateway(
   stored?: LlmGatewayStored | null,
 ): ResolvedLlmGateway {
   const storedBase = trimOrUndefined(stored?.baseUrl ?? undefined) ?? null
-  const storedKey = trimOrUndefined(stored?.apiKey ?? undefined) ?? null
   const firstProvider = (stored?.providers ?? []).find((provider) => {
     return Boolean(trimOrUndefined(provider.apiKey))
   })
@@ -227,14 +225,14 @@ export function resolveLlmGateway(
   const envBase = env.baseUrl ?? null
   const envKey = env.apiKey ?? null
 
-  const apiKey = envKey ?? storedKey ?? storedProviderKey
+  const apiKey = envKey ?? storedProviderKey
   const explicitBase = envBase ?? storedBase ?? storedProviderBase
   const baseUrl = explicitBase ?? (apiKey ? OPENROUTER_DEFAULT_BASE_URL : null)
   const defaultTier = env.defaultTier ?? stored?.defaultTier ?? DEFAULT_MODEL_TIER
   const configured = Boolean(baseUrl && apiKey)
 
   const envHasCreds = Boolean(envBase || envKey)
-  const storeHasCreds = Boolean(storedBase || storedKey || storedProviderKey)
+  const storeHasCreds = Boolean(storedBase || storedProviderKey)
   let source: LlmGatewaySource = 'none'
   if (envHasCreds && storeHasCreds) {
     source = 'merged'
@@ -297,7 +295,9 @@ export function toPublicLlmGateway(input: {
     baseUrl: stored?.baseUrl ?? null,
     effectiveBaseUrl: resolved.baseUrl,
     hasApiKey: Boolean(resolved.apiKey),
-    hasStoredApiKey: Boolean(trimOrUndefined(stored?.apiKey)),
+    hasStoredApiKey: (stored?.providers ?? []).some((provider) => {
+      return Boolean(trimOrUndefined(provider.apiKey))
+    }),
     apiKeyMasked: maskApiKey(resolved.apiKey),
     defaultTier: stored?.defaultTier ?? resolved.defaultTier,
     modelOverrides: stored?.modelOverrides ?? {},
@@ -451,7 +451,6 @@ export function chatSystemPrompt(input: {
 export function emptyLlmGatewayStored(): LlmGatewayStored {
   return {
     baseUrl: null,
-    apiKey: null,
     defaultTier: DEFAULT_MODEL_TIER,
     modelOverrides: {},
     providers: [],

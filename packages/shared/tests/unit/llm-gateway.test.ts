@@ -77,9 +77,15 @@ it('reads OpenAI-compatible env and treats env as override over Store', () => {
 
   const stored = {
     baseUrl: 'https://store.example/v1',
-    apiKey: 'sk-store',
     defaultTier: DEFAULT_MODEL_TIER,
     modelOverrides: { cheap: 'store-cheap' },
+    providers: [{
+      id: 'legacy',
+      kind: 'openai-compatible' as const,
+      apiKey: 'sk-store',
+      baseUrl: 'https://store.example/v1',
+      defaultModel: null,
+    }],
   }
   const resolved = resolveLlmGateway(env, stored)
   expect(resolved.configured).toBe(true)
@@ -148,12 +154,18 @@ it('uses distinct Russian gateway errors for the Owner and a Member', () => {
   expect(MEMBER_GATEWAY_EMPTY_ERROR_REPLY).not.toContain('Settings')
 })
 
-it('uses Store settings when env is unset, defaulting the base to OpenRouter', () => {
+it('uses Store Provider settings when env is unset, defaulting the base to OpenRouter', () => {
   const resolved = resolveLlmGateway(readLlmGatewayEnv({}), {
     baseUrl: null,
-    apiKey: 'sk-store',
     defaultTier: 'code',
     modelOverrides: {},
+    providers: [{
+      id: 'legacy',
+      kind: 'openrouter',
+      apiKey: 'sk-store',
+      baseUrl: null,
+      defaultModel: null,
+    }],
   })
   expect(resolved.configured).toBe(true)
   expect(resolved.baseUrl).toBe(OPENROUTER_DEFAULT_BASE_URL)
@@ -168,25 +180,34 @@ it('never returns the full key from mask or public JSON', () => {
   expect(maskApiKey(key)?.includes(key)).toBe(false)
   expect(redactSecrets(`Bearer ${key} failed`, [key])).toBe('Bearer [redacted] failed')
 
-  const resolved = resolveLlmGateway(readLlmGatewayEnv({}), {
+  const stored = {
     baseUrl: 'https://openrouter.ai/api/v1',
-    apiKey: key,
-    defaultTier: 'strong',
+    defaultTier: 'strong' as const,
     modelOverrides: {},
-  })
+    providers: [{
+      id: 'legacy',
+      kind: 'openrouter' as const,
+      apiKey: key,
+      baseUrl: null,
+      defaultModel: null,
+    }],
+  }
+  const resolved = resolveLlmGateway(readLlmGatewayEnv({}), stored)
   const pub = toPublicLlmGateway({
     resolved,
-    stored: {
-      baseUrl: 'https://openrouter.ai/api/v1',
-      apiKey: key,
-      defaultTier: 'strong',
-      modelOverrides: {},
-    },
+    stored,
   })
   expect(pub.hasApiKey).toBe(true)
   expect(pub.hasStoredApiKey).toBe(true)
   expect(pub.apiKeyMasked).toBe('••••wxyz')
-  expect(pub.providers).toEqual([])
+  expect(pub.providers).toEqual([{
+    id: 'legacy',
+    kind: 'openrouter',
+    baseUrl: null,
+    hasApiKey: true,
+    apiKeyMasked: '••••wxyz',
+    defaultModel: null,
+  }])
   expect(pub.tierBinds).toEqual({})
   expect(JSON.stringify(pub).includes(key)).toBe(false)
   expect(pub).not.toHaveProperty('apiKey')

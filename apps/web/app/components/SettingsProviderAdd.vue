@@ -99,7 +99,7 @@
       <input
         v-model="defaultModel"
         type="text"
-        :placeholder="kind === 'openai' ? OPENAI_SETTINGS_DEFAULT_MODEL : 'Model id'"
+        :placeholder="kind === 'openai' ? OPENAI_SETTINGS_DEFAULT_MODEL : $t('settings.providers.add.modelId')"
         autocomplete="off"
         spellcheck="false"
       >

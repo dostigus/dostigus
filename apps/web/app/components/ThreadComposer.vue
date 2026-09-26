@@ -183,6 +183,7 @@
 
 <script setup lang="ts">
 import type { HouseholdPerson, ThreadListItem } from '@dostigus/shared'
+import { hostStatusCopy } from '../utils/host-status-copy'
 
 type RoomAudience = {
   botId: string
@@ -346,42 +347,7 @@ async function createThread(
 }
 
 function errorText(caught: unknown): string {
-  const message = statusMessage(caught)
-  if (message === 'Every person in the room must already have access to that Bot') {
-    return t('host.threadCreate.needAccess')
-  }
-  if (message === 'A room needs a Bot') {
-    return t('host.threadCreate.pickBot')
-  }
-  if (message === 'A room needs at least two people' || message === 'A group needs at least two people') {
-    return t('host.threadCreate.pickPeople')
-  }
-  if (message === 'A direct message is one person and another person') {
-    return t('host.threadCreate.pickPerson')
-  }
-  if (message === 'Name this Thread') {
-    return t('host.threadCreate.nameThread')
-  }
-  if (message) {
-    return message
-  }
-  return t('host.threadCreate.createFailed')
-}
-
-function statusMessage(caught: unknown): string {
-  if (caught && typeof caught === 'object' && 'statusMessage' in caught) {
-    const message = (caught as { statusMessage?: string }).statusMessage
-    if (message) {
-      return message
-    }
-  }
-  if (caught && typeof caught === 'object' && 'data' in caught) {
-    const data = (caught as { data?: { statusMessage?: string } }).data
-    if (data?.statusMessage) {
-      return data.statusMessage
-    }
-  }
-  return ''
+  return hostStatusCopy(caught, t, 'host.threadCreate.createFailed')
 }
 
 function onKeydown(event: KeyboardEvent) {

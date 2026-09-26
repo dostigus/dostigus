@@ -27,17 +27,17 @@
       </div>
       <div
         class="identity"
-        :aria-label="thread?.title ?? 'Thread'"
+        :aria-label="thread?.title ?? $t('chat.fallbackTitle')"
       >
         <span class="identity-copy">
           <HostBotAvatar
-            :name="thread?.mark.name ?? 'Thread'"
+            :name="thread?.mark.name ?? $t('chat.fallbackTitle')"
             :seed="thread?.mark.seed ?? ''"
             :shape="thread?.mark.shape ?? ''"
             :avatar-color="thread?.mark.color"
             size="sm"
           />
-          <span class="name">{{ thread?.title ?? 'Thread' }}</span>
+          <span class="name">{{ thread?.title ?? $t('chat.fallbackTitle') }}</span>
         </span>
       </div>
 
@@ -60,13 +60,13 @@
           </p>
           <KitMarkdown
             v-if="assistantBubbleUsesMarkdown(message.role)"
-            :source="message.content"
+            :source="chatLineText(message.content)"
           />
           <p
             v-else
             class="text"
           >
-            {{ message.content }}
+            {{ chatLineText(message.content) }}
           </p>
           <KitChatParts
             v-if="assistantBubbleUsesMarkdown(message.role) && hostChatParts(message.parts).length"
@@ -190,7 +190,7 @@
 import type { Message, ThreadListItem, ThreadParticipantView } from '@dostigus/shared'
 import type { HostSheetEntry } from '../../utils/host-sheets'
 import { mentionedRoomBot } from '@dostigus/shared'
-import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet } from '@dostigus/ui-kit'
+import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet, localizeGatewayErrorReply } from '@dostigus/ui-kit'
 import { hostChatParts, hostSheetById } from '../../utils/host-sheets'
 
 definePageMeta({ layout: 'host' })
@@ -203,6 +203,11 @@ type Payload = {
 }
 
 const route = useRoute()
+const { locale, t } = useI18n()
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
+function chatLineText(content: string) {
+  return localizeGatewayErrorReply(content, hostLocale.value)
+}
 const { user, isOwner } = useHostAccount()
 const { refresh: refreshThreads } = await useHostThreads()
 const threadId = computed(() => String(route.params.id ?? ''))
@@ -221,7 +226,7 @@ const openSheet = ref<HostSheetEntry | null>(null)
 const sheetTargetId = ref('')
 
 function onOpenSheet(sheetId: string, targetId?: string) {
-  const sheet = hostSheetById(sheetId)
+  const sheet = hostSheetById(sheetId, hostLocale.value)
   if (!sheet) {
     return
   }
@@ -251,7 +256,6 @@ const { phase: liveActivityPhase } = useChatActivityPhase({
   threadId,
   botId: replyBotId,
 })
-const { locale, t } = useI18n()
 const threadActivity = computed(() => chatActivityStatus({
   pending: replying.value && thread.value?.kind === 'room',
   gatewayConfigured: readyData.value?.configured === true,
@@ -260,7 +264,7 @@ const threadActivity = computed(() => chatActivityStatus({
   connectTarget: import.meta.dev && typeof route.query.target === 'string'
     ? route.query.target
     : null,
-  locale: locale.value === 'ru' ? 'ru' : 'en',
+  locale: hostLocale.value,
 }))
 const activityBot = computed(() => {
   if (replyBot.value) {

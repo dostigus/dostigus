@@ -35,7 +35,7 @@ English.
 | [0001](0001-platform-git-vs-in-cluster-bot-packages.md) | Platform git vs in-cluster bot packages |
 | [0002](0002-host-ui-kit-and-sheets.md) | Host UI kit and Sheets |
 | [0003](0003-mcp-as-bot-store-contract.md) | MCP as the Bot ↔ store contract |
-| [0004](0004-llm-gateway-tiers.md) | LLM gateway and model tiers (amended 2026-09-24: one transient retry, Russian error copy; Chat assembly [0032](0032-chat-llm-context-assembly.md); amended 2026-09-25: triggering-line image parts [0035](0035-image-artifact-vision.md); amended 2026-09-25: bind / resolve / escalate [0036](0036-llm-providers-tier-resolve-escalate.md); OpenRouter Policy `free` on cheap/toy for casual supersedes “roulette is toy only”; amended 2026-09-25: OpenRouter Settings catalog stays [0036](0036-llm-providers-tier-resolve-escalate.md)) |
+| [0004](0004-llm-gateway-tiers.md) | LLM gateway and model tiers (amended 2026-09-24: one transient retry, Russian error copy; Chat assembly [0032](0032-chat-llm-context-assembly.md); amended 2026-09-25: triggering-line image parts [0035](0035-image-artifact-vision.md); amended 2026-09-25: bind / resolve / escalate [0036](0036-llm-providers-tier-resolve-escalate.md); OpenRouter Policy `free` on cheap/toy for casual supersedes “roulette is toy only”; amended 2026-09-25: OpenRouter Settings catalog stays [0036](0036-llm-providers-tier-resolve-escalate.md); amended 2026-09-26: Store key is Provider `apiKey` only [0036](0036-llm-providers-tier-resolve-escalate.md)) |
 | [0005](0005-self-host-first.md) | Self-host first |
 | [0006](0006-day-1-declarative-modules.md) | Day-1 declarative modules (before arbitrary sandbox) |
 | [0007](0007-platform-image-tags.md) | Platform image tags |
@@ -67,6 +67,6 @@ English.
 | [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md) | Cluster outbound: LLM proxy vs Bot HTTP proxy (amended 2026-09-24: domain failover lists stay out of scope; soft policy is [0031](0031-host-http-get.md)) |
 | [0034](0034-artifacts.md) | Artifacts (amended 2026-09-25: image vision is [0035](0035-image-artifact-vision.md); no get tool stays) |
 | [0035](0035-image-artifact-vision.md) | Image Artifact vision |
-| [0036](0036-llm-providers-tier-resolve-escalate.md) | LLM Providers, tier resolve, and escalate (amended 2026-09-25: OpenRouter Settings catalog + quality shelf; Advanced pin is day-1 of this amend for `kind=openrouter`; amended 2026-09-25: Settings IA — Провайдеры / Прочее, health from key + soft catalog probe; amended 2026-09-25: chrome slugs `/dashboard/providers` and `/dashboard/cluster`, no `/settings` redirects [0038](0038-dashboard-chrome.md)) |
-| [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) |
+| [0036](0036-llm-providers-tier-resolve-escalate.md) | LLM Providers, tier resolve, and escalate (amended 2026-09-25: OpenRouter Settings catalog + quality shelf; Advanced pin is day-1 of this amend for `kind=openrouter`; amended 2026-09-25: Settings IA — Провайдеры / Прочее, health from key + soft catalog probe; amended 2026-09-25: chrome slugs `/dashboard/providers` and `/dashboard/cluster`, no `/settings` redirects [0038](0038-dashboard-chrome.md); amended 2026-09-26: Provider `apiKey` is the only Store SoT; one-shot migrate then drop `llm_gateway.api_key`) |
+| [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) (amended 2026-09-26: Thread chrome is chat / чат) |
 | [0038](0038-dashboard-chrome.md) | Dashboard chrome (own layout; Settings is one page; Members under Account; no `/settings` or `/members` redirects) |

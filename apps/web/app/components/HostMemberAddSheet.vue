@@ -141,6 +141,7 @@
 <script setup lang="ts">
 import type { Invite } from '@dostigus/shared'
 import { GooseSticker, KitButton, KitSheet } from '@dostigus/ui-kit'
+import { hostStatusCopy } from '../utils/host-status-copy'
 
 const open = defineModel<boolean>('open', { required: true })
 const { noteMembersChanged } = useHostMemberAdd()
@@ -178,11 +179,8 @@ function selectLink(event: FocusEvent) {
   }
 }
 
-function failure(error: unknown, fallback: string): string {
-  const fetchError = error as { data?: { statusMessage?: string }, statusMessage?: string }
-  return fetchError.data?.statusMessage
-    ?? fetchError.statusMessage
-    ?? fallback
+function failure(error: unknown, fallbackKey: string): string {
+  return hostStatusCopy(error, t, fallbackKey)
 }
 
 async function createInvite() {
@@ -199,7 +197,7 @@ async function createInvite() {
     inviteEmail.value = ''
     noteMembersChanged()
   } catch (error) {
-    inviteMessage.value = failure(error, t('members.addSheet.inviteFailed'))
+    inviteMessage.value = failure(error, 'members.addSheet.inviteFailed')
     inviteMessageError.value = true
   } finally {
     inviting.value = false
@@ -246,7 +244,7 @@ async function add() {
     noteMembersChanged()
     open.value = false
   } catch (error) {
-    message.value = failure(error, t('members.addSheet.addFailed'))
+    message.value = failure(error, 'members.addSheet.addFailed')
     messageError.value = true
   } finally {
     adding.value = false

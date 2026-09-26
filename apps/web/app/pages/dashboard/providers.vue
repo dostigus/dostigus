@@ -177,7 +177,7 @@
               <input
                 v-model="editModel"
                 type="text"
-                :placeholder="provider.kind === 'openai' ? OPENAI_SETTINGS_DEFAULT_MODEL : 'Model id'"
+                :placeholder="provider.kind === 'openai' ? OPENAI_SETTINGS_DEFAULT_MODEL : $t('settings.providers.add.modelId')"
                 autocomplete="off"
                 spellcheck="false"
               >
@@ -380,8 +380,6 @@ import type {
 import {
   clearOpenRouterPins,
   defaultBaseUrlForKind,
-  inferLlmProviderKind,
-  LEGACY_LLM_PROVIDER_ID,
   LLM_PROVIDER_KIND_LABELS,
   MODEL_TIER_LABELS,
   MODEL_TIERS,
@@ -413,48 +411,9 @@ const { bots } = await useHostBots()
 
 const gateway = computed(() => data.value?.llmGateway)
 
-/** A Store saved before Providers has one legacy row. Show it as one Provider. */
-const providers = computed<LlmProviderPublic[]>(() => {
-  const next = gateway.value
-  if (!next) {
-    return []
-  }
-  if (next.providers.length > 0) {
-    return next.providers
-  }
-  if (next.hasStoredApiKey) {
-    return [{
-      id: LEGACY_LLM_PROVIDER_ID,
-      kind: inferLlmProviderKind(next.baseUrl),
-      baseUrl: next.baseUrl,
-      hasApiKey: true,
-      apiKeyMasked: next.apiKeyMasked,
-      defaultModel: null,
-    }]
-  }
-  return []
-})
+const providers = computed<LlmProviderPublic[]>(() => gateway.value?.providers ?? [])
 
-const legacyOnly = computed(() => (gateway.value?.providers.length ?? 0) === 0 && providers.value.length > 0)
-
-/** Legacy rows resolve each tier as a pinned model id until Settings saves a bind. */
-const effectiveBinds = computed<Binds>(() => {
-  const next = gateway.value
-  if (!next) {
-    return {}
-  }
-  if (!legacyOnly.value) {
-    return next.tierBinds ?? {}
-  }
-  const out: Binds = {}
-  for (const tier of MODEL_TIERS) {
-    out[tier] = {
-      providerId: LEGACY_LLM_PROVIDER_ID,
-      policy: { kind: 'model', modelId: next.modelOverrides[tier] ?? next.defaultModels[tier] },
-    }
-  }
-  return out
-})
+const effectiveBinds = computed<Binds>(() => gateway.value?.tierBinds ?? {})
 
 const modelOverrides = ref<Partial<Record<ModelTier, string>>>({})
 const hasLegacyPins = computed(() => MODEL_TIERS.some((tier) => Boolean(gateway.value?.modelOverrides[tier])))
@@ -556,11 +515,7 @@ async function put(body: Record<string, unknown>): Promise<LlmGatewayPublic> {
 async function writeBinds(binds: Binds, success: string) {
   busy.value = true
   try {
-    const body: Record<string, unknown> = { tierBinds: binds }
-    if (legacyOnly.value) {
-      body.providers = providers.value.map(providerWrite)
-    }
-    await put(body)
+    await put({ tierBinds: binds })
     say(success)
   } catch (error) {
     say(errorText(error, t('settings.providers.saveFailed')), true)
@@ -615,7 +570,7 @@ async function ping(providerId: string) {
   try {
     const result = await $fetch<{ ok: boolean }>('/api/settings/llm-gateway/ping', {
       method: 'POST',
-      body: { providerId: providerId === LEGACY_LLM_PROVIDER_ID ? undefined : providerId },
+      body: { providerId },
     })
     pings.value = { ...pings.value, [providerId]: result.ok }
   } catch {
@@ -739,7 +694,6 @@ async function removeProvider(id: string) {
     await put({
       providers: rest.map(providerWrite),
       tierBinds: binds,
-      ...(rest.length === 0 ? { clearApiKey: true } : {}),
     })
     const next = { ...catalogs.value }
     delete next[id]

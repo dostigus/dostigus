@@ -27,7 +27,29 @@
       "fallbackSignIn": "Could not sign in.",
       "fallbackCreateOwner": "Could not create the Owner.",
       "fallbackJoin": "Could not join this Host.",
-      "fallbackSignOut": "Could not sign out."
+      "fallbackSignOut": "Could not sign out.",
+      "invalidCredentials": "Invalid email, username, or password.",
+      "invalidLogin": "Invalid email or username.",
+      "loginRequired": "Email or username is required.",
+      "passwordRequired": "Password is required.",
+      "clusterHasOwner": "This Cluster already has an Owner.",
+      "checkMember": "Check the Member details.",
+      "inviteLink": "This Host could not build the invite link.",
+      "validEmail": "Enter a valid email.",
+      "signOutFirst": "Sign out, then open this link again.",
+      "loginTooLong": "Email or username must be 254 characters or fewer.",
+      "usernameMin": "Username must be at least 2 characters.",
+      "usernameMax": "Username must be 32 characters or fewer.",
+      "usernameChars": "Username may use letters, numbers, dots, underscores, and hyphens.",
+      "passwordMin": "Password must be at least 8 characters.",
+      "passwordMax": "Password must be 128 characters or fewer.",
+      "displayNameRequired": "Display name is required.",
+      "displayNameMax": "Display name must be 64 characters or fewer.",
+      "alreadyOnHost": "That email or username is already on this Host.",
+      "emailAlreadyOnHost": "That email is already on this Host.",
+      "inviteUsed": "This invite was already used.",
+      "inviteRevoked": "This invite was revoked.",
+      "needsOwner": "This Host needs an Owner first."
     },
     "onboarding": {
       "kicker": "First visit",
@@ -97,8 +119,8 @@
     },
     "home": {
       "title": "Threads",
-      "open": "Open a Thread",
-      "hint": "Choose a Thread from the list."
+      "open": "Open chat",
+      "hint": "Choose a chat from the list."
     },
     "empty": {
       "title": "Threads",
@@ -260,7 +282,8 @@
     "emptyDm": "Say hello.",
     "mentionHint": "Mention a Bot with @Name so it replies.",
     "placeholderOrSend": "Add a message or just send",
-    "kitchenDescriptionAlt": "Pantry, one recipe, and a cooked log."
+    "kitchenDescriptionAlt": "Pantry, one recipe, and a cooked log.",
+    "fallbackTitle": "Chat"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -385,7 +408,8 @@
         "modelHint": "One model on every Model tier while this is the only Provider.",
         "whereBefore": "Create a key at",
         "whereAfter": ". Host stores it and does not show it in the browser.",
-        "otherOpenAI": "Another Provider: OpenAI or OpenAI-compatible"
+        "otherOpenAI": "Another Provider: OpenAI or OpenAI-compatible",
+        "modelId": "Model id"
       },
       "flow": {
         "how": "How this works",

@@ -370,9 +370,15 @@ it('uses Store settings when env is unset', async () => {
     env: {},
     stored: {
       baseUrl: 'https://example.test/v1',
-      apiKey: 'sk-store',
       defaultTier: 'cheap',
       modelOverrides: { cheap: 'openai/gpt-4o-mini' },
+      providers: [{
+        id: 'legacy',
+        kind: 'openai-compatible',
+        apiKey: 'sk-store',
+        baseUrl: 'https://example.test/v1',
+        defaultModel: null,
+      }],
     },
     fetchImpl,
   })
@@ -846,7 +852,6 @@ it('escalates silently after an empty body onto the next Model tier', async () =
     env: {},
     stored: {
       baseUrl: null,
-      apiKey: 'sk-or',
       defaultTier: 'strong',
       modelOverrides: {},
       providers: [{
@@ -899,7 +904,6 @@ it('escalates after HTTP 500 and keeps the same-model retry on that attempt', as
     env: {},
     stored: {
       baseUrl: null,
-      apiKey: 'sk-or',
       defaultTier: 'strong',
       modelOverrides: {},
       providers: [
@@ -949,7 +953,6 @@ it('escalates a detectable refuse and stays silent in Chat', async () => {
     env: {},
     stored: {
       baseUrl: null,
-      apiKey: 'sk-or',
       defaultTier: 'strong',
       modelOverrides: {},
       providers: [{

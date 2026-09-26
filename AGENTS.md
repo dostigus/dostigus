@@ -324,7 +324,7 @@ wins when both are set. **HEAD** ignores `?settings=1`.
 
 For the Providers page with a saved OpenRouter key, open
 **http://localhost:3000/preview-seed?providers=1**. When the Store has
-no Provider and no legacy key, that GET saves the fixture OpenRouter
+no Provider, that GET saves the fixture OpenRouter
 Provider (id `preview-openrouter`, key `sk-or-v1-preview-fixture`),
 then redirects to `/dashboard/providers`. On `nuxt dev` with
 `DOSTIGUS_PREVIEW_SEED=1`, the catalog route skips `GET /key` for that

@@ -151,7 +151,10 @@ Kinds are labels, not separate products: `dm` (person and person),
 own bot-thread with that Bot. A `room` is how a Bot joins a Thread with
 more than one person. Personal use stays that bot-thread. There is no
 private write on a shared chat timeline.
-_Avoid_: channel, conversation (unqualified).
+Host chrome says chat / чат, not Thread
+([ADR 0037](docs/adr/0037-host-ui-i18n.md)).
+_Avoid_: channel, conversation (unqualified), Thread as a RU
+UI loanword.
 
 **Participant**:
 A person or a Bot on a Thread. A person is the Owner or a Member.
@@ -389,12 +392,16 @@ _Avoid_: renaming the gateway per Provider, model picker
 An Owner-connected LLM gateway instance: kind (`openrouter` |
 `openai` | `openai-compatible`), API key, optional base URL. Not
 a frozen model list in Dostigus source. Several instances may
-exist on one Cluster. After an OpenRouter key is saved, the
-Host may proxy that instance’s live catalog for Settings
-(`kind=openrouter` day-1 of the [ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)
+exist on one Cluster. The API key lives on that instance
+(`providers[].apiKey`) and is the only Store copy
+([ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)).
+After an OpenRouter key is saved, the Host may proxy that
+instance’s live catalog for Settings (`kind=openrouter` day-1
+of the [ADR 0036](docs/adr/0036-llm-providers-tier-resolve-escalate.md)
 Settings amend).
 _Avoid_: vendor, engine, catalog (unqualified), treating a
-Provider as the whole LLM gateway.
+Provider as the whole LLM gateway, a second Cluster-level key
+field beside the Provider.
 
 **Policy**:
 How a Model tier resolves a model id on a Provider. OpenRouter

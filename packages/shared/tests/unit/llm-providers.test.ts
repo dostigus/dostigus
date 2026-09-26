@@ -36,7 +36,13 @@ it('reads legacy openrouter/free pins on every Model tier', () => {
   const stored = {
     ...emptyLlmGatewayStored(),
     baseUrl: OPENROUTER_DEFAULT_BASE_URL,
-    apiKey: 'sk-legacy',
+    providers: [{
+      id: 'legacy',
+      kind: 'openrouter' as const,
+      apiKey: 'sk-legacy',
+      baseUrl: OPENROUTER_DEFAULT_BASE_URL,
+      defaultModel: null,
+    }],
     modelOverrides: {
       cheap: OPENROUTER_FREE_MODEL_ID,
       strong: OPENROUTER_FREE_MODEL_ID,

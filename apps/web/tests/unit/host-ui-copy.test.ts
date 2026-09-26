@@ -24,6 +24,12 @@ it('keeps Create Owner and Sign in free of leftover technical copy', () => {
   expect(login).not.toContain('Password reset')
   expect(tHost('en', 'auth.login.title')).toBe('Welcome back')
   expect(tHost('en', 'auth.onboarding.hint')).toContain('This Host needs one Owner')
+  expect(tHost('en', 'host.home.open')).toBe('Open chat')
+  expect(tHost('ru', 'host.home.open')).toBe('Открыть чат')
+  expect(tHost('ru', 'chat.errorGateway.owner.transient')).toContain('моделью')
+  expect(read('pages/login.vue')).toContain('hostStatusCopy')
+  expect(read('pages/bots/[id].vue')).toContain('localizeGatewayErrorReply')
+  expect(read('pages/dashboard/members.vue')).not.toContain('Added.')
 })
 
 it('splits Dashboard into Overview, Cluster settings, Providers, and Settings', () => {

@@ -152,6 +152,7 @@
 <script setup lang="ts">
 import type { HostLocale } from '@dostigus/ui-kit/locale'
 import { HOST_LOCALES } from '@dostigus/ui-kit/locale'
+import { hostStatusCopy } from '../../utils/host-status-copy'
 
 type ClusterTimezoneSettings = {
   stored: string | null
@@ -200,23 +201,11 @@ watch(allowlist, (next) => {
 }, { immediate: true })
 
 function timezoneErrorText(error: unknown): string {
-  if (error && typeof error === 'object' && 'statusMessage' in error) {
-    const statusMessage = error.statusMessage
-    if (typeof statusMessage === 'string' && statusMessage.trim()) {
-      return statusMessage
-    }
-  }
-  return t('settings.other.timezone.invalid')
+  return hostStatusCopy(error, t, 'settings.other.timezone.invalid')
 }
 
 function allowlistErrorText(error: unknown): string {
-  if (error && typeof error === 'object' && 'statusMessage' in error) {
-    const statusMessage = error.statusMessage
-    if (typeof statusMessage === 'string' && statusMessage.trim()) {
-      return statusMessage
-    }
-  }
-  return t('settings.other.allowlist.invalid')
+  return hostStatusCopy(error, t, 'settings.other.allowlist.invalid')
 }
 
 function hostsFromInput(text: string): string[] {

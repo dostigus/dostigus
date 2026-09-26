@@ -10,7 +10,6 @@ const KEY = 'sk-or-v1-secret-value'
 function stored(overrides: Partial<LlmGatewayStored> = {}): LlmGatewayStored {
   return {
     baseUrl: null,
-    apiKey: null,
     defaultTier: 'strong',
     modelOverrides: {},
     providers: [{ id: 'or1', kind: 'openrouter', apiKey: KEY, baseUrl: null, defaultModel: null }],
@@ -177,9 +176,11 @@ describe('loadOpenRouterCatalog', () => {
     expect(calls).toHaveLength(0)
   })
 
-  it('reads a legacy single-row key as Provider legacy', async () => {
+  it('reads Provider legacy from providers_json only', async () => {
     const catalog = await loadOpenRouterCatalog({
-      stored: stored({ providers: [], apiKey: KEY }),
+      stored: stored({
+        providers: [{ id: 'legacy', kind: 'openrouter', apiKey: KEY, baseUrl: null, defaultModel: null }],
+      }),
       providerId: 'legacy',
       fetchImpl: fakeFetch().fetchImpl,
       cache: new Map(),

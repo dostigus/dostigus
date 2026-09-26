@@ -16,7 +16,6 @@ import {
   isLlmPolicyKind,
   isLlmProviderKind,
   isModelTier,
-  LEGACY_LLM_PROVIDER_ID,
   MODEL_TIERS,
   normalizeBotAccentHex,
   serializeChatParts,
@@ -804,7 +803,6 @@ const MODEL_ID_MAX = 200
 type LlmGatewayRecord = {
   id: string
   base_url: string | null
-  api_key: string | null
   default_tier: string
   models_json: string
   providers_json: string
@@ -922,7 +920,6 @@ function parseTierBinds(raw: string | null | undefined): Partial<Record<ModelTie
 function toLlmGatewayStored(row: LlmGatewayRecord): LlmGatewayStored {
   return {
     baseUrl: row.base_url,
-    apiKey: row.api_key,
     defaultTier: isModelTier(row.default_tier) ? row.default_tier : DEFAULT_MODEL_TIER,
     modelOverrides: parseModelOverrides(row.models_json),
     providers: parseProviders(row.providers_json),
@@ -992,7 +989,6 @@ type LlmProviderWrite = LlmProviderInstance & { clearApiKey?: boolean }
 function normalizeProviders(
   value: LlmProviderWrite[] | undefined,
   current: LlmProviderInstance[],
-  legacyApiKey: string | null = null,
 ): LlmProviderInstance[] {
   if (!value) {
     return current
@@ -1010,9 +1006,7 @@ function normalizeProviders(
       throw new StoreError('Provider kind must be openrouter, openai, or openai-compatible', 400)
     }
     const previous = currentById.get(id)
-    // The legacy row's key moves onto the Provider the first time Settings saves it.
-    let apiKey = previous?.apiKey
-      ?? (id === LEGACY_LLM_PROVIDER_ID && current.length === 0 ? legacyApiKey : null)
+    let apiKey = previous?.apiKey ?? null
     if (item.clearApiKey) {
       apiKey = null
     } else if (item.apiKey !== undefined) {
@@ -1077,24 +1071,9 @@ function normalizeTierBinds(
   return out
 }
 
-function syncLegacyFromProviders(input: {
-  providers: LlmProviderInstance[]
-  baseUrl: string | null
-  apiKey: string | null
-}): { baseUrl: string | null, apiKey: string | null } {
-  const first = input.providers[0]
-  if (!first) {
-    return { baseUrl: input.baseUrl, apiKey: input.apiKey }
-  }
-  return {
-    baseUrl: first.baseUrl ?? input.baseUrl,
-    apiKey: first.apiKey ?? input.apiKey,
-  }
-}
-
 export function getLlmGatewaySettings(store: OpenedStore): LlmGatewayStored {
   const row = store.sqlite.prepare(`
-    SELECT id, base_url, api_key, default_tier, models_json, providers_json, tier_binds_json, updated_at
+    SELECT id, base_url, default_tier, models_json, providers_json, tier_binds_json, updated_at
     FROM llm_gateway
     WHERE id = ?
   `).get(LLM_GATEWAY_ID) as LlmGatewayRecord | undefined
@@ -1105,8 +1084,6 @@ export function upsertLlmGatewaySettings(
   store: OpenedStore,
   input: {
     baseUrl?: string | null
-    apiKey?: string | null
-    clearApiKey?: boolean
     defaultTier?: string
     modelOverrides?: Partial<Record<ModelTier, string>>
     providers?: LlmProviderWrite[]
@@ -1114,7 +1091,7 @@ export function upsertLlmGatewaySettings(
   },
 ): LlmGatewayStored {
   const current = getLlmGatewaySettings(store)
-  let baseUrl = input.baseUrl !== undefined ? normalizeBaseUrl(input.baseUrl) : current.baseUrl
+  const baseUrl = input.baseUrl !== undefined ? normalizeBaseUrl(input.baseUrl) : current.baseUrl
   const defaultTier = input.defaultTier !== undefined
     ? normalizeTier(input.defaultTier)
     : current.defaultTier
@@ -1122,17 +1099,7 @@ export function upsertLlmGatewaySettings(
     ? normalizeModelOverrides(input.modelOverrides)
     : current.modelOverrides
 
-  let apiKey = current.apiKey
-  if (input.clearApiKey) {
-    apiKey = null
-  } else if (input.apiKey !== undefined) {
-    const trimmed = trimOrUndefined(input.apiKey) ?? null
-    if (trimmed) {
-      apiKey = trimmed
-    }
-  }
-
-  const providers = normalizeProviders(input.providers, current.providers ?? [], current.apiKey)
+  const providers = normalizeProviders(input.providers, current.providers ?? [])
   let tierBinds = normalizeTierBinds(input.tierBinds, current.tierBinds ?? {}, providers)
   const firstProvider = providers[0]
   if ((current.providers ?? []).length === 0 && providers.length === 1 && firstProvider) {
@@ -1143,21 +1110,14 @@ export function upsertLlmGatewaySettings(
     })
   }
 
-  if (input.providers !== undefined) {
-    const synced = syncLegacyFromProviders({ providers, baseUrl, apiKey })
-    baseUrl = synced.baseUrl
-    apiKey = synced.apiKey
-  }
-
   const updatedAt = nowMs()
   store.sqlite.prepare(`
     INSERT INTO llm_gateway (
-      id, base_url, api_key, default_tier, models_json, providers_json, tier_binds_json, updated_at
+      id, base_url, default_tier, models_json, providers_json, tier_binds_json, updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       base_url = excluded.base_url,
-      api_key = excluded.api_key,
       default_tier = excluded.default_tier,
       models_json = excluded.models_json,
       providers_json = excluded.providers_json,
@@ -1166,7 +1126,6 @@ export function upsertLlmGatewaySettings(
   `).run(
     LLM_GATEWAY_ID,
     baseUrl,
-    apiKey,
     defaultTier,
     JSON.stringify(modelOverrides),
     JSON.stringify(providers),

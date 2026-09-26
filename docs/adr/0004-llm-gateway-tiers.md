@@ -7,6 +7,7 @@
 - Amended: 2026-09-25 — Triggering-line image Artifact vision (OpenAI content parts) is [ADR 0035](0035-image-artifact-vision.md). This record still owns the gateway, tiers, and transient retry.
 - Amended: 2026-09-25 — Binding, resolve, and escalate are [ADR 0036](0036-llm-providers-tier-resolve-escalate.md). This record still owns the OpenAI-compatible gateway shape and transient *same-model* retry (timeout / abort / network / HTTP 429 / HTTP 5xx on that one completion). Escalate is an upshift of Model tier / Provider after a soft or hard failure. [ADR 0036](0036-llm-providers-tier-resolve-escalate.md) supersedes the sentence that free / random model roulette is toy only: OpenRouter Policy `free` is allowed on `cheap` and `toy` for casual.
 - Amended: 2026-09-25 — OpenRouter Settings catalog, quality shelf, Advanced pin, and Settings information architecture stay [ADR 0036](0036-llm-providers-tier-resolve-escalate.md). This record still owns the gateway shape and the same-model retry.
+- Amended: 2026-09-26 — The Store key lives on Provider `apiKey` only ([ADR 0036](0036-llm-providers-tier-resolve-escalate.md)). This record still owns the gateway shape, the same-model retry, and the compose env override.
 
 ## Decision
 
@@ -41,10 +42,14 @@ blur runtime and authoring.
   ([ADR 0035](0035-image-artifact-vision.md)). When a key is set,
   that call includes Cluster MCP surface tools and a short tool loop
   ([ADR 0011](0011-chat-mcp-tool-loop.md)).
-- Cluster settings live in the Store (`llm_gateway`: base URL, key
-  server-side only, default Model tier, optional model overrides). The
-  Owner can set them in Host Settings. Env vars remain override/bootstrap
-  for compose (`OPENAI_COMPATIBLE_BASE_URL`, `LLM_API_KEY` /
+- Cluster settings live in the Store (`llm_gateway`: base URL,
+  default Model tier, optional model overrides, Provider
+  instances). The API key is server-side only on
+  `providers[].apiKey`
+  ([ADR 0036](0036-llm-providers-tier-resolve-escalate.md)). The
+  Owner sets Providers in Host Settings. Env vars remain
+  override/bootstrap for compose
+  (`OPENAI_COMPATIBLE_BASE_URL`, `LLM_API_KEY` /
   `OPENROUTER_API_KEY`, optional `LLM_MODEL` / `LLM_MODEL_*`).
 - Default model ids are OpenRouter-friendly (`strong` → `openai/gpt-4o`,
   `cheap` / `toy` → `openai/gpt-4o-mini`, `code` → `openai/gpt-4o`) and

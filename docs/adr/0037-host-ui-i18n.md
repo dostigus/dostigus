@@ -2,6 +2,8 @@
 
 - Status: accepted
 - Date: 2026-09-25
+- Amended: 2026-09-26 — Thread chrome is chat / чат, not the
+  loanword Thread in RU UI.
 
 Session and Household stay [ADR 0010](0010-owner-auth-session.md) and
 [ADR 0012](0012-household-members.md). Settings information
@@ -99,6 +101,13 @@ the surrounding chrome words.
 
 Examples that stay Latin: Bot, Host, Cluster, Skill, Schedule,
 Provider, Policy, Artifact, Member, Household.
+
+### Thread chrome
+
+Host chrome for a Thread uses **chat** / **чат**, not the
+loanword Thread. Day-1 CTA: EN «Open chat», RU «Открыть чат».
+Docs, code, and CONTEXT still say Thread. This does not mint a
+new product noun.
 
 ### Safety
 
@@ -218,6 +227,8 @@ always EN, and “LLM reply language is later” on 2026-09-25.
 - One Cluster-wide Locale and no per-Member column — rejected.
 - Translate Bot, Host, Cluster, Skill, and the other glossary
   terms in RU UI — rejected. Latin script. Chrome words only.
+- Show the loanword Thread in RU Host chrome — rejected after
+  the 2026-09-26 lock. CTA is chat / чат. Docs still say Thread.
 - Show the raw `a.b.c` key on a miss — rejected. Fall back to
   EN.
 - Permanent flag chrome in the sidebar — rejected. Settings →
