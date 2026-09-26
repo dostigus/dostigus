@@ -1,6 +1,6 @@
 # Dostigus — Domain Context
 
-Self-host agent OS: portable bot packages + host UI sheets. This file
+Self-host agent OS: portable Packs + Host UI Sheets. This file
 names the domain concepts. Keep these terms stable. Do not invent synonyms in
 code, docs, or UI copy. Host chrome may be `en` or `ru`
 ([ADR 0037](docs/adr/0037-host-ui-i18n.md)); the terms below stay
@@ -82,7 +82,7 @@ file stay Latin script in every Locale; translate only the
 surrounding chrome words. See
 [ADR 0037](docs/adr/0037-host-ui-i18n.md).
 _Avoid_: language (unqualified), i18n (as a product noun),
-treating timezone as Locale, translating Bot / Host / Cluster /
+treating timezone as Locale, translating Bot / Pack / Host / Cluster /
 Skill / Schedule / Provider / Policy / Artifact / Member /
 Household.
 
@@ -185,8 +185,13 @@ family): plain string, no parts, no Изменить.
 _Avoid_: widget, toast, system line, embed.
 
 **Sheet**:
-Modal/drawer app slice from the Kit, not a separate site.
-_Avoid_: page, iframe, dialog (use Sheet; modal is a Sheet kind).
+Modal/drawer app slice from the Kit, not a separate site. A Pack
+may ship Sheet UI as HTML under `ui/<id>/`, opened in the Sheet
+shell as a sandboxed iframe mini-app
+([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)). That
+iframe is a host for Pack HTML, not a synonym for Sheet.
+_Avoid_: page, dialog (use Sheet; modal is a Sheet kind), treating
+iframe as the Sheet, author Vue / Kit in a Pack.
 
 **Kit**:
 Shared design system / building blocks the Host renders. Bots do not ship
@@ -216,13 +221,34 @@ _Avoid_: emoji, icon (unqualified), meme.
 
 **Sheet shell**:
 The Kit frame that presents a Sheet (drawer or modal) on Reka UI and Host
-tokens. Modal is a Sheet kind.
+tokens. Modal is a Sheet kind. Pack HTML under `ui/<id>/` opens
+here as a sandboxed iframe
+([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)).
 _Avoid_: dialog library, modal component.
 
 **Bot**:
-Long-lived persona in a Cluster (Skills, memory scope, MCP access). Talks to
-the user. A Bot is **not** a Module package.
-_Avoid_: app, assistant, Module package (a Bot binds packages; it is not one).
+Runtime identity on a Cluster: id, display name, avatar /
+appearance, Threads / Chat history, live memory, bound secrets /
+API keys / MCP sessions, enabled Schedules, computer / sandbox
+assignment. Talks to the user. A Bot is **not** a Pack and **not**
+a Module package.
+_Avoid_: app, assistant, Pack, Module package (a Bot may Apply a
+Pack and bind Module packages; it is neither).
+
+**Pack**:
+Portable recipe for a Bot, not a live Bot. Soul / instructions,
+Skill docs (`SKILL.md`-class / skills files), Schedule templates
+(import paused), integration stubs (slug + reason + required env
+*names*, never values), optional `ui/` HTML mini-apps, optional
+`suggestedAppearance` (only when creating a new Bot), optional
+human README. Public id is `author.slug` plus semver `version`.
+No Chat, no secrets, no host paths. Canonical tree is `pack.json`
++ `skills/` (+ optional `schedules/`, `ui/<id>/`, README); share
+is a zip of that tree. **Pack ≠ Bot ≠ Module package.** Day-1
+marketplace / OSS share ships Packs. See
+[ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
+_Avoid_: Bot, Module package, plugin, extension, bot package
+(unqualified), treating a zip as a live Bot.
 
 **Bot visibility**:
 Who may see a Bot. A personal Bot plus explicit grants
@@ -316,20 +342,27 @@ and an optional description. Chat Self-settings may change the name,
 the label, and the description. Appearance and Model tier are not
 Chat Self-settings
 ([ADR 0028](docs/adr/0028-bot-self-settings-via-chat.md)).
-_Avoid_: config, profile (unqualified).
+Appearance lives on the Bot. A Pack may carry optional
+`suggestedAppearance` used only when Apply creates a new Bot
+([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)).
+_Avoid_: config, profile (unqualified), treating a Pack as the
+Manifest.
 
 **Module package**:
 Versioned unit: schema/migration, MCP tools, Kit UI bindings, Skill diffs.
-Lives in the Cluster Store. Not a Bot. This monorepo does not ship a
-stock Module package.
-_Avoid_: plugin, extension, addon, Bot.
+Lives in the Cluster Store. Not a Bot. Not a Pack. This monorepo
+does not ship a stock Module package. **Pack ≠ Module package.**
+_Avoid_: plugin, extension, addon, Bot, Pack.
 
 **Module catalog**:
 Not a day-1 artifact in this monorepo. There is no
 `packages/modules/<id>/` seed and no Host-bundled Apply of platform
-packages. A Marketplace of Module packages is a later cloud product.
-See [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
-_Avoid_: stock seed, registry, plugin gallery, treating Marketplace as day-1.
+packages. A Marketplace of Module packages is a later cloud product,
+separate from the day-1 Pack share track
+([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)). See
+[ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
+_Avoid_: stock seed, registry, plugin gallery, treating Marketplace as day-1,
+treating a Pack catalog as a Module catalog.
 
 **Kitchen Module**:
 Day-1 Cluster domain: pantry items (name, optional qty), one recipe
@@ -344,7 +377,9 @@ _Avoid_: Meal, meal planner, Cook app, plugin.
 
 **Store**:
 Cluster database (SQLite day-1) holding domain data + Manifests + Module
-packages.
+packages. An installed Pack is an immutable snapshot `id@version`
+in this Store; the Bot holds a ref
+([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)).
 _Avoid_: database (unqualified), repo.
 
 **Artifact**:
@@ -371,12 +406,17 @@ Approved request to run a Builder for a missing module/feature.
 _Avoid_: ticket, task (unqualified).
 
 **Apply**:
-Install a Module package into the live Cluster (after staging review).
-Day-1 does not Apply a stock package from this repo and does not bundle
-platform packages into the Host image. A Builder Job that Applies a
-package, and a Marketplace of packages, stay later. See
-[ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
-_Avoid_: deploy, merge, ship (unqualified), Host-bundled Apply.
+Two distinct writes. **Pack Apply** installs a Pack onto an
+existing Bot or creates a new Bot (preview / plan, then confirm).
+See [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
+**Module package Apply** installs a Module package into the live
+Cluster (after staging review). Day-1 does not Apply a stock
+Module package from this repo and does not bundle platform
+packages into the Host image. A Builder Job that Applies a
+Module package, and a Marketplace of Module packages, stay later.
+See [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
+_Avoid_: deploy, merge, ship (unqualified), Host-bundled Apply,
+treating Pack Apply as Module package Apply.
 
 **LLM gateway**:
 Cluster capability for LLM calls: OpenAI-compatible shape and
@@ -488,8 +528,9 @@ _Avoid_: public share, invite (unqualified).
 ## Relationships
 
 - Platform ≠ Cluster. Git is only for the Platform. A Cluster is not a git repo.
-- A Cluster has one Owner, a Store, Bots, Module packages, and its Household.
-  One Cluster is one Household.
+- A Cluster has one Owner, a Store, Bots, Module packages, installed
+  Pack snapshots, and its Household. One Cluster is one Household.
+  **Pack ≠ Bot ≠ Module package.**
 - A Member signs in on the same Host. Bot visibility decides which Bots
   they see ([ADR 0024](docs/adr/0024-threads-and-bot-visibility.md),
   amended 2026-09-24). A Bot is personal to its creator;
@@ -562,13 +603,23 @@ _Avoid_: public share, invite (unqualified).
 - Module package data lives in the Cluster Store. Bot visibility does not
   give a Bot its own Store. A personal Bot uses the same MCP surface
   under that person's permissions.
-- A Bot has a Manifest and bound Module packages. A Bot is not a Module package.
+- A Bot has a Manifest and bound Module packages. A Bot is not a Module package
+  and not a Pack. A Bot may hold a ref to one installed Pack version
+  (`id@version`).
+- A Pack is a portable recipe. Pack Apply writes Skills, paused
+  Schedule templates, stubs, and optional `ui/` onto one primary Bot
+  (or creates that Bot). Module package Apply is a different later
+  write. See
+  [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
 - The Kitchen Module is Cluster Store data, MCP tools, and a Kit Sheet.
-  It is the seed of a Module package. It is not a Meal port and not a Bot.
-- Builder writes Module packages via Job → Apply. Distinct from any Platform
-  git agent. The chat Bot does not write Module packages. This monorepo
-  ships no stock Module packages and no Weather seed. A Marketplace of
-  packages is later. See
+  It is the seed of a Module package. It is not a Meal port, not a Bot,
+  and not a Pack.
+- Builder writes Module packages via Job → Module package Apply.
+  Distinct from any Platform git agent. The chat Bot does not write
+  Module packages. This monorepo ships no stock Module packages and no
+  Weather seed. A Marketplace of Module packages is later. Day-1
+  marketplace / OSS share for Packs is
+  [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md). See
   [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
 - Host talks to Bots through the MCP surface and renders Cards and Sheets from
   the Kit. The Sheet shell and Brand stickers live in the Kit. An assistant
