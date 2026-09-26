@@ -431,59 +431,33 @@ The impl PR filled in what this record left open.
 - Advanced lists every text-output model. A model without `tools`
   cannot be pinned.
 
-### Legacy compat
+### Legacy compat (removed)
 
-Live Clusters may still store **per-tier raw model strings**
-(`llm_gateway.modelOverrides`, env `LLM_MODEL` /
-`LLM_MODEL_*`). Settings treats “tier = raw model string” as a
-pin. The Host still reads that shape so a live Cluster does not
-brick:
-
-- Treat the existing row as **one** Provider instance when
-  Providers were never saved. Infer `kind`: `openrouter` when
-  the base is OpenRouter (including the
-  [ADR 0004](0004-llm-gateway-tiers.md) default
-  `https://openrouter.ai/api/v1` when a key is set and no base
-  is stored); otherwise `openai-compatible` (or `openai` when
-  the base is the official OpenAI URL). Provider id `legacy`
-  stays. Do not rename it to `openrouter`.
-- Treat each stored / env model string as a **pinned-model
-  Policy** on that single Provider for that tier.
-- An empty override keeps today’s
-  [ADR 0004](0004-llm-gateway-tiers.md) default id until the
-  Owner adds a Provider through Settings and casual auto-fill
-  runs. Auto-fill does not wipe a non-empty pin.
-- Env override / bootstrap
-  (`OPENAI_COMPATIBLE_BASE_URL`, `LLM_API_KEY` /
-  `OPENROUTER_API_KEY`, `LLM_MODEL` / `LLM_MODEL_*`) stays the
-  [ADR 0004](0004-llm-gateway-tiers.md) compose path at resolve
-  time. It does not write a Store key.
-
-#### Provider key (sole Store SoT)
-
-A leftover `llm_gateway.api_key` beside `providers[].apiKey`
-was a dual source. Resolve preferred the Provider, so a null
-Provider key plus a leftover field key meant zero LLM attempts
-while Settings showed «Нет ключа».
+`llm_gateway.api_key` is **removed**. It was a real SQLite
+column (migration `0001_llm_gateway`) and a second Store
+source beside `providers[].apiKey`. That dual-path is gone.
+Resolve, Settings, catalog, and save do not read or write the
+column. There is no synthetic Provider built from it.
 
 On Store open / Host boot, **before** any LLM resolve or
-Providers UI, a one-shot migrate:
+Providers UI, a one-shot migrate, then the column is dropped:
 
-1. If Provider id `legacy` (or the OpenRouter Provider) has an
-   empty or null `apiKey` and the old field still has a
+1. If Provider id `legacy` (`LEGACY_LLM_PROVIDER_ID`) has an
+   empty or null `apiKey` and the column still has a
    non-empty key → copy into that Provider’s `apiKey`.
-2. If that Provider already has a key (even if the old field
-   differs) → never overwrite the Provider; wipe the old field.
-3. After migrate, or if nothing to copy → drop
-   `llm_gateway.api_key` from the Store permanently.
+2. If that Provider already has a key (even if the column
+   differs) → never overwrite the Provider; wipe the column.
+3. After migrate, or if nothing to copy → `ALTER TABLE
+   llm_gateway DROP COLUMN api_key` permanently.
 
-After this amend every resolve / UI / save path reads and
-writes **only** `providers[].apiKey`. There is no fallback to
-the deleted field.
+Provider id `legacy` stays. Do not rename it to `openrouter`.
+Prefer Provider `apiKey` forever.
 
-Write path: persist Provider instances and tier → Provider +
-Policy. Compat pins remain for Stores that still have raw
-model strings.
+Env `LLM_API_KEY` / `OPENROUTER_API_KEY` stay the
+[ADR 0004](0004-llm-gateway-tiers.md) compose override at
+resolve time. They do not write a Store field. Per-tier raw
+model strings (`modelOverrides`) remain a pinned-model Policy
+on the bound Provider. That is not a second key source.
 
 ### Vision
 
@@ -558,9 +532,10 @@ concrete id.
 
 - The first impl PR added Provider instances, tier →
   Provider + Policy bind, casual auto-fill, situation start,
-  escalate, and the legacy compat read.
-- The 2026-09-26 Host impl drops `llm_gateway.api_key` after
-  the one-shot migrate above. Provider `apiKey` is the only
+  and escalate.
+- The 2026-09-26 Host impl **removes** the
+  `llm_gateway.api_key` dual-path after the one-shot migrate
+  above, then drops the column. Provider `apiKey` is the only
   Store copy of a key. Env compose override stays
   [ADR 0004](0004-llm-gateway-tiers.md).
 - A later Host impl PR adds the Owner-session catalog proxy

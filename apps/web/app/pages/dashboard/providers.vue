@@ -380,7 +380,6 @@ import type {
 import {
   clearOpenRouterPins,
   defaultBaseUrlForKind,
-  LEGACY_LLM_PROVIDER_ID,
   LLM_PROVIDER_KIND_LABELS,
   MODEL_TIER_LABELS,
   MODEL_TIERS,
@@ -571,7 +570,7 @@ async function ping(providerId: string) {
   try {
     const result = await $fetch<{ ok: boolean }>('/api/settings/llm-gateway/ping', {
       method: 'POST',
-      body: { providerId: providerId === LEGACY_LLM_PROVIDER_ID ? undefined : providerId },
+      body: { providerId },
     })
     pings.value = { ...pings.value, [providerId]: result.ok }
   } catch {
