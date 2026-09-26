@@ -331,6 +331,7 @@
 <script setup lang="ts">
 import type { Invite, Member } from '@dostigus/shared'
 import { GooseSticker, KitButton, KitSheet } from '@dostigus/ui-kit'
+import { hostStatusCopy } from '../../utils/host-status-copy'
 
 const { t } = useI18n()
 
@@ -387,11 +388,8 @@ function selectLink(event: FocusEvent) {
   }
 }
 
-function inviteFailure(error: unknown, fallback: string) {
-  const fetchError = error as { data?: { statusMessage?: string }, statusMessage?: string }
-  inviteMessage.value = fetchError.data?.statusMessage
-    ?? fetchError.statusMessage
-    ?? fallback
+function inviteFailure(error: unknown, fallbackKey: string) {
+  inviteMessage.value = hostStatusCopy(error, t, fallbackKey)
   inviteMessageError.value = true
 }
 
@@ -410,7 +408,7 @@ async function createInvite() {
     inviteEmail.value = ''
     await refreshInvites()
   } catch (error) {
-    inviteFailure(error, t('members.inviteFailed'))
+    inviteFailure(error, 'members.inviteFailed')
   } finally {
     inviting.value = false
   }
@@ -442,7 +440,7 @@ async function revoke(id: string) {
     revokeConfirmId.value = ''
     await refreshInvites()
   } catch (error) {
-    inviteFailure(error, t('members.revokeFailed'))
+    inviteFailure(error, 'members.revokeFailed')
   } finally {
     busyInviteId.value = ''
   }
@@ -461,7 +459,7 @@ async function rotate(id: string) {
     issuedId.value = issued.invite.id
     await refreshInvites()
   } catch (error) {
-    inviteFailure(error, t('members.rotateFailed'))
+    inviteFailure(error, 'members.rotateFailed')
   } finally {
     busyInviteId.value = ''
   }
@@ -501,7 +499,7 @@ async function add() {
     login.value = ''
     password.value = ''
     confirm.value = ''
-    message.value = 'Added.'
+    message.value = t('members.added')
     addOpen.value = false
     await refresh()
     await refreshInvites()
@@ -511,10 +509,7 @@ async function add() {
       copied.value = false
     }
   } catch (error) {
-    const fetchError = error as { data?: { statusMessage?: string }, statusMessage?: string }
-    message.value = fetchError.data?.statusMessage
-      ?? fetchError.statusMessage
-      ?? t('members.addFailed')
+    message.value = hostStatusCopy(error, t, 'members.addFailed')
     messageError.value = true
   } finally {
     adding.value = false

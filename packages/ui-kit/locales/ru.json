@@ -27,7 +27,29 @@
       "fallbackSignIn": "Не получилось войти.",
       "fallbackCreateOwner": "Не получилось создать Owner.",
       "fallbackJoin": "Не получилось присоединиться к этому Host.",
-      "fallbackSignOut": "Не получилось выйти."
+      "fallbackSignOut": "Не получилось выйти.",
+      "invalidCredentials": "Неверные email, username или пароль.",
+      "invalidLogin": "Неверный email или username.",
+      "loginRequired": "Нужен email или username.",
+      "passwordRequired": "Нужен пароль.",
+      "clusterHasOwner": "У этого Cluster уже есть Owner.",
+      "checkMember": "Проверьте данные Member.",
+      "inviteLink": "Этот Host не смог собрать ссылку Invite.",
+      "validEmail": "Введите корректный email.",
+      "signOutFirst": "Выйдите, затем откройте ссылку снова.",
+      "loginTooLong": "Email или username — не больше 254 символов.",
+      "usernameMin": "Username — не меньше 2 символов.",
+      "usernameMax": "Username — не больше 32 символов.",
+      "usernameChars": "В username можно буквы, цифры, точки, подчёркивания и дефисы.",
+      "passwordMin": "Пароль — не меньше 8 символов.",
+      "passwordMax": "Пароль — не больше 128 символов.",
+      "displayNameRequired": "Нужно имя.",
+      "displayNameMax": "Имя — не больше 64 символов.",
+      "alreadyOnHost": "Этот email или username уже есть на этом Host.",
+      "emailAlreadyOnHost": "Этот email уже есть на этом Host.",
+      "inviteUsed": "Этот Invite уже использовали.",
+      "inviteRevoked": "Этот Invite отозвали.",
+      "needsOwner": "Сначала этому Host нужен Owner."
     },
     "onboarding": {
       "kicker": "Первый визит",
@@ -66,27 +88,27 @@
   "host": {
     "nav": {
       "closeDrawer": "Закрыть",
-      "threads": "Threads",
+      "threads": "Чаты",
       "search": "Поиск"
     },
     "sidebar": {
       "expand": "Развернуть список",
       "collapse": "Свернуть список",
       "resize": "Ширина списка",
-      "loading": "Загружаем Threads…",
-      "loadError": "Не получилось загрузить Threads.",
-      "empty": "Пока нет Threads"
+      "loading": "Загружаем чаты…",
+      "loadError": "Не получилось загрузить чаты.",
+      "empty": "Пока нет чатов"
     },
     "threadKind": {
-      "dm": "DM",
-      "group": "Group",
-      "room": "Room"
+      "dm": "ЛС",
+      "group": "Группа",
+      "room": "Комната"
     },
     "threadAria": {
       "online": ", в сети"
     },
     "menu": {
-      "settings": "Settings",
+      "settings": "Настройки",
       "members": "Members",
       "account": "Аккаунт",
       "accountAria": "Аккаунт, {name}"
@@ -96,13 +118,13 @@
       "busy": "Выходим…"
     },
     "home": {
-      "title": "Threads",
-      "open": "Откройте Thread",
-      "hint": "Выберите Thread из списка."
+      "title": "Чаты",
+      "open": "Открыть чат",
+      "hint": "Выберите чат из списка."
     },
     "empty": {
-      "title": "Threads",
-      "none": "Пока нет Threads",
+      "title": "Чаты",
+      "none": "Пока нет чатов",
       "ownerHint": "Создайте Bot или групповой Chat, чтобы начать.",
       "memberHint": "Owner может открыть вам Bot или добавить в Chat.",
       "createBot": "Создать Bot",
@@ -169,7 +191,7 @@
       "emptyResults": "Ничего не нашли.",
       "aria": "Поиск",
       "tagChat": "Chat",
-      "tagSettings": "Settings",
+      "tagSettings": "Настройки",
       "settingsProviders": "Провайдеры",
       "settingsProvidersHint": "Settings · ключ OpenRouter, модели и Model tiers",
       "settingsOther": "Прочее",
@@ -179,7 +201,7 @@
       "botSettings": "Параметры",
       "botSettingsHint": "{name}: имя, метка и внешний вид"
     },
-    "titleDoc": "Dostigus · Threads"
+    "titleDoc": "Dostigus · Чаты"
   },
   "chat": {
     "loadError": "Не получилось открыть этот Chat.",
@@ -235,7 +257,7 @@
     },
     "card": {
       "schedule": {
-        "pause": "Pause",
+        "pause": "Пауза",
         "edit": "Изменить",
         "deleted": "Удалено",
         "paused": "На паузе",
@@ -260,7 +282,8 @@
     "emptyDm": "Скажите привет.",
     "mentionHint": "Упомяните Bot через @Имя, чтобы он ответил.",
     "placeholderOrSend": "Добавьте сообщение или просто отправьте",
-    "kitchenDescriptionAlt": "Кладовая, один рецепт и приготовленное."
+    "kitchenDescriptionAlt": "Кладовая, один рецепт и приготовленное.",
+    "fallbackTitle": "Чат"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -300,11 +323,11 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "titleDoc": "Dostigus · Settings",
-    "titleDocPage": "Dostigus · Settings · {page}",
+    "title": "Настройки",
+    "titleDoc": "Dostigus · Настройки",
+    "titleDocPage": "Dostigus · Настройки · {page}",
     "cluster": "Cluster",
-    "aria": "Settings",
+    "aria": "Настройки",
     "nav": {
       "providers": "Провайдеры",
       "providersHint": "LLM для Bots",
@@ -315,23 +338,23 @@
       "title": "Прочее",
       "lead": "Остальные настройки Cluster.",
       "timezone": {
-        "title": "Cluster timezone",
+        "title": "Часовой пояс Cluster",
         "hint": "Schedules идут по этим часам. IANA-имя, например America/New_York или UTC.",
         "fromEnv": "Сейчас {value} с сервера, пока вы не сохраните часовой пояс здесь.",
         "usingUtc": "Сейчас UTC, пока вы не зададите часовой пояс.",
-        "label": "IANA timezone",
-        "save": "Сохранить timezone",
-        "saved": "Timezone сохранён.",
+        "label": "Часовой пояс IANA",
+        "save": "Сохранить часовой пояс",
+        "saved": "Часовой пояс сохранён.",
         "invalid": "Cluster timezone должен быть IANA-именем."
       },
       "allowlist": {
-        "title": "Cluster http allowlist",
+        "title": "HTTP-список Cluster",
         "hint": "Хосты, которые может открыть Host HTTP get. Один hostname в строке, точное совпадение, без масок. Пустой список разрешает любой публичный хост. Loopback и частные адреса всегда закрыты.",
         "empty": "Пусто — Bots могут GET любой публичный хост.",
-        "label": "Hostnames",
-        "save": "Сохранить allowlist",
-        "saved": "Allowlist сохранён.",
-        "cleared": "Allowlist очищен. Публичные хосты разрешены.",
+        "label": "Имена хостов",
+        "save": "Сохранить список",
+        "saved": "Список сохранён.",
+        "cleared": "Список очищен. Публичные хосты разрешены.",
         "invalid": "В HTTP allowlist только hostnames."
       },
       "locale": {
@@ -373,7 +396,7 @@
         "connectOpenRouter": "Подключите OpenRouter",
         "newProvider": "Новый Provider",
         "openRouterKey": "Ключ OpenRouter",
-        "apiKey": "API key",
+        "apiKey": "Ключ API",
         "save": "Сохранить",
         "saving": "Сохраняем…",
         "otherProvider": "Другой Provider…",
@@ -385,7 +408,8 @@
         "modelHint": "Одна модель на все Model tiers, пока это единственный Provider.",
         "whereBefore": "Ключ можно создать на",
         "whereAfter": ". Host хранит его у себя и не показывает в браузере.",
-        "otherOpenAI": "Другой Provider: OpenAI или OpenAI-compatible"
+        "otherOpenAI": "Другой Provider: OpenAI или OpenAI-compatible",
+        "modelId": "ID модели"
       },
       "flow": {
         "how": "Как это устроено",
@@ -730,7 +754,7 @@
   },
   "sheet": {
     "demo": {
-      "title": "Demo sheet",
+      "title": "Демо Sheet",
       "body": "Этот Sheet — ящик Kit."
     },
     "kitchen": {

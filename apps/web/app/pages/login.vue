@@ -48,6 +48,8 @@
 </template>
 
 <script setup lang="ts">
+import { hostStatusCopy } from '../utils/host-status-copy'
+
 const { t } = useI18n()
 useHead({ title: () => t('auth.login.titleDoc') })
 
@@ -72,10 +74,7 @@ async function submit() {
     clearNuxtData('owner-auth-status')
     await navigateTo('/')
   } catch (error) {
-    const fetchError = error as { data?: { statusMessage?: string }, statusMessage?: string }
-    message.value = fetchError.data?.statusMessage
-      ?? fetchError.statusMessage
-      ?? t('auth.error.fallbackSignIn')
+    message.value = hostStatusCopy(error, t, 'auth.error.fallbackSignIn')
   } finally {
     busy.value = false
   }

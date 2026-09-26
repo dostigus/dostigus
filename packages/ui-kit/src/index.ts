@@ -35,6 +35,7 @@ export {
   type HostTranslateParams,
   isHostLocale,
   localeMessageKeys,
+  localizeGatewayErrorReply,
   resolveHostLocale,
   tHost,
 } from './locale'
