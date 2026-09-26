@@ -1,5 +1,5 @@
-import { expect, it } from 'vitest'
 import { tHost } from '@dostigus/ui-kit/locale'
+import { expect, it } from 'vitest'
 import { hostStatusCopy } from '../../app/utils/host-status-copy'
 
 it('maps household API status messages onto the Locale dictionary', () => {

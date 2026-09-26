@@ -43,4 +43,4 @@ it('remaps a stored gateway error bubble onto the current Locale', () => {
   expect(localizeGatewayErrorReply(english, 'ru')).toBe(russian)
   expect(localizeGatewayErrorReply(russian, 'en')).toBe(english)
   expect(localizeGatewayErrorReply('A normal Chat line', 'ru')).toBe('A normal Chat line')
-}))
+})
