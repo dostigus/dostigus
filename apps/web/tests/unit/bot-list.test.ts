@@ -7,6 +7,8 @@ function bot(name: string, preview: string | null): BotListItem {
     id: name,
     name,
     createdAt: '2026-09-22T00:00:00.000Z',
+    createdBy: null,
+    installedPackId: null,
     manifest: {
       name,
       modelTier: 'strong',

@@ -620,6 +620,28 @@
     "needName": "Напишите имя",
     "saveAvatarFailed": "Не получилось сохранить аватар"
   },
+  "pack": {
+    "title": "Pack",
+    "hint": "Рецепт на экспорт. Без Chat и секретов.",
+    "export": "Экспорт Pack",
+    "exportBusy": "Экспортируем…",
+    "apply": "Apply Pack",
+    "folder": "Папка",
+    "previewTitle": "Apply Pack",
+    "target": "Куда Apply",
+    "targetThis": "Этот Bot",
+    "targetNew": "Новый Bot",
+    "confirm": "Apply",
+    "confirmBusy": "Применяем…",
+    "skills": "Skills",
+    "schedules": "Schedules (на паузе)",
+    "unbound": "Свободные stubs не запустят tools.",
+    "chatKept": "Chat этого Bot останется.",
+    "engineWarn": "Этот Host вне engines.dostigus ({range}).",
+    "exportFailed": "Не получилось экспортировать Pack.",
+    "previewFailed": "Не получилось прочитать Pack.",
+    "applyFailed": "Не получилось Apply Pack."
+  },
   "schedule": {
     "gone": "Этого Schedule уже нет.",
     "loading": "Загружаем…",

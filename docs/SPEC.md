@@ -29,6 +29,7 @@ Settled now, even if this repo only scaffolds them:
 | Artifacts | Persisted Cluster file objects: volume bytes + Store meta + message join. Composer **+** uploads; send takes `artifactIds[]`. Chat slim and Wake gain `dostigus_artifacts_put`. No get tool. Image vision on the triggering line is [ADR 0035](adr/0035-image-artifact-vision.md). See [ADR 0034](adr/0034-artifacts.md). |
 | Chat LLM context | System prompt is Manifest (including label and description) plus a Skill catalog (`id` + `description`). History is the last 40 lines (string `content` + Artifact meta note). The triggering user message may use OpenAI content parts. Chat tools start slim; keyword expand adds builder tools on that user turn only. Wake is narrower and has no expand. See [ADR 0032](adr/0032-chat-llm-context-assembly.md) and [ADR 0035](adr/0035-image-artifact-vision.md). |
 | Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, appends one system Chat line (plain string, no parts). This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
+| Pack | Portable recipe, not a Bot and not a Module package. Export Pack from a live Bot is a scrubbed zip (`pack.json` + `skills/` + optional `schedules/` + optional `ui/` + optional README). Apply Pack from a local file shows a preview / plan, then writes onto an existing Bot or creates a new Bot. Imported Schedules land paused. Update does not wipe Chat. See [ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -38,6 +39,8 @@ What the running Cluster does today:
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
   default `goose` (Bot mark), `avatarColor` default `#1F7AE5` /
   `--bot-accent-10`, optional `label` and `description` default empty,
+  optional `installed_pack_id` ref to an installed Pack snapshot
+  (`installed_packs`, `author.slug@version`, [ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md)),
   modules empty, meta Skills inserted on create when each id is absent
   ([ADR 0030](adr/0030-chat-cards-module-catalog.md)), `created_by` the
   Owner or Member who created it),
@@ -148,9 +151,11 @@ What the running Cluster does today:
   Hover or focus fades an arrow in on the trailing side and the pill grows
   to fit it, with padding still sitting past that arrow. The pill opens a
   right Sheet titled Параметры (name, optional label, description, who
-  may open the Bot, a large Bot mark, and a «Расписания» block for that
-  person's Schedules on this Bot). Schedules on that Sheet are Store
-  rows, not Manifest fields
+  may open the Bot, a large Bot mark, a «Расписания» block for that
+  person's Schedules on this Bot, and Export Pack / Apply Pack).
+  Schedules on that Sheet are Store rows, not Manifest fields. Pack
+  Apply always shows a preview / plan before write
+  ([ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md)).
   ([ADR 0020](adr/0020-bot-closet.md),
   [ADR 0027](adr/0027-bot-schedules.md)). The creator and the Owner open
   appearance by clicking that mark or

@@ -378,7 +378,7 @@ _Avoid_: Meal, meal planner, Cook app, plugin.
 **Store**:
 Cluster database (SQLite day-1) holding domain data + Manifests + Module
 packages. An installed Pack is an immutable snapshot `id@version`
-in this Store; the Bot holds a ref
+in `installed_packs`; the Bot holds `installed_pack_id`
 ([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)).
 _Avoid_: database (unqualified), repo.
 

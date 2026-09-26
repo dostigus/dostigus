@@ -56,6 +56,9 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
     'bots/[id]/schedules.post.ts',
     'artifacts/index.post.ts',
     'artifacts/[id].get.ts',
+    'bots/[id]/pack.get.ts',
+    'packs/preview.post.ts',
+    'packs/apply.post.ts',
   ]
   for (const file of files) {
     const src = readFileSync(join(apiRoot, file), 'utf8')
