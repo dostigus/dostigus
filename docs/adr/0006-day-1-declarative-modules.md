@@ -2,6 +2,10 @@
 
 - Status: accepted (MVP constraint; sandbox remains open)
 - Date: 2026-09-21
+- Amended: 2026-09-26 — Pack HTML `ui/` is a sandboxed iframe
+  mini-app ([ADR 0039](0039-pack-vs-bot-portable-recipe.md)), not
+  arbitrary in-cluster module code. This record stays declarative
+  Module packages.
 
 ## Decision
 
@@ -25,8 +29,10 @@ and the Host before the MCP surface is real.
 - Builder “write me a module” Jobs are also out of scope (see SPEC).
 - This monorepo does not ship stock Module package seeds. Schedule
   Chat Cards are [ADR 0030](0030-chat-cards-module-catalog.md). A
-  Marketplace of packages is later. That is not a sandbox and not a
-  Builder Job.
+  Marketplace of Module packages is later. That is not a sandbox and not a
+  Builder Job. Pack HTML `ui/` is a sandboxed iframe mini-app
+  ([ADR 0039](0039-pack-vs-bot-portable-recipe.md)), not this
+  module runner and not arbitrary in-cluster module code.
 - Revisit sandbox only after declarative install/export and Host Sheets work.
 
 ## Alternatives

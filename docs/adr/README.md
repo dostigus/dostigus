@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0038, so the next ADR
-is **0039**. Name it `0039-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0039, so the next ADR
+is **0040**. Name it `0040-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one.
 
@@ -32,12 +32,12 @@ English.
 
 | ADR | Title |
 | --- | --- |
-| [0001](0001-platform-git-vs-in-cluster-bot-packages.md) | Platform git vs in-cluster bot packages |
-| [0002](0002-host-ui-kit-and-sheets.md) | Host UI kit and Sheets |
+| [0001](0001-platform-git-vs-in-cluster-bot-packages.md) | Platform git vs in-cluster bot packages (amended 2026-09-26: Pack share vs Bot backup [0039](0039-pack-vs-bot-portable-recipe.md)) |
+| [0002](0002-host-ui-kit-and-sheets.md) | Host UI kit and Sheets (amended 2026-09-26: Pack HTML `ui/` is a sandboxed iframe in the Sheet shell [0039](0039-pack-vs-bot-portable-recipe.md)) |
 | [0003](0003-mcp-as-bot-store-contract.md) | MCP as the Bot ↔ store contract |
 | [0004](0004-llm-gateway-tiers.md) | LLM gateway and model tiers (amended 2026-09-24: one transient retry, Russian error copy; Chat assembly [0032](0032-chat-llm-context-assembly.md); amended 2026-09-25: triggering-line image parts [0035](0035-image-artifact-vision.md); amended 2026-09-25: bind / resolve / escalate [0036](0036-llm-providers-tier-resolve-escalate.md); OpenRouter Policy `free` on cheap/toy for casual supersedes “roulette is toy only”; amended 2026-09-25: OpenRouter Settings catalog stays [0036](0036-llm-providers-tier-resolve-escalate.md); amended 2026-09-26: Store key is Provider `apiKey` only [0036](0036-llm-providers-tier-resolve-escalate.md)) |
 | [0005](0005-self-host-first.md) | Self-host first |
-| [0006](0006-day-1-declarative-modules.md) | Day-1 declarative modules (before arbitrary sandbox) |
+| [0006](0006-day-1-declarative-modules.md) | Day-1 declarative modules (before arbitrary sandbox; Pack HTML ui is [0039](0039-pack-vs-bot-portable-recipe.md), not this sandbox) |
 | [0007](0007-platform-image-tags.md) | Platform image tags |
 | [0008](0008-host-store-routes.md) | Host Store routes for Bots and Chat |
 | [0009](0009-mcp-toolkit-endpoint.md) | MCP toolkit endpoint |
@@ -61,7 +61,7 @@ English.
 | [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets; Wake tools [0032](0032-chat-llm-context-assembly.md); amended 2026-09-26: visible Wake is the Schedule name, `wakeText` is LLM-only) |
 | [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat (amended 2026-09-24: closet Schedule list stays [0027](0027-bot-schedules.md); Skill `description` + catalog [0032](0032-chat-llm-context-assembly.md)) |
 | [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows; amended 2026-09-25: modelId / modelTier / visionParts observability; amended 2026-09-25: servedModelId + token usage on the Turn; amended 2026-09-25: escalate may resolve more than once [0036](0036-llm-providers-tier-resolve-escalate.md); journal stays last successful / last attempted resolve + llmCallCount) |
-| [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create; Card «Изменить» opens closet detail; meta Skills catalog + read [0032](0032-chat-llm-context-assembly.md)) |
+| [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create; Card «Изменить» opens closet detail; meta Skills catalog + read [0032](0032-chat-llm-context-assembly.md); amended 2026-09-26: day-1 marketplace track for Packs is [0039](0039-pack-vs-bot-portable-recipe.md); Module package Marketplace / Apply stays later) |
 | [0031](0031-host-http-get.md) | Host HTTP get and Cluster http allowlist (amended 2026-09-24: allowlist Chat tools behind expand [0032](0032-chat-llm-context-assembly.md); Bot HTTP egress [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md); soft retry / pursue-result in tool text + `platform-meta-http-get`) |
 | [0032](0032-chat-llm-context-assembly.md) | Chat LLM context assembly (amended 2026-09-24: slim + Wake gain `dostigus_artifacts_put`; no get tool [0034](0034-artifacts.md); amended 2026-09-25: triggering user message may use content parts [0035](0035-image-artifact-vision.md); amended 2026-09-26: Wake `wakeText` is current-turn LLM content, stored line is the Schedule name [0027](0027-bot-schedules.md)) |
 | [0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md) | Cluster outbound: LLM proxy vs Bot HTTP proxy (amended 2026-09-24: domain failover lists stay out of scope; soft policy is [0031](0031-host-http-get.md)) |
@@ -70,3 +70,4 @@ English.
 | [0036](0036-llm-providers-tier-resolve-escalate.md) | LLM Providers, tier resolve, and escalate (amended 2026-09-25: OpenRouter Settings catalog + quality shelf; Advanced pin is day-1 of this amend for `kind=openrouter`; amended 2026-09-25: Settings IA — Провайдеры / Прочее, health from key + soft catalog probe; amended 2026-09-25: chrome slugs `/dashboard/providers` and `/dashboard/cluster`, no `/settings` redirects [0038](0038-dashboard-chrome.md); amended 2026-09-26: Provider `apiKey` is the only Store SoT; one-shot migrate then drop `llm_gateway.api_key`) |
 | [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) (amended 2026-09-26: Thread chrome is chat / чат) |
 | [0038](0038-dashboard-chrome.md) | Dashboard chrome (own layout; Settings is one page; Members under Account; no `/settings` or `/members` redirects) |
+| [0039](0039-pack-vs-bot-portable-recipe.md) | Pack vs Bot portable recipe (Pack ≠ Bot ≠ Module package; Export Pack vs Export Bot backup; HTML `ui/` in a sandboxed iframe) |

@@ -2,12 +2,18 @@
 
 - Status: accepted
 - Date: 2026-09-21
+- Amended: 2026-09-26 — Pack HTML `ui/` is a sandboxed iframe
+  inside the Sheet shell, not a per-bot SPA or domain. See
+  [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
 
 ## Decision
 
 One Host. Chat, Cards, and Sheets / modals come from the Kit. Bots do not
-ship their own SPA, domain, or iframe app. UI modules bind to Kit components
-and talk to the Store only through the Bot’s MCP surface.
+ship their own SPA or domain. UI modules bind to Kit components
+and talk to the Store only through the Bot’s MCP surface. A Pack may
+ship HTML under `ui/<id>/` opened as a sandboxed iframe mini-app in
+the Sheet shell ([ADR 0039](0039-pack-vs-bot-portable-recipe.md)). That
+is not a per-bot site and not author Vue / Kit in the Host process.
 
 ## Context
 
