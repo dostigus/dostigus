@@ -15,6 +15,7 @@ import {
 } from '@dostigus/db'
 import { STUB_ASSISTANT_REPLY } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
+import { scheduleDisplayName, truncateScheduleText } from '../../app/utils/schedule-copy'
 import {
   clearChatActivityPhases,
   readChatActivityPhase,
@@ -205,6 +206,86 @@ it('leaves a revoked grant due until access returns, and skips once the window p
   expect(skipped.last_run_status).toBe('skipped_late')
   expect(skipped.next_run_at).toBeGreaterThan(late)
   expect(listBotThreadMessages(store, bot.id, member.id).some((message) => message.role === 'system')).toBe(false)
+})
+
+it('stores the Schedule name as the Wake and sends wakeText to the LLM only', async () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const bot = createBot(store, { name: 'Notes', createdBy: owner.id }).bot
+  const now = Date.parse('2026-01-15T08:10:00.000Z')
+  const wakeText = [
+    'Дождевик: проверь текущую погоду в Светлогорске (Калининградская область).',
+    'Укажи температуру воздуха и ощущаемую (фактическую) температуру.',
+    'Порекомендуй — нужна ли куртка сегодня.',
+  ].join(' ')
+  const schedule = createSchedule(store, {
+    botId: bot.id,
+    personId: owner.id,
+    name: 'Дождевик',
+    cadence: 'daily',
+    timeLocal: '08:00',
+    wakeText,
+  }, { now, env: {} })
+  dueAt(store, schedule.id, now - SCHEDULE_CATCH_UP_MS + 1)
+
+  let llmHistory: Array<{ role: string, content: string }> = []
+  runScheduleTick({
+    store,
+    now,
+    env: {},
+    completeReply: async (input) => {
+      llmHistory = input.history.map((message) => ({
+        role: message.role,
+        content: message.content,
+      }))
+      return { content: 'ok', via: 'stub' }
+    },
+  })
+  await flushScheduleWakes()
+
+  const fired = listBotThreadMessages(store, bot.id, owner.id)
+  const system = fired.filter((message) => message.role === 'system')
+  expect(system).toHaveLength(1)
+  expect(system[0]?.content).toBe('Дождевик')
+  expect(fired.some((message) => message.content.includes('проверь текущую погоду'))).toBe(false)
+  expect(llmHistory.at(-1)).toEqual({ role: 'system', content: wakeText })
+  expect(llmHistory.some((message) => message.content === 'Дождевик')).toBe(false)
+})
+
+it('falls back to the truncated list title when Schedule name is empty', async () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const bot = createBot(store, { name: 'Notes', createdBy: owner.id }).bot
+  const now = Date.parse('2026-01-15T08:10:00.000Z')
+  const wakeText = `${'Check the weather in Svetlogorsk and say whether a jacket is needed today. '.repeat(3)}End.`
+  const schedule = createSchedule(store, {
+    botId: bot.id,
+    personId: owner.id,
+    cadence: 'daily',
+    timeLocal: '08:00',
+    wakeText,
+  }, { now, env: {} })
+  dueAt(store, schedule.id, now - SCHEDULE_CATCH_UP_MS + 1)
+
+  let llmWake = ''
+  runScheduleTick({
+    store,
+    now,
+    env: {},
+    completeReply: async (input) => {
+      llmWake = input.history.at(-1)?.content ?? ''
+      return { content: 'ok', via: 'stub' }
+    },
+  })
+  await flushScheduleWakes()
+
+  const system = listBotThreadMessages(store, bot.id, owner.id)
+    .filter((message) => message.role === 'system')
+  expect(system).toHaveLength(1)
+  expect(system[0]?.content).toBe(scheduleDisplayName({ name: '', wakeText }))
+  expect(system[0]?.content).toBe(truncateScheduleText(wakeText))
+  expect(system[0]?.content).not.toBe(wakeText)
+  expect(llmWake).toBe(wakeText)
 })
 
 it('does not fire a paused Schedule', async () => {

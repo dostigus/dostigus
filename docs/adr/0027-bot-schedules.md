@@ -5,6 +5,7 @@
 - Amended: 2026-09-24 — Schedule Chat Cards are [ADR 0030](0030-chat-cards-module-catalog.md). Schedule rows and the ticker stay this record. Weather stays out of this monorepo. A Marketplace of packages is later.
 - Amended: 2026-09-24 — Host UI: closet «Расписания» list, create Sheet, and detail Sheet are day-1. Optional `name` on the row. Run history is Turn journal rows ([ADR 0029](0029-turn-journal.md)). Card «Изменить» opens the same detail Sheet ([ADR 0030](0030-chat-cards-module-catalog.md)).
 - Amended: 2026-09-24 — Wake Skill catalog matches a user turn; Wake tools are narrower and there is no keyword expand ([ADR 0032](0032-chat-llm-context-assembly.md)). The Wake line and the ticker stay this record.
+- Amended: 2026-09-26 — Visible Wake is the Schedule display name (same string as the Schedules list). `wakeText` is the current-turn LLM prompt only. It is not stored as Chat content.
 
 Chat turns stay [ADR 0011](0011-chat-mcp-tool-loop.md). Activity phases
 stay [ADR 0021](0021-chat-activity-status.md). Bot visibility and
@@ -29,7 +30,7 @@ is full create, read, update, delete, pause, and resume.
 | cadence | the Bot, that person (Host UI), or the Owner | `daily` or `weekly` |
 | timeLocal | the Bot, that person (Host UI), or the Owner | `HH:MM` wall clock in the Cluster timezone |
 | daysOfWeek | the Bot, that person (Host UI), or the Owner | omitted for `daily`; the weekdays when `weekly` |
-| wakeText | the Bot supplies it; that person (Host UI) or the Owner may set it | the string the Wake line shows |
+| wakeText | the Bot supplies it; that person (Host UI) or the Owner may set it | the current-turn LLM prompt. Not Chat content |
 | paused / enabled | the Bot, that person (Host UI), or the Owner | paused rows do not fire |
 | next_run_at | Host | next fire instant |
 | last run | Host | last-run metadata |
@@ -41,17 +42,24 @@ Resume changes the paused flag and recomputes `next_run_at`.
 ### Fire
 
 When a Schedule is due, the Host writes one visible **Wake** on that
-bot-thread: a system Chat line whose text is `wakeText`. It then
-starts the Bot turn pipeline
+bot-thread: a system Chat line whose text is the Schedule display
+name (the same string the Schedules list shows: `name`, or truncated
+`wakeText` when `name` is empty). That line is system/meta style, not
+a user bubble. The Host then starts the Bot turn pipeline
 ([ADR 0011](0011-chat-mcp-tool-loop.md)). The Skill catalog matches a
 user turn. Wake tools are narrower than user slim (HTTP get, Skills
 list/read, Schedule list, messages list/create, timezone get). No
 Schedule writes, no `dostigus_bots_*`, no keyword expand
-([ADR 0032](0032-chat-llm-context-assembly.md)). The Wake line is
-stored as `system` and sent as `role: system`. Activity phases apply
-for that turn ([ADR 0021](0021-chat-activity-status.md)). The Turn
-journal records that turn with trigger `wake` and this Schedule's id
-([ADR 0029](0029-turn-journal.md)).
+([ADR 0032](0032-chat-llm-context-assembly.md)). The stored Wake line
+is `system`. Later history sends that stored name as `role: system`.
+On the firing turn the Host sends `wakeText` as the triggering
+`role: system` content. The transcript does not store `wakeText`.
+Activity phases apply for that turn
+([ADR 0021](0021-chat-activity-status.md)). The Turn journal records
+that turn with trigger `wake` and this Schedule's id
+([ADR 0029](0029-turn-journal.md)). Host LLM error bubbles on that
+turn use the same i18n keys as a user turn
+([ADR 0037](0037-host-ui-i18n.md)).
 
 Day-1 fires on a bot-thread only. A room, a direct message, and a group
 are not fire targets.
@@ -219,11 +227,12 @@ that record. This record is the schedule decision. Weather stays out.
   closet list, create Sheet, and detail Sheet. This record does not
   add that UI.
 - The ticker runs in the Host process. A second process is not day-1.
-- A fire writes a system Wake, then the
+- A fire writes a system Wake (Schedule display name), then the
   [ADR 0011](0011-chat-mcp-tool-loop.md) pipeline, with
   [ADR 0021](0021-chat-activity-status.md) phases and the Wake
   allowlist in [ADR 0032](0032-chat-llm-context-assembly.md). That
-  Turn stores `scheduleId` ([ADR 0029](0029-turn-journal.md)).
+  turn's LLM request uses `wakeText`. That Turn stores `scheduleId`
+  ([ADR 0029](0029-turn-journal.md)).
 - Member Chat gains the schedule tools and timezone get, scoped above.
   Other Member Chat tools stay
   [ADR 0011](0011-chat-mcp-tool-loop.md) and
@@ -264,6 +273,9 @@ that record. This record is the schedule decision. Weather stays out.
 - The Host parses «каждое утро в 8:00…» — rejected. The Bot calls
   tools.
 - Fire with no Chat line — rejected. The Wake is a visible system line.
+- Store the full `wakeText` as the visible Wake — rejected
+  2026-09-26. The visible line is the Schedule display name.
+  `wakeText` stays for the LLM on that turn only.
 - Fire on a room — rejected for day-1. Bot-thread only.
 - An external cron worker — rejected for day-1. The Host polls
   `next_run_at`.

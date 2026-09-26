@@ -20,6 +20,7 @@ import {
   viewerForPerson,
 } from '@dostigus/db'
 import { resolveHostLocale } from '@dostigus/ui-kit/locale'
+import { scheduleDisplayName } from '../../app/utils/schedule-copy'
 import { annotateHistoryWithArtifacts, attachTurnArtifacts, gcArtifacts } from './artifacts'
 import {
   clearChatActivityPhase,
@@ -38,6 +39,18 @@ import {
 } from './turn-journal'
 
 type ReplyFn = typeof completeAssistantReply
+
+/** Current-turn LLM history: wakeText replaces the stored Schedule-name line. */
+export function applyWakePromptToHistory<T extends { role: string, content: string }>(
+  history: T[],
+  wakeText: string,
+): T[] {
+  const last = history.at(-1)
+  if (!last || last.role !== 'system') {
+    return history
+  }
+  return [...history.slice(0, -1), { ...last, content: wakeText }]
+}
 
 const wakes = new Set<Promise<void>>()
 let timer: ReturnType<typeof setInterval> | undefined
@@ -160,6 +173,7 @@ function dispatchSchedule(input: {
     scheduleId: schedule.id,
     botId: schedule.botId,
     personId: schedule.personId,
+    name: schedule.name,
     wakeText: schedule.wakeText,
     threadId,
   })
@@ -173,6 +187,7 @@ function beginWake(input: {
   scheduleId: string
   botId: string
   personId: string
+  name: string
   wakeText: string
   threadId: string
 }): void {
@@ -181,7 +196,7 @@ function beginWake(input: {
   insertMessage(input.store, {
     botId: input.botId,
     role: 'system',
-    content: input.wakeText,
+    content: scheduleDisplayName({ name: input.name, wakeText: input.wakeText }),
     threadId: input.threadId,
     viewer,
   })
@@ -212,6 +227,7 @@ async function finishWake(
     botId: string
     personId: string
     threadId: string
+    wakeText: string
   },
   role: 'owner' | 'member',
   turnId: string,
@@ -240,7 +256,10 @@ async function finishWake(
       botName: bot.name,
       botId: bot.id,
       modelTier: bot.manifest.modelTier,
-      history: annotateHistoryWithArtifacts(listThreadMessages(input.store, input.threadId)),
+      history: applyWakePromptToHistory(
+        annotateHistoryWithArtifacts(listThreadMessages(input.store, input.threadId)),
+        input.wakeText,
+      ),
       manifest: bot.manifest,
       skills: listBotSkills(input.store, bot.id),
       env: input.env,

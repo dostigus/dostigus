@@ -11,6 +11,9 @@
   string `content` plus the [ADR 0034](0034-artifacts.md) meta note.
   Slim tools stay unchanged. There is still no
   `dostigus_artifacts_get`.
+- Amended: 2026-09-26 — Stored Wake content is the Schedule display
+  name. The firing turn sends `wakeText` as the triggering system
+  line ([ADR 0027](0027-bot-schedules.md)).
 
 The tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). Gateway
 and Model tiers stay [ADR 0004](0004-llm-gateway-tiers.md). Schedules
@@ -228,8 +231,11 @@ Wake tools are **narrower than user slim**:
 No Schedule create, update, pause, resume, or delete on a Wake. No
 `dostigus_bots_*`. No keyword expand to builder tools.
 
-The Wake line remains stored as `system` and is sent as
-`role: system`.
+The stored Wake line is the Schedule display name
+([ADR 0027](0027-bot-schedules.md)). It is `system`. Later history
+sends that stored name as `role: system`. On the firing turn the
+Host sends `wakeText` as the triggering system content. The
+transcript does not store `wakeText`.
 
 ### Live Bots and lazy backfill
 
