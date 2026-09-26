@@ -77,13 +77,13 @@
         >
           <KitMarkdown
             v-if="assistantBubbleUsesMarkdown(message.role)"
-            :source="message.content"
+            :source="chatLineText(message.content)"
           />
           <p
             v-else
             class="text"
           >
-            {{ message.content }}
+            {{ chatLineText(message.content) }}
           </p>
           <KitChatParts
             v-if="assistantBubbleUsesMarkdown(message.role) && hostChatParts(message.parts).length"
@@ -336,7 +336,7 @@
 import type { Bot, BotAvatarState, Message } from '@dostigus/shared'
 import type { PendingAttachment } from '../../composables/useComposerAttachments'
 import type { HostSheetEntry } from '../../utils/host-sheets'
-import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet } from '@dostigus/ui-kit'
+import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet, localizeGatewayErrorReply } from '@dostigus/ui-kit'
 import { hostChatParts, hostSheetById } from '../../utils/host-sheets'
 
 definePageMeta({ layout: 'host' })
@@ -461,6 +461,10 @@ const { phase: liveActivityPhase } = useChatActivityPhase({
   botId,
 })
 const { locale, t } = useI18n()
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
+function chatLineText(content: string) {
+  return localizeGatewayErrorReply(content, hostLocale.value)
+}
 const threadActivity = computed(() => chatActivityStatus({
   pending: botPending.value,
   gatewayConfigured: readyData.value?.configured === true,
@@ -469,7 +473,7 @@ const threadActivity = computed(() => chatActivityStatus({
   connectTarget: import.meta.dev && typeof route.query.target === 'string'
     ? route.query.target
     : null,
-  locale: locale.value === 'ru' ? 'ru' : 'en',
+  locale: hostLocale.value,
 }))
 const identityLabel = computed(() => {
   if (!bot.value) {
@@ -804,7 +808,7 @@ watch([timeline, botPending, showPurpose, threadActivity], () => {
 }, { flush: 'post', immediate: true })
 
 function onOpenSheet(sheetId: string, targetId?: string) {
-  const sheet = hostSheetById(sheetId)
+  const sheet = hostSheetById(sheetId, hostLocale.value)
   if (!sheet) {
     return
   }

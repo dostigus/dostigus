@@ -61,6 +61,8 @@
 </template>
 
 <script setup lang="ts">
+import { hostStatusCopy } from '../utils/host-status-copy'
+
 const { t } = useI18n()
 useHead({ title: () => t('auth.onboarding.titleDoc') })
 
@@ -90,13 +92,7 @@ async function submit() {
     clearNuxtData('owner-auth-status')
     await navigateTo('/')
   } catch (error) {
-    message.value = error instanceof Error
-      ? error.message
-      : t('auth.error.fallbackCreateOwner')
-    const fetchError = error as { data?: { statusMessage?: string }, statusMessage?: string }
-    message.value = fetchError.data?.statusMessage
-      ?? fetchError.statusMessage
-      ?? message.value
+    message.value = hostStatusCopy(error, t, 'auth.error.fallbackCreateOwner')
   } finally {
     busy.value = false
   }

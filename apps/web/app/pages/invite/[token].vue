@@ -124,6 +124,8 @@
 </template>
 
 <script setup lang="ts">
+import { hostStatusCopy } from '../../utils/host-status-copy'
+
 definePageMeta({ layout: false })
 
 const { t } = useI18n()
@@ -221,10 +223,10 @@ async function submit() {
       return
     }
     if (statusCode === 409 && statusMessage.includes('Sign out')) {
-      message.value = statusMessage
+      message.value = hostStatusCopy(error, t, 'auth.error.signOutFirst')
       return
     }
-    message.value = statusMessage || t('auth.error.fallbackJoin')
+    message.value = hostStatusCopy(error, t, 'auth.error.fallbackJoin')
   } finally {
     busy.value = false
   }

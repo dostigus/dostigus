@@ -148,7 +148,10 @@ Kinds are labels, not separate products: `dm` (person and person),
 own bot-thread with that Bot. A `room` is how a Bot joins a Thread with
 more than one person. Personal use stays that bot-thread. There is no
 private write on a shared chat timeline.
-_Avoid_: channel, conversation (unqualified).
+Host chrome says chat / чат, not Thread
+([ADR 0037](docs/adr/0037-host-ui-i18n.md)).
+_Avoid_: channel, conversation (unqualified), Thread as a RU
+UI loanword.
 
 **Participant**:
 A person or a Bot on a Thread. A person is the Owner or a Member.
