@@ -200,7 +200,28 @@ export function parsePackVersion(value: unknown): string {
 }
 
 export function slugifyPackPart(value: string): string {
-  const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32)
+  const parts: string[] = []
+  let current = ''
+  for (const char of value.toLowerCase()) {
+    const code = char.charCodeAt(0)
+    const letter = code >= 97 && code <= 122
+    const digit = code >= 48 && code <= 57
+    if (letter || digit) {
+      current += char
+      continue
+    }
+    if (current) {
+      parts.push(current)
+      current = ''
+    }
+  }
+  if (current) {
+    parts.push(current)
+  }
+  let slug = parts.join('-').slice(0, 32)
+  if (slug.endsWith('-')) {
+    slug = slug.slice(0, -1)
+  }
   return slug || 'pack'
 }
 

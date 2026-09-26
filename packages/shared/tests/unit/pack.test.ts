@@ -15,6 +15,7 @@ import {
   parsePackZip,
   satisfiesEngineRange,
   scrubPackTree,
+  slugifyPackPart,
 } from '../../src/index'
 
 function sampleManifest(over: Record<string, unknown> = {}) {
@@ -159,6 +160,12 @@ it('warns when Host is outside engines.dostigus and blocks a newer packFormat', 
   expect(plan.warnings.some((line) => line.includes('outside engines.dostigus'))).toBe(true)
   expect(plan.blockers.some((line) => line.includes('packFormat'))).toBe(true)
   expect(plan.chatPreserved).toBe(false)
+})
+
+it('slugifies a Schedule name without a dash-run regex', () => {
+  expect(slugifyPackPart('Morning brief')).toBe('morning-brief')
+  expect(slugifyPackPart(`---${'-'.repeat(20_000)}Notes!!!`)).toBe('notes')
+  expect(slugifyPackPart('')).toBe('pack')
 })
 
 it('parses a zip upload and a raw pack.json upload', () => {
