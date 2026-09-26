@@ -38,8 +38,8 @@
         {{ $t('host.menu.settings') }}
       </NuxtLink>
       <NuxtLink
-        v-if="isOwner"
-        to="/members"
+        v-if="isOwner && !hideMembers"
+        to="/dashboard/members"
         class="item"
         role="menuitem"
         @click="choose"
@@ -55,6 +55,7 @@
 defineProps<{
   collapsed?: boolean
   hideSettings?: boolean
+  hideMembers?: boolean
 }>()
 
 const { user, isOwner } = useHostAccount()

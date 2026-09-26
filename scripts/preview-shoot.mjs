@@ -61,6 +61,11 @@ export const PREVIEW_SHOOT_STATES = {
     ready: { selector: '.cluster input[name="timezone"]', count: 1 },
     viewport: DEFAULT_VIEWPORT,
   },
+  'members': {
+    seed: 'members=1',
+    ready: { selector: '.members h1', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+  },
   'narrow': {
     seed: 'settings=1',
     thenPath: '/dashboard/providers',

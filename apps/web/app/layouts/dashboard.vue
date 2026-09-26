@@ -111,6 +111,35 @@
           {{ $t('dashboard.nav.account') }}
         </p>
         <NuxtLink
+          to="/dashboard/members"
+          class="item"
+          :aria-current="route.path === '/dashboard/members' ? 'page' : undefined"
+        >
+          <span
+            class="glyph"
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24">
+              <circle
+                cx="9"
+                cy="8"
+                r="3"
+              />
+              <path d="M3.8 18.5C4.4 15.8 6.4 14 9 14s4.6 1.8 5.2 4.5" />
+              <circle
+                cx="16.5"
+                cy="8.5"
+                r="2.4"
+              />
+              <path d="M15.1 14.2c2.1.3 3.8 1.8 4.3 4.3" />
+            </svg>
+          </span>
+          <span class="item-copy">
+            <span class="item-label">{{ $t('dashboard.nav.members') }}</span>
+            <span class="item-hint">{{ $t('dashboard.nav.membersHint') }}</span>
+          </span>
+        </NuxtLink>
+        <NuxtLink
           to="/dashboard/settings"
           class="item"
           :aria-current="route.path === '/dashboard/settings' ? 'page' : undefined"
@@ -136,7 +165,10 @@
       </div>
 
       <div class="foot">
-        <HostUserMenu hide-settings />
+        <HostUserMenu
+          hide-settings
+          hide-members
+        />
       </div>
     </nav>
 

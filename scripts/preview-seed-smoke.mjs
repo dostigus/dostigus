@@ -6,7 +6,7 @@
  * to the GET JSON byte length and ends with an empty body.
  * HEAD /preview-seed is 204 until fixture Bot id `preview` exists, then 302.
  * GET must land on that id. Renaming the Bot must not create another Bot.
- * GET `?members=1` must 302 to `/members` with a session cookie.
+ * GET `?members=1` must 302 to `/dashboard/members` with a session cookie.
  * HEAD ignores `?members=1` and still points at `/bots/<id>`.
  * GET `?parts=1` adds one assistant line with a button and a status once.
  * HEAD ignores `?parts=1`.
@@ -442,8 +442,8 @@ async function main() {
   }
   const members = await request('/preview-seed?members=1')
   const membersPath = locationPath(members.response.headers.get('location'))
-  if (members.response.status !== 302 || membersPath !== '/members') {
-    fail(`GET /preview-seed?members=1 expected 302 /members, got ${members.response.status} ${membersPath ?? members.text.slice(0, 200)}`)
+  if (members.response.status !== 302 || membersPath !== '/dashboard/members') {
+    fail(`GET /preview-seed?members=1 expected 302 /dashboard/members, got ${members.response.status} ${membersPath ?? members.text.slice(0, 200)}`)
   }
   const membersSession = cookieHeader(members.response)
   if (!membersSession) {
@@ -453,7 +453,7 @@ async function main() {
   if (membersApi.response.status !== 200) {
     fail(`GET /api/members as preview Owner expected 200, got ${membersApi.response.status} ${membersApi.text.slice(0, 200)}`)
   }
-  note('GET /preview-seed?members=1 302 /members; HEAD ignored the query')
+  note('GET /preview-seed?members=1 302 /dashboard/members; HEAD ignored the query')
 
   const activityHead = assertPreviewHead(await request('/preview-seed?activity=typing', { method: 'HEAD' }))
   if (activityHead.status !== 302 || activityHead.location !== `/bots/${botId}`) {

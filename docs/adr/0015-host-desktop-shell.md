@@ -28,6 +28,11 @@ picker lists Household people and Bots the current person can already
 open. Creating the chat does not grant a Bot. See
 [ADR 0024](0024-threads-and-bot-visibility.md).
 
+Amended 2026-09-26: the user-menu **Members** item opens
+`/dashboard/members` inside Dashboard
+([ADR 0038](0038-dashboard-chrome.md)). Old `/members` bookmarks
+404.
+
 The sidebar `+` opens that menu. Find or create a Bot is one item and
 still opens the picker. See
 [ADR 0019](0019-bot-picker-and-chat-purpose.md).
@@ -60,10 +65,10 @@ Reka UI. This is that structure, with Dostigus copy and Brand.
   opens that Sheet. It does not create a Bot and it does not add a route.
   The `+` opens the Bot picker.
 - The bottom of the expanded sidebar is a user button (initials and name).
-  Its menu opens Settings (`/dashboard/settings`), Members (`/members`,
-  Owner only), and Sign out. Those links leave the sidebar chrome.
-  Settings is a Dashboard page
-  ([ADR 0038](0038-dashboard-chrome.md)). Members stays a page.
+  Its menu opens Settings (`/dashboard/settings`), Members
+  (`/dashboard/members`, Owner only), and Sign out. Those links leave
+  the sidebar chrome. Settings and Members are Dashboard pages
+  ([ADR 0038](0038-dashboard-chrome.md)).
 - Chat has no full-width header bar. A centered pill overlays the thread:
   the Bot avatar and name. The thread scrolls under the translucent pill.
   A top inset, about the pill height, keeps the first line clear when the

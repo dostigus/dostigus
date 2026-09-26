@@ -255,7 +255,7 @@ export function previewSeedRedirect(input: {
   target?: unknown
 }): string {
   if (previewMembersRequested(input.members)) {
-    return '/members'
+    return '/dashboard/members'
   }
   if (previewSettingsRequested(input.settings) || previewProvidersRequested(input.providers)) {
     return previewProvidersRequested(input.providers) ? '/dashboard/providers' : '/dashboard'

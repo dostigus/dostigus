@@ -279,6 +279,8 @@
       "providers": "Providers",
       "providersHint": "LLM for Bots",
       "account": "Account",
+      "members": "Members",
+      "membersHint": "Household on this Host",
       "settings": "Settings",
       "settingsHint": "Owner account"
     },

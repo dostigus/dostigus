@@ -29,6 +29,7 @@ it('names the preview states agents are asked to shoot', () => {
     'providers-empty',
     'providers-fixture',
     'settings-other',
+    'members',
     'narrow',
   ])
 })
@@ -50,6 +51,9 @@ it('reuses preview-seed flags and waits for an explicit ready marker', () => {
 
   expect(PREVIEW_SHOOT_STATES['settings-other'].thenPath).toBe('/dashboard/cluster')
   expect(PREVIEW_SHOOT_STATES['settings-other'].ready.selector).toBe('.cluster input[name="timezone"]')
+
+  expect(previewSeedPath(PREVIEW_SHOOT_STATES.members)).toBe('/preview-seed?members=1')
+  expect(PREVIEW_SHOOT_STATES.members.ready.selector).toBe('.members h1')
 
   expect(PREVIEW_SHOOT_STATES.narrow.viewport).toEqual(NARROW_VIEWPORT)
   expect(PREVIEW_SHOOT_STATES.narrow.ready.selector).toBe('.providers h1')
@@ -111,4 +115,6 @@ it('documents shoot:preview next to preview-seed in AGENTS.md', () => {
   expect(agents).toContain('OPENROUTER_TEST_KEY')
   expect(agents).toContain('54rem')
   expect(agents).toContain('/dashboard/providers')
+  expect(agents).toContain('/dashboard/members')
+  expect(agents).toContain('`members`')
 })

@@ -16,6 +16,7 @@ const PAGES = computed(() => [
   { to: '/dashboard', label: t('dashboard.nav.overview'), exact: true },
   { to: '/dashboard/cluster', label: t('dashboard.nav.clusterSettings') },
   { to: '/dashboard/providers', label: t('dashboard.nav.providers') },
+  { to: '/dashboard/members', label: t('dashboard.nav.members') },
   { to: '/dashboard/settings', label: t('dashboard.nav.settings') },
 ])
 
