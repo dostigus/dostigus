@@ -5,9 +5,5 @@ export function useHostPlusMenu() {
     open.value = false
   }
 
-  function togglePlusMenu() {
-    open.value = !open.value
-  }
-
-  return { open, closePlusMenu, togglePlusMenu }
+  return { open, closePlusMenu }
 }

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 
@@ -101,6 +101,38 @@ it('builds Closet, Schedule, and Add Member Sheets from Kit form primitives', ()
   expect(pack).toContain('remoteError')
 })
 
+it('builds the Host + menu and the account menu on KitMenu', () => {
+  const plus = read('app/components/HostPlusMenu.vue')
+  const account = read('app/components/HostUserMenu.vue')
+  const dashboardLayout = read('app/layouts/dashboard.vue')
+
+  for (const src of [plus, account]) {
+    const style = src.slice(src.indexOf('<style'))
+    expect(src).toContain('<KitMenu')
+    expect(src).toContain('<template #trigger>')
+    expect(src).toContain('<KitMenuItem')
+    expect(src).toMatch(/import \{[^}]*KitMenu[^}]*\} from '@dostigus\/ui-kit'/)
+    expect(src).not.toContain('from \'reka-ui\'')
+    expect(src).not.toMatch(/role="menu(?:item)?"/)
+    expect(src).not.toContain('aria-haspopup')
+    expect(src).not.toContain(':aria-expanded')
+    expect(src).not.toContain('addEventListener(\'pointerdown\'')
+    expect(src).not.toContain('@keydown.escape')
+    expect(src).not.toMatch(/class="(?:plus-wrap|plus-menu|plus-item|plus-label|plus-hint|menu|item)"/)
+    expect(style).not.toMatch(/^\.(?:plus-menu|plus-item|menu|item)\b/m)
+    expect(style).not.toContain(':deep(.logout')
+    expect(style).not.toContain('position: absolute')
+    expect(style).not.toContain('box-shadow')
+  }
+  expect(plus.match(/<KitMenuItem\b/g)).toHaveLength(4)
+  expect(plus).toContain('v-model:open="open"')
+  expect(account).toContain('<KitMenuSeparator')
+  expect(account.match(/:as="NuxtLink"/g)).toHaveLength(2)
+  expect(existsSync(join(webRoot, 'app/components/HostLogoutButton.vue'))).toBe(false)
+  expect(dashboardLayout).not.toContain(':deep(.menu)')
+  expect(read('app/layouts/host.vue')).toContain('closest(\'[role="menu"]\')')
+})
+
 it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   const mark = read('app/components/HostMark.vue')
   const sidebar = read('app/components/HostSidebar.vue')
@@ -145,7 +177,8 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   expect(account).toContain('to="/dashboard/settings"')
   expect(account).toContain('hideSettings')
   expect(account).toContain('hideMembers')
-  expect(account).toContain('HostLogoutButton')
+  expect(account).toContain('useHostLogout')
+  expect(account).toContain('host.logout.action')
   expect(account).toContain(':class="{ collapsed }"')
   expect(account).not.toMatch(/\.rail \.(?:user-btn|menu)/)
   const settings = read('app/components/BotSettingsSheet.vue')

@@ -390,13 +390,5 @@ const route = useRoute()
   .foot :deep(.user-btn) {
     width: auto;
   }
-
-  .foot :deep(.menu) {
-    top: calc(100% + 0.4rem);
-    bottom: auto;
-    left: auto;
-    right: 0;
-    width: 12rem;
-  }
 }
 </style>
