@@ -241,11 +241,14 @@ Skill docs (`SKILL.md`-class / skills files), Schedule templates
 (import paused), integration stubs (slug + reason + required env
 *names*, never values), optional `ui/` HTML mini-apps, optional
 `suggestedAppearance` (only when creating a new Bot), optional
-human README. Public id is `author.slug` plus semver `version`.
-No Chat, no secrets, no host paths. Canonical tree is `pack.json`
-+ `skills/` (+ optional `schedules/`, `ui/<id>/`, README); share
-is a zip of that tree. **Pack ≠ Bot ≠ Module package.** Day-1
-marketplace / OSS share ships Packs. See
+human README. Public id is `author.slug` plus semver `version`. The Bot-part
+slug is RU→lat transliteration then slugify; a named Bot does
+not fall back to `pack`. Export omits Host seed Skills. A
+successful Export stamps the installed Pack snapshot and the
+Bot ref. No Chat, no secrets, no host paths. Canonical tree is
+`pack.json` + `skills/` (+ optional `schedules/`, `ui/<id>/`,
+README); share is a zip of that tree. **Pack ≠ Bot ≠ Module
+package.** Day-1 marketplace / OSS share ships Packs. See
 [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
 _Avoid_: Bot, Module package, plugin, extension, bot package
 (unqualified), treating a zip as a live Bot.
@@ -408,7 +411,10 @@ _Avoid_: ticket, task (unqualified).
 **Apply**:
 Two distinct writes. **Pack Apply** installs a Pack onto an
 existing Bot or creates a new Bot (preview / plan, then confirm).
-See [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
+The Pack owns Skills (except Host seed Skills) and Schedules that
+carry that snapshot's provenance. Owner-created and unlabeled
+grandfather Schedules stay. See
+[ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
 **Module package Apply** installs a Module package into the live
 Cluster (after staging review). Day-1 does not Apply a stock
 Module package from this repo and does not bundle platform
@@ -606,9 +612,11 @@ _Avoid_: public share, invite (unqualified).
 - A Bot has a Manifest and bound Module packages. A Bot is not a Module package
   and not a Pack. A Bot may hold a ref to one installed Pack version
   (`id@version`).
-- A Pack is a portable recipe. Pack Apply writes Skills, paused
-  Schedule templates, stubs, and optional `ui/` onto one primary Bot
-  (or creates that Bot). Module package Apply is a different later
+- A Pack is a portable recipe. Pack Apply writes Skills (not Host
+  seed Skills), paused Schedule templates stamped with the snapshot
+  id, stubs, and optional `ui/` onto one primary Bot (or creates
+  that Bot). Update replaces only provenance-stamped Schedules from
+  the previous snapshot. Module package Apply is a different later
   write. See
   [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
 - The Kitchen Module is Cluster Store data, MCP tools, and a Kit Sheet.

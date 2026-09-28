@@ -90,6 +90,7 @@ export {
   backfillMetaSkillDescriptions,
   insertMissingHttpGetMetaSkill,
   insertMissingMetaSkills,
+  isHostSeedSkillId,
   META_SKILL_DESCRIPTIONS,
   META_SKILL_IDS,
   type MetaSkillId,
@@ -107,8 +108,12 @@ export {
 } from './owners'
 export {
   applyPack,
+  describePackExport,
   exportBotPack,
   getInstalledPack,
+  type PackExportPreview,
+  type PackExportReason,
+  type PackExportWrite,
   previewPackApply,
   putInstalledPack,
   setBotInstalledPack,

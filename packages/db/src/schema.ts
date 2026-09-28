@@ -182,6 +182,8 @@ export const schedules = sqliteTable('schedules', {
   deferCount: integer('defer_count').notNull().default(0),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
+  /** Pack snapshot `author.slug@version` when Apply created this row. Null is Owner-created or grandfather. See ADR 0039. */
+  installedPackId: text('installed_pack_id'),
 }, (table) => [
   index('schedules_paused_next_run_at_idx').on(table.paused, table.nextRunAt),
   index('schedules_bot_id_person_id_idx').on(table.botId, table.personId),

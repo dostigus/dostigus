@@ -27,6 +27,27 @@ const SCHEDULE_COLUMNS = `
   paused, next_run_at, last_run_at, last_run_status, defer_count, created_at, updated_at
 `
 
+const installedPackColumn = new WeakMap<object, boolean>()
+
+function schedulesHaveInstalledPackId(store: OpenedStore): boolean {
+  const cached = installedPackColumn.get(store.sqlite)
+  if (cached != null) {
+    return cached
+  }
+  const row = store.sqlite.prepare(`
+    SELECT 1 AS ok FROM pragma_table_info('schedules') WHERE name = 'installed_pack_id'
+  `).get() as { ok?: number } | undefined
+  const present = Boolean(row)
+  installedPackColumn.set(store.sqlite, present)
+  return present
+}
+
+function scheduleSelect(store: OpenedStore): string {
+  return schedulesHaveInstalledPackId(store)
+    ? `${SCHEDULE_COLUMNS}, installed_pack_id`
+    : SCHEDULE_COLUMNS
+}
+
 export type ScheduleLastRunStatus = 'fired' | 'skipped_late' | 'skipped_busy' | 'deferred'
 
 export type Schedule = {
@@ -44,6 +65,8 @@ export type Schedule = {
   lastRunStatus: ScheduleLastRunStatus | null
   createdAt: string
   updatedAt: string
+  /** Pack snapshot id when Apply created this row. Null is Owner-created or grandfather. */
+  installedPackId: string | null
 }
 
 export type DueSchedule = Schedule & {
@@ -78,6 +101,7 @@ type ScheduleRow = {
   defer_count: number
   created_at: number
   updated_at: number
+  installed_pack_id?: string | null
 }
 
 export type ScheduleWrite = {
@@ -90,6 +114,8 @@ export type ScheduleWrite = {
   wakeText: string
   /** Pack import always lands paused. See ADR 0039. */
   paused?: boolean
+  /** Pack snapshot id when Apply created this row. */
+  installedPackId?: string | null
 }
 
 function clockNow(clock?: ScheduleClock): number {
@@ -230,6 +256,7 @@ function toSchedule(row: ScheduleRow): Schedule {
     lastRunStatus: isLastRunStatus(row.last_run_status) ? row.last_run_status : null,
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
+    installedPackId: row.installed_pack_id ?? null,
   }
 }
 
@@ -243,7 +270,7 @@ function toDue(row: ScheduleRow): DueSchedule {
 
 function selectSchedule(store: OpenedStore, id: string): ScheduleRow | undefined {
   return store.sqlite.prepare(`
-    SELECT ${SCHEDULE_COLUMNS}
+    SELECT ${scheduleSelect(store)}
     FROM schedules
     WHERE id = ?
   `).get(id) as ScheduleRow | undefined
@@ -332,25 +359,50 @@ export function createSchedule(
     days_of_week_json: daysJson(days),
   }, timeZone, now)
   const id = randomUUID()
-  store.sqlite.prepare(`
-    INSERT INTO schedules (
-      id, bot_id, person_id, name, cadence, time_local, days_of_week_json, wake_text,
-      paused, next_run_at, last_run_at, last_run_status, defer_count, created_at, updated_at
-    )     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)
-  `).run(
-    id,
-    botId,
-    personId,
-    name,
-    cadence,
-    timeLocal,
-    daysJson(days),
-    wakeText,
-    input.paused ? 1 : 0,
-    nextRunAt,
-    now,
-    now,
-  )
+  const snapshotId = input.installedPackId?.trim() || null
+  if (schedulesHaveInstalledPackId(store)) {
+    store.sqlite.prepare(`
+      INSERT INTO schedules (
+        id, bot_id, person_id, name, cadence, time_local, days_of_week_json, wake_text,
+        paused, next_run_at, last_run_at, last_run_status, defer_count, created_at, updated_at,
+        installed_pack_id
+      )     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?, ?)
+    `).run(
+      id,
+      botId,
+      personId,
+      name,
+      cadence,
+      timeLocal,
+      daysJson(days),
+      wakeText,
+      input.paused ? 1 : 0,
+      nextRunAt,
+      now,
+      now,
+      snapshotId,
+    )
+  } else {
+    store.sqlite.prepare(`
+      INSERT INTO schedules (
+        id, bot_id, person_id, name, cadence, time_local, days_of_week_json, wake_text,
+        paused, next_run_at, last_run_at, last_run_status, defer_count, created_at, updated_at
+      )     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)
+    `).run(
+      id,
+      botId,
+      personId,
+      name,
+      cadence,
+      timeLocal,
+      daysJson(days),
+      wakeText,
+      input.paused ? 1 : 0,
+      nextRunAt,
+      now,
+      now,
+    )
+  }
   return toSchedule(requireSchedule(store, id))
 }
 
@@ -474,13 +526,13 @@ export function listSchedules(
   const personId = filter.personId?.trim()
   const rows = personId
     ? store.sqlite.prepare(`
-        SELECT ${SCHEDULE_COLUMNS}
+        SELECT ${scheduleSelect(store)}
         FROM schedules
         WHERE bot_id = ? AND person_id = ?
         ORDER BY created_at ASC, id ASC
       `).all(botId, personId) as ScheduleRow[]
     : store.sqlite.prepare(`
-        SELECT ${SCHEDULE_COLUMNS}
+        SELECT ${scheduleSelect(store)}
         FROM schedules
         WHERE bot_id = ?
         ORDER BY created_at ASC, id ASC
@@ -490,7 +542,7 @@ export function listSchedules(
 
 export function listDueSchedules(store: OpenedStore, now: number): DueSchedule[] {
   const rows = store.sqlite.prepare(`
-    SELECT ${SCHEDULE_COLUMNS}
+    SELECT ${scheduleSelect(store)}
     FROM schedules
     WHERE paused = 0 AND next_run_at <= ?
     ORDER BY next_run_at ASC, id ASC
@@ -573,7 +625,7 @@ export function setClusterTimeZone(
     `).run(CLUSTER_SETTINGS_ID, name, now)
     const timeZone = effectiveClusterTimeZone(store, env).effective
     const rows = store.sqlite.prepare(`
-      SELECT ${SCHEDULE_COLUMNS} FROM schedules
+      SELECT ${scheduleSelect(store)} FROM schedules
     `).all() as ScheduleRow[]
     const update = store.sqlite.prepare(`
       UPDATE schedules SET next_run_at = ?, defer_count = 0, updated_at = ? WHERE id = ?

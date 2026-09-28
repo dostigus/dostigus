@@ -63,9 +63,9 @@
       <ul>
         <li
           v-for="row in plan.schedules"
-          :key="`${row.name}-${row.timeLocal}`"
+          :key="`${row.action}-${row.name}-${row.timeLocal}`"
         >
-          {{ row.name || row.timeLocal }} · {{ row.cadence }}
+          {{ row.action }} · {{ row.name || row.timeLocal }} · {{ row.cadence }} {{ row.timeLocal }}
         </li>
       </ul>
     </section>

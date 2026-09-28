@@ -1,7 +1,8 @@
-import type { OpenedStore } from '@dostigus/db'
+import type { OpenedStore, PackExportWrite } from '@dostigus/db'
 import type { BotViewer, PackApplyTarget, PackTree } from '@dostigus/shared'
 import {
   applyPack,
+  describePackExport,
   exportBotPack,
   previewPackApply,
   StoreError,
@@ -20,11 +21,20 @@ function asPack<T>(fn: () => T): T {
   }
 }
 
-export function exportClusterPack(store: OpenedStore, botId: string, viewer: BotViewer) {
-  const pack = exportBotPack(store, botId, viewer)
+export function exportClusterPack(
+  store: OpenedStore,
+  botId: string,
+  viewer: BotViewer,
+  options: PackExportWrite = {},
+) {
+  const pack = exportBotPack(store, botId, viewer, options)
   const bytes = packTreeToZip(pack)
   const filename = `${pack.manifest.id}-${pack.manifest.version}.zip`
   return { pack, bytes, filename }
+}
+
+export function describeClusterPackExport(store: OpenedStore, botId: string, viewer: BotViewer) {
+  return describePackExport(store, botId, viewer)
 }
 
 export function previewClusterPack(

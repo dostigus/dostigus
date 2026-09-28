@@ -57,6 +57,8 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
     'artifacts/index.post.ts',
     'artifacts/[id].get.ts',
     'bots/[id]/pack.get.ts',
+    'bots/[id]/pack.post.ts',
+    'bots/[id]/pack/options.get.ts',
     'packs/preview.post.ts',
     'packs/apply.post.ts',
   ]

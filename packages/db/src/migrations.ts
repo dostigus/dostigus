@@ -495,6 +495,12 @@ CREATE INDEX \`installed_packs_pack_id_version_idx\` ON \`installed_packs\` (\`p
 ALTER TABLE \`bots\` ADD \`installed_pack_id\` text;
 `,
   },
+  {
+    id: '0025_schedule_installed_pack',
+    sql: `
+ALTER TABLE \`schedules\` ADD \`installed_pack_id\` text;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

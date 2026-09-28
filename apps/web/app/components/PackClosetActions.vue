@@ -59,6 +59,25 @@
   </section>
 
   <KitSheet
+    v-model:open="exportOpen"
+    edge="end"
+    :title="$t('pack.exportTitle')"
+    title-align="center"
+    close="icon"
+  >
+    <PackExportSheet
+      v-if="exportPreview && exportOpen"
+      :bot-id="botId"
+      :author="exportPreview.author"
+      :bot-slug="exportPreview.botSlug"
+      :version="exportPreview.version"
+      :readme="exportPreview.readme"
+      @downloaded="exportOpen = false"
+      @cancel="exportOpen = false"
+    />
+  </KitSheet>
+
+  <KitSheet
     v-model:open="open"
     edge="end"
     :title="$t('pack.previewTitle')"
@@ -81,6 +100,16 @@
 import type { PackApplyPlan, PackTree } from '@dostigus/shared'
 import { KitButton, KitSheet } from '@dostigus/ui-kit'
 
+type PackExportPreview = {
+  author: string
+  botSlug: string
+  version: string
+  id: string
+  readme: string
+  needsSheet: boolean
+  reasons: Array<'empty-slug' | 'conflict' | 're-export'>
+}
+
 const props = defineProps<{
   botId: string
   canUpdate: boolean
@@ -99,6 +128,8 @@ const error = ref('')
 const open = ref(false)
 const pack = ref<PackTree | null>(null)
 const plan = ref<PackApplyPlan | null>(null)
+const exportOpen = ref(false)
+const exportPreview = ref<PackExportPreview | null>(null)
 
 function pickFile() {
   error.value = ''
@@ -115,21 +146,31 @@ function filenameFromDisposition(header: string | null): string {
   return match?.[1] || 'pack.zip'
 }
 
+async function downloadZip(response: Response) {
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filenameFromDisposition(response.headers.get('content-disposition'))
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 async function exportPack() {
   exporting.value = true
   error.value = ''
   try {
+    const options = await $fetch<PackExportPreview>(`/api/bots/${props.botId}/pack/options`)
+    if (options.needsSheet) {
+      exportPreview.value = options
+      exportOpen.value = true
+      return
+    }
     const response = await fetch(`/api/bots/${props.botId}/pack`)
     if (!response.ok) {
       throw new Error('export')
     }
-    const blob = await response.blob()
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filenameFromDisposition(response.headers.get('content-disposition'))
-    link.click()
-    URL.revokeObjectURL(url)
+    await downloadZip(response)
   } catch {
     error.value = t('pack.exportFailed')
   } finally {
