@@ -16,7 +16,7 @@ Grok Bot and OpenClaw-style desktop agents keep the loop on someone else’s box
 
 You run a **Cluster**. You add **Household** Members. Bots talk through an **MCP surface** against that Store. You pick **Providers** — OpenRouter first, plus OpenAI and OpenAI-compatible — and bind **Model tiers** instead of baking a model list into the repo.
 
-Day-1 the Host can **Export Pack** from a live Bot and **Apply from file** (preview, then write onto a Bot). That is not a marketplace. Module packages and git-URL Apply stay later — not a browseable store.
+Day-1 the Host can **Export Pack** from a live Bot and **Apply** from a local file, a public `.zip` URL, or an https git remote (preview, then write onto a Bot). That is not a marketplace. Module packages stay later — not a browseable store.
 
 ## What you get
 
@@ -64,7 +64,7 @@ Scope: [`docs/SPEC.md`](docs/SPEC.md). Glossary: [`CONTEXT.md`](CONTEXT.md). Dec
 
 Early. Self-host first. MIT.
 
-Day-1 Host **Export Pack** / **Apply from file** (preview → Bot). Marketplace, Module packages, and git-URL Apply stay later. This Host already runs Chat, Skills, Schedules, Artifacts, and Household Members. Do not read that as a store you browse and install. See [`docs/SPEC.md`](docs/SPEC.md).
+Day-1 Host **Export Pack** / **Apply** from file, public URL, or git (preview → Bot). Marketplace and Module packages stay later. This Host already runs Chat, Skills, Schedules, Artifacts, and Household Members. Do not read that as a store you browse and install. See [`docs/SPEC.md`](docs/SPEC.md).
 
 ## License
 

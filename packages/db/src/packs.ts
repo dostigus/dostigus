@@ -394,7 +394,11 @@ export function applyPack(
   if (plan.blockers.length > 0) {
     throw new StoreError(plan.blockers[0] ?? 'Pack Apply is blocked', 400)
   }
-  const snapshotId = putInstalledPack(store, tree)
+  const stamped: PackTree = {
+    ...tree,
+    source: tree.source ?? { kind: 'file' },
+  }
+  const snapshotId = putInstalledPack(store, stamped)
   const personId = viewer?.id ?? getClusterOwnerId(store)
   if (!personId) {
     throw new StoreError('Sign in required', 401)

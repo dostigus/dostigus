@@ -1,5 +1,6 @@
 import type { OpenedStore, PackExportWrite } from '@dostigus/db'
 import type { BotViewer, PackApplyTarget, PackTree } from '@dostigus/shared'
+import type { PackRemoteOptions } from './pack-remote'
 import {
   applyPack,
   describePackExport,
@@ -9,6 +10,7 @@ import {
   validatePackTree,
 } from '@dostigus/db'
 import { PackInputError, packTreeToZip, parsePackUpload } from '@dostigus/shared'
+import { fetchPackFromRemote } from './pack-remote'
 
 function asPack<T>(fn: () => T): T {
   try {
@@ -60,7 +62,13 @@ export function packTreeFromUpload(input: {
   filename?: string
   files?: Record<string, string>
 }): PackTree {
-  return asPack(() => parsePackUpload(input))
+  const tree = asPack(() => parsePackUpload(input))
+  return { ...tree, source: tree.source ?? { kind: 'file' } }
+}
+
+export async function packTreeFromRemote(input: PackRemoteOptions): Promise<PackTree> {
+  const fetched = await fetchPackFromRemote(input)
+  return fetched.pack
 }
 
 export function packTreeFromBody(value: unknown): PackTree {

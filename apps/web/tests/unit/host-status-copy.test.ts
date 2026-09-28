@@ -26,4 +26,9 @@ it('maps household API status messages onto the Locale dictionary', () => {
     ru,
     'auth.error.fallbackSignIn',
   )).toBe('A Store error without a dictionary key')
+  expect(hostStatusCopy(
+    { statusMessage: 'Paste a .zip URL or an https git remote' },
+    ru,
+    'pack.previewFailed',
+  )).toBe(tHost('ru', 'pack.remoteHint'))
 })

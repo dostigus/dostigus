@@ -88,6 +88,8 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   expect(packCloset).toContain('PackExportSheet')
   expect(packCloset).toContain('pack.exportTitle')
   expect(packCloset).toContain('/pack/options')
+  expect(packCloset).toContain('pack.urlPlaceholder')
+  expect(packCloset).toContain('previewRemote')
   const packExport = read('app/components/PackExportSheet.vue')
   expect(packExport).toContain('pack.exportAuthor')
   expect(packExport).toContain('pack.exportSlug')
