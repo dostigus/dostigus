@@ -18,10 +18,12 @@
       <span class="route-copy">
         <span class="route-title">
           {{ mode === 'meta' ? $t('settings.providers.shelf.routingOn') : $t('settings.providers.shelf.routingOff') }}
-          <span
+          <KitChip
             v-if="mode === 'meta'"
-            class="now"
-          >{{ $t('settings.providers.shelf.now') }}</span>
+            tone="ok"
+          >
+            {{ $t('settings.providers.shelf.now') }}
+          </KitChip>
         </span>
         <span class="route-detail">
           {{ $t('settings.providers.shelf.routingDetail') }}
@@ -114,16 +116,18 @@
             </p>
             <p class="badges">
               <span class="price">{{ modelPriceCopy(card.top, hostLocale) }}</span>
-              <span
+              <KitChip
                 v-if="scoreOf(card.slot, card.top) != null"
-                class="badge"
                 :title="SLOT_COPY[card.slot].scoreTitle"
-              >{{ SLOT_COPY[card.slot].scoreLabel }} {{ scoreOf(card.slot, card.top) }}</span>
-              <span
+              >
+                {{ SLOT_COPY[card.slot].scoreLabel }} {{ scoreOf(card.slot, card.top) }}
+              </KitChip>
+              <KitChip
                 v-if="card.top.vision"
-                class="badge vision"
                 :title="$t('settings.providers.shelf.understandsImages')"
-              >{{ $t('settings.providers.shelf.vision') }}</span>
+              >
+                {{ $t('settings.providers.shelf.vision') }}
+              </KitChip>
             </p>
             <p class="why">
               {{ SLOT_COPY[card.slot].why }}
@@ -217,7 +221,7 @@ import {
   openRouterRoutingMode,
   shelfSlotPin,
 } from '@dostigus/shared'
-import { KitButton } from '@dostigus/ui-kit'
+import { KitButton, KitChip } from '@dostigus/ui-kit'
 import { catalogErrorCopy, modelPriceCopy } from '../utils/provider-settings'
 
 const props = defineProps<{
@@ -354,17 +358,6 @@ function scoreOf(slot: OpenRouterShelfSlot, model: OpenRouterCatalogModel): numb
   font-weight: 700;
 }
 
-.now {
-  padding: 0.05rem 0.5rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--live) 18%, transparent);
-  color: var(--live);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .route-detail {
   color: var(--text-muted);
   font-size: 0.85rem;
@@ -480,19 +473,6 @@ code {
   color: var(--text);
   font-variant-numeric: tabular-nums;
   margin-right: 0.15rem;
-}
-
-.badge {
-  padding: 0.05rem 0.45rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  color: var(--text-muted);
-}
-
-.badge.vision {
-  border-color: transparent;
-  background: color-mix(in srgb, var(--bot-accent-09) 22%, transparent);
-  color: color-mix(in srgb, var(--bot-accent-09) 60%, var(--text));
 }
 
 .why {

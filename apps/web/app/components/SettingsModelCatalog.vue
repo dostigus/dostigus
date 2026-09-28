@@ -22,15 +22,15 @@
             :class="{ pinned: row.pinned }"
             :title="row.policy"
           >{{ row.policy }}</span>
-          <button
+          <KitButton
             v-if="row.pinned"
-            type="button"
-            class="link"
+            variant="ghost"
+            size="sm"
             :disabled="busy"
             @click="emit('pin', row.tier, null)"
           >
             {{ $t('settings.providers.catalog.reset') }}
-          </button>
+          </KitButton>
         </li>
       </ul>
     </section>
@@ -64,44 +64,35 @@
       </div>
 
       <div class="toolbar">
-        <label class="search">
-          <span class="kit-sr-only">{{ $t('settings.providers.catalog.find') }}</span>
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle
-              cx="11"
-              cy="11"
-              r="6.5"
-            />
-            <path d="M16 16.5L20 20.5" />
-          </svg>
-          <input
-            v-model="query"
-            type="search"
-            :placeholder="$t('settings.providers.catalog.find')"
-            autocomplete="off"
-            spellcheck="false"
-          >
-        </label>
+        <label
+          class="kit-sr-only"
+          :for="`${uid}-find`"
+        >{{ $t('settings.providers.catalog.find') }}</label>
+        <KitInput
+          :id="`${uid}-find`"
+          v-model="query"
+          class="search"
+          type="search"
+          :placeholder="$t('settings.providers.catalog.find')"
+          autocomplete="off"
+          spellcheck="false"
+        />
         <div
           class="filters"
           role="radiogroup"
           :aria-label="$t('settings.providers.catalog.filter')"
         >
-          <button
+          <KitChip
             v-for="option in FILTERS"
             :key="option.id"
-            type="button"
+            as="button"
             role="radio"
-            class="chip"
-            :class="{ on: filter === option.id }"
+            :selected="filter === option.id"
             :aria-checked="filter === option.id"
             @click="filter = option.id"
           >
             {{ option.label }}
-          </button>
+          </KitChip>
         </div>
       </div>
 
@@ -122,7 +113,7 @@
         class="models"
       >
         <li
-          v-for="model in visible"
+          v-for="(model, index) in visible"
           :key="model.id"
           class="model"
         >
@@ -140,18 +131,21 @@
                 v-if="model.intelligence != null"
                 :title="$t('settings.providers.shelf.scoreTitleIntelligence')"
               >{{ $t('settings.providers.catalog.intelligence', { n: Math.round(model.intelligence) }) }}</span>
-              <span
-                v-if="model.vision"
-                class="vision"
-              >{{ $t('settings.providers.shelf.vision') }}</span>
-              <span
+              <KitChip v-if="model.vision">
+                {{ $t('settings.providers.shelf.vision') }}
+              </KitChip>
+              <KitChip
                 v-if="!model.tools"
-                class="warn"
-              >{{ $t('settings.providers.catalog.noTools') }}</span>
-              <span
+                tone="warn"
+              >
+                {{ $t('settings.providers.catalog.noTools') }}
+              </KitChip>
+              <KitChip
                 v-if="model.expiresAt"
-                class="warn"
-              >{{ $t('settings.providers.catalog.expires', { date: model.expiresAt }) }}</span>
+                tone="warn"
+              >
+                {{ $t('settings.providers.catalog.expires', { date: model.expiresAt }) }}
+              </KitChip>
             </p>
             <p
               v-if="pinnedTiers(model.id).length > 0"
@@ -164,29 +158,23 @@
               >{{ tier }}</code>
             </p>
           </div>
-          <label class="pin">
-            <span class="kit-sr-only">{{ $t('settings.providers.catalog.pinSr', { name: model.name }) }}</span>
-            <select
+          <div
+            class="pin"
+            :title="model.tools ? undefined : $t('settings.providers.catalog.noToolsHint')"
+          >
+            <label
+              class="kit-sr-only"
+              :for="`${uid}-pin-${index}`"
+            >{{ $t('settings.providers.catalog.pinSr', { name: model.name }) }}</label>
+            <KitSelect
+              :id="`${uid}-pin-${index}`"
+              model-value=""
+              :options="TIER_OPTIONS"
+              :placeholder="$t('settings.providers.catalog.pinTo')"
               :disabled="busy || !model.tools"
-              :title="model.tools ? undefined : $t('settings.providers.catalog.noToolsHint')"
-              value=""
-              @change="onPin(model.id, $event)"
-            >
-              <option
-                value=""
-                disabled
-              >
-                {{ $t('settings.providers.catalog.pinTo') }}
-              </option>
-              <option
-                v-for="tier in MODEL_TIERS"
-                :key="tier"
-                :value="tier"
-              >
-                {{ tier }}
-              </option>
-            </select>
-          </label>
+              @update:model-value="(tier) => onPin(model.id, tier)"
+            />
+          </div>
         </li>
       </ul>
       <KitButton
@@ -216,8 +204,9 @@
 
 <script setup lang="ts">
 import type { LlmProviderKind, LlmTierBind, ModelTier, OpenRouterCatalogPublic } from '@dostigus/shared'
+import type { KitSelectOption } from '@dostigus/ui-kit'
 import { MODEL_TIERS } from '@dostigus/shared'
-import { KitButton } from '@dostigus/ui-kit'
+import { KitButton, KitChip, KitInput, KitSelect } from '@dostigus/ui-kit'
 import {
   bindCopy,
   catalogErrorCopy,
@@ -244,6 +233,8 @@ const emit = defineEmits<{
 }>()
 
 const PAGE = 40
+const TIER_OPTIONS: KitSelectOption[] = MODEL_TIERS.map((tier) => ({ value: tier, label: tier }))
+const uid = useId()
 const { locale, t } = useI18n()
 const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
 
@@ -309,11 +300,8 @@ function pinnedTiers(modelId: string): ModelTier[] {
   })
 }
 
-function onPin(modelId: string, event: Event) {
-  const select = event.target as HTMLSelectElement
-  const tier = select.value
-  select.value = ''
-  if ((MODEL_TIERS as readonly string[]).includes(tier)) {
+function onPin(modelId: string, tier: string | undefined) {
+  if (tier && (MODEL_TIERS as readonly string[]).includes(tier)) {
     emit('pin', tier as ModelTier, modelId)
   }
 }
@@ -403,23 +391,6 @@ code {
   color: var(--accent);
 }
 
-.link {
-  appearance: none;
-  flex: none;
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.link:hover {
-  color: var(--text);
-}
-
 .block-head {
   display: flex;
   flex-wrap: wrap;
@@ -448,61 +419,12 @@ code {
 
 .search {
   flex: 1 1 14rem;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--bg);
-}
-
-.search:focus-within {
-  outline: 1px solid var(--accent-dim);
-}
-
-.search svg {
-  flex: none;
-  width: 1rem;
-  height: 1rem;
-  fill: none;
-  stroke: var(--text-muted);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-}
-
-.search input {
-  appearance: none;
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  padding: 0.55rem 0;
-  outline: none;
 }
 
 .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.3rem;
-}
-
-.chip {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--text-muted);
-  border-radius: 999px;
-  padding: 0.35rem 0.75rem;
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.chip.on {
-  border-color: transparent;
-  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
-  color: var(--accent-ink);
 }
 
 .models {
@@ -551,6 +473,7 @@ code {
   margin: 0.3rem 0 0;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.25rem 0.65rem;
   font-size: 0.74rem;
   color: var(--text-muted);
@@ -559,14 +482,6 @@ code {
 .price {
   color: var(--text);
   font-variant-numeric: tabular-nums;
-}
-
-.vision {
-  color: color-mix(in srgb, var(--bot-accent-09) 60%, var(--text));
-}
-
-.warn {
-  color: var(--bot-accent-04);
 }
 
 .pinned-on {
@@ -578,20 +493,9 @@ code {
   color: var(--accent);
 }
 
-.pin select {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 0.35rem 0.8rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.pin select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.pin {
+  flex: none;
+  width: 8.5rem;
 }
 
 .raw {
