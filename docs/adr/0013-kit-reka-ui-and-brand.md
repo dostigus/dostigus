@@ -134,6 +134,8 @@ not restyled.
 - Existing pages move onto the primitives when they are next touched.
   This amend does not migrate Members, Providers, the closet fields, or
   the Host sidebar.
+- Dashboard Members and Providers moved onto the primitives in
+  [#155](https://github.com/dostigus/dostigus/pull/155).
 - `KitMenu` (Reka `DropdownMenu`) waits for its first Host menu
   migration (user menu, `+` menu). Those sit in the Host sidebar, which
   this amend does not restyle.
