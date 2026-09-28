@@ -20,13 +20,13 @@ import {
   installedPackSnapshotId,
   inventPackScheduleName,
   nextPackVersion,
+  PACK_README_MAX,
   packBotSlugNeedsSheet,
   PackInputError,
   parseInstalledPackSnapshotId,
   parsePackId,
   parsePackTreeJson,
   parsePackVersion,
-  PACK_README_MAX,
   randomBotAppearance,
   scrubPackTree,
   serializePackTree,
@@ -248,15 +248,15 @@ export function exportBotPack(
   const locale = options.locale === 'ru' ? 'ru' : 'en'
   const readme = options.readme != null
     ? asPack(() => {
-      if (typeof options.readme !== 'string') {
-        throw new PackInputError('README must be text')
-      }
-      const trimmed = options.readme.trim()
-      if (trimmed.length > PACK_README_MAX) {
-        throw new PackInputError(`README must be ${PACK_README_MAX} characters or fewer`)
-      }
-      return trimmed
-    })
+        if (typeof options.readme !== 'string') {
+          throw new PackInputError('README must be text')
+        }
+        const trimmed = options.readme.trim()
+        if (trimmed.length > PACK_README_MAX) {
+          throw new PackInputError(`README must be ${PACK_README_MAX} characters or fewer`)
+        }
+        return trimmed
+      })
     : (installed?.readme ?? '')
   const raw: PackTree = {
     manifest: {
@@ -317,12 +317,12 @@ function applyTargetFromBot(store: OpenedStore, target: PackApplyTarget, bot?: B
     existingSkillIds: bot ? listBotSkills(store, bot.id).map((skill) => skill.id) : [],
     existingSchedules: bot
       ? listSchedules(store, { botId: bot.id }).map((schedule) => ({
-        name: schedule.name,
-        cadence: schedule.cadence,
-        timeLocal: schedule.timeLocal,
-        daysOfWeek: schedule.daysOfWeek,
-        installedPackId: schedule.installedPackId,
-      }))
+          name: schedule.name,
+          cadence: schedule.cadence,
+          timeLocal: schedule.timeLocal,
+          daysOfWeek: schedule.daysOfWeek,
+          installedPackId: schedule.installedPackId,
+        }))
       : [],
     previousSnapshotId: bot?.installedPackId ?? null,
   }

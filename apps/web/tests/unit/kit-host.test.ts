@@ -87,7 +87,7 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   const packCloset = read('app/components/PackClosetActions.vue')
   expect(packCloset).toContain('PackExportSheet')
   expect(packCloset).toContain('pack.exportTitle')
-  expect(packCloset).toContain('/api/bots/${props.botId}/pack/options')
+  expect(packCloset).toContain('/pack/options')
   const packExport = read('app/components/PackExportSheet.vue')
   expect(packExport).toContain('pack.exportAuthor')
   expect(packExport).toContain('pack.exportSlug')
