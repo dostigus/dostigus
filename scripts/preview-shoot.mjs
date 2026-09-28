@@ -115,6 +115,18 @@ export const PREVIEW_SHOOT_STATES = {
     ready: { selector: '.kit-sheet input[type="password"]', count: 2 },
     viewport: DEFAULT_VIEWPORT,
   },
+  'plus-menu': {
+    seed: '',
+    clicks: ['.side-head .chrome[aria-haspopup="menu"]'],
+    ready: { selector: '.kit-menu .kit-menu-item', count: 4 },
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'account-menu': {
+    seed: '',
+    clicks: ['.foot .user-btn'],
+    ready: { selector: '.kit-menu .kit-menu-item', count: 3 },
+    viewport: DEFAULT_VIEWPORT,
+  },
 }
 
 /** Sheets animate in for 180ms. Wait past that before the capture. */
