@@ -16,56 +16,53 @@
       class="block"
       @submit.prevent="createInvite"
     >
-      <h3>{{ $t('members.inviteByEmail') }}</h3>
-      <p class="hint">
-        {{ $t('members.inviteHint') }}
-      </p>
-      <label class="field">
-        <span>{{ $t('auth.field.email') }}</span>
-        <input
+      <header class="block-head">
+        <h3>{{ $t('members.inviteByEmail') }}</h3>
+        <p class="hint">
+          {{ $t('members.inviteHint') }}
+        </p>
+      </header>
+      <KitField
+        :label="$t('auth.field.email')"
+        :error="inviteError || undefined"
+        required
+      >
+        <KitInput
           v-model="inviteEmail"
           type="email"
           autocomplete="off"
-          required
+        />
+      </KitField>
+      <div class="actions start">
+        <KitButton
+          type="submit"
+          :disabled="inviting"
         >
-      </label>
-      <KitButton
-        type="submit"
-        :disabled="inviting"
-      >
-        {{ inviting ? $t('members.addSheet.creatingInvite') : $t('members.addSheet.createInvite') }}
-      </KitButton>
+          {{ inviting ? $t('members.addSheet.creatingInvite') : $t('members.addSheet.createInvite') }}
+        </KitButton>
+      </div>
 
-      <div
+      <KitField
         v-if="issuedUrl"
-        class="link-box"
+        :label="$t('members.inviteLink')"
+        :hint="$t('members.copyOnce')"
+        :error="copyError || undefined"
       >
-        <p class="hint">
-          {{ $t('members.copyOnce') }}
-        </p>
         <div class="copy-row">
-          <input
+          <KitInput
+            class="grow"
+            :model-value="issuedUrl"
             readonly
-            :value="issuedUrl"
-            :aria-label="$t('members.inviteLink')"
             @focus="selectLink"
-          >
-          <button
-            type="button"
-            class="ghost"
+          />
+          <KitButton
+            variant="ghost"
             @click="copyLink"
           >
             {{ copied ? $t('members.copied') : $t('members.copy') }}
-          </button>
+          </KitButton>
         </div>
-      </div>
-      <p
-        v-if="inviteMessage"
-        class="flash"
-        :class="{ error: inviteMessageError }"
-      >
-        {{ inviteMessage }}
-      </p>
+      </KitField>
     </form>
 
     <form
@@ -73,53 +70,59 @@
       @submit.prevent="add"
     >
       <h3>{{ $t('members.orWithPassword') }}</h3>
-      <label class="field">
-        <span>{{ $t('auth.field.displayName') }}</span>
-        <input
+      <KitField
+        :label="$t('auth.field.displayName')"
+        :error="addErrors.displayName"
+        required
+      >
+        <KitInput
           v-model="displayName"
-          type="text"
           autocomplete="off"
-          required
-        >
-      </label>
-      <label class="field">
-        <span>{{ $t('auth.field.login') }}</span>
-        <input
+        />
+      </KitField>
+      <KitField
+        :label="$t('auth.field.login')"
+        :error="addErrors.login"
+        required
+      >
+        <KitInput
           v-model="login"
-          type="text"
           autocomplete="off"
-          required
-        >
-      </label>
-      <label class="field">
-        <span>{{ $t('auth.field.password') }}</span>
-        <input
+        />
+      </KitField>
+      <KitField
+        :label="$t('auth.field.password')"
+        :hint="$t('auth.field.passwordMin')"
+        :error="addErrors.password"
+        required
+      >
+        <KitInput
           v-model="password"
           type="password"
           autocomplete="new-password"
-          required
           minlength="8"
-        >
-        <span class="field-hint">{{ $t('auth.field.passwordMin') }}</span>
-      </label>
-      <label class="field">
-        <span>{{ $t('auth.field.confirmPassword') }}</span>
-        <input
+        />
+      </KitField>
+      <KitField
+        :label="$t('auth.field.confirmPassword')"
+        :error="addErrors.confirm"
+        required
+      >
+        <KitInput
           v-model="confirm"
           type="password"
           autocomplete="new-password"
-          required
           minlength="8"
-        >
-      </label>
-      <p
-        v-if="message"
-        class="flash"
-        :class="{ error: messageError }"
-      >
-        {{ message }}
-      </p>
+        />
+      </KitField>
       <div class="actions">
+        <p
+          v-if="addErrors.form"
+          class="error"
+          role="alert"
+        >
+          {{ addErrors.form }}
+        </p>
         <KitButton
           variant="ghost"
           type="button"
@@ -140,8 +143,10 @@
 
 <script setup lang="ts">
 import type { Invite } from '@dostigus/shared'
-import { GooseSticker, KitButton, KitSheet } from '@dostigus/ui-kit'
+import type { MemberFormField } from '../utils/member-form'
+import { GooseSticker, KitButton, KitField, KitInput, KitSheet } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../utils/host-status-copy'
+import { memberErrorField } from '../utils/member-form'
 
 const open = defineModel<boolean>('open', { required: true })
 const { noteMembersChanged } = useHostMemberAdd()
@@ -149,27 +154,25 @@ const { t } = useI18n()
 
 const inviteEmail = ref('')
 const inviting = ref(false)
+const inviteError = ref('')
 const issuedUrl = ref('')
 const copied = ref(false)
-const inviteMessage = ref('')
-const inviteMessageError = ref(false)
+const copyError = ref('')
 
 const displayName = ref('')
 const login = ref('')
 const password = ref('')
 const confirm = ref('')
 const adding = ref(false)
-const message = ref('')
-const messageError = ref(false)
+const addErrors = ref<Partial<Record<MemberFormField | 'confirm', string>>>({})
 
 watch(open, (isOpen) => {
   if (!isOpen) {
     return
   }
-  message.value = ''
-  messageError.value = false
-  inviteMessage.value = ''
-  inviteMessageError.value = false
+  addErrors.value = {}
+  inviteError.value = ''
+  copyError.value = ''
 })
 
 function selectLink(event: FocusEvent) {
@@ -179,13 +182,9 @@ function selectLink(event: FocusEvent) {
   }
 }
 
-function failure(error: unknown, fallbackKey: string): string {
-  return hostStatusCopy(error, t, fallbackKey)
-}
-
 async function createInvite() {
-  inviteMessage.value = ''
-  inviteMessageError.value = false
+  inviteError.value = ''
+  copyError.value = ''
   inviting.value = true
   copied.value = false
   try {
@@ -197,8 +196,7 @@ async function createInvite() {
     inviteEmail.value = ''
     noteMembersChanged()
   } catch (error) {
-    inviteMessage.value = failure(error, 'members.addSheet.inviteFailed')
-    inviteMessageError.value = true
+    inviteError.value = hostStatusCopy(error, t, 'members.addSheet.inviteFailed')
   } finally {
     inviting.value = false
   }
@@ -208,21 +206,19 @@ async function copyLink() {
   if (!issuedUrl.value) {
     return
   }
+  copyError.value = ''
   try {
     await navigator.clipboard.writeText(issuedUrl.value)
     copied.value = true
   } catch {
-    inviteMessage.value = t('members.selectAndCopy')
-    inviteMessageError.value = true
+    copyError.value = t('members.selectAndCopy')
   }
 }
 
 async function add() {
-  message.value = ''
-  messageError.value = false
+  addErrors.value = {}
   if (password.value !== confirm.value) {
-    message.value = t('auth.error.passwordMismatch')
-    messageError.value = true
+    addErrors.value = { confirm: t('auth.error.passwordMismatch') }
     return
   }
   adding.value = true
@@ -239,13 +235,10 @@ async function add() {
     login.value = ''
     password.value = ''
     confirm.value = ''
-    message.value = t('members.added')
-    messageError.value = false
     noteMembersChanged()
     open.value = false
   } catch (error) {
-    message.value = failure(error, 'members.addSheet.addFailed')
-    messageError.value = true
+    addErrors.value = { [memberErrorField(error)]: hostStatusCopy(error, t, 'members.addSheet.addFailed') }
   } finally {
     adding.value = false
   }
@@ -253,91 +246,66 @@ async function add() {
 </script>
 
 <style scoped>
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
 .block + .block {
   margin-top: 1.25rem;
   padding-top: 1.1rem;
   border-top: 1px solid var(--line);
 }
 
+.block-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 h3 {
-  margin: 0 0 0.35rem;
+  margin: 0;
   font-size: 1rem;
 }
 
 .hint,
-.field-hint,
-.flash {
+.error {
   margin: 0;
   line-height: 1.45;
 }
 
-.hint,
-.field-hint {
+.hint {
   color: var(--text-muted);
   font-size: 0.85rem;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  margin: 0.75rem 0;
-}
-
-.field span {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}
-
-input {
-  font: inherit;
-  color: inherit;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 0.55rem 0.7rem;
-}
-
-.link-box {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  margin-top: 0.85rem;
+.error {
+  margin-right: auto;
+  color: var(--accent);
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .copy-row {
   display: flex;
-  gap: 0.45rem;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.copy-row input {
+.grow {
   flex: 1;
-  min-width: 0;
-}
-
-.ghost {
-  appearance: none;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.45rem 0.8rem;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.flash {
-  margin-top: 0.75rem;
-}
-
-.error {
-  color: var(--accent);
 }
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.4rem;
+  gap: 0.6rem;
+}
+
+.actions.start {
+  justify-content: flex-start;
 }
 </style>

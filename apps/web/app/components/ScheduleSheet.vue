@@ -2,13 +2,13 @@
   <div class="schedule">
     <p
       v-if="gone"
-      class="gone"
+      class="muted"
     >
       {{ $t('schedule.gone') }}
     </p>
     <p
       v-else-if="loadError"
-      class="flash"
+      class="error"
       role="alert"
     >
       {{ loadError }}
@@ -33,79 +33,87 @@
         @update:model-value="(active) => setPaused(!active)"
       />
 
-      <label class="field">
-        <span>{{ $t('schedule.nameOptional') }}</span>
-        <input
+      <KitField
+        :label="$t('schedule.nameOptional')"
+        :error="errors.name"
+      >
+        <KitInput
           v-model="name"
-          type="text"
+          name="name"
           :maxlength="SCHEDULE_NAME_MAX"
           autocomplete="off"
           :placeholder="$t('schedule.namePlaceholder')"
-          :disabled="busy"
-          @blur="onFieldCommit"
-        >
-      </label>
-
-      <label class="field">
-        <span>{{ $t('schedule.whenLabel') }}</span>
-        <select
-          v-model="cadence"
-          :disabled="busy"
-          @change="onFieldCommit"
-        >
-          <option value="daily">
-            {{ $t('schedule.daily') }}
-          </option>
-          <option value="weekly">
-            {{ $t('schedule.weekly') }}
-          </option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>{{ $t('schedule.time') }}</span>
-        <input
-          v-model="timeLocal"
-          type="time"
-          required
-          :disabled="busy"
-          @change="onFieldCommit"
-          @blur="onFieldCommit"
-        >
-      </label>
-
-      <fieldset
-        v-if="cadence === 'weekly'"
-        class="days"
-      >
-        <legend>{{ $t('schedule.daysOfWeek') }}</legend>
-        <label
-          v-for="day in SCHEDULE_WEEKDAYS"
-          :key="day"
-        >
-          <input
-            v-model="selectedDays"
-            type="checkbox"
-            :value="day"
-            :disabled="busy"
-            @change="onFieldCommit"
-          >
-          {{ weekdayLabels[day] }}
-        </label>
-      </fieldset>
-
-      <label class="field">
-        <span>{{ $t('schedule.instruction') }}</span>
-        <textarea
-          v-model="wakeText"
-          rows="3"
-          :maxlength="SCHEDULE_WAKE_MAX"
-          required
-          :placeholder="$t('schedule.wakePlaceholder')"
-          :disabled="busy"
+          :readonly="busy"
           @blur="onFieldCommit"
         />
-      </label>
+      </KitField>
+
+      <KitField
+        :label="$t('schedule.whenLabel')"
+        :error="errors.cadence"
+      >
+        <KitSelect
+          :model-value="cadence"
+          name="cadence"
+          :options="cadenceOptions"
+          :disabled="busy"
+          @update:model-value="pickCadence"
+        />
+      </KitField>
+
+      <KitField
+        :label="$t('schedule.time')"
+        :error="errors.time"
+        required
+      >
+        <KitInput
+          v-model="timeLocal"
+          name="timeLocal"
+          type="time"
+          :readonly="busy"
+          @change="onFieldCommit"
+          @blur="onFieldCommit"
+        />
+      </KitField>
+
+      <KitField
+        v-if="cadence === 'weekly'"
+        :label="$t('schedule.daysOfWeek')"
+        :error="errors.days"
+      >
+        <div
+          class="days"
+          role="group"
+          :aria-label="$t('schedule.daysOfWeek')"
+        >
+          <KitChip
+            v-for="day in SCHEDULE_WEEKDAYS"
+            :key="day"
+            as="button"
+            :selected="selectedDays.includes(day)"
+            :disabled="busy"
+            @click="toggleDay(day)"
+          >
+            {{ weekdayLabels[day] }}
+          </KitChip>
+        </div>
+      </KitField>
+
+      <KitField
+        :label="$t('schedule.instruction')"
+        :error="errors.wakeText"
+        required
+      >
+        <KitTextarea
+          v-model="wakeText"
+          name="wakeText"
+          :rows="3"
+          :maxlength="SCHEDULE_WAKE_MAX"
+          :placeholder="$t('schedule.wakePlaceholder')"
+          :readonly="busy"
+          @blur="onFieldCommit"
+        />
+      </KitField>
 
       <p
         v-if="!creating && nextRunLabel"
@@ -113,6 +121,14 @@
       >
         <span>{{ $t('schedule.nextRun') }}</span>
         <span>{{ nextRunLabel }}</span>
+      </p>
+
+      <p
+        v-if="errors.form"
+        class="error"
+        role="alert"
+      >
+        {{ errors.form }}
       </p>
 
       <KitButton
@@ -126,9 +142,11 @@
       <section
         v-if="!creating"
         class="history"
-        :aria-label="$t('schedule.history')"
+        aria-labelledby="schedule-history-heading"
       >
-        <h2>{{ $t('schedule.history') }}</h2>
+        <h2 id="schedule-history-heading">
+          {{ $t('schedule.history') }}
+        </h2>
         <p
           v-if="runs.length === 0"
           class="muted"
@@ -137,32 +155,35 @@
         </p>
         <ul
           v-else
-          class="runs"
+          class="rows"
         >
-          <li
+          <KitListRow
             v-for="run in runs"
             :key="run.id"
+            as="li"
+            :title="scheduleWhenLabel(run.startedAt, timeZone, Date.now(), hostLocale)"
           >
-            <span>{{ scheduleWhenLabel(run.startedAt, timeZone, Date.now(), hostLocale) }}</span>
-            <span :class="{ ok: run.outcome === 'ok', bad: run.outcome === 'error' || run.outcome === 'abort' }">
-              {{ scheduleRunOutcome(run.outcome, hostLocale) }}
-            </span>
-          </li>
+            <template #trailing>
+              <KitChip :tone="runTone(run.outcome)">
+                {{ scheduleRunOutcome(run.outcome, hostLocale) }}
+              </KitChip>
+            </template>
+          </KitListRow>
         </ul>
       </section>
 
       <div
         v-if="!creating && !confirming"
-        class="danger-wrap"
+        class="actions"
       >
-        <button
-          type="button"
-          class="danger"
+        <KitButton
+          variant="ghost"
+          size="sm"
           :disabled="busy"
           @click="confirming = true"
         >
           {{ $t('schedule.delete') }}
-        </button>
+        </KitButton>
       </div>
       <div
         v-else-if="!creating"
@@ -170,38 +191,31 @@
       >
         <p>{{ $t('schedule.confirmDelete') }}</p>
         <div class="actions">
-          <button
-            type="button"
-            class="danger"
-            :disabled="busy"
-            @click="remove"
-          >
-            {{ $t('schedule.delete') }}
-          </button>
-          <button
-            type="button"
-            class="ghost"
+          <KitButton
+            variant="ghost"
+            size="sm"
             :disabled="busy"
             @click="confirming = false"
           >
             {{ $t('common.cancel') }}
-          </button>
+          </KitButton>
+          <KitButton
+            size="sm"
+            :disabled="busy"
+            @click="remove"
+          >
+            {{ $t('schedule.delete') }}
+          </KitButton>
         </div>
       </div>
-
-      <p
-        v-if="saveError"
-        class="flash"
-        role="alert"
-      >
-        {{ saveError }}
-      </p>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { KitButton, KitToggle } from '@dostigus/ui-kit'
+import type { KitSelectOption } from '@dostigus/ui-kit'
+import type { ScheduleFormField } from '../utils/schedule-form'
+import { KitButton, KitChip, KitField, KitInput, KitListRow, KitSelect, KitTextarea, KitToggle } from '@dostigus/ui-kit'
 import {
   SCHEDULE_NAME_MAX,
   SCHEDULE_WAKE_MAX,
@@ -211,6 +225,7 @@ import {
   scheduleWeekdayLabels,
   scheduleWhenLabel,
 } from '../utils/schedule-copy'
+import { scheduleErrorField } from '../utils/schedule-form'
 
 type ScheduleCadence = 'daily' | 'weekly'
 
@@ -252,6 +267,10 @@ const creating = computed(() => props.mode === 'create')
 const { locale, t } = useI18n()
 const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
 const weekdayLabels = computed(() => scheduleWeekdayLabels(hostLocale.value))
+const cadenceOptions = computed<KitSelectOption[]>(() => [
+  { value: 'daily', label: t('schedule.daily') },
+  { value: 'weekly', label: t('schedule.weekly') },
+])
 
 const schedule = ref<ScheduleView | null>(null)
 const name = ref('')
@@ -265,7 +284,7 @@ const timeZone = ref('UTC')
 const runs = ref<ScheduleRun[]>([])
 const gone = ref(false)
 const loadError = ref('')
-const saveError = ref('')
+const errors = ref<Partial<Record<ScheduleFormField, string>>>({})
 const busy = ref(false)
 const confirming = ref(false)
 
@@ -308,7 +327,7 @@ function apply(next: ScheduleView) {
 async function load() {
   gone.value = false
   loadError.value = ''
-  saveError.value = ''
+  errors.value = {}
   confirming.value = false
   if (creating.value) {
     schedule.value = {
@@ -349,6 +368,28 @@ async function load() {
   }
 }
 
+function pickCadence(value: string | undefined) {
+  if (value !== 'daily' && value !== 'weekly') {
+    return
+  }
+  cadence.value = value
+  onFieldCommit()
+}
+
+function toggleDay(day: string) {
+  selectedDays.value = selectedDays.value.includes(day)
+    ? selectedDays.value.filter((item) => item !== day)
+    : [...selectedDays.value, day]
+  onFieldCommit()
+}
+
+function runTone(outcome: string): 'ok' | 'warn' | 'neutral' {
+  if (outcome === 'ok') {
+    return 'ok'
+  }
+  return outcome === 'error' || outcome === 'abort' ? 'warn' : 'neutral'
+}
+
 function onFieldCommit() {
   if (!creating.value) {
     void persistFields()
@@ -381,19 +422,23 @@ function dirty(): boolean {
 }
 
 async function persistFields() {
-  if (creating.value || !schedule.value || busy.value || !dirty()) {
+  if (creating.value || !schedule.value || busy.value) {
+    return
+  }
+  if (!dirty()) {
+    errors.value = {}
     return
   }
   if (cadence.value === 'weekly' && selectedDays.value.length === 0) {
-    saveError.value = t('schedule.needDays')
+    errors.value = { days: t('schedule.needDays') }
     return
   }
   if (!wakeText.value.trim()) {
-    saveError.value = t('schedule.needInstruction')
+    errors.value = { wakeText: t('schedule.needInstruction') }
     return
   }
   busy.value = true
-  saveError.value = ''
+  errors.value = {}
   try {
     const body = await $fetch<{ schedule: ScheduleView }>(`/api/schedules/${schedule.value.id}`, {
       method: 'PATCH',
@@ -402,7 +447,7 @@ async function persistFields() {
     apply(body.schedule)
     emit('saved')
   } catch (error) {
-    saveError.value = messageOf(error)
+    errors.value = { [scheduleErrorField(error)]: messageOf(error) }
   } finally {
     busy.value = false
   }
@@ -413,15 +458,15 @@ async function create() {
     return
   }
   if (cadence.value === 'weekly' && selectedDays.value.length === 0) {
-    saveError.value = t('schedule.needDays')
+    errors.value = { days: t('schedule.needDays') }
     return
   }
   if (!wakeText.value.trim()) {
-    saveError.value = t('schedule.needInstruction')
+    errors.value = { wakeText: t('schedule.needInstruction') }
     return
   }
   busy.value = true
-  saveError.value = ''
+  errors.value = {}
   try {
     const body = await $fetch<{ schedule: ScheduleView }>(`/api/bots/${props.botId}/schedules`, {
       method: 'POST',
@@ -429,7 +474,7 @@ async function create() {
     })
     emit('created', body.schedule.id)
   } catch (error) {
-    saveError.value = messageOf(error)
+    errors.value = { [scheduleErrorField(error)]: messageOf(error) }
   } finally {
     busy.value = false
   }
@@ -440,7 +485,7 @@ async function setPaused(nextPaused: boolean) {
     return
   }
   busy.value = true
-  saveError.value = ''
+  errors.value = {}
   try {
     const body = await $fetch<{ schedule: ScheduleView }>(`/api/schedules/${schedule.value.id}`, {
       method: 'PATCH',
@@ -449,7 +494,7 @@ async function setPaused(nextPaused: boolean) {
     apply(body.schedule)
     emit('saved')
   } catch (error) {
-    saveError.value = messageOf(error)
+    errors.value = { form: messageOf(error) }
   } finally {
     busy.value = false
   }
@@ -460,7 +505,7 @@ async function remove() {
     return
   }
   busy.value = true
-  saveError.value = ''
+  errors.value = {}
   try {
     await $fetch(`/api/schedules/${schedule.value.id}`, { method: 'DELETE' })
     schedule.value = null
@@ -468,7 +513,7 @@ async function remove() {
     confirming.value = false
     emit('deleted')
   } catch (error) {
-    saveError.value = messageOf(error)
+    errors.value = { form: messageOf(error) }
   } finally {
     busy.value = false
   }
@@ -494,99 +539,32 @@ function messageOf(error: unknown): string {
 </script>
 
 <style scoped>
-.schedule {
+.schedule,
+.form {
   display: flex;
   flex-direction: column;
+}
+
+.schedule {
   gap: 0.85rem;
 }
 
-.form,
-.field,
-.actions,
-.days {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.field {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--text-muted);
-}
-
-input,
-textarea,
-select {
-  appearance: none;
-  width: 100%;
-  border: 1px solid var(--line);
-  background: var(--bg-chat);
-  color: var(--text);
-  border-radius: 0.9rem;
-  padding: 0.75rem 0.9rem;
-  font: inherit;
-  font-size: 1.02rem;
-  font-weight: 700;
-}
-
-textarea {
-  min-height: 6rem;
-  resize: vertical;
-  line-height: 1.45;
-  font-weight: 600;
-}
-
-select {
-  cursor: pointer;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  outline: 1px solid var(--accent);
-}
-
-.days {
-  border: 0;
-  margin: 0;
-  padding: 0;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
-
-.days legend {
-  padding: 0;
-  margin-bottom: 0.35rem;
-}
-
-.days label {
-  display: flex;
-  gap: 0.45rem;
-  align-items: center;
-  color: var(--text);
-  font-weight: 700;
-}
-
-.days input {
-  width: 1rem;
-  height: 1rem;
-  margin: 0;
-  padding: 0;
-  accent-color: var(--accent);
+.form {
+  gap: 0.9rem;
 }
 
 .switch-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
   border: 1px solid var(--line);
-  background: var(--bg-chat);
-  border-radius: 0.9rem;
-  padding: 0.8rem 0.95rem;
-  color: var(--text);
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
   font-weight: 700;
+}
+
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .meta {
@@ -594,7 +572,7 @@ select:focus {
   justify-content: space-between;
   gap: 0.75rem;
   margin: 0;
-  padding: 0.75rem 0.2rem 0;
+  padding: 0 0.2rem;
   color: var(--text-muted);
   font-size: 0.88rem;
   font-weight: 600;
@@ -605,82 +583,45 @@ select:focus {
   text-align: right;
 }
 
-.history {
-  margin-top: 0.4rem;
-}
-
 .history h2 {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.35rem;
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--text-muted);
 }
 
-.runs {
+.rows {
   list-style: none;
-  margin: 0;
+  margin: 0 -0.7rem;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
 }
 
-.runs li {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  font-weight: 600;
+.rows > li + li {
+  border-top: 1px solid var(--line);
 }
 
-.runs .ok {
-  color: #2f9e5f;
-}
-
-.runs .bad {
-  color: var(--accent);
-}
-
-.danger-wrap,
-.confirm {
-  margin-top: 0.55rem;
-}
-
-.danger,
-.ghost {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0.45rem 0;
-}
-
-.danger {
-  color: #e24b4b;
-}
-
-.ghost {
-  color: var(--text-muted);
+.confirm p {
+  margin: 0 0 0.55rem;
 }
 
 .actions {
-  flex-direction: row;
-  gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
 
-.paused,
-.muted,
-.gone {
+.error,
+.muted {
   margin: 0;
 }
 
-.flash {
-  margin: 0;
+.error {
   color: var(--accent);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.45;
 }
 
-.gone,
 .muted {
   color: var(--text-muted);
 }

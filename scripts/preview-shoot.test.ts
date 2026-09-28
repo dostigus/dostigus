@@ -2,7 +2,9 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import {
+  buildClickExpression,
   buildReadyExpression,
+  buildScrollEndExpression,
   chromeCandidates,
   DEFAULT_SHOOT_DIR,
   DEFAULT_VIEWPORT,
@@ -32,7 +34,33 @@ it('names the preview states agents are asked to shoot', () => {
     'settings-other',
     'members',
     'narrow',
+    'closet',
+    'closet-end',
+    'schedule-new',
+    'schedule',
+    'member-add',
   ])
+})
+
+it('opens Sheets with a click chain after hydration', () => {
+  expect(PREVIEW_SHOOT_STATES.closet.clicks).toEqual(['.identity'])
+  expect(PREVIEW_SHOOT_STATES['closet-end'].scrollEnd).toBe('.kit-sheet--end')
+  expect(PREVIEW_SHOOT_STATES['schedule-new'].clicks.at(-1)).toBe('#schedules-heading + .kit-button')
+  expect(PREVIEW_SHOOT_STATES.schedule.clicks.at(-1)).toBe('.schedule-row')
+  expect(PREVIEW_SHOOT_STATES.schedule.hint).toContain('Add one in the Closet first')
+  expect(PREVIEW_SHOOT_STATES['member-add'].ready).toEqual({ selector: '.kit-sheet input[type="password"]', count: 2 })
+  const click = buildClickExpression('.identity')
+  expect(click).toContain('isHydrating')
+  expect(click).toContain('querySelector(".identity")')
+  expect(buildScrollEndExpression('.kit-sheet--end')).toContain('scrollHeight')
+})
+
+it('shoots any state at 390px with --narrow', () => {
+  const narrow = resolvePreviewShootState('closet', { narrow: true })
+  expect(narrow?.name).toBe('closet-narrow')
+  expect(narrow?.viewport).toEqual(NARROW_VIEWPORT)
+  expect(resolvePreviewShootState('narrow', { narrow: true })?.name).toBe('narrow')
+  expect(previewShootUsage()).toContain('--narrow')
 })
 
 it('reuses preview-seed flags and waits for an explicit ready marker', () => {

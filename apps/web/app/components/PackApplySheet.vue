@@ -18,29 +18,36 @@
     >
       {{ plan.blockers[0] }}
     </p>
-    <fieldset
+    <KitField
       v-if="plan && plan.blockers.length === 0"
-      class="targets"
+      :label="$t('pack.target')"
     >
-      <legend>{{ $t('pack.target') }}</legend>
-      <label>
-        <input
-          v-model="target"
-          type="radio"
-          value="update"
+      <div
+        class="targets"
+        role="radiogroup"
+        :aria-label="$t('pack.target')"
+      >
+        <KitChip
+          as="button"
+          role="radio"
+          :selected="target === 'update'"
+          :aria-checked="target === 'update'"
           :disabled="!canUpdate"
+          @click="target = 'update'"
         >
-        <span>{{ $t('pack.targetThis') }}</span>
-      </label>
-      <label>
-        <input
-          v-model="target"
-          type="radio"
-          value="create"
+          {{ $t('pack.targetThis') }}
+        </KitChip>
+        <KitChip
+          as="button"
+          role="radio"
+          :selected="target === 'create'"
+          :aria-checked="target === 'create'"
+          @click="target = 'create'"
         >
-        <span>{{ $t('pack.targetNew') }}</span>
-      </label>
-    </fieldset>
+          {{ $t('pack.targetNew') }}
+        </KitChip>
+      </div>
+    </KitField>
     <section
       v-if="plan"
       class="block"
@@ -109,7 +116,7 @@
 
 <script setup lang="ts">
 import type { PackApplyPlan, PackTree } from '@dostigus/shared'
-import { KitButton } from '@dostigus/ui-kit'
+import { KitButton, KitChip, KitField } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../utils/host-status-copy'
 
 const props = defineProps<{
@@ -193,27 +200,9 @@ async function confirm() {
 }
 
 .targets {
-  margin: 0;
-  border: 0;
-  padding: 0;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 0.45rem;
-}
-
-.targets legend {
-  padding: 0;
-  margin-bottom: 0.35rem;
-  color: var(--text-muted);
-  font-size: 0.92rem;
-  font-weight: 700;
-}
-
-.targets label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
 }
 
 .block h3 {

@@ -26,68 +26,70 @@
       >
         {{ previewing ? $t('common.loading') : $t('pack.apply') }}
       </KitButton>
-      <button
+      <KitButton
         type="button"
-        class="folder"
+        variant="ghost"
         :disabled="previewing"
         @click="pickFolder"
       >
         {{ $t('pack.folder') }}
-      </button>
+      </KitButton>
     </div>
     <form
       class="remote"
       @submit.prevent="previewRemote"
     >
-      <label class="field">
-        <span class="sr">{{ $t('pack.url') }}</span>
-        <input
+      <KitField
+        :label="$t('pack.url')"
+        :error="remoteError || undefined"
+      >
+        <KitInput
           v-model="remoteUrl"
           type="url"
           autocomplete="off"
           spellcheck="false"
           :placeholder="$t('pack.urlPlaceholder')"
-          :disabled="previewing"
-        >
-      </label>
+          :readonly="previewing"
+        />
+      </KitField>
       <div class="remote-extra">
-        <input
-          v-model="remoteRef"
-          type="text"
-          autocomplete="off"
-          spellcheck="false"
-          :placeholder="$t('pack.ref')"
-          :disabled="previewing"
-        >
-        <input
-          v-model="remotePath"
-          type="text"
-          autocomplete="off"
-          spellcheck="false"
-          :placeholder="$t('pack.path')"
-          :disabled="previewing"
-        >
+        <KitField :label="$t('pack.ref')">
+          <KitInput
+            v-model="remoteRef"
+            autocomplete="off"
+            spellcheck="false"
+            :readonly="previewing"
+          />
+        </KitField>
+        <KitField :label="$t('pack.path')">
+          <KitInput
+            v-model="remotePath"
+            autocomplete="off"
+            spellcheck="false"
+            :readonly="previewing"
+          />
+        </KitField>
       </div>
-      <KitButton
-        type="submit"
-        variant="ghost"
-        :disabled="previewing || !remoteUrl.trim()"
-      >
-        {{ previewing ? $t('common.loading') : $t('pack.urlPreview') }}
-      </KitButton>
+      <div class="row">
+        <KitButton
+          type="submit"
+          variant="ghost"
+          :disabled="previewing || !remoteUrl.trim()"
+        >
+          {{ previewing ? $t('common.loading') : $t('pack.urlPreview') }}
+        </KitButton>
+      </div>
     </form>
     <div class="hidden-inputs">
       <input
         ref="fileInput"
         type="file"
         accept=".zip,application/zip,application/json"
-        class="file"
         @change="onFile"
       >
       <input
         ref="folderInput"
         type="file"
-        class="file"
         multiple
         webkitdirectory
         @change="onFolder"
@@ -96,6 +98,7 @@
     <p
       v-if="error"
       class="error"
+      role="alert"
     >
       {{ error }}
     </p>
@@ -141,7 +144,7 @@
 
 <script setup lang="ts">
 import type { PackApplyPlan, PackTree } from '@dostigus/shared'
-import { KitButton, KitSheet } from '@dostigus/ui-kit'
+import { KitButton, KitField, KitInput, KitSheet } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../utils/host-status-copy'
 
 type PackExportPreview = {
@@ -172,6 +175,7 @@ const remotePath = ref('')
 const exporting = ref(false)
 const previewing = ref(false)
 const error = ref('')
+const remoteError = ref('')
 const open = ref(false)
 const pack = ref<PackTree | null>(null)
 const plan = ref<PackApplyPlan | null>(null)
@@ -264,6 +268,7 @@ async function previewRemote() {
   }
   previewing.value = true
   error.value = ''
+  remoteError.value = ''
   try {
     const body = await $fetch<{ pack: PackTree, plan: PackApplyPlan }>('/api/packs/preview', {
       method: 'POST',
@@ -279,7 +284,7 @@ async function previewRemote() {
     plan.value = body.plan
     open.value = true
   } catch (caught) {
-    error.value = hostStatusCopy(caught, t, 'pack.previewFailed')
+    remoteError.value = hostStatusCopy(caught, t, 'pack.previewFailed')
   } finally {
     previewing.value = false
   }
@@ -328,21 +333,37 @@ function onApplied(botId: string) {
 
 <style scoped>
 .pack {
-  margin: 0 0 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
 }
 
 .pack h2 {
-  margin: 0 0 0.35rem;
+  margin: 0;
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-muted);
 }
 
-.hint {
-  margin: 0 0 0.7rem;
-  font-size: 0.82rem;
+.hint,
+.error {
+  margin: 0;
+}
+
+.error {
+  color: var(--accent);
+  font-size: 0.88rem;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+.hint {
+  margin-top: -0.35rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .row {
@@ -354,72 +375,16 @@ function onApplied(botId: string) {
 .remote {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 0.45rem;
-  margin-top: 0.7rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-}
-
-.remote input {
-  appearance: none;
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid color-mix(in srgb, var(--text-muted) 28%, transparent);
-  border-radius: 0.7rem;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-weight: 600;
-  padding: 0.55rem 0.7rem;
+  gap: 0.7rem;
 }
 
 .remote-extra {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  gap: 0.45rem;
+  gap: 0.6rem;
 }
 
 .hidden-inputs {
   display: none;
-}
-
-.file {
-  display: none;
-}
-
-.folder {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0.45rem 0.2rem;
-}
-
-.folder:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.error {
-  margin: 0.65rem 0 0;
-  color: var(--accent);
-  font-size: 0.88rem;
 }
 </style>
