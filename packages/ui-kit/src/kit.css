@@ -543,6 +543,89 @@
   transform: translateY(-15%) rotate(45deg);
 }
 
+.kit-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: max(12rem, var(--reka-dropdown-menu-trigger-width, 0px));
+  max-width: min(20rem, calc(100vw - 1rem));
+  max-height: min(24rem, var(--reka-dropdown-menu-content-available-height, 24rem));
+  overflow: auto;
+  outline: none;
+  transform-origin: var(--reka-dropdown-menu-content-transform-origin);
+}
+
+.kit-menu[data-state='open'] {
+  animation: kit-menu-in 120ms ease-out;
+}
+
+.kit-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.08rem;
+  min-width: 0;
+  border-radius: var(--radius, 0.75rem);
+  padding: 0.48rem 0.7rem;
+  color: var(--text, #ffffff);
+  font-size: 0.92rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.kit-menu-item[data-highlighted] {
+  background: color-mix(in srgb, var(--text, #ffffff) 6%, transparent);
+}
+
+.kit-menu-item:focus-visible {
+  outline: 2px solid var(--accent-dim, #d94a28);
+  outline-offset: -2px;
+}
+
+.kit-menu-item[aria-current='page'] {
+  background: color-mix(in srgb, var(--accent, #f25630) 16%, var(--surface, #262626));
+}
+
+.kit-menu-item[data-disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.kit-menu-item--danger {
+  color: var(--accent, #f25630);
+}
+
+.kit-menu-item--danger[data-highlighted] {
+  background: color-mix(in srgb, var(--accent, #f25630) 12%, transparent);
+}
+
+.kit-menu-item-label,
+.kit-menu-item-hint {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kit-menu-item--hint .kit-menu-item-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.kit-menu-item-hint {
+  color: var(--text-muted, #a4a4a4);
+  font-size: 0.78rem;
+}
+
+.kit-menu-separator {
+  height: 1px;
+  margin: 0.25rem 0.35rem;
+  background: var(--line-soft, var(--line, #333333));
+}
+
 .kit-toggle {
   display: flex;
   align-items: center;
@@ -782,6 +865,18 @@ button.kit-chip:disabled {
   }
 }
 
+@keyframes kit-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes kit-rise {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
@@ -795,7 +890,8 @@ button.kit-chip:disabled {
 @media (prefers-reduced-motion: reduce) {
   .kit-overlay,
   .kit-dialog,
-  .kit-sheet {
+  .kit-sheet,
+  .kit-menu {
     animation: none;
   }
 
