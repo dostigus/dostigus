@@ -250,6 +250,22 @@ export function searchCatalogModels(
   })
 }
 
+export type ProviderFormField = 'baseUrl' | 'model' | 'apiKey'
+
+/**
+ * The Provider form field a gateway save error sits under. Anything unnamed,
+ * or a field this kind does not show, lands on the key.
+ */
+export function providerErrorField(message: string, kind: LlmProviderKind): ProviderFormField {
+  if (kind === 'openai-compatible' && /base URL/i.test(message)) {
+    return 'baseUrl'
+  }
+  if (kind !== 'openrouter' && /^Model id/i.test(message)) {
+    return 'model'
+  }
+  return 'apiKey'
+}
+
 export function fetchedAtCopy(
   iso: string | null,
   now: Date = new Date(),
