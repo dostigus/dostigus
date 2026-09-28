@@ -5,6 +5,9 @@
 - Amended: 2026-09-26 — Pack HTML `ui/` is a sandboxed iframe
   inside the Sheet shell, not a per-bot SPA or domain. See
   [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
+- Amended: 2026-09-28 — the Kit also carries form and surface
+  primitives the Host assembles pages from. See
+  [ADR 0013](0013-kit-reka-ui-and-brand.md).
 
 ## Decision
 
@@ -24,7 +27,9 @@ one kit, and one place to learn the UI.
 ## Consequences
 
 - `apps/web` is the only user-facing app in this monorepo.
-- `packages/ui-kit` is the Kit barrel for Sheets and Cards.
+- `packages/ui-kit` is the Kit barrel for Sheets and Cards, and for the
+  form and surface primitives Host pages use
+  ([ADR 0013](0013-kit-reka-ui-and-brand.md)).
 - Assistant Chat bodies render through `KitMarkdown`
   ([ADR 0022](0022-chat-assistant-markdown.md)). An assistant line may
   also carry Kit parts (a button that opens a Sheet, and a status)

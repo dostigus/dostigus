@@ -33,7 +33,7 @@ English.
 | ADR | Title |
 | --- | --- |
 | [0001](0001-platform-git-vs-in-cluster-bot-packages.md) | Platform git vs in-cluster bot packages (amended 2026-09-26: Pack share vs Bot backup [0039](0039-pack-vs-bot-portable-recipe.md)) |
-| [0002](0002-host-ui-kit-and-sheets.md) | Host UI kit and Sheets (amended 2026-09-26: Pack HTML `ui/` is a sandboxed iframe in the Sheet shell [0039](0039-pack-vs-bot-portable-recipe.md)) |
+| [0002](0002-host-ui-kit-and-sheets.md) | Host UI kit and Sheets (amended 2026-09-26: Pack HTML `ui/` is a sandboxed iframe in the Sheet shell [0039](0039-pack-vs-bot-portable-recipe.md); amended 2026-09-28: Kit form and surface primitives [0013](0013-kit-reka-ui-and-brand.md)) |
 | [0003](0003-mcp-as-bot-store-contract.md) | MCP as the Bot ↔ store contract |
 | [0004](0004-llm-gateway-tiers.md) | LLM gateway and model tiers (amended 2026-09-24: one transient retry, Russian error copy; Chat assembly [0032](0032-chat-llm-context-assembly.md); amended 2026-09-25: triggering-line image parts [0035](0035-image-artifact-vision.md); amended 2026-09-25: bind / resolve / escalate [0036](0036-llm-providers-tier-resolve-escalate.md); OpenRouter Policy `free` on cheap/toy for casual supersedes “roulette is toy only”; amended 2026-09-25: OpenRouter Settings catalog stays [0036](0036-llm-providers-tier-resolve-escalate.md); amended 2026-09-26: Store key is Provider `apiKey` only [0036](0036-llm-providers-tier-resolve-escalate.md)) |
 | [0005](0005-self-host-first.md) | Self-host first |
@@ -44,7 +44,7 @@ English.
 | [0010](0010-owner-auth-session.md) | Owner auth and Host session |
 | [0011](0011-chat-mcp-tool-loop.md) | Chat ↔ MCP tool loop (amended 2026-09-24: retry one completion, not the tool loop; slim + expand [0032](0032-chat-llm-context-assembly.md)) |
 | [0012](0012-household-members.md) | Household Members on the Host (Bot visibility: [0024](0024-threads-and-bot-visibility.md)) |
-| [0013](0013-kit-reka-ui-and-brand.md) | Kit on Reka UI, Sheet shell, and Brand |
+| [0013](0013-kit-reka-ui-and-brand.md) | Kit on Reka UI, Sheet shell, and Brand (amended 2026-09-28: form and surface primitives `KitCard`, `KitField`, `KitInput`, `KitTextarea`, `KitSelect`, `KitToggle`, `KitChip`, `KitListRow`; proof on Cluster settings) |
 | [0014](0014-host-messenger-shell.md) | Host messenger shell |
 | [0015](0015-host-desktop-shell.md) | Host desktop shell |
 | [0016](0016-bot-avatar-tokens.md) | Bot avatar tokens |
