@@ -453,7 +453,7 @@ explicit ready marker (not network idle), and writes a PNG under
 | `chat` | `/preview-seed` | `.bubble` | 1440×900 |
 | `system` | `?system=1` | three `.bubble.system` | 1440×900 |
 | `providers-empty` | `?settings=1` then `/dashboard/providers` | `.providers .add` | 1440×900 |
-| `providers-fixture` | `?providers=1` | `.provider` and the shelf (cards or miss banner) | 1440×900 |
+| `providers-fixture` | `?providers=1` | `.provider` and shelf cards (`.shelf .card:not(.skeleton)`; not the miss banner) | 1440×900 |
 | `settings-other` | `?settings=1` then `/dashboard/cluster` | `.cluster input[name="timezone"]` | 1440×900 |
 | `members` | `?members=1` | `.members h1` | 1440×900 |
 | `narrow` | `?settings=1` then `/dashboard/providers` | `.providers h1` | 390×844 |

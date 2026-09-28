@@ -50,10 +50,11 @@ export const PREVIEW_SHOOT_STATES = {
     ready: {
       selector: '.provider',
       count: 1,
-      any: ['.shelf .card:not(.skeleton)', '.shelf .banner'],
+      any: ['.shelf .card:not(.skeleton)'],
       none: ['.shelf [aria-busy="true"]'],
     },
     viewport: DEFAULT_VIEWPORT,
+    hint: 'providers-fixture waits for shelf cards (.shelf .card:not(.skeleton)), not the first-paint miss banner.',
   },
   'settings-other': {
     seed: 'settings=1',
