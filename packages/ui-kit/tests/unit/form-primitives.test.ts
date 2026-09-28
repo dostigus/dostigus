@@ -13,10 +13,12 @@ import KitTextarea from '../../src/components/KitTextarea.vue'
 import KitToggle from '../../src/components/KitToggle.vue'
 import * as kit from '../../src/index'
 
-async function render(component: Component, props: Record<string, unknown> = {}, slots?: Record<string, () => unknown>) {
-  const html = await renderToString(createSSRApp({ render: () => h(component, props, slots) }))
-  return html.replace(/<!--[\s\S]*?-->/g, '')
+function render(component: Component, props: Record<string, unknown> = {}, slots?: Record<string, () => unknown>) {
+  return renderToString(createSSRApp({ render: () => h(component, props, slots) }))
 }
+
+/** Vue SSR wraps slot and fragment content in `<!--[-->` and `<!--]-->` markers. */
+const MARK = '(?:<!--[[\\]]-->)*'
 
 function attr(html: string, selector: RegExp, name: string): string | undefined {
   const tag = html.match(selector)?.[0]
@@ -84,9 +86,9 @@ it('builds the select on Reka and shows the chosen label', async () => {
   expect(html).toMatch(trigger)
   expect(attr(html, trigger, 'id')).toBe(attr(html, /<label[^>]*>/, 'for'))
   expect(html).toContain('kit-select')
-  expect(html).toMatch(/class="kit-select-value"[^>]*>RU</)
+  expect(html).toMatch(new RegExp(`class="kit-select-value"[^>]*>${MARK}RU${MARK}<`))
   const empty = await render(KitSelect, { options: [{ value: 'en', label: 'EN' }], placeholder: 'Pick one' })
-  expect(empty).toMatch(/kit-select-value kit-select-value--empty[^>]*>Pick one</)
+  expect(empty).toMatch(new RegExp(`kit-select-value kit-select-value--empty[^>]*>${MARK}Pick one${MARK}<`))
 })
 
 it('builds the toggle on Reka Switch with a clickable label', async () => {
@@ -110,7 +112,7 @@ it('titles a card, names its landmark, and keeps actions in a footer', async () 
   expect(html.startsWith('<form')).toBe(true)
   const titleId = attr(html, /<h2[^>]*>/, 'id')
   expect(attr(html, /<form[^>]*>/, 'aria-labelledby')).toBe(titleId)
-  expect(html).toMatch(/<footer class="kit-card-actions"><button>Save<\/button><\/footer>/)
+  expect(html).toMatch(new RegExp(`<footer class="kit-card-actions">${MARK}<button>Save</button>${MARK}</footer>`))
   const bare = await render(KitCard, {}, { default: () => 'x' })
   expect(bare).not.toContain('aria-labelledby')
   expect(bare).not.toContain('<header')
@@ -118,7 +120,7 @@ it('titles a card, names its landmark, and keeps actions in a footer', async () 
 
 it('reports chip state as pressed or leaves it to a radio group', async () => {
   const status = await render(KitChip, { tone: 'ok' }, { default: () => 'Saved' })
-  expect(status).toMatch(/^<span class="kit-chip kit-chip--ok">Saved<\/span>$/)
+  expect(status).toMatch(new RegExp(`^<span class="kit-chip kit-chip--ok">${MARK}Saved${MARK}</span>$`))
   const toggle = await render(KitChip, { as: 'button', selected: true }, { default: () => 'Work' })
   expect(toggle).toContain('type="button"')
   expect(toggle).toContain('aria-pressed="true"')
