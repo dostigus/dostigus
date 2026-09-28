@@ -333,7 +333,7 @@
 
 /* Form and surface primitives. See ADR 0013 (amended 2026-09-28). */
 
-.kit-card {
+.kit-panel {
   padding: 1.5rem 1.45rem;
   border: 1px solid var(--line, #333333);
   border-radius: var(--radius-card, 1.75rem);
@@ -341,31 +341,31 @@
   color: var(--text, #ffffff);
 }
 
-.kit-card-head {
+.kit-panel-head {
   margin-bottom: 1.1rem;
 }
 
-.kit-card-title {
+.kit-panel-title {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
-.kit-card-desc {
+.kit-panel-desc {
   margin: 0.35rem 0 0;
   color: var(--text-muted, #a4a4a4);
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
-.kit-card-body {
+.kit-panel-body {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
 }
 
-.kit-card-actions {
+.kit-panel-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

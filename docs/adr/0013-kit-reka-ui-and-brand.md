@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-09-22
 - Amended: 2026-09-28 — the Kit grows past the Sheet shell, Brand,
-  flock, and Markdown into form and surface primitives: `KitCard`,
+  flock, and Markdown into form and surface primitives: `KitPanel`,
   `KitField`, `KitInput`, `KitTextarea`, `KitSelect` (Reka Select),
   `KitToggle` (Reka Switch), `KitChip`, and `KitListRow`. Host screens
   assemble from them instead of page-scoped control CSS. Proof is
@@ -64,7 +64,7 @@ Day-1 set, all exported from `@dostigus/ui-kit` and listed in
 
 | Component | Primitive | Role |
 |-----------|-----------|------|
-| `KitCard` | native | Surface panel on `--card` with `--radius-card`. Optional title (`h2`/`h3`, names the landmark), description, body, and an `actions` footer. `as="form"` keeps submit on the panel. |
+| `KitPanel` | native | Surface panel on `--card` with `--radius-card`. Optional title (`h2`/`h3`, names the landmark), description, body, and an `actions` footer. `as="form"` keeps submit on the panel. |
 | `KitField` | native | Label above the control, helper and error below. Wires `for`, `aria-describedby`, `aria-invalid`, and `required` into the Kit control inside it. |
 | `KitInput` | native `input` | Single-line field. Native attributes (`name`, `placeholder`, `autocomplete`) pass through. |
 | `KitTextarea` | native `textarea` | Multi-line field, same look as `KitInput`. |
@@ -80,12 +80,13 @@ CSS variables in `packages/ui-kit/src/kit.css`. Focus is a visible
 field has an `--accent` edge plus inline error copy. Motion stays at
 state changes only (the switch thumb); reduced motion drops it.
 
-`KitCard` is a surface panel, not a **Card**. A Card (and a Chat
-Card) stays inline Chat UI rendered by `KitChatParts`. The Chat part
-classes are `.kit-chat-card*`; `.kit-card` belongs to `KitCard`.
+`KitPanel` is the page surface, not a **Card**. A Card (and a Chat
+Card) stays inline Chat UI rendered by `KitChatParts`, so the panel
+does not take the Card name. The Chat part classes are
+`.kit-chat-card*`; `.kit-panel*` belongs to `KitPanel`.
 
 Proof: Dashboard → Cluster settings (`/dashboard/cluster`) is built
-from `KitCard`, `KitField`, `KitSelect`, `KitInput`, `KitTextarea`,
+from `KitPanel`, `KitField`, `KitSelect`, `KitInput`, `KitTextarea`,
 `KitChip`, and `KitButton`. The Schedule Sheet «Активно» switch is
 `KitToggle`. Routes, field names, and save flows do not change.
 
@@ -129,7 +130,7 @@ not restyled.
 ### Form and surface primitives (amend)
 
 - New Host forms use `KitField` with a Kit control. New panels use
-  `KitCard`. Host screens still import Kit components, not Reka parts.
+  `KitPanel`. Host screens still import Kit components, not Reka parts.
 - Existing pages move onto the primitives when they are next touched.
   This amend does not migrate Members, Providers, the closet fields, or
   the Host sidebar.

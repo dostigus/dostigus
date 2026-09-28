@@ -5,7 +5,7 @@
       <p>{{ $t('dashboard.cluster.lead') }}</p>
     </header>
 
-    <KitCard
+    <KitPanel
       as="form"
       :title="$t('settings.other.locale.title')"
       :description="$t('settings.other.locale.hint')"
@@ -39,9 +39,9 @@
           {{ localeSaving ? $t('common.saving') : $t('settings.other.locale.save') }}
         </KitButton>
       </template>
-    </KitCard>
+    </KitPanel>
 
-    <KitCard
+    <KitPanel
       as="form"
       :title="$t('settings.other.timezone.title')"
       :description="$t('settings.other.timezone.hint')"
@@ -76,9 +76,9 @@
           {{ timezoneSaving ? $t('common.saving') : $t('settings.other.timezone.save') }}
         </KitButton>
       </template>
-    </KitCard>
+    </KitPanel>
 
-    <KitCard
+    <KitPanel
       as="form"
       :title="$t('settings.other.allowlist.title')"
       :description="$t('settings.other.allowlist.hint')"
@@ -114,14 +114,14 @@
           {{ allowlistSaving ? $t('common.saving') : $t('settings.other.allowlist.save') }}
         </KitButton>
       </template>
-    </KitCard>
+    </KitPanel>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { KitSelectOption } from '@dostigus/ui-kit'
 import type { HostLocale } from '@dostigus/ui-kit/locale'
-import { KitButton, KitCard, KitChip, KitField, KitInput, KitSelect, KitTextarea } from '@dostigus/ui-kit'
+import { KitButton, KitChip, KitField, KitInput, KitPanel, KitSelect, KitTextarea } from '@dostigus/ui-kit'
 import { HOST_LOCALES, isHostLocale } from '@dostigus/ui-kit/locale'
 import { hostStatusCopy } from '../../utils/host-status-copy'
 

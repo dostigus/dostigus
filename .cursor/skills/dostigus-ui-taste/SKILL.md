@@ -15,7 +15,7 @@ Host source of truth, in precedence order:
    `--sheet` `#212121`, `--card` / `--bg-chat` `#000000`, `--accent`
    `#F25630`, `--text` / `--text-muted`, `--line`, `--radius-card`,
    `--radius-bubble`, `--radius`. Font is Nunito.
-2. The Kit in `packages/ui-kit` (`kit.css`, `KitButton`, `KitCard`,
+2. The Kit in `packages/ui-kit` (`kit.css`, `KitButton`, `KitPanel`,
    `KitField`, `KitInput`, `KitTextarea`, `KitSelect`, `KitToggle`,
    `KitChip`, `KitListRow`, the Sheet shell, Brand, Bot marks).
 3. Reka UI under the Kit. Host screens import Kit components, not Reka
@@ -25,8 +25,8 @@ Host source of truth, in precedence order:
    shell records they link (0014, 0015, 0038).
 5. Taste v2, only where it does not conflict with 1 to 4.
 
-Terms come from [`CONTEXT.md`](../../../CONTEXT.md). `KitCard` is a
-surface panel; a **Card** is inline Chat UI (`KitChatParts`).
+Terms come from [`CONTEXT.md`](../../../CONTEXT.md). `KitPanel` is the
+page surface; a **Card** is inline Chat UI (`KitChatParts`).
 
 ## Design Read (every UI change)
 

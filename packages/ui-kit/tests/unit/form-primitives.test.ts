@@ -3,11 +3,11 @@ import { expect, it } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { uiKitComponents } from '../../src/components'
-import KitCard from '../../src/components/KitCard.vue'
 import KitChip from '../../src/components/KitChip.vue'
 import KitField from '../../src/components/KitField.vue'
 import KitInput from '../../src/components/KitInput.vue'
 import KitListRow from '../../src/components/KitListRow.vue'
+import KitPanel from '../../src/components/KitPanel.vue'
 import KitSelect from '../../src/components/KitSelect.vue'
 import KitTextarea from '../../src/components/KitTextarea.vue'
 import KitToggle from '../../src/components/KitToggle.vue'
@@ -104,16 +104,16 @@ it('builds the toggle on Reka Switch with a clickable label', async () => {
   expect(off).not.toContain('<label')
 })
 
-it('titles a card, names its landmark, and keeps actions in a footer', async () => {
-  const html = await render(KitCard, { as: 'form', title: 'Cluster timezone', description: 'Schedules use this wall clock.' }, {
+it('titles a panel, names its landmark, and keeps actions in a footer', async () => {
+  const html = await render(KitPanel, { as: 'form', title: 'Cluster timezone', description: 'Schedules use this wall clock.' }, {
     default: () => h('p', 'body'),
     actions: () => h('button', 'Save'),
   })
   expect(html.startsWith('<form')).toBe(true)
   const titleId = attr(html, /<h2[^>]*>/, 'id')
   expect(attr(html, /<form[^>]*>/, 'aria-labelledby')).toBe(titleId)
-  expect(html).toMatch(new RegExp(`<footer class="kit-card-actions">${MARK}<button>Save</button>${MARK}</footer>`))
-  const bare = await render(KitCard, {}, { default: () => 'x' })
+  expect(html).toMatch(new RegExp(`<footer class="kit-panel-actions">${MARK}<button>Save</button>${MARK}</footer>`))
+  const bare = await render(KitPanel, {}, { default: () => 'x' })
   expect(bare).not.toContain('aria-labelledby')
   expect(bare).not.toContain('<header')
 })
@@ -146,7 +146,7 @@ it('lays out a list row with leading, copy, and trailing slots', async () => {
 })
 
 it('exports every primitive from the Kit barrel', () => {
-  for (const name of ['KitCard', 'KitChip', 'KitField', 'KitInput', 'KitListRow', 'KitSelect', 'KitTextarea', 'KitToggle'] as const) {
+  for (const name of ['KitChip', 'KitField', 'KitInput', 'KitListRow', 'KitPanel', 'KitSelect', 'KitTextarea', 'KitToggle'] as const) {
     expect(kit[name]).toBeTruthy()
     expect(Object.values(uiKitComponents)).toContain(name)
   }

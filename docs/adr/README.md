@@ -44,7 +44,7 @@ English.
 | [0010](0010-owner-auth-session.md) | Owner auth and Host session |
 | [0011](0011-chat-mcp-tool-loop.md) | Chat ↔ MCP tool loop (amended 2026-09-24: retry one completion, not the tool loop; slim + expand [0032](0032-chat-llm-context-assembly.md)) |
 | [0012](0012-household-members.md) | Household Members on the Host (Bot visibility: [0024](0024-threads-and-bot-visibility.md)) |
-| [0013](0013-kit-reka-ui-and-brand.md) | Kit on Reka UI, Sheet shell, and Brand (amended 2026-09-28: form and surface primitives `KitCard`, `KitField`, `KitInput`, `KitTextarea`, `KitSelect`, `KitToggle`, `KitChip`, `KitListRow`; proof on Cluster settings) |
+| [0013](0013-kit-reka-ui-and-brand.md) | Kit on Reka UI, Sheet shell, and Brand (amended 2026-09-28: form and surface primitives `KitPanel`, `KitField`, `KitInput`, `KitTextarea`, `KitSelect`, `KitToggle`, `KitChip`, `KitListRow`; proof on Cluster settings) |
 | [0014](0014-host-messenger-shell.md) | Host messenger shell |
 | [0015](0015-host-desktop-shell.md) | Host desktop shell |
 | [0016](0016-bot-avatar-tokens.md) | Bot avatar tokens |

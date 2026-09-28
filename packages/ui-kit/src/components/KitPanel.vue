@@ -1,18 +1,18 @@
 <template>
   <component
     :is="as"
-    class="kit-card"
+    class="kit-panel"
     :aria-labelledby="hasTitle ? titleId : undefined"
   >
     <header
       v-if="hasTitle || description"
-      class="kit-card-head"
+      class="kit-panel-head"
     >
       <component
         :is="`h${headingLevel}`"
         v-if="hasTitle"
         :id="titleId"
-        class="kit-card-title"
+        class="kit-panel-title"
       >
         <slot name="title">
           {{ title }}
@@ -20,17 +20,17 @@
       </component>
       <p
         v-if="description"
-        class="kit-card-desc"
+        class="kit-panel-desc"
       >
         {{ description }}
       </p>
     </header>
-    <div class="kit-card-body">
+    <div class="kit-panel-body">
       <slot />
     </div>
     <footer
       v-if="$slots.actions"
-      class="kit-card-actions"
+      class="kit-panel-actions"
     >
       <slot name="actions" />
     </footer>

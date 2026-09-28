@@ -154,7 +154,7 @@ Host pages assemble from these instead of page-scoped control CSS
 
 | Component | Look |
 |-----------|------|
-| `KitCard` | `--card` panel, `--line` edge, `--radius-card`, 700 title, muted description, actions footer on the right |
+| `KitPanel` | `--card` panel, `--line` edge, `--radius-card`, 700 title, muted description, actions footer on the right |
 | `KitField` | Muted `0.85rem` label above; muted helper and `--accent` error below |
 | `KitInput` / `KitTextarea` | `--bg` fill, `--line` edge, `--radius`; `--accent-dim` focus ring; `--accent` edge when invalid |
 | `KitSelect` | `KitInput` trigger with a chevron; `--card` popover, highlighted option on a 6% `--text` tint, `--accent` check |
@@ -165,7 +165,7 @@ Host pages assemble from these instead of page-scoped control CSS
 Radii follow one rule: panels and Sheets use `--radius-card`, Chat
 bubbles `--radius-bubble`, fields, selects, buttons, rows, and options
 `--radius`; chips, `sm` buttons, switches, icon buttons, and the
-composer are pills. `KitCard` is a surface panel. It is not a Card;
+composer are pills. `KitPanel` is the page surface. It is not a Card;
 Cards stay inline Chat UI in `KitChatParts`.
 
 The Host is charcoal only. There is no light theme.

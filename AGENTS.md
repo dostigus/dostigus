@@ -28,7 +28,7 @@
  ([`.cursor/skills/design-taste-frontend/SKILL.md`](.cursor/skills/design-taste-frontend/SKILL.md)).
  `docs/ui.md` tokens, the Kit, Reka, and ADR 0002 / ADR 0013 win over
  Taste defaults. Build controls from Kit primitives (`KitField`,
- `KitInput`, `KitSelect`, `KitToggle`, `KitCard`, …), not page CSS.
+ `KitInput`, `KitSelect`, `KitToggle`, `KitPanel`, …), not page CSS.
 
 ## Before every commit
 

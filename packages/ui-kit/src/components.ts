@@ -4,13 +4,13 @@
  */
 export const uiKitComponents = {
   button: 'KitButton',
-  card: 'KitCard',
   chatParts: 'KitChatParts',
   chip: 'KitChip',
   dialog: 'KitDialog',
   field: 'KitField',
   input: 'KitInput',
   listRow: 'KitListRow',
+  panel: 'KitPanel',
   select: 'KitSelect',
   sheet: 'KitSheet',
   sheetShell: 'SheetShell',
