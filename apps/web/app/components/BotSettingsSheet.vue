@@ -45,63 +45,73 @@
       class="form"
       @submit.prevent="persistFields"
     >
-      <label class="field">
-        <span>{{ $t('closet.name') }}</span>
-        <input
+      <KitField
+        :label="$t('closet.name')"
+        :error="nameError || undefined"
+        required
+      >
+        <KitInput
           v-model="name"
-          type="text"
           maxlength="120"
           autocomplete="off"
-          required
-          :disabled="!canEdit || saving"
+          :readonly="!canEdit || saving"
           @blur="persistFields"
-        >
-      </label>
-      <label class="field">
-        <span>{{ $t('closet.labelOptional') }}</span>
-        <input
+        />
+      </KitField>
+      <KitField :label="$t('closet.labelOptional')">
+        <KitInput
           v-model="label"
-          type="text"
           maxlength="160"
           autocomplete="off"
           :placeholder="$t('closet.labelPlaceholder')"
-          :disabled="!canEdit || saving"
-          @blur="persistFields"
-        >
-      </label>
-      <label class="field">
-        <span>{{ $t('closet.description') }}</span>
-        <textarea
-          v-model="description"
-          maxlength="2000"
-          rows="5"
-          :placeholder="$t('closet.descriptionPlaceholder')"
-          :disabled="!canEdit || saving"
+          :readonly="!canEdit || saving"
           @blur="persistFields"
         />
-      </label>
+      </KitField>
+      <KitField :label="$t('closet.description')">
+        <KitTextarea
+          v-model="description"
+          maxlength="2000"
+          :rows="5"
+          :placeholder="$t('closet.descriptionPlaceholder')"
+          :readonly="!canEdit || saving"
+          @blur="persistFields"
+        />
+      </KitField>
+      <p
+        v-if="error"
+        class="note"
+        role="alert"
+      >
+        <KitChip tone="warn">
+          {{ error }}
+        </KitChip>
+      </p>
       <section
-        class="schedules"
+        class="group"
         aria-labelledby="schedules-heading"
       >
-        <div class="schedules-head">
+        <div class="group-head">
           <h2 id="schedules-heading">
             {{ $t('closet.schedules') }}
           </h2>
-          <button
-            type="button"
-            class="add"
+          <KitButton
+            variant="ghost"
+            size="sm"
             :aria-label="$t('closet.addSchedule')"
             @click="openCreate"
           >
-            +
-          </button>
+            {{ $t('closet.add') }}
+          </KitButton>
         </div>
         <p
           v-if="schedulesError"
-          class="error"
+          class="note"
+          role="alert"
         >
-          {{ schedulesError }}
+          <KitChip tone="warn">
+            {{ schedulesError }}
+          </KitChip>
         </p>
         <p
           v-else-if="schedulesLoading"
@@ -109,44 +119,37 @@
         >
           {{ $t('closet.loading') }}
         </p>
-        <div
+        <p
           v-else-if="schedules.length === 0"
-          class="schedules-empty"
+          class="hint"
         >
-          <p class="hint">
-            {{ $t('closet.noSchedules') }}
-          </p>
-          <button
-            type="button"
-            class="grant-all"
-            @click="openCreate"
-          >
-            {{ $t('closet.add') }}
-          </button>
-        </div>
+          {{ $t('closet.noSchedules') }}
+        </p>
         <ul
           v-else
-          class="schedules-list"
+          class="rows"
         >
           <li
             v-for="row in schedules"
             :key="row.id"
           >
-            <button
-              type="button"
+            <KitListRow
+              as="button"
               class="schedule-row"
-              :class="{ paused: row.paused }"
+              :title="scheduleDisplayName(row)"
+              :subtitle="scheduleCadenceLabel(row, hostLocale)"
               @click="openDetail(row)"
             >
-              <span class="schedule-copy">
-                <span class="schedule-name">{{ scheduleDisplayName(row) }}</span>
-                <span class="schedule-cadence">{{ scheduleCadenceLabel(row, hostLocale) }}</span>
-              </span>
-              <span
-                class="chevron"
-                aria-hidden="true"
-              >›</span>
-            </button>
+              <template #trailing>
+                <KitChip v-if="row.paused">
+                  {{ $t('schedule.paused') }}
+                </KitChip>
+                <span
+                  class="chevron"
+                  aria-hidden="true"
+                >›</span>
+              </template>
+            </KitListRow>
           </li>
         </ul>
       </section>
@@ -156,11 +159,14 @@
         :can-update="canEdit"
         @applied="onPackApplied"
       />
-      <div
+      <section
         v-if="canEdit"
-        class="field"
+        class="group"
+        aria-labelledby="who-sees-heading"
       >
-        <span>{{ $t('closet.whoSees') }}</span>
+        <h2 id="who-sees-heading">
+          {{ $t('closet.whoSees') }}
+        </h2>
         <p class="hint">
           {{ $t('closet.whoSeesHint') }}
         </p>
@@ -170,35 +176,37 @@
         >
           {{ $t('closet.noOtherMembers') }}
         </p>
-        <label
+        <KitToggle
           v-for="person in sharePeople"
           :key="person.id"
-          class="grant"
-        >
-          <input
-            type="checkbox"
-            :checked="grantedIds.has(person.id)"
-            :disabled="grantBusy"
-            @change="onGrantChange(person.id, $event)"
-          >
-          <span>{{ person.displayName }}</span>
-        </label>
-        <button
-          v-if="sharePeople.length > 0"
-          type="button"
-          class="grant-all"
+          :label="person.displayName"
+          :model-value="grantedIds.has(person.id)"
           :disabled="grantBusy"
-          @click="grantEveryone"
+          @update:model-value="(granted) => toggleGrant(person.id, granted)"
+        />
+        <p
+          v-if="grantError"
+          class="note"
+          role="alert"
         >
-          {{ $t('closet.grantAll') }}
-        </button>
-      </div>
-      <p
-        v-if="error"
-        class="error"
-      >
-        {{ error }}
-      </p>
+          <KitChip tone="warn">
+            {{ grantError }}
+          </KitChip>
+        </p>
+        <div
+          v-if="sharePeople.length > 0"
+          class="group-actions"
+        >
+          <KitButton
+            variant="ghost"
+            size="sm"
+            :disabled="grantBusy"
+            @click="grantEveryone"
+          >
+            {{ $t('closet.grantAll') }}
+          </KitButton>
+        </div>
+      </section>
     </form>
   </KitSheet>
 
@@ -258,20 +266,22 @@
 
       <p
         v-if="appearanceError"
-        class="error"
+        class="note"
+        role="alert"
       >
-        {{ appearanceError }}
+        <KitChip tone="warn">
+          {{ appearanceError }}
+        </KitChip>
       </p>
 
       <div class="actions">
-        <button
-          type="button"
-          class="reset"
+        <KitButton
+          variant="ghost"
           :disabled="appearanceSaving"
           @click="resetAppearance"
         >
           {{ $t('closet.reset') }}
-        </button>
+        </KitButton>
         <KitButton
           type="button"
           :disabled="appearanceSaving"
@@ -324,7 +334,18 @@ import {
   DEFAULT_AVATAR_COLOR,
   DEFAULT_AVATAR_SHAPE,
 } from '@dostigus/shared'
-import { KitBotAvatar, KitButton, KitDialog, KitSheet } from '@dostigus/ui-kit'
+import {
+  KitBotAvatar,
+  KitButton,
+  KitChip,
+  KitDialog,
+  KitField,
+  KitInput,
+  KitListRow,
+  KitSheet,
+  KitTextarea,
+  KitToggle,
+} from '@dostigus/ui-kit'
 import { scheduleCadenceLabel, scheduleDisplayName } from '../utils/schedule-copy'
 
 const props = defineProps<{
@@ -358,6 +379,8 @@ const label = ref('')
 const description = ref('')
 const saving = ref(false)
 const error = ref('')
+const nameError = ref('')
+const grantError = ref('')
 const appearanceOpen = ref(false)
 const draftShape = ref<BotAvatarShape>(DEFAULT_AVATAR_SHAPE)
 const draftColor = ref<BotAccentHex>(DEFAULT_AVATAR_COLOR)
@@ -425,6 +448,8 @@ function syncFromBot() {
   label.value = props.bot.manifest.label
   description.value = props.bot.manifest.description
   error.value = ''
+  nameError.value = ''
+  grantError.value = ''
 }
 
 async function loadSchedules() {
@@ -486,13 +511,8 @@ async function loadGrants() {
     sharePeople.value = people.people.filter((person) => person.role === 'member' && person.id !== creatorId)
     grantedIds.value = new Set(grants.grants.map((grant) => grant.personId))
   } catch {
-    error.value = t('closet.openAccessFailed')
+    grantError.value = t('closet.openAccessFailed')
   }
-}
-
-function onGrantChange(personId: string, event: Event) {
-  const checked = event.target instanceof HTMLInputElement && event.target.checked
-  void toggleGrant(personId, checked)
 }
 
 async function toggleGrant(personId: string, checked: boolean) {
@@ -500,7 +520,7 @@ async function toggleGrant(personId: string, checked: boolean) {
     return
   }
   grantBusy.value = true
-  error.value = ''
+  grantError.value = ''
   try {
     if (checked) {
       await $fetch(`/api/bots/${props.bot.id}/grants`, {
@@ -512,7 +532,7 @@ async function toggleGrant(personId: string, checked: boolean) {
     }
     await loadGrants()
   } catch {
-    error.value = t('closet.saveAccessFailed')
+    grantError.value = t('closet.saveAccessFailed')
     await loadGrants()
   } finally {
     grantBusy.value = false
@@ -524,7 +544,7 @@ async function grantEveryone() {
     return
   }
   grantBusy.value = true
-  error.value = ''
+  grantError.value = ''
   try {
     await $fetch(`/api/bots/${props.bot.id}/grants`, {
       method: 'POST',
@@ -532,7 +552,7 @@ async function grantEveryone() {
     })
     await loadGrants()
   } catch {
-    error.value = t('closet.saveAccessFailed')
+    grantError.value = t('closet.saveAccessFailed')
   } finally {
     grantBusy.value = false
   }
@@ -623,7 +643,7 @@ async function persistFields() {
   const nextDescription = description.value.trim()
   if (!nextName) {
     if (open.value) {
-      error.value = t('closet.needName')
+      nameError.value = t('closet.needName')
       return
     }
     nextName = props.bot.name
@@ -635,10 +655,12 @@ async function persistFields() {
     && nextDescription === props.bot.manifest.description
   ) {
     error.value = ''
+    nameError.value = ''
     return
   }
   saving.value = true
   error.value = ''
+  nameError.value = ''
   try {
     await $fetch(`/api/bots/${props.bot.id}`, {
       method: 'PATCH',
@@ -762,109 +784,62 @@ onUnmounted(() => {
 }
 
 .form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
   margin: 0;
 }
 
-.field {
+.group {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 0.95rem;
+  gap: 0.55rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.group h2 {
+  margin: 0;
   font-size: 0.92rem;
+  font-weight: 700;
   color: var(--text-muted);
 }
 
-input,
-textarea {
-  appearance: none;
-  width: 100%;
-  border: 1px solid var(--line);
-  background: var(--bg-chat);
-  color: var(--text);
-  border-radius: 0.9rem;
-  padding: 0.8rem 0.9rem;
-  font: inherit;
-  font-size: 1.02rem;
-  font-weight: 700;
-}
-
-textarea {
-  min-height: 8.5rem;
-  resize: vertical;
-  line-height: 1.45;
-  font-weight: 600;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: color-mix(in srgb, var(--text-muted) 88%, transparent);
-  font-weight: 600;
-}
-
-input:focus,
-textarea:focus {
-  outline: 1px solid var(--accent);
-}
-
-input:disabled,
-textarea:disabled {
-  opacity: 1;
-  cursor: default;
+.hint,
+.note {
+  margin: 0;
 }
 
 .hint {
-  margin: 0;
+  color: var(--text-muted);
   font-size: 0.82rem;
-  font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-.grant {
+.group-actions {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.55rem;
-  margin-top: 0.45rem;
-  color: var(--text);
-  font-weight: 700;
 }
 
-.grant input {
-  width: 1rem;
-  height: 1rem;
-  margin: 0;
-  accent-color: var(--accent);
+.rows {
+  list-style: none;
+  margin: 0 -0.7rem;
+  padding: 0;
 }
 
-.grant-all {
-  appearance: none;
-  margin-top: 0.7rem;
-  align-self: flex-start;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--text);
-  border-radius: 0.8rem;
-  padding: 0.45rem 0.75rem;
-  font: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
+.rows > li + li {
+  border-top: 1px solid var(--line);
 }
 
-.grant-all:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.grant-all:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.error {
-  margin: 0 0 0.75rem;
-  color: var(--accent);
-  font-size: 0.88rem;
+.chevron {
+  font-size: 1.25rem;
+  line-height: 1;
 }
 
 .editor {
@@ -945,7 +920,7 @@ textarea:disabled {
 .swatch.selected {
   box-shadow:
     0 0 0 2px var(--sheet),
-    0 0 0 3.5px #3a3a3a;
+    0 0 0 3.5px var(--text-muted);
 }
 
 .swatch:disabled {
@@ -964,152 +939,5 @@ textarea:disabled {
   gap: 0.75rem;
   width: 100%;
   margin-top: 0.35rem;
-}
-
-.reset {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0.45rem 0.2rem;
-}
-
-.reset:hover:not(:disabled) {
-  color: var(--text);
-}
-
-.reset:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.reset:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: var(--radius);
-}
-
-.schedules {
-  margin: 0 0 1.15rem;
-}
-
-.schedules-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.55rem;
-}
-
-.schedules-head h2 {
-  margin: 0;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-
-.add {
-  appearance: none;
-  width: 1.85rem;
-  height: 1.85rem;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 0.55rem;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 1.35rem;
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.add:hover {
-  background: color-mix(in srgb, var(--text) 8%, transparent);
-}
-
-.add:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.schedules-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.45rem;
-}
-
-.schedules-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 0.95rem;
-  overflow: hidden;
-  background: var(--bg-chat);
-}
-
-.schedules-list li + li {
-  border-top: 1px solid var(--line);
-}
-
-.schedule-row {
-  appearance: none;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.7rem;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  text-align: left;
-  padding: 0.8rem 0.9rem;
-  font: inherit;
-  cursor: pointer;
-}
-
-.schedule-row:hover {
-  background: color-mix(in srgb, var(--text) 6%, transparent);
-}
-
-.schedule-row.paused {
-  opacity: 0.55;
-}
-
-.schedule-row:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.schedule-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.18rem;
-  min-width: 0;
-}
-
-.schedule-name {
-  font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.schedule-cadence {
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
-.chevron {
-  color: var(--text-muted);
-  font-size: 1.25rem;
-  line-height: 1;
 }
 </style>

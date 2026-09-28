@@ -98,7 +98,7 @@ export const PREVIEW_SHOOT_STATES = {
   },
   'schedule-new': {
     seed: '',
-    clicks: ['.identity', '.schedules .add'],
+    clicks: ['.identity', '#schedules-heading + .kit-button'],
     ready: { selector: '.kit-sheet--end .schedule form', count: 1 },
     viewport: DEFAULT_VIEWPORT,
   },

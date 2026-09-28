@@ -3,44 +3,40 @@
     <p class="id">
       {{ $t('pack.exportId', { author, slug: botSlug }) }}
     </p>
-    <label class="field">
-      <span>{{ $t('pack.exportAuthor') }}</span>
-      <input
-        :value="author"
-        type="text"
+    <KitField :label="$t('pack.exportAuthor')">
+      <KitInput
+        :model-value="author"
         readonly
-      >
-    </label>
-    <label class="field">
-      <span>{{ $t('pack.exportSlug') }}</span>
-      <input
+      />
+    </KitField>
+    <KitField :label="$t('pack.exportSlug')">
+      <KitInput
         v-model="botSlug"
-        type="text"
         autocomplete="off"
         maxlength="32"
-      >
-    </label>
-    <label class="field">
-      <span>{{ $t('pack.exportVersion') }}</span>
-      <input
+      />
+    </KitField>
+    <KitField :label="$t('pack.exportVersion')">
+      <KitInput
         v-model="version"
-        type="text"
         autocomplete="off"
         maxlength="20"
-      >
-    </label>
-    <label class="field">
-      <span>{{ $t('pack.exportReadme') }}</span>
-      <textarea
-        v-model="readme"
-        rows="4"
       />
-    </label>
+    </KitField>
+    <KitField :label="$t('pack.exportReadme')">
+      <KitTextarea
+        v-model="readme"
+        :rows="4"
+      />
+    </KitField>
     <p
       v-if="error"
-      class="error"
+      class="note"
+      role="alert"
     >
-      {{ error }}
+      <KitChip tone="warn">
+        {{ error }}
+      </KitChip>
     </p>
     <div class="actions">
       <KitButton
@@ -63,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { KitButton } from '@dostigus/ui-kit'
+import { KitButton, KitChip, KitField, KitInput, KitTextarea } from '@dostigus/ui-kit'
 
 const props = defineProps<{
   botId: string
@@ -139,36 +135,8 @@ async function confirm() {
   word-break: break-all;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-
-.field input,
-.field textarea {
-  appearance: none;
-  border: 1px solid color-mix(in srgb, var(--text-muted) 28%, transparent);
-  border-radius: 0.7rem;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-weight: 600;
-  padding: 0.55rem 0.7rem;
-}
-
-.field input[readonly] {
-  opacity: 0.75;
-}
-
-.error {
+.note {
   margin: 0;
-  color: var(--accent);
-  font-size: 0.88rem;
-  font-weight: 600;
 }
 
 .actions {

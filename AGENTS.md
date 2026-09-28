@@ -487,7 +487,7 @@ explicit ready marker (not network idle), and writes a PNG under
 | `narrow` | `?settings=1` then `/dashboard/providers` | `.providers h1` | 390×844 |
 | `closet` | `/preview-seed`, click `.identity` | `.kit-sheet--end .mark` | 1440×900 |
 | `closet-end` | same as `closet`, Sheet scrolled to the end | `.kit-sheet--end .mark` | 1440×900 |
-| `schedule-new` | `closet`, then click `.schedules .add` | `.kit-sheet--end .schedule form` | 1440×900 |
+| `schedule-new` | `closet`, then click `#schedules-heading + .kit-button` | `.kit-sheet--end .schedule form` | 1440×900 |
 | `schedule` | `closet`, then click `.schedule-row` | `.kit-sheet--end .schedule .history` | 1440×900 |
 | `member-add` | `/preview-seed`, `+` menu, Add Member | two `.kit-sheet input[type="password"]` | 1440×900 |
 

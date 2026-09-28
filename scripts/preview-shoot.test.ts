@@ -45,7 +45,7 @@ it('names the preview states agents are asked to shoot', () => {
 it('opens Sheets with a click chain after hydration', () => {
   expect(PREVIEW_SHOOT_STATES.closet.clicks).toEqual(['.identity'])
   expect(PREVIEW_SHOOT_STATES['closet-end'].scrollEnd).toBe('.kit-sheet--end')
-  expect(PREVIEW_SHOOT_STATES['schedule-new'].clicks.at(-1)).toBe('.schedules .add')
+  expect(PREVIEW_SHOOT_STATES['schedule-new'].clicks.at(-1)).toBe('#schedules-heading + .kit-button')
   expect(PREVIEW_SHOOT_STATES.schedule.clicks.at(-1)).toBe('.schedule-row')
   expect(PREVIEW_SHOOT_STATES.schedule.hint).toContain('Add one in the Closet first')
   expect(PREVIEW_SHOOT_STATES['member-add'].ready).toEqual({ selector: '.kit-sheet input[type="password"]', count: 2 })
