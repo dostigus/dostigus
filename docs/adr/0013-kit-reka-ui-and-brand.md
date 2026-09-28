@@ -136,6 +136,14 @@ not restyled.
   the Host sidebar.
 - Dashboard Members and Providers moved onto the primitives in
   [#155](https://github.com/dostigus/dostigus/pull/155).
+- The Bot closet Sheet (fields, Schedules, Pack, who can see), Pack
+  export and Pack apply, the Schedule Sheet, and the Host `+` menu Add
+  Member Sheet use `KitField`, `KitInput`, `KitTextarea`, `KitSelect`,
+  `KitToggle`, `KitChip`, `KitListRow`, and `KitButton`. Save errors sit
+  under the field they name and keep the typed value. A Sheet is already
+  the surface, so these Sheets group with a `--line` rule, not a nested
+  `KitPanel`. `KitChip` does not wrap, so a Store or gateway message of
+  unknown length stays a plain `--accent` error line.
 - `KitMenu` (Reka `DropdownMenu`) waits for its first Host menu
   migration (user menu, `+` menu). Those sit in the Host sidebar, which
   this amend does not restyle.
