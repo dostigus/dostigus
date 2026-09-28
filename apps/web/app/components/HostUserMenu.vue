@@ -4,8 +4,8 @@
     :class="{ collapsed }"
   >
     <KitMenu
-      side="top"
-      align="start"
+      :side="menuSide"
+      :align="menuSide === 'bottom' ? 'end' : 'start'"
     >
       <template #trigger>
         <button
@@ -55,11 +55,15 @@
 import { NuxtLink } from '#components'
 import { KitMenu, KitMenuItem, KitMenuSeparator } from '@dostigus/ui-kit'
 
-defineProps<{
+withDefaults(defineProps<{
   collapsed?: boolean
   hideSettings?: boolean
   hideMembers?: boolean
-}>()
+  /** The Dashboard stacked nav puts the button at the top, so it opens down. */
+  menuSide?: 'top' | 'bottom'
+}>(), {
+  menuSide: 'top',
+})
 
 const { user, isOwner } = useHostAccount()
 const { close } = useHostNav()

@@ -168,6 +168,7 @@
         <HostUserMenu
           hide-settings
           hide-members
+          :menu-side="stacked ? 'bottom' : 'top'"
         />
       </div>
     </nav>
@@ -180,6 +181,24 @@
 
 <script setup lang="ts">
 const route = useRoute()
+const stacked = ref(false)
+
+let detachStacked = () => {}
+
+/* Same breakpoint as the stacked nav in the styles below. */
+onMounted(() => {
+  const query = window.matchMedia('(max-width: 46rem)')
+  const apply = () => {
+    stacked.value = query.matches
+  }
+  apply()
+  query.addEventListener('change', apply)
+  detachStacked = () => query.removeEventListener('change', apply)
+})
+
+onUnmounted(() => {
+  detachStacked()
+})
 </script>
 
 <style scoped>

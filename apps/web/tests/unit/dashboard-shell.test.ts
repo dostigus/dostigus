@@ -81,6 +81,9 @@ it('reuses HostUserMenu and omits Settings on the Dashboard rail', () => {
   expect(layout).toContain('hide-settings')
   expect(layout).toContain('hide-members')
   expect(layout).not.toContain('collapsed')
+  expect(layout).toContain(':menu-side="stacked ? \'bottom\' : \'top\'"')
+  expect(layout.match(/max-width: 46rem/g)).toHaveLength(2)
+  expect(menu).toContain(':side="menuSide"')
   expect(layout.indexOf('class="items"')).toBeLessThan(layout.indexOf('class="foot"'))
 })
 
