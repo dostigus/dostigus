@@ -8,6 +8,44 @@ function read(rel: string): string {
   return readFileSync(join(webRoot, rel), 'utf8')
 }
 
+it('builds Members and Providers from Kit form and surface primitives', () => {
+  const members = read('app/pages/dashboard/members.vue')
+  const providers = read('app/pages/dashboard/providers.vue')
+  const add = read('app/components/SettingsProviderAdd.vue')
+  const catalog = read('app/components/SettingsModelCatalog.vue')
+  const shelf = read('app/components/SettingsOpenRouterShelf.vue')
+  const flow = read('app/components/SettingsLlmFlow.vue')
+
+  for (const name of ['KitPanel', 'KitField', 'KitInput', 'KitListRow', 'KitChip', 'KitButton', 'KitSheet']) {
+    expect(members).toContain(`<${name}`)
+  }
+  for (const name of ['KitPanel', 'KitField', 'KitInput', 'KitSelect', 'KitButton']) {
+    expect(providers).toContain(`<${name}`)
+  }
+  for (const name of ['KitPanel', 'KitField', 'KitInput', 'KitChip']) {
+    expect(add).toContain(`<${name}`)
+  }
+  for (const name of ['KitInput', 'KitSelect', 'KitChip']) {
+    expect(catalog).toContain(`<${name}`)
+  }
+  expect(shelf).toContain('<KitChip')
+  expect(flow).toContain('<KitPanel')
+
+  for (const src of [members, providers, add, catalog]) {
+    expect(src).not.toMatch(/<(?:input|select|textarea)\b/)
+    expect(src).not.toMatch(/class="(?:field|ghost|danger|danger-link|chip|kind|link)"/)
+    expect(src).not.toMatch(/^(?:input|select|\.field|\.ghost|\.danger)\b.*\{/m)
+    expect(src).not.toContain('var(--radius-sm)')
+  }
+  for (const src of [members, providers, add, catalog, shelf, flow]) {
+    expect(src).not.toContain('class="kicker"')
+    expect(src).not.toContain('var(--bot-accent')
+  }
+  expect(members).toContain('memberErrorField')
+  expect(providers).toContain('editErrorOn(')
+  expect(add).toContain('providerErrorField')
+})
+
 it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   const mark = read('app/components/HostMark.vue')
   const sidebar = read('app/components/HostSidebar.vue')
