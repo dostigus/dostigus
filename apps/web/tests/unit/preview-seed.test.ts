@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { createBot, getLlmGatewaySettings, listBots, listBotThreadMessages, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, openStore, readKitchen, updateBot } from '@dostigus/db'
+import { createBot, getLlmGatewaySettings, listBots, listBotSkills, listBotThreadMessages, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, openStore, readKitchen, updateBot } from '@dostigus/db'
 import { DEFAULT_BOT_NAME, mentionedRoomBot } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import { OwnerAuthError, registerClusterOwner } from '../../server/utils/owner-auth'
@@ -22,6 +22,15 @@ import {
   PREVIEW_PARTS_PREFIX,
   PREVIEW_PRIVATE_BOT_ID,
   PREVIEW_PRIVATE_THREAD_PREFIX,
+  PREVIEW_README_KITCHEN_BOT_ID,
+  PREVIEW_README_KITCHEN_BOT_NAME,
+  PREVIEW_README_KITCHEN_LINES,
+  PREVIEW_README_KITCHEN_PREFIX,
+  PREVIEW_README_MAIL_BOT_ID,
+  PREVIEW_README_MAIL_BOT_NAME,
+  PREVIEW_README_READER_BOT_ID,
+  PREVIEW_README_READER_BOT_NAME,
+  PREVIEW_README_SKILLS,
   PREVIEW_ROOM_PREFIX,
   PREVIEW_ROOM_REPLY_PREFIX,
   PREVIEW_ROOM_THREAD_ID,
@@ -38,6 +47,7 @@ import {
   previewParts,
   previewPartsRequested,
   previewProvidersRequested,
+  previewReadmeRequested,
   previewRoomsRequested,
   previewScheduleCard,
   previewSchedulesRequested,
@@ -126,6 +136,8 @@ it('keeps the preview seed route closed unless the gate allows it', () => {
   expect(src).toContain('previewSystemRequested')
   expect(src).toContain('previewThreadsRequested')
   expect(src).toContain('previewRoomsRequested')
+  expect(src).toContain('previewReadmeRequested')
+  expect(src).toContain('readme: query.readme')
   expect(src).toContain('previewThreadAsMember')
   expect(src).toContain('previewSeedRedirect({')
   expect(src).toContain('statusCode: 404')
@@ -158,6 +170,7 @@ it('answers HEAD without signing in or writing the Store', () => {
   expect(src).not.toContain('previewSystemRequested')
   expect(src).not.toContain('previewThreadsRequested')
   expect(src).not.toContain('previewRoomsRequested')
+  expect(src).not.toContain('previewReadmeRequested')
   expect(src).not.toContain('/members')
   expect(src).not.toContain('requireOwnerSession')
   expect(src).not.toContain('requireHostSession')
@@ -480,6 +493,9 @@ it('redirects preview seed the way the live smoke checks', () => {
   expect(previewSeedRedirect({ ...chat, activity: 'typing' })).toBe(`/bots/${PREVIEW_BOT_ID}?activity=typing`)
   expect(previewSeedRedirect({ ...chat, hold: '1', activity: 'typing' })).toBe(`/bots/${PREVIEW_BOT_ID}?hold=1&activity=typing`)
   expect(previewSeedRedirect({ ...chat, activity: 'connect', target: 'Expi' })).toBe(`/bots/${PREVIEW_BOT_ID}?activity=connect&target=Expi`)
+  expect(previewSeedRedirect({ ...chat, readme: '1', botId: PREVIEW_README_KITCHEN_BOT_ID })).toBe(`/bots/${PREVIEW_README_KITCHEN_BOT_ID}`)
+  expect(previewSeedRedirect({ ...chat, readme: '1', members: '1', botId: PREVIEW_README_KITCHEN_BOT_ID })).toBe('/dashboard/members')
+  expect(previewSeedRedirect({ ...chat, readme: '1', hold: '1', activity: 'typing', botId: PREVIEW_README_KITCHEN_BOT_ID })).toBe(`/bots/${PREVIEW_README_KITCHEN_BOT_ID}`)
 })
 
 it('treats rooms=1 as the messenger demo', () => {
@@ -542,4 +558,65 @@ it('seeds a direct message and a room with one stored mention reply', async () =
   await ensurePreviewCluster(store, hashPassword, verifyPassword, { rooms: true })
   expect(listThreadMessages(store, PREVIEW_ROOM_THREAD_ID)).toHaveLength(before)
   expect(listThreadMessages(store, PREVIEW_DM_THREAD_ID)).toHaveLength(2)
+})
+
+it('treats readme=1 as the README face seed', () => {
+  expect(previewReadmeRequested('1')).toBe(true)
+  expect(previewReadmeRequested(1)).toBe(true)
+  expect(previewReadmeRequested(['1'])).toBe(true)
+  expect(previewReadmeRequested(undefined)).toBe(false)
+  expect(previewReadmeRequested('true')).toBe(false)
+  expect(previewReadmeRequested('0')).toBe(false)
+})
+
+it('seeds Mail, Kitchen, and Reader with hardcoded Kitchen dinner lines once', async () => {
+  const store = memoryStore()
+  const first = await ensurePreviewCluster(store, hashPassword, verifyPassword, { readme: true })
+  expect(first.botId).toBe(PREVIEW_README_KITCHEN_BOT_ID)
+  expect(stablePreviewBotId(listBots(store))).toBeNull()
+  const names = listBots(store).map((bot) => bot.name).sort()
+  expect(names).toEqual([
+    PREVIEW_README_KITCHEN_BOT_NAME,
+    PREVIEW_README_MAIL_BOT_NAME,
+    PREVIEW_README_READER_BOT_NAME,
+  ].sort())
+  const mail = listBots(store).find((bot) => bot.id === PREVIEW_README_MAIL_BOT_ID)
+  const kitchen = listBots(store).find((bot) => bot.id === PREVIEW_README_KITCHEN_BOT_ID)
+  const reader = listBots(store).find((bot) => bot.id === PREVIEW_README_READER_BOT_ID)
+  expect(mail?.manifest.avatarShape).toBe('owl')
+  expect(mail?.manifest.avatarColor).toBe('#1F7AE5')
+  expect(kitchen?.manifest.avatarShape).toBe('duck')
+  expect(kitchen?.manifest.avatarColor).toBe('#E47134')
+  expect(reader?.manifest.avatarShape).toBe('heron')
+  expect(reader?.manifest.avatarColor).toBe('#8354E6')
+  expect(listBotSkills(store, PREVIEW_README_MAIL_BOT_ID).some((skill) => (
+    skill.id === PREVIEW_README_SKILLS.mail.id
+    && skill.description === PREVIEW_README_SKILLS.mail.description
+  ))).toBe(true)
+  expect(listBotSkills(store, PREVIEW_README_KITCHEN_BOT_ID).some((skill) => (
+    skill.id === PREVIEW_README_SKILLS.kitchen.id
+  ))).toBe(true)
+  expect(listBotSkills(store, PREVIEW_README_READER_BOT_ID).some((skill) => (
+    skill.id === PREVIEW_README_SKILLS.reader.id
+  ))).toBe(true)
+  const kitchenLines = listMessages(store, PREVIEW_README_KITCHEN_BOT_ID)
+  expect(kitchenLines[0]?.role).toBe('assistant')
+  expect(kitchenLines[0]?.content).toContain(PREVIEW_README_KITCHEN_BOT_NAME)
+  const dinner = kitchenLines.slice(1)
+  expect(dinner).toHaveLength(PREVIEW_README_KITCHEN_LINES.length)
+  expect(dinner.map((line) => line.content)).toEqual(
+    PREVIEW_README_KITCHEN_LINES.map((line) => line.content),
+  )
+  expect(dinner.filter((line) => line.role === 'user').every((line) => line.personId === first.user.id)).toBe(true)
+  expect(dinner.at(-1)?.content.startsWith(PREVIEW_README_KITCHEN_PREFIX)).toBe(false)
+  expect(dinner[0]?.content.startsWith(PREVIEW_README_KITCHEN_PREFIX)).toBe(true)
+  expect(dinner.at(-1)?.parts).toEqual(previewKitchenParts())
+  const gateway = getLlmGatewaySettings(store)
+  expect(gateway.providers?.[0]?.id).toBe(PREVIEW_OPENROUTER_PROVIDER_ID)
+
+  await ensurePreviewCluster(store, hashPassword, verifyPassword, { readme: true })
+  expect(listBots(store)).toHaveLength(3)
+  expect(listMessages(store, PREVIEW_README_KITCHEN_BOT_ID)).toHaveLength(kitchenLines.length)
+  expect(listMessages(store, PREVIEW_README_MAIL_BOT_ID)).toHaveLength(1)
+  expect(listMessages(store, PREVIEW_README_READER_BOT_ID)).toHaveLength(1)
 })

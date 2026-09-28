@@ -294,6 +294,18 @@ system Chat lines once on the Owner's bot-thread for Bot `preview`:
 Wake. Compose with `?hold=1`, `?activity=`, and `?parts=1`. Another visit
 does not append those lines again. **HEAD** ignores `?system=1`.
 
+For the public README Chat face, open
+**http://localhost:3000/preview-seed?readme=1**. That GET signs in the
+preview Owner, sets Locale `en`, seeds three fixture Bots (**Mail**,
+**Kitchen**, **Reader**) with distinct flock marks and Kit accents, and
+opens the Kitchen thread with six hardcoded EN dinner lines (plus the
+create greeting). Skills text and Chat lines are fixtures in seed code —
+no LLM call. A second visit does not duplicate Bots or lines. The
+fixture OpenRouter Provider is saved when the Store has none, so the
+quiet-key banner stays off. Fixture Bot `preview` is not created when
+it is still missing. `?members=1` still wins. **HEAD** ignores
+`?readme=1`.
+
 For a direct message and a room, open
 **http://localhost:3000/preview-seed?rooms=1**. That GET signs in the
 preview Owner, seeds the preview Member (same rows as `?threads=1`),
@@ -418,7 +430,9 @@ Bot, that `?tall=1` adds the tall thread once, that GET
 `?parts=1` adds one assistant line with a button once while HEAD ignores
 that query, that `?kitchen=1` adds one Kitchen button once while
 HEAD ignores that query, that `?system=1` adds three system Skill /
-self-settings lines once while HEAD ignores that query, and that `?threads=1` lists Bot `preview` and the Member's Bot for the
+self-settings lines once while HEAD ignores that query, that `?readme=1`
+opens `/bots/readme-kitchen` after seeding Mail, Kitchen, and Reader
+while HEAD ignores that query, and that `?threads=1` lists Bot `preview` and the Member's Bot for the
 Owner while `?threads=1&as=member` opens a different bot-thread on Bot
 `preview`. HEAD ignores `?threads=1`. `?settings=1` lands on `/dashboard`; `?providers=1`
 lands on `/dashboard/providers`; the catalog answers without the key; a
@@ -452,6 +466,7 @@ explicit ready marker (not network idle), and writes a PNG under
 | --- | --- | --- | --- |
 | `chat` | `/preview-seed` | `.bubble` | 1440×900 |
 | `system` | `?system=1` | three `.bubble.system` | 1440×900 |
+| `readme-chat` | `?readme=1` | seven `.bubble` (Kitchen greeting + six dinner lines); no purpose Card; no Vite overlay | 1440×900 |
 | `providers-empty` | `?settings=1` then `/dashboard/providers` | `.providers .add` | 1440×900 |
 | `providers-fixture` | `?providers=1` | `.provider` and shelf cards (`.shelf .card:not(.skeleton)`; not the miss banner) | 1440×900 |
 | `settings-other` | `?settings=1` then `/dashboard/cluster` | `.cluster input[name="timezone"]` | 1440×900 |
@@ -466,6 +481,13 @@ use a fresh file or remove the Provider on the page). Optional
 Missing Host prints a stderr hint to start `pnpm preview:host`.
 Do not invent another `/tmp` CDP capture
 ([#106](https://github.com/dostigus/dostigus/issues/106)).
+
+Literal `@` in `apps/web/i18n/locales/{en,ru}.json` (and the matching
+Kit copies in `packages/ui-kit/locales/`) must be written as `{'@'}`.
+`unplugin-vue-i18n` treats `@Name` as a linked message and paints a
+full-page Vite overlay on `pnpm preview:host`, which `shoot:preview`
+then captures. Keep those two JSON trees byte-identical
+(`locale-parity` in the Kit).
 
 Turn journal harness (no screenshots). The preview Host and the smoke
 share one MCP bearer. The fixed preview token is `preview-agent`:

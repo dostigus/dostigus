@@ -26,6 +26,7 @@ it('names the preview states agents are asked to shoot', () => {
   expect(previewShootStateNames()).toEqual([
     'chat',
     'system',
+    'readme-chat',
     'providers-empty',
     'providers-fixture',
     'settings-other',
@@ -42,6 +43,13 @@ it('reuses preview-seed flags and waits for an explicit ready marker', () => {
   expect(previewSeedPath(PREVIEW_SHOOT_STATES.system)).toBe('/preview-seed?system=1')
   expect(PREVIEW_SHOOT_STATES.system.ready).toEqual({ selector: '.bubble.system', count: 3 })
 
+  expect(previewSeedPath(PREVIEW_SHOOT_STATES['readme-chat'])).toBe('/preview-seed?readme=1')
+  expect(PREVIEW_SHOOT_STATES['readme-chat'].ready).toEqual({
+    selector: '.bubble',
+    count: 7,
+    none: ['.purpose', 'vite-error-overlay'],
+  })
+
   expect(previewSeedPath(PREVIEW_SHOOT_STATES['providers-empty'])).toBe('/preview-seed?settings=1')
   expect(PREVIEW_SHOOT_STATES['providers-empty'].ready.selector).toBe('.providers .add')
 
@@ -49,7 +57,10 @@ it('reuses preview-seed flags and waits for an explicit ready marker', () => {
   expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.selector).toBe('.provider')
   expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.any).toEqual(['.shelf .card:not(.skeleton)'])
   expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.any).not.toContain('.shelf .banner')
-  expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.none).toEqual(['.shelf [aria-busy="true"]'])
+  expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.none).toEqual([
+    '.shelf [aria-busy="true"]',
+    'vite-error-overlay',
+  ])
 
   expect(PREVIEW_SHOOT_STATES['settings-other'].thenPath).toBe('/dashboard/cluster')
   expect(PREVIEW_SHOOT_STATES['settings-other'].ready.selector).toBe('.cluster input[name="timezone"]')
@@ -121,4 +132,6 @@ it('documents shoot:preview next to preview-seed in AGENTS.md', () => {
   expect(agents).toContain('`members`')
   expect(agents).toContain('.shelf .card:not(.skeleton)')
   expect(agents).not.toContain('cards or miss banner')
+  expect(agents).toContain('`readme-chat`')
+  expect(agents).toContain('{\'@\'}')
 })
