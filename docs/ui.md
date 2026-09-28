@@ -161,6 +161,7 @@ Host pages assemble from these instead of page-scoped control CSS
 | `KitToggle` | Pill switch, 22% `--text` track off, `--accent` on, white thumb |
 | `KitChip` | Pill. Status: muted, `ok` (`--live`), `warn` (`--accent`). Choice: `--text`, `--accent` edge on hover, accent-tinted fill when selected |
 | `KitListRow` | `--radius` row, bold title and one muted line, 6% `--text` hover, accent-tinted fill when selected |
+| `KitMenu` | Host trigger; portaled `--card` popover (`--line` edge, `--radius`); `--radius` items, bold label over a muted hint, 6% `--text` highlight, 2px `--accent-dim` keyboard ring, `--accent` label when `danger`, `--line-soft` separator |
 
 Radii follow one rule: panels and Sheets use `--radius-card`, Chat
 bubbles `--radius-bubble`, fields, selects, buttons, rows, and options

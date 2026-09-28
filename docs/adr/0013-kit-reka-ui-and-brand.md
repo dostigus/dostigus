@@ -144,9 +144,15 @@ not restyled.
   the surface, so these Sheets group with a `--line` rule, not a nested
   `KitPanel`. `KitChip` does not wrap, so a Store or gateway message of
   unknown length stays a plain `--accent` error line.
-- `KitMenu` (Reka `DropdownMenu`) waits for its first Host menu
-  migration (user menu, `+` menu). Those sit in the Host sidebar, which
-  this amend does not restyle.
+- `KitMenu` (Reka `DropdownMenu`) with `KitMenuItem` (label, optional
+  muted hint, `danger`, `disabled`, `as` for a link) and
+  `KitMenuSeparator` is in the Kit. The Host `+` menu (`HostPlusMenu`)
+  and the account menu (`HostUserMenu`, Host sidebar and Dashboard rail)
+  use it. The trigger stays Host chrome in the `trigger` slot. The
+  portaled surface is `.kit-popover`, not a nested `KitPanel`. Reka
+  owns keyboard, outside-click close, and focus return; the highlighted
+  item has a 6% `--text` tint and keyboard focus a 2px `--accent-dim`
+  ring. Other Host popovers move onto it when they are next touched.
 - `vitest` compiles Kit SFCs with `@vitejs/plugin-vue` and renders them
   with Vue's server renderer. That test checks the Field wiring, the
   Reka roles, and the barrel.
