@@ -217,12 +217,12 @@ async function saveAllowlist() {
     allowlistMessage.value = result.hosts.length === 0
       ? t('settings.other.allowlist.cleared')
       : t('settings.other.allowlist.saved')
+    await refreshAllowlist()
   } catch (error) {
     allowlistMessage.value = allowlistErrorText(error)
     allowlistMessageError.value = true
   } finally {
     allowlistSaving.value = false
-    await refreshAllowlist()
   }
 }
 
@@ -238,12 +238,12 @@ async function saveTimezone() {
     timezoneData.value = result
     timezoneInput.value = result.timezone.stored ?? ''
     timezoneMessage.value = t('settings.other.timezone.saved')
+    await refreshTimezone()
   } catch (error) {
     timezoneMessage.value = timezoneErrorText(error)
     timezoneMessageError.value = true
   } finally {
     timezoneSaving.value = false
-    await refreshTimezone()
   }
 }
 
