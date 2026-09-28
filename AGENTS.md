@@ -20,8 +20,15 @@
    Members on one Host are in scope
    ([ADR 0012](docs/adr/0012-household-members.md)): the Owner adds Members;
    Members use Bot list and Chat. Settings, Bot create/delete, and Members
-   stay with the Owner. The Cluster has one Owner
-   ([ADR 0010](docs/adr/0010-owner-auth-session.md)).
+ stay with the Owner. The Cluster has one Owner
+ ([ADR 0010](docs/adr/0010-owner-auth-session.md)).
+4. Host or Kit UI work: load
+ [`.cursor/skills/dostigus-ui-taste/SKILL.md`](.cursor/skills/dostigus-ui-taste/SKILL.md)
+ first, then Taste v2
+ ([`.cursor/skills/design-taste-frontend/SKILL.md`](.cursor/skills/design-taste-frontend/SKILL.md)).
+ `docs/ui.md` tokens, the Kit, Reka, and ADR 0002 / ADR 0013 win over
+ Taste defaults. Build controls from Kit primitives (`KitField`,
+ `KitInput`, `KitSelect`, `KitToggle`, `KitPanel`, …), not page CSS.
 
 ## Before every commit
 

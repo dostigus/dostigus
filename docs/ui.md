@@ -15,7 +15,9 @@ These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
 | `--card` | `#000000` | Content cards / page panels on `--bg` |
 | `--text` | `#FFFFFF` | Primary copy |
 | `--text-muted` | `#A4A4A4` | Secondary copy |
-| `--accent` | `#F25630` | Primary actions, `+` create, focus |
+| `--accent` | `#F25630` | Primary actions, `+` create, focus, inline field errors, a Kit switch that is on |
+| `--accent-dim` | `#D94A28` | Kit field focus ring and edge |
+| `--accent-ink` | `#FFF7F3` | Text on an `--accent` fill (solid `KitButton`, a selected `KitChip`) |
 | `--live` | `#3DDC84` | Green live dot on a busy Bot avatar |
 | `--line` | `#333333` | Quiet borders (slightly lighter than `--surface`) |
 | `--line-soft` | `color-mix(in srgb, var(--line) 55%, var(--bg))` (~`#242424`) | Sidebar \| Chat divider, rule above the user button |
@@ -144,6 +146,29 @@ Reka UI `Dialog` is the primitive. The Kit wrappers are:
 | `KitButton` | — | `solid`, `ghost`, or `icon` |
 
 See [ADR 0013](adr/0013-kit-reka-ui-and-brand.md).
+
+## Kit form and surface primitives
+
+Host pages assemble from these instead of page-scoped control CSS
+([ADR 0013](adr/0013-kit-reka-ui-and-brand.md), amended 2026-09-28).
+
+| Component | Look |
+|-----------|------|
+| `KitPanel` | `--card` panel, `--line` edge, `--radius-card`, 700 title, muted description, actions footer on the right |
+| `KitField` | Muted `0.85rem` label above; muted helper and `--accent` error below |
+| `KitInput` / `KitTextarea` | `--bg` fill, `--line` edge, `--radius`; `--accent-dim` focus ring; `--accent` edge when invalid |
+| `KitSelect` | `KitInput` trigger with a chevron; `--card` popover, highlighted option on a 6% `--text` tint, `--accent` check |
+| `KitToggle` | Pill switch, 22% `--text` track off, `--accent` on, white thumb |
+| `KitChip` | Pill. Status: muted, `ok` (`--live`), `warn` (`--accent`). Choice: `--text`, `--accent` edge on hover, accent-tinted fill when selected |
+| `KitListRow` | `--radius` row, bold title and one muted line, 6% `--text` hover, accent-tinted fill when selected |
+
+Radii follow one rule: panels and Sheets use `--radius-card`, Chat
+bubbles `--radius-bubble`, fields, selects, buttons, rows, and options
+`--radius`; chips, `sm` buttons, switches, icon buttons, and the
+composer are pills. `KitPanel` is the page surface. It is not a Card;
+Cards stay inline Chat UI in `KitChatParts`.
+
+The Host is charcoal only. There is no light theme.
 
 ## Brand
 

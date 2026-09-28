@@ -289,7 +289,7 @@
   border-color: color-mix(in srgb, var(--accent, #f25630) 45%, var(--line, #333333));
 }
 
-.kit-card {
+.kit-chat-card {
   flex: 1 0 100%;
   display: flex;
   flex-direction: column;
@@ -301,34 +301,442 @@
   background: color-mix(in srgb, var(--panel, #141414) 92%, transparent);
 }
 
-.kit-card-title,
-.kit-card-body {
+.kit-chat-card-title,
+.kit-chat-card-body {
   margin: 0;
 }
 
-.kit-card-title {
+.kit-chat-card-title {
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 
-.kit-card-body {
+.kit-chat-card-body {
   font-size: 0.95rem;
   line-height: 1.35;
 }
 
-.kit-card-actions {
+.kit-chat-card-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
 }
 
-.kit-card--ok {
+.kit-chat-card--ok {
   border-color: color-mix(in srgb, var(--live, #3ddc84) 45%, var(--line, #333333));
 }
 
-.kit-card--warn {
+.kit-chat-card--warn {
   border-color: color-mix(in srgb, var(--accent, #f25630) 45%, var(--line, #333333));
+}
+
+/* Form and surface primitives. See ADR 0013 (amended 2026-09-28). */
+
+.kit-panel {
+  padding: 1.5rem 1.45rem;
+  border: 1px solid var(--line, #333333);
+  border-radius: var(--radius-card, 1.75rem);
+  background: var(--card, #000000);
+  color: var(--text, #ffffff);
+}
+
+.kit-panel-head {
+  margin-bottom: 1.1rem;
+}
+
+.kit-panel-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.kit-panel-desc {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted, #a4a4a4);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.kit-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.kit-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+}
+
+.kit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.kit-field-label {
+  color: var(--text-muted, #a4a4a4);
+  font-size: 0.85rem;
+}
+
+.kit-field-hint,
+.kit-field-error {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.kit-field-hint {
+  color: var(--text-muted, #a4a4a4);
+}
+
+.kit-field-error {
+  color: var(--accent, #f25630);
+  font-weight: 600;
+}
+
+.kit-input {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--line, #333333);
+  border-radius: var(--radius, 0.75rem);
+  padding: 0.75rem 0.9rem;
+  background: var(--bg, #121212);
+  color: var(--text, #ffffff);
+  font: inherit;
+  line-height: 1.4;
+}
+
+.kit-input::placeholder {
+  color: var(--text-muted, #a4a4a4);
+  opacity: 1;
+}
+
+.kit-input:hover:not(:disabled, [data-disabled]) {
+  border-color: color-mix(in srgb, var(--text, #ffffff) 18%, var(--line, #333333));
+}
+
+.kit-input:focus,
+.kit-select[data-state='open'] {
+  outline: 1px solid var(--accent-dim, #d94a28);
+  outline-offset: 0;
+  border-color: var(--accent-dim, #d94a28);
+}
+
+.kit-input[aria-invalid='true'] {
+  border-color: var(--accent, #f25630);
+}
+
+.kit-input:disabled,
+.kit-input[data-disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.kit-input--multiline {
+  min-height: 6.5rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.kit-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Reka sets data-placeholder on the value during SSR even when a value is chosen. */
+.kit-select-value--empty {
+  color: var(--text-muted, #a4a4a4);
+}
+
+.kit-select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kit-select-chevron {
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-right: 0.15rem;
+  border: solid var(--text-muted, #a4a4a4);
+  border-width: 0 1.5px 1.5px 0;
+  transform: translateY(-25%) rotate(45deg);
+}
+
+.kit-select[data-state='open'] .kit-select-chevron {
+  transform: translateY(20%) rotate(-135deg);
+}
+
+/* Portaled popovers sit above Sheets (z 21) and modals (z 31). */
+.kit-popover {
+  z-index: 40;
+  padding: 0.35rem;
+  border: 1px solid var(--line, #333333);
+  border-radius: var(--radius, 0.75rem);
+  background: var(--card, #000000);
+  color: var(--text, #ffffff);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 38%);
+}
+
+.kit-select-content {
+  min-width: var(--reka-select-trigger-width);
+  max-height: min(20rem, var(--reka-select-content-available-height, 20rem));
+  overflow: hidden;
+}
+
+.kit-select-viewport {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.kit-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: var(--radius, 0.75rem);
+  padding: 0.48rem 0.7rem;
+  font-size: 0.92rem;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.kit-option[data-highlighted] {
+  background: color-mix(in srgb, var(--text, #ffffff) 6%, transparent);
+}
+
+.kit-option[data-state='checked'] {
+  font-weight: 700;
+}
+
+.kit-option[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kit-option-check {
+  flex: none;
+  width: 0.35rem;
+  height: 0.65rem;
+  margin-right: 0.2rem;
+  border: solid var(--accent, #f25630);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-15%) rotate(45deg);
+}
+
+.kit-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.kit-toggle-label {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.kit-toggle--disabled .kit-toggle-label {
+  cursor: not-allowed;
+}
+
+.kit-switch {
+  appearance: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  width: 2.7rem;
+  height: 1.6rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text, #ffffff) 22%, transparent);
+  cursor: pointer;
+}
+
+.kit-switch[data-state='checked'] {
+  background: var(--accent, #f25630);
+}
+
+.kit-switch:focus-visible {
+  outline: 2px solid var(--accent, #f25630);
+  outline-offset: 2px;
+}
+
+.kit-switch:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.kit-switch-thumb {
+  display: block;
+  width: 1.28rem;
+  height: 1.28rem;
+  border-radius: 999px;
+  background: var(--text, #ffffff);
+  transform: translateX(0.16rem);
+  transition: transform 160ms ease;
+}
+
+.kit-switch-thumb[data-state='checked'] {
+  transform: translateX(1.26rem);
+}
+
+.kit-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  border: 1px solid var(--line, #333333);
+  border-radius: 999px;
+  padding: 0.18rem 0.65rem;
+  background: transparent;
+  color: var(--text-muted, #a4a4a4);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.kit-chip--ok {
+  color: var(--live, #3ddc84);
+  border-color: color-mix(in srgb, var(--live, #3ddc84) 45%, var(--line, #333333));
+}
+
+.kit-chip--warn {
+  color: var(--accent, #f25630);
+  border-color: color-mix(in srgb, var(--accent, #f25630) 45%, var(--line, #333333));
+}
+
+button.kit-chip {
+  appearance: none;
+  padding: 0.4rem 0.85rem;
+  color: var(--text, #ffffff);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.kit-chip:hover:not(:disabled, [data-selected]) {
+  border-color: var(--accent, #f25630);
+}
+
+button.kit-chip[data-selected] {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--accent, #f25630) 22%, var(--surface, #262626));
+  color: var(--accent-ink, #fff7f3);
+}
+
+button.kit-chip:focus-visible {
+  outline: 2px solid var(--accent, #f25630);
+  outline-offset: 2px;
+}
+
+button.kit-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.kit-row {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-radius: var(--radius, 0.75rem);
+  padding: 0.55rem 0.7rem;
+  background: transparent;
+  color: var(--text, #ffffff);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.kit-row--interactive {
+  cursor: pointer;
+}
+
+.kit-row--interactive:hover {
+  background: color-mix(in srgb, var(--text, #ffffff) 6%, transparent);
+}
+
+.kit-row[data-selected] {
+  background: color-mix(in srgb, var(--accent, #f25630) 16%, var(--surface, #262626));
+}
+
+.kit-row--interactive:focus-visible {
+  outline: 2px solid var(--accent, #f25630);
+  outline-offset: -2px;
+}
+
+.kit-row:disabled,
+.kit-row[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.kit-row-leading,
+.kit-row-trailing {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.kit-row-trailing {
+  color: var(--text-muted, #a4a4a4);
+  font-size: 0.84rem;
+}
+
+.kit-row-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.kit-row-title,
+.kit-row-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kit-row-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.kit-row-subtitle {
+  color: var(--text-muted, #a4a4a4);
+  font-size: 0.84rem;
 }
 
 .kit-sticker {
@@ -389,5 +797,9 @@
   .kit-dialog,
   .kit-sheet {
     animation: none;
+  }
+
+  .kit-switch-thumb {
+    transition: none;
   }
 }

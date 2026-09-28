@@ -21,6 +21,13 @@ export default antfu(
     },
   },
   {
-    ignores: ['.github/**', '.nuxt/**', '.output/**', 'dist/**'],
+    ignores: [
+      '.github/**',
+      '.nuxt/**',
+      '.output/**',
+      'dist/**',
+      // Vendored Taste v2 upstream. Keep its bytes identical to the source.
+      '.cursor/skills/design-taste-frontend/**',
+    ],
   },
 )

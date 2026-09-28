@@ -26,6 +26,7 @@ catalog:
   '@nuxtjs/i18n': ^10.6.0
   '@nuxtjs/mcp-toolkit': ^0.18.0
   '@types/node': ^24.3.0
+  '@vitejs/plugin-vue': ^6.0.9
   drizzle-kit: ^0.31.10
   drizzle-orm: ^0.45.2
   eslint: ^9.36.0

@@ -167,11 +167,13 @@ a button and a status as Kit parts on an assistant bubble
 Host-injected Card for a Schedule change
 ([ADR 0030](docs/adr/0030-chat-cards-module-catalog.md)). A table and
 other Card kinds stay later. An Artifact on a message is not a Card.
+The Kit page surface `KitPanel` (Dashboard sections on `--card`) is not
+a Card; Cards render through `KitChatParts`.
 _Avoid_: widget, embed, attachment (unqualified; that word is the
-Artifact join, not a Card).
+Artifact join, not a Card), `KitPanel` for Chat UI.
 
 **Chat Card**:
-A Kit Card the Host injects in the thread after a successful Schedule
+A Card the Host injects in the thread after a successful Schedule
 change. Stored as one assistant message part (`kind: card`) so reload
 keeps it. Card kind is `schedule`. Not a system line and not a closet
 control. Pause and Изменить open Sheet id `schedule`, the same detail
@@ -196,7 +198,10 @@ iframe as the Sheet, author Vue / Kit in a Pack.
 **Kit**:
 Shared design system / building blocks the Host renders. Bots do not ship
 custom CSS apps. Locale dictionaries the Host uses live with the Kit
-([ADR 0037](docs/adr/0037-host-ui-i18n.md)).
+([ADR 0037](docs/adr/0037-host-ui-i18n.md)). Form and surface
+primitives (`KitPanel`, `KitField`, `KitInput`, `KitTextarea`,
+`KitSelect`, `KitToggle`, `KitChip`, `KitListRow`) are Kit parts Host
+pages assemble from ([ADR 0013](docs/adr/0013-kit-reka-ui-and-brand.md)).
 _Avoid_: theme, CSS app, per-bot design system.
 
 **Locale dictionary**:

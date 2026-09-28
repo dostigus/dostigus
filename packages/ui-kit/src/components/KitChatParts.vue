@@ -24,18 +24,18 @@
       </KitButton>
       <article
         v-else-if="part.kind === 'card'"
-        class="kit-card"
-        :class="`kit-card--${part.tone}`"
+        class="kit-chat-card"
+        :class="`kit-chat-card--${part.tone}`"
       >
-        <p class="kit-card-title">
+        <p class="kit-chat-card-title">
           {{ part.title }}
         </p>
-        <p class="kit-card-body">
+        <p class="kit-chat-card-body">
           {{ part.body }}
         </p>
         <div
           v-if="part.actions.length"
-          class="kit-card-actions"
+          class="kit-chat-card-actions"
         >
           <KitButton
             v-for="(action, actionIndex) in part.actions"

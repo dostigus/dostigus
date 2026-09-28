@@ -24,19 +24,14 @@
       class="form"
       @submit.prevent="creating ? create() : persistFields()"
     >
-      <label
+      <KitToggle
         v-if="!creating"
         class="switch-row"
-      >
-        <span>{{ $t('schedule.active') }}</span>
-        <input
-          type="checkbox"
-          role="switch"
-          :checked="!paused"
-          :disabled="busy"
-          @change="setPaused(!paused)"
-        >
-      </label>
+        :label="$t('schedule.active')"
+        :model-value="!paused"
+        :disabled="busy"
+        @update:model-value="(active) => setPaused(!active)"
+      />
 
       <label class="field">
         <span>{{ $t('schedule.nameOptional') }}</span>
@@ -206,7 +201,7 @@
 </template>
 
 <script setup lang="ts">
-import { KitButton } from '@dostigus/ui-kit'
+import { KitButton, KitToggle } from '@dostigus/ui-kit'
 import {
   SCHEDULE_NAME_MAX,
   SCHEDULE_WAKE_MAX,
@@ -592,37 +587,6 @@ select:focus {
   padding: 0.8rem 0.95rem;
   color: var(--text);
   font-weight: 700;
-}
-
-.switch-row input {
-  width: 2.7rem;
-  height: 1.6rem;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--text) 22%, transparent);
-  cursor: pointer;
-  position: relative;
-}
-
-.switch-row input:checked {
-  background: #34c759;
-}
-
-.switch-row input::after {
-  content: '';
-  position: absolute;
-  top: 0.16rem;
-  left: 0.16rem;
-  width: 1.28rem;
-  height: 1.28rem;
-  border-radius: 999px;
-  background: #fff;
-  transition: transform 0.16s ease;
-}
-
-.switch-row input:checked::after {
-  transform: translateX(1.1rem);
 }
 
 .meta {
