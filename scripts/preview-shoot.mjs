@@ -83,7 +83,42 @@ export const PREVIEW_SHOOT_STATES = {
     ready: { selector: '.providers h1', count: 1 },
     viewport: NARROW_VIEWPORT,
   },
+  'closet': {
+    seed: '',
+    clicks: ['.identity'],
+    ready: { selector: '.kit-sheet--end .mark', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'closet-end': {
+    seed: '',
+    clicks: ['.identity'],
+    ready: { selector: '.kit-sheet--end .mark', count: 1 },
+    scrollEnd: '.kit-sheet--end',
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'schedule-new': {
+    seed: '',
+    clicks: ['.identity', '.schedules .add'],
+    ready: { selector: '.kit-sheet--end .schedule form', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'schedule': {
+    seed: '',
+    clicks: ['.identity', '.schedule-row'],
+    ready: { selector: '.kit-sheet--end .schedule .history', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'schedule opens the first Schedule on Bot preview. Add one in the Closet first (Schedules, +).',
+  },
+  'member-add': {
+    seed: '',
+    clicks: ['.plus-wrap .chrome', '.plus-menu .plus-item:last-child'],
+    ready: { selector: '.kit-sheet input[type="password"]', count: 2 },
+    viewport: DEFAULT_VIEWPORT,
+  },
 }
+
+/** Sheets animate in for 180ms. Wait past that before the capture. */
+const CLICK_SETTLE_MS = 400
 
 const REQUEST_MS = 15_000
 const CHROME_READY_MS = 20_000
@@ -95,8 +130,9 @@ export function previewShootStateNames() {
 export function previewShootUsage() {
   const names = previewShootStateNames().join(', ')
   return [
-    'usage: pnpm shoot:preview <state>',
+    'usage: pnpm shoot:preview <state> [--narrow]',
     `states: ${names}`,
+    '--narrow shoots the state at 390x844 and writes <state>-narrow.png.',
     'Needs a running Host: pnpm preview:host',
     'Then open http://localhost:3000/ (not 127.0.0.1).',
     'PREVIEW_SMOKE_URL (default http://localhost:3000), PREVIEW_SHOOT_DIR (default .preview-shots), CHROME_PATH.',
@@ -112,11 +148,14 @@ export function missingChromeMessage() {
   return 'preview-shoot: no Chrome/Chromium on PATH. Set CHROME_PATH to google-chrome or chromium.'
 }
 
-export function resolvePreviewShootState(name) {
+export function resolvePreviewShootState(name, { narrow = false } = {}) {
   const key = String(name ?? '').trim()
   const state = PREVIEW_SHOOT_STATES[key]
   if (!state) {
     return null
+  }
+  if (narrow && state.viewport !== NARROW_VIEWPORT) {
+    return { ...state, name: `${key}-narrow`, viewport: NARROW_VIEWPORT }
   }
   return { name: key, ...state }
 }
@@ -452,6 +491,48 @@ async function waitForReady(cdp, sessionId, ready, waitMs, hint) {
   fail(`preview-shoot: ready marker ${ready.selector} did not appear.${extra}`)
 }
 
+/** A click before hydration hits server HTML with no handler, so wait for Nuxt first. */
+export function buildClickExpression(selector) {
+  return `(() => {
+    const nuxt = document.querySelector('#__nuxt')?.__vue_app__?.config.globalProperties.$nuxt
+    if (!nuxt || nuxt.isHydrating) {
+      return false
+    }
+    const node = document.querySelector(${JSON.stringify(selector)})
+    if (!node) {
+      return false
+    }
+    node.click()
+    return true
+  })()`
+}
+
+export function buildScrollEndExpression(selector) {
+  return `(() => {
+    const node = document.querySelector(${JSON.stringify(selector)})
+    if (node) {
+      node.scrollTop = node.scrollHeight
+    }
+  })()`
+}
+
+async function clickWhenReady(cdp, sessionId, selector, waitMs) {
+  const expression = buildClickExpression(selector)
+  const deadline = Date.now() + waitMs
+  while (Date.now() <= deadline) {
+    const result = await cdp.send('Runtime.evaluate', {
+      expression,
+      returnByValue: true,
+    }, sessionId)
+    if (result.result?.value === true) {
+      await sleep(CLICK_SETTLE_MS)
+      return
+    }
+    await sleep(150)
+  }
+  fail(`preview-shoot: click target ${selector} did not appear.`)
+}
+
 async function capturePng(cdp, sessionId) {
   const shot = await cdp.send('Page.captureScreenshot', {
     format: 'png',
@@ -467,7 +548,7 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     console.error(previewShootUsage())
     process.exit(name ? 0 : 2)
   }
-  const state = resolvePreviewShootState(name)
+  const state = resolvePreviewShootState(name, { narrow: argv.includes('--narrow') })
   if (!state) {
     console.error(previewShootUsage())
     fail(`preview-shoot: unknown state ${name}`)
@@ -500,7 +581,16 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     if (state.thenPath) {
       await navigate(cdp, sessionId, `${base}${state.thenPath}`)
     }
+    for (const selector of state.clicks ?? []) {
+      await clickWhenReady(cdp, sessionId, selector, waitMs)
+    }
     await waitForReady(cdp, sessionId, state.ready, waitMs, state.hint)
+    if (state.scrollEnd) {
+      await cdp.send('Runtime.evaluate', { expression: buildScrollEndExpression(state.scrollEnd) }, sessionId)
+    }
+    if (state.clicks?.length) {
+      await sleep(CLICK_SETTLE_MS)
+    }
     const png = await capturePng(cdp, sessionId)
     await mkdir(dirname(outPath), { recursive: true })
     await writeFile(outPath, png)
