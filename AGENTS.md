@@ -9,7 +9,10 @@
    Module package, Store, Artifact, MCP surface, Job, Apply, LLM gateway,
    Provider, Policy, Model tier, Household, Share link, Dashboard.**
    Prefer **Host** (Host shell is a synonym). Prefer **MCP surface** (MCP
-   contract is its interface definition). Pack ≠ Bot ≠ Module package. Avoid
+   contract is its interface definition). Pack ≠ Bot ≠ Module package.
+   Closet Import accepts a file or a public `.zip` URL / https git
+   (shallow), preview → confirm
+   ([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)). Avoid
    bare “cloud agent” — use Builder. Do not invent synonyms. All repo docs are
    **English only**.
 3. Stay inside SPEC scope. Do not implement agent runtime, Meal port, Builder
@@ -204,6 +207,9 @@ page routes. The OpenRouter catalog is
 First visit creates the Cluster Owner; later visits sign in. The Owner opens
 **Members** to add a Member (display name, email or username, password). A
 Member signs in and uses Bot list and Chat. Dashboard stays with the Owner.
+Closet **Import** accepts a file or a public `.zip` URL / https git
+(shallow), preview → confirm
+([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)).
 
 ### Host UI / pane width
 
