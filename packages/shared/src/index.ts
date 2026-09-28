@@ -303,6 +303,31 @@ export {
   slugifyPackPart,
   transliterateCyrillic,
 } from './pack'
+export {
+  detectPackRemoteSource,
+  isZipContentType,
+  PACK_REMOTE_CLONE_FAILED,
+  PACK_REMOTE_GIT_AUTH,
+  PACK_REMOTE_GIT_HTTPS,
+  PACK_REMOTE_HINT,
+  PACK_REMOTE_MAX_BYTES,
+  PACK_REMOTE_PATH,
+  PACK_REMOTE_REF,
+  PACK_REMOTE_TIMEOUT,
+  PACK_REMOTE_TIMEOUT_MS,
+  PACK_REMOTE_TOO_LARGE,
+  PACK_REMOTE_ZIP_FETCH,
+  PACK_REMOTE_ZIP_ONLY,
+  type PackFileSource,
+  type PackGitSource,
+  type PackRemoteSource,
+  type PackSource,
+  type PackUrlSource,
+  parsePackSource,
+  pathnameLooksLikeZip,
+  sanitizePackGitPath,
+  sanitizePackGitRef,
+} from './pack-source'
 export { crc32, isZipBytes, unzipPackFiles, zipPackFiles } from './pack-zip'
 export {
   parseSkillDescription,

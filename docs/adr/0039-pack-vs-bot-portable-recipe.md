@@ -11,6 +11,12 @@
   ref; Apply update owns only Schedules stamped with the previous
   Pack snapshot (Owner-created and unlabeled grandfather rows
   stay).
+- Amended: 2026-09-28 — URL / git Apply is in scope. File Apply
+  and preview / plan stay. URL (non-git) is `.zip` only. Git is
+  https, `git clone --depth 1`, optional path + ref. Destination
+  SSRF matches Host HTTP get. Caps: 25 MB, 60 s. Successful Apply
+  stores snapshot `source` (`file` / `url` / `git`). Host runtime
+  image installs `git`.
 
 Platform git vs Cluster objects stays
 [ADR 0001](0001-platform-git-vs-in-cluster-bot-packages.md).
@@ -80,11 +86,38 @@ exist on a previously installed Pack snapshot.
 
 ### Apply / import (day-1)
 
-Sources:
+Sources (one Closet Import flow → the same preview / plan →
+confirm → write):
 
 - local file or folder
-- URL to an archive or raw `pack.json`
-- git repo (optional path / ref; shallow fetch)
+- public URL to a **`.zip` only** (suffix or zip Content-Type)
+- https git remote (`git clone --depth 1`; optional path + ref)
+
+A paste is classified by suffix / Content-Type (`.zip` → zip
+fetch). Otherwise the Host treats it as git when the URL looks
+cloneable: bare `https://github.com/owner/repo` becomes
+`.git`; a GitHub web `…/tree/<ref>/<path>` becomes ref + path.
+Unclear URLs fail with a hint. No raw `pack.json`. No GitHub
+tree HTML as an archive substitute. No SSH, PAT, private auth,
+LFS, or submodules.
+
+Owner Host egress uses the same destination SSRF rules as
+Host HTTP get ([ADR 0031](0031-host-http-get.md)): block
+loopback, private, and link-local. Trust remains preview +
+consent (no domain whitelist). Zip fetch reuses the Bot HTTP
+egress helpers / `DOSTIGUS_HTTP_PROXY` knobs
+([ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
+Caps: **25 MB** archive / working tree, **60 s**, depth 1.
+
+A zip or git checkout may have `pack.json` at the root or a
+single top-level wrapper folder (unwrap).
+
+On successful Apply the installed Pack snapshot stores
+`source: { kind: 'url' | 'git' | 'file', url?, ref?, path? }`.
+There is no auto-update / “check for update” UI.
+
+The Host runtime image installs **`git`** so shallow clone
+works.
 
 Trust is preview + consent. There is no repo whitelist on
 day-1.
@@ -190,10 +223,11 @@ Day-1 Host surfaces:
 
 - Export Pack (one-click, or Export Sheet when a trigger above
   fires)
-- Import / Apply from a local file or folder (preview / plan,
-  then confirm)
+- Import / Apply from a local file or folder, a public `.zip`
+  URL, or an https git remote (one Closet surface, preview /
+  plan, then confirm)
 
-Export Bot backup, URL Apply, and git Apply stay later.
+Export Bot backup stays later.
 
 ## Context
 
@@ -246,10 +280,11 @@ that loads into the Host process.
 
 ### Out of scope
 
-- URL / git Apply.
 - Export Bot backup.
 - Marketplace.
 - Pack `ui/` iframe host.
+- Private packs, SSH, PAT, LFS, submodules, and auto-update
+  from source.
 - Module package Apply and Module package catalog tools.
 - Inventing integration stubs from live secrets / MCP.
 - Multi-bot team Packs.
@@ -292,6 +327,13 @@ that loads into the Host process.
 - Wipe every Schedule on Pack update — rejected. Pack owns
   only provenance-stamped rows from the previous snapshot.
   Owner-created and unlabeled grandfather rows stay.
+- Raw `pack.json` or GitHub tree HTML as a URL Apply source —
+  rejected. URL (non-git) is `.zip` only.
+- SSH, PAT, or private git auth on day-1 — rejected.
+- Domain whitelist as the day-1 URL / git trust model —
+  rejected. Trust is preview + consent plus destination SSRF.
+- Auto-update / “check for update” from stored source —
+  rejected. Provenance only.
 - Import Schedules already enabled — rejected. Templates
   land paused.
 - Merge local Skill / UI edits on Pack update — rejected.

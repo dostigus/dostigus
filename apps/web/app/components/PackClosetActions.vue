@@ -34,6 +34,49 @@
       >
         {{ $t('pack.folder') }}
       </button>
+    </div>
+    <form
+      class="remote"
+      @submit.prevent="previewRemote"
+    >
+      <label class="field">
+        <span class="sr">{{ $t('pack.url') }}</span>
+        <input
+          v-model="remoteUrl"
+          type="url"
+          autocomplete="off"
+          spellcheck="false"
+          :placeholder="$t('pack.urlPlaceholder')"
+          :disabled="previewing"
+        >
+      </label>
+      <div class="remote-extra">
+        <input
+          v-model="remoteRef"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          :placeholder="$t('pack.ref')"
+          :disabled="previewing"
+        >
+        <input
+          v-model="remotePath"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          :placeholder="$t('pack.path')"
+          :disabled="previewing"
+        >
+      </div>
+      <KitButton
+        type="submit"
+        variant="ghost"
+        :disabled="previewing || !remoteUrl.trim()"
+      >
+        {{ previewing ? $t('common.loading') : $t('pack.urlPreview') }}
+      </KitButton>
+    </form>
+    <div class="hidden-inputs">
       <input
         ref="fileInput"
         type="file"
@@ -99,6 +142,7 @@
 <script setup lang="ts">
 import type { PackApplyPlan, PackTree } from '@dostigus/shared'
 import { KitButton, KitSheet } from '@dostigus/ui-kit'
+import { hostStatusCopy } from '../utils/host-status-copy'
 
 type PackExportPreview = {
   author: string
@@ -122,6 +166,9 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const fileInput = ref<HTMLInputElement | null>(null)
 const folderInput = ref<HTMLInputElement | null>(null)
+const remoteUrl = ref('')
+const remoteRef = ref('')
+const remotePath = ref('')
 const exporting = ref(false)
 const previewing = ref(false)
 const error = ref('')
@@ -203,8 +250,36 @@ async function onFile(event: Event) {
     pack.value = body.pack
     plan.value = body.plan
     open.value = true
-  } catch {
-    error.value = t('pack.previewFailed')
+  } catch (caught) {
+    error.value = hostStatusCopy(caught, t, 'pack.previewFailed')
+  } finally {
+    previewing.value = false
+  }
+}
+
+async function previewRemote() {
+  const url = remoteUrl.value.trim()
+  if (!url || previewing.value) {
+    return
+  }
+  previewing.value = true
+  error.value = ''
+  try {
+    const body = await $fetch<{ pack: PackTree, plan: PackApplyPlan }>('/api/packs/preview', {
+      method: 'POST',
+      body: {
+        url,
+        ref: remoteRef.value.trim() || undefined,
+        path: remotePath.value.trim() || undefined,
+        target: props.canUpdate ? 'update' : 'create',
+        botId: props.canUpdate ? props.botId : undefined,
+      },
+    })
+    pack.value = body.pack
+    plan.value = body.plan
+    open.value = true
+  } catch (caught) {
+    error.value = hostStatusCopy(caught, t, 'pack.previewFailed')
   } finally {
     previewing.value = false
   }
@@ -238,8 +313,8 @@ async function onFolder(event: Event) {
     pack.value = body.pack
     plan.value = body.plan
     open.value = true
-  } catch {
-    error.value = t('pack.previewFailed')
+  } catch (caught) {
+    error.value = hostStatusCopy(caught, t, 'pack.previewFailed')
   } finally {
     previewing.value = false
   }
@@ -274,6 +349,51 @@ function onApplied(botId: string) {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.remote {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.remote input {
+  appearance: none;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--text-muted) 28%, transparent);
+  border-radius: 0.7rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 0.7rem;
+}
+
+.remote-extra {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 0.45rem;
+}
+
+.hidden-inputs {
+  display: none;
 }
 
 .file {

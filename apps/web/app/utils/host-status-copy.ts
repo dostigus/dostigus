@@ -31,6 +31,15 @@ export const HOST_STATUS_MESSAGE_KEYS = {
   'Cluster timezone must be an IANA name': 'settings.other.timezone.invalid',
   'HTTP allowlist entries are hostnames only': 'settings.other.allowlist.invalid',
   'HTTP allowlist entries are hostnames': 'settings.other.allowlist.invalid',
+  'Paste a .zip URL or an https git remote': 'pack.remoteHint',
+  'Pack URL Apply accepts a .zip file only, not pack.json or a web page': 'pack.remoteZipOnly',
+  'Git Apply uses https remotes only': 'pack.remoteGitHttps',
+  'Git Apply does not use SSH or private auth': 'pack.remoteGitAuth',
+  'blocked destination': 'pack.remoteBlocked',
+  'Pack archive is too large': 'pack.remoteTooLarge',
+  'Pack remote Apply timed out': 'pack.remoteTimeout',
+  'Could not clone the git remote': 'pack.remoteCloneFailed',
+  'Git path is not allowed': 'pack.remotePath',
 } as const
 
 export function hostStatusMessage(error: unknown): string {

@@ -410,7 +410,8 @@ _Avoid_: ticket, task (unqualified).
 
 **Apply**:
 Two distinct writes. **Pack Apply** installs a Pack onto an
-existing Bot or creates a new Bot (preview / plan, then confirm).
+existing Bot or creates a new Bot from a local file, a public
+`.zip` URL, or an https git remote (preview / plan, then confirm).
 The Pack owns Skills (except Host seed Skills) and Schedules that
 carry that snapshot's provenance. Owner-created and unlabeled
 grandfather Schedules stay. See

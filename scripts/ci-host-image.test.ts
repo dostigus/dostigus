@@ -90,6 +90,13 @@ it('builds the Host image for tags and a missing base', () => {
   })).toBe(true)
 })
 
+it('installs git in the Host runtime image for Pack Apply clone', () => {
+  const docker = readFileSync(join(repoRoot, 'Dockerfile'), 'utf8')
+  expect(docker).toContain('FROM node:22-bookworm-slim AS runtime')
+  expect(docker).toMatch(/apt-get install[^\n]*git/)
+  expect(docker).toContain('ca-certificates')
+})
+
 it('wires the Host image job to the docs-only decision', () => {
   const workflow = readFileSync(join(repoRoot, '.github/workflows/ci.yml'), 'utf8')
   expect(workflow).toContain('node scripts/ci-host-image.mjs')

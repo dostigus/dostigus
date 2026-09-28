@@ -110,6 +110,7 @@
 <script setup lang="ts">
 import type { PackApplyPlan, PackTree } from '@dostigus/shared'
 import { KitButton } from '@dostigus/ui-kit'
+import { hostStatusCopy } from '../utils/host-status-copy'
 
 const props = defineProps<{
   pack: PackTree
@@ -149,8 +150,8 @@ async function refreshPlan() {
       },
     })
     plan.value = body.plan
-  } catch {
-    error.value = t('pack.previewFailed')
+  } catch (caught) {
+    error.value = hostStatusCopy(caught, t, 'pack.previewFailed')
   }
 }
 
@@ -170,8 +171,8 @@ async function confirm() {
       },
     })
     emit('applied', body.bot.id)
-  } catch {
-    error.value = t('pack.applyFailed')
+  } catch (caught) {
+    error.value = hostStatusCopy(caught, t, 'pack.applyFailed')
   } finally {
     busy.value = false
   }

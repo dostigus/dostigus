@@ -269,4 +269,5 @@ it('parses a zip upload and a raw pack.json upload', () => {
   expect(parsePackUpload({ bytes: zip, filename: 'ada.notes-1.0.0.zip' }).manifest.id).toBe('ada.notes')
   const json = new TextEncoder().encode(JSON.stringify(sampleManifest()))
   expect(parsePackUpload({ bytes: json, filename: 'pack.json' }).skills).toEqual([])
+  expect(() => parsePackZip(new Uint8Array(8), 4)).toThrow(/too large/)
 })

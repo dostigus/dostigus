@@ -30,7 +30,11 @@ ENV PORT=3000
 ENV NITRO_HOST=0.0.0.0
 ENV NITRO_PORT=3000
 ENV DATABASE_URL=file:/var/lib/dostigus/cluster.sqlite
-RUN mkdir -p /var/lib/dostigus \
+# git: Pack Apply from an https remote (ADR 0039). ca-certificates: https clone.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends git ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /var/lib/dostigus \
   && chown node:node /var/lib/dostigus /app
 COPY --from=build --chown=node:node /app/apps/web/.output /app/.output
 USER node

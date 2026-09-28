@@ -15,6 +15,7 @@ import {
   describePackExport,
   exportBotPack,
   getBot,
+  getInstalledPack,
   insertMessage,
   listBotSkills,
   listMessages,
@@ -206,6 +207,7 @@ it('applies onto a new Bot and onto an existing Bot without wiping Chat', () => 
   const created = applyPack(store, pack, { kind: 'create' }, viewer)
   expect(created.bot.name).toBe('Notes')
   expect(created.bot.installedPackId).toBe('ada.notes@1.0.0')
+  expect(getInstalledPack(store, created.bot.installedPackId!)?.source).toEqual({ kind: 'file' })
   const createdSkillIds = listBotSkills(store, created.bot.id).map((skill) => skill.id)
   expect(createdSkillIds).toContain('notes')
   for (const id of META_SKILL_IDS) {
@@ -343,4 +345,41 @@ it('warns when Host is outside engines.dostigus and refuses a newer packFormat',
       version: '1.0.0',
     }),
   }), { kind: 'create' }, { id: owner.id, role: 'owner' })).toThrow(StoreError)
+})
+
+it('stores url and git Apply source on the installed Pack snapshot', () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const viewer = { id: owner.id, role: 'owner' as const }
+  const fromUrl = applyPack(store, {
+    ...tree(),
+    source: { kind: 'url', url: 'https://cdn.example/ada.notes-1.0.0.zip' },
+  }, { kind: 'create' }, viewer)
+  expect(getInstalledPack(store, fromUrl.bot.installedPackId!)?.source).toEqual({
+    kind: 'url',
+    url: 'https://cdn.example/ada.notes-1.0.0.zip',
+  })
+  const fromGit = applyPack(store, {
+    ...tree({
+      manifest: parsePackManifest({
+        packFormat: PACK_FORMAT,
+        engines: { dostigus: `>=${HOST_ENGINE_VERSION}` },
+        id: 'ada.notes',
+        version: '1.0.1',
+        soul: 'Keep short notes.',
+      }),
+    }),
+    source: {
+      kind: 'git',
+      url: 'https://github.com/ada/notes.git',
+      ref: 'main',
+      path: 'share',
+    },
+  }, { kind: 'update', botId: fromUrl.bot.id }, viewer)
+  expect(getInstalledPack(store, fromGit.bot.installedPackId!)?.source).toEqual({
+    kind: 'git',
+    url: 'https://github.com/ada/notes.git',
+    ref: 'main',
+    path: 'share',
+  })
 })

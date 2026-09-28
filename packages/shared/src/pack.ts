@@ -4,10 +4,14 @@
  */
 
 import type { BotAccentHex, BotAvatarShape } from './bot-avatar'
+import type { PackSource } from './pack-source'
 import type { Skill } from './types'
 import { isBotAvatarShape, normalizeBotAccentHex } from './bot-avatar'
+import { PackInputError, parsePackSource } from './pack-source'
 import { isZipBytes, unzipPackFiles, zipPackFiles } from './pack-zip'
 import { parseSkillDescription, parseSkillId, parseSkillInstructions, SkillInputError } from './skill'
+
+export { PackInputError } from './pack-source'
 
 function asPackSkill<T>(fn: () => T): T {
   try {
@@ -58,16 +62,6 @@ const PATH_PATTERNS: RegExp[] = [
   /(?:^|[\s"'`])(~\/[^\s"'`]+)/g,
 ]
 
-export class PackInputError extends Error {
-  constructor(
-    message: string,
-    readonly statusCode = 400,
-  ) {
-    super(message)
-    this.name = 'PackInputError'
-  }
-}
-
 export type PackIntegrationStub = {
   slug: string
   reason: string
@@ -113,6 +107,7 @@ export type PackTree = {
   schedules: PackScheduleTemplate[]
   uiFiles: PackUiFile[]
   readme: string
+  source?: PackSource
 }
 
 export type PackEngineSeverity = 'ok' | 'warn' | 'block'
@@ -764,8 +759,8 @@ export function packTreeToZip(tree: PackTree): Uint8Array {
   return zipPackFiles(packTreeToFiles(tree))
 }
 
-export function parsePackZip(bytes: Uint8Array): PackTree {
-  if (bytes.length > PACK_ZIP_MAX_BYTES) {
+export function parsePackZip(bytes: Uint8Array, maxBytes = PACK_ZIP_MAX_BYTES): PackTree {
+  if (bytes.length > maxBytes) {
     throw new PackInputError('Pack zip is too large')
   }
   return parsePackTreeFromFiles(unzipPackFiles(bytes))
@@ -1045,5 +1040,6 @@ export function parsePackTreeJson(value: unknown): PackTree {
     schedules,
     uiFiles,
     readme: optionalString(row.readme, PACK_README_MAX, 'README'),
+    source: parsePackSource(row.source),
   }
 }

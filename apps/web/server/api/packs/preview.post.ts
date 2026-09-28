@@ -1,5 +1,11 @@
 import { viewerFromUser } from '../../utils/cluster-bots'
-import { packApplyTargetFromBody, packTreeFromBody, packTreeFromUpload, previewClusterPack } from '../../utils/cluster-packs'
+import {
+  packApplyTargetFromBody,
+  packTreeFromBody,
+  packTreeFromRemote,
+  packTreeFromUpload,
+  previewClusterPack,
+} from '../../utils/cluster-packs'
 
 export default defineEventHandler(async (event) => {
   const session = await requireHostSession(event)
@@ -44,11 +50,29 @@ export default defineEventHandler(async (event) => {
     } else {
       const body = await readBody<{
         pack?: unknown
+        url?: string
+        path?: string
+        ref?: string
         target?: string
         botId?: string
-      }>(event).catch(() => ({ pack: undefined, target: undefined, botId: undefined }))
-      tree = packTreeFromBody(body.pack)
+      }>(event).catch(() => ({
+        pack: undefined,
+        url: undefined,
+        path: undefined,
+        ref: undefined,
+        target: undefined,
+        botId: undefined,
+      }))
       target = packApplyTargetFromBody(body)
+      if (typeof body.url === 'string' && body.url.trim()) {
+        tree = await packTreeFromRemote({
+          url: body.url,
+          path: body.path,
+          ref: body.ref,
+        })
+      } else {
+        tree = packTreeFromBody(body.pack)
+      }
     }
     return withClusterStore((store) => previewClusterPack(store, tree, target, viewer))
   } catch (error) {
