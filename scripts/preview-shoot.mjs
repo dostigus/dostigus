@@ -111,8 +111,20 @@ export const PREVIEW_SHOOT_STATES = {
   },
   'member-add': {
     seed: '',
-    clicks: ['.plus-wrap .chrome', '.plus-menu .plus-item:last-child'],
+    clicks: ['.side-head .chrome[aria-haspopup="menu"]', '.kit-menu .kit-menu-item:last-child'],
     ready: { selector: '.kit-sheet input[type="password"]', count: 2 },
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'plus-menu': {
+    seed: '',
+    clicks: ['.side-head .chrome[aria-haspopup="menu"]'],
+    ready: { selector: '.kit-menu .kit-menu-item', count: 4 },
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'account-menu': {
+    seed: '',
+    clicks: ['.foot .user-btn'],
+    ready: { selector: '.kit-menu .kit-menu-item', count: 3 },
     viewport: DEFAULT_VIEWPORT,
   },
 }

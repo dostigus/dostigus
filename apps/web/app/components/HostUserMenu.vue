@@ -1,106 +1,84 @@
 <template>
   <div
-    ref="rootEl"
     class="user"
     :class="{ collapsed }"
-    @keydown.escape.stop="menuOpen = false"
   >
-    <button
-      type="button"
-      class="user-btn"
-      :aria-expanded="menuOpen"
-      aria-haspopup="menu"
-      :aria-label="$t('host.menu.accountAria', { name: label })"
-      @click="menuOpen = !menuOpen"
+    <KitMenu
+      :side="menuSide"
+      :align="menuSide === 'bottom' ? 'end' : 'start'"
     >
-      <HostBotAvatar
-        :name="label"
-        color="var(--surface)"
-        :size="collapsed ? 'sm' : 'md'"
-      />
-      <span
-        v-if="!collapsed"
-        class="user-name"
-      >{{ label }}</span>
-    </button>
-    <div
-      v-if="menuOpen"
-      class="menu"
-      role="menu"
-    >
-      <NuxtLink
+      <template #trigger>
+        <button
+          type="button"
+          class="user-btn"
+          :aria-label="$t('host.menu.accountAria', { name: label })"
+        >
+          <HostBotAvatar
+            :name="label"
+            color="var(--surface)"
+            :size="collapsed ? 'sm' : 'md'"
+          />
+          <span
+            v-if="!collapsed"
+            class="user-name"
+          >{{ label }}</span>
+        </button>
+      </template>
+      <KitMenuItem
         v-if="isOwner && !hideSettings"
+        :as="NuxtLink"
         to="/dashboard/settings"
-        class="item"
-        role="menuitem"
-        @click="choose"
+        @select="close()"
       >
         {{ $t('host.menu.settings') }}
-      </NuxtLink>
-      <NuxtLink
+      </KitMenuItem>
+      <KitMenuItem
         v-if="isOwner && !hideMembers"
+        :as="NuxtLink"
         to="/dashboard/members"
-        class="item"
-        role="menuitem"
-        @click="choose"
+        @select="close()"
       >
         {{ $t('host.menu.members') }}
-      </NuxtLink>
-      <HostLogoutButton />
-    </div>
+      </KitMenuItem>
+      <KitMenuSeparator v-if="isOwner && !(hideSettings && hideMembers)" />
+      <KitMenuItem
+        :disabled="busy"
+        @select="onLogout"
+      >
+        {{ busy ? $t('host.logout.busy') : $t('host.logout.action') }}
+      </KitMenuItem>
+    </KitMenu>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { NuxtLink } from '#components'
+import { KitMenu, KitMenuItem, KitMenuSeparator } from '@dostigus/ui-kit'
+
+withDefaults(defineProps<{
   collapsed?: boolean
   hideSettings?: boolean
   hideMembers?: boolean
-}>()
+  /** The Dashboard stacked nav puts the button at the top, so it opens down. */
+  menuSide?: 'top' | 'bottom'
+}>(), {
+  menuSide: 'top',
+})
 
 const { user, isOwner } = useHostAccount()
 const { close } = useHostNav()
-const route = useRoute()
-const menuOpen = ref(false)
-const rootEl = ref<HTMLElement | null>(null)
+const { busy, logout } = useHostLogout()
 
 const { t } = useI18n()
 const label = computed(() => user.value?.displayName?.trim() || t('host.menu.account'))
 
-watch(() => route.fullPath, () => {
-  menuOpen.value = false
-})
-
-function choose() {
-  menuOpen.value = false
-  close()
+function onLogout(event: Event) {
+  event.preventDefault()
+  void logout()
 }
-
-function onPointerDown(event: PointerEvent) {
-  if (!menuOpen.value) {
-    return
-  }
-  const root = rootEl.value
-  if (root && event.target instanceof Node && root.contains(event.target)) {
-    return
-  }
-  menuOpen.value = false
-}
-
-onMounted(() => {
-  document.addEventListener('pointerdown', onPointerDown)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('pointerdown', onPointerDown)
-})
 </script>
 
 <style scoped>
-.user {
-  position: relative;
-}
-
 .user-btn {
   display: flex;
   align-items: center;
@@ -147,52 +125,5 @@ onUnmounted(() => {
 .user.collapsed .user-btn {
   justify-content: center;
   padding: 0.25rem;
-}
-
-.menu {
-  position: absolute;
-  left: 0.15rem;
-  right: 0.15rem;
-  bottom: calc(100% + 0.4rem);
-  z-index: 6;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.35rem;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: 0 14px 36px rgb(0 0 0 / 38%);
-}
-
-.user.collapsed .menu {
-  left: 0.2rem;
-  right: auto;
-  width: 12rem;
-}
-
-.item,
-.menu :deep(.logout) {
-  display: block;
-  width: 100%;
-  text-align: left;
-  border: 0;
-  border-radius: var(--radius);
-  padding: 0.48rem 0.7rem;
-  background: transparent;
-  color: var(--text);
-  text-decoration: none;
-  font-size: 0.92rem;
-  cursor: pointer;
-}
-
-.item:hover,
-.menu :deep(.logout:hover:not(:disabled)) {
-  color: var(--text);
-  background: color-mix(in srgb, var(--text) 6%, transparent);
-}
-
-.item.router-link-exact-active {
-  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
 }
 </style>

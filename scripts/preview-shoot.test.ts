@@ -39,6 +39,8 @@ it('names the preview states agents are asked to shoot', () => {
     'schedule-new',
     'schedule',
     'member-add',
+    'plus-menu',
+    'account-menu',
   ])
 })
 
@@ -49,6 +51,9 @@ it('opens Sheets with a click chain after hydration', () => {
   expect(PREVIEW_SHOOT_STATES.schedule.clicks.at(-1)).toBe('.schedule-row')
   expect(PREVIEW_SHOOT_STATES.schedule.hint).toContain('Add one in the Closet first')
   expect(PREVIEW_SHOOT_STATES['member-add'].ready).toEqual({ selector: '.kit-sheet input[type="password"]', count: 2 })
+  expect(PREVIEW_SHOOT_STATES['member-add'].clicks.at(-1)).toBe('.kit-menu .kit-menu-item:last-child')
+  expect(PREVIEW_SHOOT_STATES['plus-menu'].ready).toEqual({ selector: '.kit-menu .kit-menu-item', count: 4 })
+  expect(PREVIEW_SHOOT_STATES['account-menu'].clicks).toEqual(['.foot .user-btn'])
   const click = buildClickExpression('.identity')
   expect(click).toContain('isHydrating')
   expect(click).toContain('querySelector(".identity")')

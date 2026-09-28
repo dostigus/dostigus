@@ -490,6 +490,8 @@ explicit ready marker (not network idle), and writes a PNG under
 | `schedule-new` | `closet`, then click `#schedules-heading + .kit-button` | `.kit-sheet--end .schedule form` | 1440×900 |
 | `schedule` | `closet`, then click `.schedule-row` | `.kit-sheet--end .schedule .history` | 1440×900 |
 | `member-add` | `/preview-seed`, `+` menu, Add Member | two `.kit-sheet input[type="password"]` | 1440×900 |
+| `plus-menu` | `/preview-seed`, click the sidebar `+` | four `.kit-menu .kit-menu-item` | 1440×900 |
+| `account-menu` | `/preview-seed`, click `.foot .user-btn` | three `.kit-menu .kit-menu-item` (Settings, Members, sign out) | 1440×900 |
 
 Sheet states click after Nuxt hydrates (`$nuxt.isHydrating` is false)
 and wait 400ms for the Sheet animation. `pnpm shoot:preview <state> --narrow`

@@ -68,7 +68,8 @@ async function onThreadCreated(thread: { href: string }) {
 }
 
 function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && open.value && !createOpen.value && !threadOpen.value && !memberAddOpen.value) {
+  const inMenu = event.target instanceof Element && event.target.closest('[role="menu"]')
+  if (event.key === 'Escape' && !inMenu && open.value && !createOpen.value && !threadOpen.value && !memberAddOpen.value) {
     close()
   }
 }
