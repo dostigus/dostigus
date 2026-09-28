@@ -46,6 +46,61 @@ it('builds Members and Providers from Kit form and surface primitives', () => {
   expect(add).toContain('providerErrorField')
 })
 
+it('builds Closet, Schedule, and Add Member Sheets from Kit form primitives', () => {
+  const closet = read('app/components/BotSettingsSheet.vue')
+  const schedule = read('app/components/ScheduleSheet.vue')
+  const memberAdd = read('app/components/HostMemberAddSheet.vue')
+  const pack = read('app/components/PackClosetActions.vue')
+  const packExport = read('app/components/PackExportSheet.vue')
+  const packApply = read('app/components/PackApplySheet.vue')
+
+  for (const name of ['KitField', 'KitInput', 'KitTextarea', 'KitToggle', 'KitListRow', 'KitChip', 'KitButton']) {
+    expect(closet).toContain(`<${name}`)
+  }
+  for (const name of ['KitField', 'KitInput', 'KitTextarea', 'KitSelect', 'KitToggle', 'KitChip', 'KitListRow', 'KitButton']) {
+    expect(schedule).toContain(`<${name}`)
+  }
+  for (const name of ['KitField', 'KitInput', 'KitButton']) {
+    expect(memberAdd).toContain(`<${name}`)
+    expect(pack).toContain(`<${name}`)
+    expect(packExport).toContain(`<${name}`)
+  }
+  expect(packExport).toContain('<KitTextarea')
+  expect(packApply).toContain('<KitChip')
+  expect(packApply).toContain('role="radiogroup"')
+
+  for (const src of [closet, schedule, memberAdd, packExport, packApply]) {
+    expect(src).not.toMatch(/<(?:input|select|textarea)\b/)
+  }
+  expect(pack.match(/<input\b/g)).toHaveLength(2)
+  expect(pack.match(/type="file"/g)).toHaveLength(2)
+
+  for (const src of [schedule, memberAdd, pack, packExport, packApply]) {
+    expect(src).not.toMatch(/<button\b/)
+  }
+  const closetButtons = (closet.match(/<button\b[^>]*>/g) ?? []).map((tag) => /class="([^"]+)"/.exec(tag)?.[1])
+  expect(new Set(closetButtons)).toEqual(new Set(['hero', 'pencil', 'shape', 'swatch']))
+
+  for (const src of [closet, schedule, memberAdd, pack, packExport, packApply]) {
+    const style = src.slice(src.indexOf('<style'))
+    expect(src).not.toMatch(/class="(?:field|ghost|danger|danger-link|chip|kind|link|kicker|grant|grant-all|reset|folder|sr)"/)
+    expect(style).not.toMatch(/(?:^|[\s,])(?:input|textarea|select)\b[^{]*\{/m)
+    expect(style).not.toMatch(/^\.(?:field|ghost|danger|grant|grant-all|reset|folder|add|schedule-row|kicker)\b/m)
+    expect(style).not.toContain('accent-color')
+    expect(style).not.toMatch(/#[0-9a-f]{3,8}\b/i)
+    expect(style).not.toContain('var(--surface)')
+    expect(style).not.toContain('var(--bot-accent')
+  }
+
+  expect(schedule).toContain('scheduleErrorField')
+  expect(schedule).toContain('errors.days')
+  expect(schedule).toContain('errors.wakeText')
+  expect(memberAdd).toContain('memberErrorField')
+  expect(memberAdd).toContain('addErrors.confirm')
+  expect(closet).toContain('nameError')
+  expect(pack).toContain('remoteError')
+})
+
 it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   const mark = read('app/components/HostMark.vue')
   const sidebar = read('app/components/HostSidebar.vue')
