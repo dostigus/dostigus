@@ -2,6 +2,15 @@
 
 - Status: accepted
 - Date: 2026-09-26
+- Amended: 2026-09-28 — Export Bot-part slug is RU→lat then
+  slugify (no silent `pack` fallback for a named Bot); Export
+  Sheet only when the Bot-part slug would be empty/`pack`, the
+  Pack id conflicts with another Bot's installed Pack, or this
+  Bot already has `installed_pack_id`; Export omits Host seed
+  Skills; Export stamps the installed Pack snapshot and the Bot
+  ref; Apply update owns only Schedules stamped with the previous
+  Pack snapshot (Owner-created and unlabeled grandfather rows
+  stay).
 
 Platform git vs Cluster objects stays
 [ADR 0001](0001-platform-git-vs-in-cluster-bot-packages.md).
@@ -14,12 +23,8 @@ Host seed, not a Pack
 bindings stay [ADR 0002](0002-host-ui-kit-and-sheets.md) and
 [ADR 0013](0013-kit-reka-ui-and-brand.md).
 
-This record is the decision. It does not change Host, Store, MCP
-surface, or Apply code. The impl PR lands after this docs PR
-merges.
-
 Nick locked the nouns and the export / import shape below on
-2026-09-26.
+2026-09-26, and the Export / Apply polish below on 2026-09-28.
 
 ## Decision
 
@@ -62,9 +67,16 @@ It carries a `packFormat` integer (schema version) and
 blocks when the Host is outside that range.
 
 Public `id` is `author.slug` (not a UUID) plus semver `version`.
+Author is the Owner username (or email local-part), slugified.
+The Bot-part slug is **RU→lat transliteration** (in-repo char
+table: ё→yo, ж→zh, …) then the same slugify. A Bot with a
+non-empty name that only needs translit must not fall back to
+`pack`. Zip filename is `{id}-{version}.zip`.
 
 Integration stubs are slug + reason + required env **names**.
-Never values.
+Never values. Export does not invent stubs from live Bot
+secrets or MCP. `integrations` stays `[]` unless they already
+exist on a previously installed Pack snapshot.
 
 ### Apply / import (day-1)
 
@@ -96,12 +108,22 @@ Cluster Store. The Bot holds a ref to that installed Pack
 version.
 
 Update to a new version: the Pack **owns** Skills and `ui/` in
-the snapshot (overwrite from the Pack). A local override means
-fork the Pack or pin the old version. Never wipe Chat / history
-on update.
+the snapshot (overwrite from the Pack), except Host seed Skills
+(`platform-meta-*` or the Host seed allowlist). A local override
+means fork the Pack or pin the old version. Never wipe Chat /
+history on update.
 
 Schedules from a Pack import **paused** (`enabled: false`). The
-person enables them by hand.
+person enables them by hand. The Pack **owns** Schedules that
+came from a Pack Apply, symmetrical to Skills replace. Those
+rows store `schedules.installed_pack_id` (the snapshot id).
+On create, new Schedules land paused and stamped with the new
+snapshot. On update, remove / replace only Schedules stamped
+with the **previous** Pack snapshot for this Bot. Owner-created
+rows (null provenance) stay. Schedules with no provenance from
+older Hosts are **not** deleted on the first Pack-update
+(grandfather). Preview / plan shows Schedule add / replace /
+remove.
 
 Integrations are stubs only. The Host prompts to bind after
 Apply. Tools do not start unbound.
@@ -112,10 +134,36 @@ Two artifacts. Do not mix them.
 
 | Export | Purpose | Contains | Never contains |
 | --- | --- | --- | --- |
-| **Export Pack** | share / Marketplace / git | scrubbed recipe: soul, Skills, Schedule templates, stubs, optional `ui/`, optional `suggestedAppearance` | Chat, memory, API keys, MCP tokens, computer paths |
+| **Export Pack** | share / Marketplace / git | scrubbed recipe: soul, Skills (not Host seed Skills), Schedule templates (empty live name becomes cadence+time, Locale twin), stubs already on a snapshot, optional `ui/`, optional `suggestedAppearance` | Chat, memory, API keys, MCP tokens, computer paths, Host seed Skills |
 | **Export Bot backup** | Host → Host migrate | may include scrubbed memory / notes + optional Chat history toggle | secrets |
 
 A Bot backup is a separate artifact from a Pack.
+
+A successful Export writes `putInstalledPack` and
+`setBotInstalledPack` so the Bot refs that snapshot. The next
+Export keeps the same id and uses `nextPackVersion` (patch bump)
+unless the Export Sheet overrides version. Snapshot write is not
+Apply-only.
+
+Export omits Host seed Skills: id starts with `platform-meta-`,
+or id is in the Host seed allowlist (`META_SKILL_IDS` in
+`packages/db/src/meta-skills.ts` is the one source of truth).
+Share Packs must not overwrite those Skills on Apply. A weather
+Bot recipe is soul + wake + Host `http_get` at runtime.
+
+### Export Sheet (Host)
+
+Open the Export Sheet **only** when:
+
+1. Without Sheet intervention the Bot-part slug would be empty /
+   `pack`, or
+2. The Pack id would conflict with another Bot's `installed_pack`
+   on the Cluster, or
+3. This Bot already has `installed_pack_id` (re-export).
+
+Otherwise Export is one click (no Sheet). Sheet fields: author
+(read-only), Bot slug part (editable), version (editable),
+optional README. Confirm downloads the zip. Cancel dismisses.
 
 ### Sheet UI in a Pack
 
@@ -136,15 +184,16 @@ This is not arbitrary in-cluster module code
 per-bot SPA or a per-bot domain
 ([ADR 0002](0002-host-ui-kit-and-sheets.md)).
 
-### Host UI (intent only)
+### Host UI
 
-Day-1 Host surfaces, when implemented:
+Day-1 Host surfaces:
 
-- Export Pack
-- Export Bot backup
-- Import / Apply (file + URL + git)
+- Export Pack (one-click, or Export Sheet when a trigger above
+  fires)
+- Import / Apply from a local file or folder (preview / plan,
+  then confirm)
 
-This record does not implement those screens.
+Export Bot backup, URL Apply, and git Apply stay later.
 
 ## Context
 
@@ -176,13 +225,16 @@ that loads into the Host process.
   Host-compatibility fields. Apply warns or blocks outside
   the range.
 - Installed Pack snapshots are Store rows (`id@version`).
-  The Bot stores a ref. This record does not add those
-  columns.
-- Update overwrites Pack-owned Skills and `ui/`. Chat and
-  history stay. Local Skill / UI edits that must survive an
-  update are a fork or a pin, not a silent merge.
-- Imported Schedules start paused. Unbound integration stubs
-  do not run tools.
+  The Bot stores a ref. Export and Apply both write that
+  snapshot.
+- Update overwrites Pack-owned Skills and `ui/`. Host seed
+  Skills stay. Chat and history stay. Local Skill / UI edits
+  that must survive an update are a fork or a pin, not a
+  silent merge.
+- Imported Schedules start paused and stamped with the
+  snapshot id. Update replaces only rows stamped with the
+  previous snapshot. Unbound integration stubs do not run
+  tools.
 - Pack `ui/` is HTML in a sandboxed iframe inside the Sheet
   shell. It does not inject Vue / Kit into the Host and does
   not get Host Node APIs. [ADR 0006](0006-day-1-declarative-modules.md)
@@ -194,10 +246,13 @@ that loads into the Host process.
 
 ### Out of scope
 
-- Runtime / impl, Store migrations, MCP tools, Host UI
-  screens, and Apply code.
-- Multi-bot team Packs.
+- URL / git Apply.
+- Export Bot backup.
+- Marketplace.
+- Pack `ui/` iframe host.
 - Module package Apply and Module package catalog tools.
+- Inventing integration stubs from live secrets / MCP.
+- Multi-bot team Packs.
 - Signing / notarization.
 - Changing the Kitchen seed into a Pack.
 
@@ -222,6 +277,21 @@ that loads into the Host process.
   sandbox, still later. HTML iframe is not that sandbox.
 - UUID as the public Pack id — rejected. Public id is
   `author.slug` plus semver `version`.
+- Silent `pack` Bot-part when the name is Cyrillic — rejected.
+  Transliterate, then slugify.
+- Always open an Export Sheet — rejected. Sheet only for
+  empty/`pack` slug, id conflict, or re-export.
+- Export Host seed Skills — rejected. Share must not
+  overwrite Host meta Skills on Apply.
+- Invent integration stubs from live Bot secrets / MCP —
+  rejected. Leave `integrations: []` unless a snapshot
+  already has them.
+- Write the installed Pack snapshot only on Apply — rejected.
+  Export stamps the snapshot so the next Export can bump
+  version.
+- Wipe every Schedule on Pack update — rejected. Pack owns
+  only provenance-stamped rows from the previous snapshot.
+  Owner-created and unlabeled grandfather rows stay.
 - Import Schedules already enabled — rejected. Templates
   land paused.
 - Merge local Skill / UI edits on Pack update — rejected.

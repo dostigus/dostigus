@@ -133,11 +133,22 @@ export type PackSkillPlanRow = {
   action: PackSkillPlanAction
 }
 
+export type PackSchedulePlanAction = 'add' | 'replace' | 'remove' | 'keep'
+
 export type PackSchedulePlanRow = {
   name: string
   cadence: 'daily' | 'weekly'
   timeLocal: string
   paused: true
+  action: PackSchedulePlanAction
+}
+
+export type PackExistingSchedule = {
+  name: string
+  cadence: 'daily' | 'weekly'
+  timeLocal: string
+  daysOfWeek: Array<'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'> | null
+  installedPackId: string | null
 }
 
 export type PackApplyTarget = {
@@ -145,6 +156,8 @@ export type PackApplyTarget = {
   botId?: string
   botName?: string
   existingSkillIds?: string[]
+  existingSchedules?: PackExistingSchedule[]
+  previousSnapshotId?: string | null
 }
 
 export type PackApplyPlan = {
@@ -199,7 +212,56 @@ export function parsePackVersion(value: unknown): string {
   return value.trim()
 }
 
-export function slugifyPackPart(value: string): string {
+/**
+ * RU→lat for Pack id parts. Char table only — no regex, no npm lib.
+ * ё→yo, ж→zh, х→kh, ц→ts, ч→ch, ш→sh, щ→shch, ю→yu, я→ya.
+ */
+const CYRILLIC_TO_LATIN: Record<string, string> = {
+  а: 'a',
+  б: 'b',
+  в: 'v',
+  г: 'g',
+  д: 'd',
+  е: 'e',
+  ё: 'yo',
+  ж: 'zh',
+  з: 'z',
+  и: 'i',
+  й: 'y',
+  к: 'k',
+  л: 'l',
+  м: 'm',
+  н: 'n',
+  о: 'o',
+  п: 'p',
+  р: 'r',
+  с: 's',
+  т: 't',
+  у: 'u',
+  ф: 'f',
+  х: 'kh',
+  ц: 'ts',
+  ч: 'ch',
+  ш: 'sh',
+  щ: 'shch',
+  ъ: '',
+  ы: 'y',
+  ь: '',
+  э: 'e',
+  ю: 'yu',
+  я: 'ya',
+}
+
+export function transliterateCyrillic(value: string): string {
+  let out = ''
+  for (const char of value) {
+    const mapped = CYRILLIC_TO_LATIN[char.toLowerCase()]
+    out += mapped === undefined ? char : mapped
+  }
+  return out
+}
+
+function slugifyPackPartOrEmpty(value: string): string {
   const parts: string[] = []
   let current = ''
   for (const char of value.toLowerCase()) {
@@ -222,7 +284,35 @@ export function slugifyPackPart(value: string): string {
   if (slug.endsWith('-')) {
     slug = slug.slice(0, -1)
   }
-  return slug || 'pack'
+  return slug
+}
+
+export function slugifyPackPart(value: string): string {
+  return slugifyPackPartOrEmpty(transliterateCyrillic(value)) || 'pack'
+}
+
+/** Empty or the silent `pack` fallback — Export Sheet trigger 1. */
+export function packBotSlugNeedsSheet(name: string): boolean {
+  return slugifyPackPartOrEmpty(transliterateCyrillic(name)) === ''
+    || slugifyPackPart(name) === 'pack'
+}
+
+export type PackScheduleNameLocale = 'en' | 'ru'
+
+export function inventPackScheduleName(
+  cadence: 'daily' | 'weekly',
+  timeLocal: string,
+  locale: PackScheduleNameLocale = 'en',
+): string {
+  if (locale === 'ru') {
+    return cadence === 'weekly' ? `Еженедельно ${timeLocal}` : `Ежедневно ${timeLocal}`
+  }
+  return cadence === 'weekly' ? `Weekly ${timeLocal}` : `Daily ${timeLocal}`
+}
+
+/** Host seed Skills stay on the Host. Prefix covers the seed allowlist. */
+export function isPackExcludedSkillId(id: string): boolean {
+  return id.startsWith('platform-meta-')
 }
 
 export function parseSemver(value: string): { major: number, minor: number, patch: number } {
@@ -822,10 +912,11 @@ export function buildApplyPlan(tree: PackTree, target: PackApplyTarget): PackApp
   } else if (engine.severity === 'warn') {
     warnings.push(engine.message)
   }
-  const existing = new Set(target.existingSkillIds ?? [])
-  const incoming = new Set(tree.skills.map((skill) => skill.id))
+  const packSkills = tree.skills.filter((skill) => !isPackExcludedSkillId(skill.id))
+  const existing = new Set((target.existingSkillIds ?? []).filter((id) => !isPackExcludedSkillId(id)))
+  const incoming = new Set(packSkills.map((skill) => skill.id))
   const skills: PackSkillPlanRow[] = [
-    ...tree.skills.map((skill) => ({
+    ...packSkills.map((skill) => ({
       id: skill.id,
       description: skill.description,
       action: (existing.has(skill.id) ? 'replace' : 'add') as PackSkillPlanAction,
@@ -836,12 +927,7 @@ export function buildApplyPlan(tree: PackTree, target: PackApplyTarget): PackApp
       action: 'remove' as const,
     })),
   ]
-  const schedules: PackSchedulePlanRow[] = tree.schedules.map((schedule) => ({
-    name: schedule.name,
-    cadence: schedule.cadence,
-    timeLocal: schedule.timeLocal,
-    paused: true,
-  }))
+  const schedules = planPackSchedules(tree.schedules, target)
   if (tree.manifest.integrations.length > 0) {
     warnings.push('Unbound integration stubs will not start tools')
   }
@@ -866,6 +952,65 @@ export function buildApplyPlan(tree: PackTree, target: PackApplyTarget): PackApp
     blockers,
     chatPreserved: target.kind === 'update',
   }
+}
+
+function scheduleSlotKey(row: {
+  cadence: 'daily' | 'weekly'
+  timeLocal: string
+  daysOfWeek?: Array<'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'> | null
+}): string {
+  return `${row.cadence}|${row.timeLocal}|${JSON.stringify(row.daysOfWeek ?? [])}`
+}
+
+export function planPackSchedules(
+  incoming: PackScheduleTemplate[],
+  target: Pick<PackApplyTarget, 'kind' | 'existingSchedules' | 'previousSnapshotId'>,
+): PackSchedulePlanRow[] {
+  if (target.kind !== 'update') {
+    return incoming.map((schedule) => ({
+      name: schedule.name,
+      cadence: schedule.cadence,
+      timeLocal: schedule.timeLocal,
+      paused: true as const,
+      action: 'add' as const,
+    }))
+  }
+  const previous = target.previousSnapshotId ?? null
+  const existing = target.existingSchedules ?? []
+  const owned = existing.filter((row) => previous && row.installedPackId === previous)
+  const unlabeled = existing.filter((row) => !row.installedPackId)
+  const ownedBySlot = new Map(owned.map((row) => [scheduleSlotKey(row), row]))
+  const unlabeledBySlot = new Map(unlabeled.map((row) => [scheduleSlotKey(row), row]))
+  const incomingSlots = new Set<string>()
+  const rows: PackSchedulePlanRow[] = incoming.map((schedule) => {
+    const slot = scheduleSlotKey(schedule)
+    incomingSlots.add(slot)
+    let action: PackSchedulePlanAction = 'add'
+    if (ownedBySlot.has(slot)) {
+      action = 'replace'
+    } else if (unlabeledBySlot.has(slot)) {
+      action = 'keep'
+    }
+    return {
+      name: schedule.name,
+      cadence: schedule.cadence,
+      timeLocal: schedule.timeLocal,
+      paused: true,
+      action,
+    }
+  })
+  for (const row of owned) {
+    if (!incomingSlots.has(scheduleSlotKey(row))) {
+      rows.push({
+        name: row.name,
+        cadence: row.cadence,
+        timeLocal: row.timeLocal,
+        paused: true,
+        action: 'remove',
+      })
+    }
+  }
+  return rows
 }
 
 export function serializePackTree(tree: PackTree): string {

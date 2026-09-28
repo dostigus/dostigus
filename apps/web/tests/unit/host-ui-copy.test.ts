@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { BOT_PURPOSE_OPTIONS, BOT_PURPOSE_PROMPT } from '@dostigus/shared'
+import { BOT_PURPOSE_OPTIONS, BOT_PURPOSE_PROMPT, inventPackScheduleName } from '@dostigus/shared'
 import { HOST_LOCALE_MESSAGES, tHost } from '@dostigus/ui-kit/locale'
 import { expect, it } from 'vitest'
 
@@ -158,6 +158,15 @@ it('keeps Bot list and Chat copy product-facing when no key is set', () => {
   expect(read('components/HostMemberAddSheet.vue')).not.toMatch(leftover)
   expect(chat).toContain('v-if="isOwner"')
   expect(read('pages/index.vue')).not.toContain('Kinnu')
+})
+
+it('keeps Pack Export Schedule name twins in Locale dictionaries', () => {
+  expect(tHost('en', 'pack.scheduleNameDaily', { time: '08:00' })).toBe(inventPackScheduleName('daily', '08:00', 'en'))
+  expect(tHost('ru', 'pack.scheduleNameDaily', { time: '08:00' })).toBe(inventPackScheduleName('daily', '08:00', 'ru'))
+  expect(tHost('en', 'pack.scheduleNameWeekly', { time: '09:30' })).toBe(inventPackScheduleName('weekly', '09:30', 'en'))
+  expect(tHost('ru', 'pack.scheduleNameWeekly', { time: '09:30' })).toBe(inventPackScheduleName('weekly', '09:30', 'ru'))
+  expect(tHost('en', 'pack.exportTitle')).toBe('Export Pack')
+  expect(tHost('ru', 'pack.exportTitle')).toBe('Экспорт Pack')
 })
 
 it('keeps Members copy product-facing', () => {

@@ -23,6 +23,11 @@ export type MetaSkillId = (typeof META_SKILL_IDS)[number]
 
 const META_SKILL_ID_SET = new Set<string>(META_SKILL_IDS)
 
+/** Host seed Skills. Prefix or the seed allowlist. One source: META_SKILL_IDS. */
+export function isHostSeedSkillId(id: string): boolean {
+  return id.startsWith('platform-meta-') || META_SKILL_ID_SET.has(id)
+}
+
 export const META_SKILL_DESCRIPTIONS: Record<MetaSkillId, string> = {
   'platform-meta-schedules': 'Create, list, pause, update, resume, and delete Schedules (daily or weekly wall-clock Wake).',
   'platform-meta-skills': 'List, read, upsert, and delete Skill text on this Bot.',

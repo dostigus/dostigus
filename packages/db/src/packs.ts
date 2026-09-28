@@ -3,7 +3,14 @@
  * See ADR 0039.
  */
 
-import type { Bot, BotViewer, PackApplyPlan, PackApplyTarget, PackTree } from '@dostigus/shared'
+import type {
+  Bot,
+  BotViewer,
+  PackApplyPlan,
+  PackApplyTarget,
+  PackScheduleNameLocale,
+  PackTree,
+} from '@dostigus/shared'
 import type { OpenedStore } from './store'
 import {
   assertNoSecretsInPack,
@@ -11,18 +18,24 @@ import {
   canEditBot,
   HOST_ENGINE_VERSION,
   installedPackSnapshotId,
+  inventPackScheduleName,
   nextPackVersion,
+  packBotSlugNeedsSheet,
   PackInputError,
   parseInstalledPackSnapshotId,
+  parsePackId,
   parsePackTreeJson,
+  parsePackVersion,
+  PACK_README_MAX,
   randomBotAppearance,
   scrubPackTree,
   serializePackTree,
   slugifyPackPart,
 } from '@dostigus/shared'
+import { isHostSeedSkillId } from './meta-skills'
 import { getOwner } from './owners'
 import { createBot, getClusterOwnerId, listMessages, requireBot, viewerMaySeeBot } from './queries'
-import { createSchedule, listSchedules } from './schedules'
+import { createSchedule, deleteSchedule, listSchedules } from './schedules'
 import { listBotSkills, replaceBotSkills } from './skills'
 import { StoreError } from './store-error'
 
@@ -49,19 +62,86 @@ function authorSlug(store: OpenedStore): string {
   return 'cluster'
 }
 
-function exportPackId(store: OpenedStore, bot: Bot): { id: string, version: string } {
+export type PackExportWrite = {
+  botSlug?: string
+  version?: string
+  readme?: string
+  locale?: PackScheduleNameLocale
+}
+
+export type PackExportReason = 'empty-slug' | 'conflict' | 're-export'
+
+export type PackExportPreview = {
+  author: string
+  botSlug: string
+  version: string
+  id: string
+  readme: string
+  needsSheet: boolean
+  reasons: PackExportReason[]
+}
+
+function exportPackId(
+  store: OpenedStore,
+  bot: Bot,
+  options: PackExportWrite = {},
+): { id: string, version: string, author: string, botSlug: string } {
+  const author = authorSlug(store)
+  let packId = `${author}.${slugifyPackPart(bot.name)}`
+  let version = '1.0.0'
   if (bot.installedPackId) {
     try {
       const current = parseInstalledPackSnapshotId(bot.installedPackId)
-      return { id: current.packId, version: nextPackVersion(current.version) }
+      packId = current.packId
+      version = nextPackVersion(current.version)
     } catch {
       // Fall through and mint from the live Bot.
     }
   }
-  return {
-    id: `${authorSlug(store)}.${slugifyPackPart(bot.name)}`,
-    version: '1.0.0',
+  if (options.botSlug != null) {
+    const botSlug = slugifyPackPart(options.botSlug)
+    packId = asPack(() => parsePackId(`${author}.${botSlug}`))
   }
+  if (options.version != null) {
+    version = asPack(() => parsePackVersion(options.version))
+  }
+  const parts = packId.split('.')
+  return {
+    id: packId,
+    version,
+    author: parts[0] ?? author,
+    botSlug: parts[1] ?? slugifyPackPart(bot.name),
+  }
+}
+
+function installedPackIdsOnCluster(store: OpenedStore): Array<{ botId: string, packId: string }> {
+  const rows = store.sqlite.prepare(`
+    SELECT 1 AS ok FROM pragma_table_info('bots') WHERE name = 'installed_pack_id'
+  `).get() as { ok?: number } | undefined
+  if (!rows) {
+    return []
+  }
+  const bots = store.sqlite.prepare(`
+    SELECT id, installed_pack_id FROM bots WHERE installed_pack_id IS NOT NULL
+  `).all() as Array<{ id: string, installed_pack_id: string }>
+  const next: Array<{ botId: string, packId: string }> = []
+  for (const row of bots) {
+    try {
+      next.push({
+        botId: row.id,
+        packId: parseInstalledPackSnapshotId(row.installed_pack_id).packId,
+      })
+    } catch {
+      // Ignore a bad snapshot ref.
+    }
+  }
+  return next
+}
+
+function packIdConflicts(store: OpenedStore, packId: string, exceptBotId: string): boolean {
+  return installedPackIdsOnCluster(store).some((row) => (
+    row.botId !== exceptBotId && row.packId === packId
+  ))
 }
 
 export function getInstalledPack(store: OpenedStore, snapshotId: string): PackTree | undefined {
@@ -97,13 +177,87 @@ export function setBotInstalledPack(store: OpenedStore, botId: string, snapshotI
   `).run(snapshotId, botId)
 }
 
-export function exportBotPack(store: OpenedStore, botId: string, viewer?: BotViewer): PackTree {
+function stampExportedPack(store: OpenedStore, botId: string, tree: PackTree): void {
+  const snapshotId = putInstalledPack(store, tree)
+  setBotInstalledPack(store, botId, snapshotId)
+}
+
+function exportSkills(store: OpenedStore, botId: string) {
+  return listBotSkills(store, botId).filter((skill) => !isHostSeedSkillId(skill.id))
+}
+
+function applyPackSkills(store: OpenedStore, botId: string, packSkills: PackTree['skills']): void {
+  const incoming = packSkills.filter((skill) => !isHostSeedSkillId(skill.id))
+  const preserved = listBotSkills(store, botId).filter((skill) => isHostSeedSkillId(skill.id))
+  replaceBotSkills(store, botId, [...preserved, ...incoming])
+}
+
+function scheduleNameForExport(
+  name: string,
+  cadence: 'daily' | 'weekly',
+  timeLocal: string,
+  locale: PackScheduleNameLocale,
+): string {
+  return name.trim() || inventPackScheduleName(cadence, timeLocal, locale)
+}
+
+export function describePackExport(
+  store: OpenedStore,
+  botId: string,
+  viewer?: BotViewer,
+): PackExportPreview {
   const bot = requireBot(store, botId)
   if (viewer && !viewerMaySeeBot(store, bot, viewer)) {
     throw new StoreError('Bot not found', 404)
   }
-  const { id, version } = exportPackId(store, bot)
+  const minted = exportPackId(store, bot)
   const installed = bot.installedPackId ? getInstalledPack(store, bot.installedPackId) : undefined
+  const reasons: PackExportReason[] = []
+  if (packBotSlugNeedsSheet(bot.name) && !bot.installedPackId) {
+    reasons.push('empty-slug')
+  }
+  if (packIdConflicts(store, minted.id, bot.id)) {
+    reasons.push('conflict')
+  }
+  if (bot.installedPackId) {
+    reasons.push('re-export')
+  }
+  return {
+    author: minted.author,
+    botSlug: minted.botSlug,
+    version: minted.version,
+    id: minted.id,
+    readme: installed?.readme ?? '',
+    needsSheet: reasons.length > 0,
+    reasons,
+  }
+}
+
+export function exportBotPack(
+  store: OpenedStore,
+  botId: string,
+  viewer?: BotViewer,
+  options: PackExportWrite = {},
+): PackTree {
+  const bot = requireBot(store, botId)
+  if (viewer && !viewerMaySeeBot(store, bot, viewer)) {
+    throw new StoreError('Bot not found', 404)
+  }
+  const { id, version } = exportPackId(store, bot, options)
+  const installed = bot.installedPackId ? getInstalledPack(store, bot.installedPackId) : undefined
+  const locale = options.locale === 'ru' ? 'ru' : 'en'
+  const readme = options.readme != null
+    ? asPack(() => {
+      if (typeof options.readme !== 'string') {
+        throw new PackInputError('README must be text')
+      }
+      const trimmed = options.readme.trim()
+      if (trimmed.length > PACK_README_MAX) {
+        throw new PackInputError(`README must be ${PACK_README_MAX} characters or fewer`)
+      }
+      return trimmed
+    })
+    : (installed?.readme ?? '')
   const raw: PackTree = {
     manifest: {
       packFormat: 1,
@@ -120,19 +274,20 @@ export function exportBotPack(store: OpenedStore, botId: string, viewer?: BotVie
       },
       integrations: installed?.manifest.integrations ?? [],
     },
-    skills: listBotSkills(store, bot.id),
+    skills: exportSkills(store, bot.id),
     schedules: listSchedules(store, { botId: bot.id }).map((schedule) => ({
-      name: schedule.name,
+      name: scheduleNameForExport(schedule.name, schedule.cadence, schedule.timeLocal, locale),
       cadence: schedule.cadence,
       timeLocal: schedule.timeLocal,
       daysOfWeek: schedule.daysOfWeek,
       wakeText: schedule.wakeText,
     })),
     uiFiles: installed?.uiFiles ?? [],
-    readme: installed?.readme ?? '',
+    readme,
   }
   const { tree } = scrubPackTree(raw)
   asPack(() => assertNoSecretsInPack(tree))
+  stampExportedPack(store, bot.id, tree)
   return tree
 }
 
@@ -154,6 +309,25 @@ function assertTargetBot(store: OpenedStore, target: PackApplyTarget, viewer?: B
   return bot
 }
 
+function applyTargetFromBot(store: OpenedStore, target: PackApplyTarget, bot?: Bot): PackApplyTarget {
+  return {
+    kind: target.kind,
+    botId: bot?.id ?? target.botId,
+    botName: bot?.name ?? target.botName,
+    existingSkillIds: bot ? listBotSkills(store, bot.id).map((skill) => skill.id) : [],
+    existingSchedules: bot
+      ? listSchedules(store, { botId: bot.id }).map((schedule) => ({
+        name: schedule.name,
+        cadence: schedule.cadence,
+        timeLocal: schedule.timeLocal,
+        daysOfWeek: schedule.daysOfWeek,
+        installedPackId: schedule.installedPackId,
+      }))
+      : [],
+    previousSnapshotId: bot?.installedPackId ?? null,
+  }
+}
+
 export function previewPackApply(
   store: OpenedStore,
   tree: PackTree,
@@ -161,12 +335,15 @@ export function previewPackApply(
   viewer?: BotViewer,
 ): PackApplyPlan {
   const bot = assertTargetBot(store, target, viewer)
-  return asPack(() => buildApplyPlan(tree, {
-    kind: target.kind,
-    botId: bot?.id ?? target.botId,
-    botName: bot?.name ?? target.botName,
-    existingSkillIds: bot ? listBotSkills(store, bot.id).map((skill) => skill.id) : [],
-  }))
+  return asPack(() => buildApplyPlan(tree, applyTargetFromBot(store, target, bot)))
+}
+
+function scheduleSlotKey(row: {
+  cadence: 'daily' | 'weekly'
+  timeLocal: string
+  daysOfWeek: Array<'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'> | null
+}): string {
+  return `${row.cadence}|${row.timeLocal}|${JSON.stringify(row.daysOfWeek ?? [])}`
 }
 
 function applySchedules(
@@ -174,8 +351,24 @@ function applySchedules(
   botId: string,
   personId: string,
   tree: PackTree,
+  snapshotId: string,
+  previousSnapshotId: string | null,
 ): void {
+  const existing = listSchedules(store, { botId })
+  if (previousSnapshotId) {
+    for (const row of existing) {
+      if (row.installedPackId === previousSnapshotId) {
+        deleteSchedule(store, row.id)
+      }
+    }
+  }
+  const remaining = listSchedules(store, { botId })
+  const remainingSlots = new Set(remaining.map((row) => scheduleSlotKey(row)))
   for (const template of tree.schedules) {
+    const slot = scheduleSlotKey(template)
+    if (remainingSlots.has(slot)) {
+      continue
+    }
     createSchedule(store, {
       botId,
       personId,
@@ -185,7 +378,9 @@ function applySchedules(
       daysOfWeek: template.daysOfWeek,
       wakeText: template.wakeText,
       paused: true,
+      installedPackId: snapshotId,
     })
+    remainingSlots.add(slot)
   }
 }
 
@@ -216,8 +411,8 @@ export function applyPack(
       avatarColor: appearance?.avatarColor ?? mark.avatarColor,
       createdBy: personId,
     })
-    replaceBotSkills(store, created.bot.id, tree.skills)
-    applySchedules(store, created.bot.id, personId, tree)
+    applyPackSkills(store, created.bot.id, tree.skills)
+    applySchedules(store, created.bot.id, personId, tree, snapshotId, null)
     setBotInstalledPack(store, created.bot.id, snapshotId)
     return {
       bot: requireBot(store, created.bot.id),
@@ -231,8 +426,8 @@ export function applyPack(
     throw new StoreError('Name the Bot to update', 400)
   }
   const beforeChat = listMessages(store, bot.id).length
-  replaceBotSkills(store, bot.id, tree.skills)
-  applySchedules(store, bot.id, personId, tree)
+  applyPackSkills(store, bot.id, tree.skills)
+  applySchedules(store, bot.id, personId, tree, snapshotId, bot.installedPackId)
   setBotInstalledPack(store, bot.id, snapshotId)
   const after = requireBot(store, bot.id)
   if (listMessages(store, after.id).length !== beforeChat) {

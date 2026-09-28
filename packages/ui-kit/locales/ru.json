@@ -640,7 +640,16 @@
     "engineWarn": "Этот Host вне engines.dostigus ({range}).",
     "exportFailed": "Не получилось экспортировать Pack.",
     "previewFailed": "Не получилось прочитать Pack.",
-    "applyFailed": "Не получилось Apply Pack."
+    "applyFailed": "Не получилось Apply Pack.",
+    "exportTitle": "Экспорт Pack",
+    "exportAuthor": "Author",
+    "exportSlug": "Слаг Bot",
+    "exportVersion": "Version",
+    "exportReadme": "README (необязательно)",
+    "exportConfirm": "Скачать",
+    "exportId": "{author}.{slug}",
+    "scheduleNameDaily": "Ежедневно {time}",
+    "scheduleNameWeekly": "Еженедельно {time}"
   },
   "schedule": {
     "gone": "Этого Schedule уже нет.",

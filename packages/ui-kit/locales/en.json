@@ -640,7 +640,16 @@
     "engineWarn": "This Host is outside engines.dostigus ({range}).",
     "exportFailed": "Could not export the Pack.",
     "previewFailed": "Could not read this Pack.",
-    "applyFailed": "Could not Apply the Pack."
+    "applyFailed": "Could not Apply the Pack.",
+    "exportTitle": "Export Pack",
+    "exportAuthor": "Author",
+    "exportSlug": "Bot slug",
+    "exportVersion": "Version",
+    "exportReadme": "README (optional)",
+    "exportConfirm": "Download",
+    "exportId": "{author}.{slug}",
+    "scheduleNameDaily": "Daily {time}",
+    "scheduleNameWeekly": "Weekly {time}"
   },
   "schedule": {
     "gone": "This Schedule is gone.",

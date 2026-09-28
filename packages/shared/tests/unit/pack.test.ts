@@ -6,8 +6,11 @@ import {
   HOST_ENGINE_VERSION,
   hostEngineGate,
   installedPackSnapshotId,
+  inventPackScheduleName,
+  isPackExcludedSkillId,
   PACK_FORMAT,
   PackInputError,
+  packBotSlugNeedsSheet,
   packTreeToZip,
   parsePackManifest,
   parsePackTreeFromFiles,
@@ -16,6 +19,7 @@ import {
   satisfiesEngineRange,
   scrubPackTree,
   slugifyPackPart,
+  transliterateCyrillic,
 } from '../../src/index'
 
 function sampleManifest(over: Record<string, unknown> = {}) {
@@ -138,6 +142,7 @@ it('builds a preview plan with paused Schedule templates', () => {
     cadence: 'daily',
     timeLocal: '09:00',
     paused: true,
+    action: 'add',
   }])
   expect(plan.skills.find((row) => row.id === 'notes')?.action).toBe('replace')
   expect(plan.skills.find((row) => row.id === 'local-only')?.action).toBe('remove')
@@ -166,6 +171,97 @@ it('slugifies a Schedule name without a dash-run regex', () => {
   expect(slugifyPackPart('Morning brief')).toBe('morning-brief')
   expect(slugifyPackPart(`---${'-'.repeat(20_000)}Notes!!!`)).toBe('notes')
   expect(slugifyPackPart('')).toBe('pack')
+})
+
+it('transliterates a RU Bot name so the Pack id is not pack', () => {
+  expect(transliterateCyrillic('Дождевик')).toBe('dozhdevik')
+  expect(slugifyPackPart('Дождевик')).toBe('dozhdevik')
+  expect(slugifyPackPart('ёлка')).toBe('yolka')
+  expect(slugifyPackPart('Жук')).toBe('zhuk')
+  expect(`nick.${slugifyPackPart('Дождевик')}`).toBe('nick.dozhdevik')
+  expect(packBotSlugNeedsSheet('Дождевик')).toBe(false)
+  expect(packBotSlugNeedsSheet('!!!')).toBe(true)
+  expect(packBotSlugNeedsSheet('')).toBe(true)
+  expect(packBotSlugNeedsSheet('Pack')).toBe(true)
+})
+
+it('invents a Schedule name from cadence and time', () => {
+  expect(inventPackScheduleName('daily', '08:00', 'ru')).toBe('Ежедневно 08:00')
+  expect(inventPackScheduleName('daily', '08:00', 'en')).toBe('Daily 08:00')
+  expect(inventPackScheduleName('weekly', '09:30', 'ru')).toBe('Еженедельно 09:30')
+  expect(inventPackScheduleName('weekly', '09:30', 'en')).toBe('Weekly 09:30')
+})
+
+it('excludes Host seed Skills from an Apply plan', () => {
+  expect(isPackExcludedSkillId('platform-meta-http-get')).toBe(true)
+  expect(isPackExcludedSkillId('notes')).toBe(false)
+  const plan = buildApplyPlan(sampleTree({
+    skills: [
+      { id: 'notes', description: 'Keep short notes', instructions: 'Write.' },
+      { id: 'platform-meta-http-get', description: 'Host HTTP', instructions: 'GET.' },
+    ],
+  }), {
+    kind: 'update',
+    botId: 'preview',
+    existingSkillIds: ['notes', 'platform-meta-schedules', 'local-only'],
+  })
+  expect(plan.skills.map((row) => row.id)).toEqual(['notes', 'local-only'])
+  expect(plan.skills.find((row) => row.id === 'notes')?.action).toBe('replace')
+  expect(plan.skills.find((row) => row.id === 'local-only')?.action).toBe('remove')
+})
+
+it('plans Schedule add, replace, remove, and grandfather keep', () => {
+  const replace = buildApplyPlan(sampleTree(), {
+    kind: 'update',
+    botId: 'preview',
+    previousSnapshotId: 'ada.notes@1.0.0',
+    existingSchedules: [{
+      name: 'Morning brief',
+      cadence: 'daily',
+      timeLocal: '09:00',
+      daysOfWeek: null,
+      installedPackId: 'ada.notes@1.0.0',
+    }],
+  })
+  expect(replace.schedules).toEqual([{
+    name: 'Morning brief',
+    cadence: 'daily',
+    timeLocal: '09:00',
+    paused: true,
+    action: 'replace',
+  }])
+  const keep = buildApplyPlan(sampleTree(), {
+    kind: 'update',
+    botId: 'preview',
+    previousSnapshotId: 'ada.notes@1.0.0',
+    existingSchedules: [{
+      name: 'Morning brief',
+      cadence: 'daily',
+      timeLocal: '09:00',
+      daysOfWeek: null,
+      installedPackId: null,
+    }],
+  })
+  expect(keep.schedules[0]?.action).toBe('keep')
+  const remove = buildApplyPlan(sampleTree({ schedules: [] }), {
+    kind: 'update',
+    botId: 'preview',
+    previousSnapshotId: 'ada.notes@1.0.0',
+    existingSchedules: [{
+      name: 'Old brief',
+      cadence: 'daily',
+      timeLocal: '07:00',
+      daysOfWeek: null,
+      installedPackId: 'ada.notes@1.0.0',
+    }],
+  })
+  expect(remove.schedules).toEqual([{
+    name: 'Old brief',
+    cadence: 'daily',
+    timeLocal: '07:00',
+    paused: true,
+    action: 'remove',
+  }])
 })
 
 it('parses a zip upload and a raw pack.json upload', () => {
