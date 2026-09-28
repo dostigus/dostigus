@@ -350,7 +350,7 @@
       "allowlist": {
         "title": "Cluster http allowlist",
         "hint": "Hostnames Host HTTP get may reach. One hostname per line, exact match, no wildcards. Empty allows every public host. Loopback and private addresses stay blocked.",
-        "empty": "Empty — Bots may GET any public host.",
+        "empty": "Empty. Bots may GET any public host.",
         "label": "Hostnames",
         "save": "Save allowlist",
         "saved": "Allowlist saved.",
@@ -360,6 +360,7 @@
       "locale": {
         "title": "Locale",
         "hint": "Host chrome language. Product terms such as Bot and Cluster stay in Latin script.",
+        "label": "Language",
         "en": "EN",
         "ru": "RU",
         "save": "Save Locale",
