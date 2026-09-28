@@ -4,10 +4,18 @@
  */
 export const uiKitComponents = {
   button: 'KitButton',
+  card: 'KitCard',
   chatParts: 'KitChatParts',
+  chip: 'KitChip',
   dialog: 'KitDialog',
+  field: 'KitField',
+  input: 'KitInput',
+  listRow: 'KitListRow',
+  select: 'KitSelect',
   sheet: 'KitSheet',
   sheetShell: 'SheetShell',
+  textarea: 'KitTextarea',
+  toggle: 'KitToggle',
   gooseSticker: 'GooseSticker',
   gooseLogo: 'GooseLogo',
   botAvatar: 'KitBotAvatar',
