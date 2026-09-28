@@ -47,7 +47,9 @@ it('reuses preview-seed flags and waits for an explicit ready marker', () => {
 
   expect(previewSeedPath(PREVIEW_SHOOT_STATES['providers-fixture'])).toBe('/preview-seed?providers=1')
   expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.selector).toBe('.provider')
-  expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.any).toContain('.shelf .card:not(.skeleton)')
+  expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.any).toEqual(['.shelf .card:not(.skeleton)'])
+  expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.any).not.toContain('.shelf .banner')
+  expect(PREVIEW_SHOOT_STATES['providers-fixture'].ready.none).toEqual(['.shelf [aria-busy="true"]'])
 
   expect(PREVIEW_SHOOT_STATES['settings-other'].thenPath).toBe('/dashboard/cluster')
   expect(PREVIEW_SHOOT_STATES['settings-other'].ready.selector).toBe('.cluster input[name="timezone"]')
@@ -79,12 +81,12 @@ it('builds a DOM ready expression that counts nodes and ignores network idle', (
   const expression = buildReadyExpression({
     selector: '.bubble.system',
     count: 3,
-    any: ['.shelf .banner'],
+    any: ['.shelf .card:not(.skeleton)'],
     none: ['.shelf [aria-busy="true"]'],
   })
   expect(expression).toContain('querySelectorAll(".bubble.system")')
   expect(expression).toContain('nodes.length < 3')
-  expect(expression).toContain('querySelector(".shelf .banner")')
+  expect(expression).toContain('querySelector(".shelf .card:not(.skeleton)")')
   expect(expression).toContain('querySelector(".shelf [aria-busy=\\"true\\"]")')
   expect(src).not.toContain('networkidle')
   expect(src).not.toContain('--virtual-time-budget')
@@ -117,4 +119,6 @@ it('documents shoot:preview next to preview-seed in AGENTS.md', () => {
   expect(agents).toContain('/dashboard/providers')
   expect(agents).toContain('/dashboard/members')
   expect(agents).toContain('`members`')
+  expect(agents).toContain('.shelf .card:not(.skeleton)')
+  expect(agents).not.toContain('cards or miss banner')
 })
