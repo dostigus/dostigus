@@ -6,6 +6,7 @@ import {
   contextCopy,
   fetchedAtCopy,
   modelPriceCopy,
+  providerErrorField,
   providerHealth,
   searchCatalogModels,
   TIER_SITUATIONS,
@@ -131,5 +132,17 @@ describe('copy helpers', () => {
     expect(fetchedAtCopy('2026-09-25T11:45:00.000Z', now, 'ru')).toBe('обновлено 15 мин назад')
     expect(fetchedAtCopy('2026-09-25T09:00:00.000Z', now, 'ru')).toBe('обновлено 3 ч назад')
     expect(fetchedAtCopy(null, now)).toBe('')
+  })
+
+  it('puts a Provider save error under the field it names', () => {
+    expect(providerErrorField('OpenAI-compatible Provider needs a base URL', 'openai-compatible')).toBe('baseUrl')
+    expect(providerErrorField('LLM gateway base URL must be an http(s) URL', 'openai-compatible')).toBe('baseUrl')
+    expect(providerErrorField('Model id must be 200 characters or fewer', 'openai')).toBe('model')
+    expect(providerErrorField('Could not save Providers.', 'openai-compatible')).toBe('apiKey')
+  })
+
+  it('hands an error for a field the kind does not show to the key', () => {
+    expect(providerErrorField('LLM gateway base URL must be an http(s) URL', 'openai')).toBe('apiKey')
+    expect(providerErrorField('Model id must be 200 characters or fewer', 'openrouter')).toBe('apiKey')
   })
 })

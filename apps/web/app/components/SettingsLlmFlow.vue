@@ -1,126 +1,120 @@
 <template>
-  <section
+  <KitPanel
     class="flow"
-    aria-labelledby="llm-flow-title"
+    :title="$t('settings.providers.flow.botsThink')"
+    :description="$t('settings.providers.flow.lead')"
   >
-    <p class="kicker">
-      {{ $t('settings.providers.flow.how') }}
-    </p>
-    <h2 id="llm-flow-title">
-      {{ $t('settings.providers.flow.botsThink') }}
-    </h2>
-    <p class="lead">
-      {{ $t('settings.providers.flow.lead') }}
-    </p>
-
-    <div class="node bots-node">
-      <div
-        v-if="bots.length > 0"
-        class="stack"
-        aria-hidden="true"
-      >
-        <HostBotAvatar
-          v-for="bot in shownBots"
-          :key="bot.id"
-          class="stacked"
-          size="sm"
-          :name="bot.name"
-          :seed="bot.id"
-          :shape="bot.manifest.avatarShape"
-          :avatar-color="bot.manifest.avatarColor"
-        />
-      </div>
-      <div class="node-copy">
-        <p class="node-title">
-          {{ botsTitle }}
-        </p>
-        <p class="node-detail">
-          {{ bots.length > 0 ? botNames : $t('settings.providers.flow.newBotsJoin') }}
-        </p>
-      </div>
-    </div>
-
-    <div
-      class="wire"
-      aria-hidden="true"
-    />
-
-    <ol
-      class="tiers"
-      :aria-label="$t('settings.providers.flow.tiersAria')"
-    >
-      <li
-        v-for="row in rows"
-        :key="row.tier"
-        class="tier"
-        :class="{ off: !row.bind, escalate: row.tier === 'code', toy: row.tier === 'toy' }"
-      >
-        <span
-          class="dot"
-          :class="row.state"
+    <div class="diagram">
+      <div class="node bots-node">
+        <div
+          v-if="bots.length > 0"
+          class="stack"
           aria-hidden="true"
-        />
-        <div class="tier-copy">
-          <p class="tier-title">
-            {{ row.title }}
-            <code>{{ row.tier }}</code>
+        >
+          <HostBotAvatar
+            v-for="bot in shownBots"
+            :key="bot.id"
+            class="stacked"
+            size="sm"
+            :name="bot.name"
+            :seed="bot.id"
+            :shape="bot.manifest.avatarShape"
+            :avatar-color="bot.manifest.avatarColor"
+          />
+        </div>
+        <div class="node-copy">
+          <p class="node-title">
+            {{ botsTitle }}
           </p>
-          <p class="tier-detail">
-            {{ row.detail }}
-          </p>
-          <p
-            class="tier-bind"
-            :class="{ none: !row.bind, pinned: row.bind?.pinned }"
-            :title="row.bind ? bindTitle(row.bind) : undefined"
-          >
-            <template v-if="row.bind">
-              <span class="bind-provider">{{ row.bind.provider }}</span>
-              <span class="bind-policy">{{ row.bind.policy }}</span>
-            </template>
-            <template v-else>
-              {{ $t('settings.providers.unset') }}
-            </template>
+          <p class="node-detail">
+            {{ bots.length > 0 ? botNames : $t('settings.providers.flow.newBotsJoin') }}
           </p>
         </div>
-      </li>
-    </ol>
+      </div>
 
-    <div
-      class="wire"
-      aria-hidden="true"
-    />
-
-    <div
-      class="node provider-node"
-      :class="{ empty: providerLabels.length === 0 }"
-    >
-      <span
-        class="plug"
+      <div
+        class="wire"
         aria-hidden="true"
+      />
+
+      <ol
+        class="tiers"
+        :aria-label="$t('settings.providers.flow.tiersAria')"
       >
-        <svg viewBox="0 0 24 24">
-          <path d="M9 3.5v4M15 3.5v4M7 7.5h10v3.2a5 5 0 0 1-10 0zM12 15.7v4.8" />
-        </svg>
-      </span>
-      <div class="node-copy">
-        <p class="node-title">
-          {{ providerLabels.length > 0 ? providerLabels.join(' + ') : $t('settings.providers.flow.noProvider') }}
-        </p>
-        <p class="node-detail">
-          {{ providerLabels.length > 0 ? 'Provider' : $t('settings.providers.flow.noKeyQuiet') }}
-        </p>
+        <li
+          v-for="row in rows"
+          :key="row.tier"
+          class="tier"
+          :class="{ off: !row.bind, escalate: row.tier === 'code', toy: row.tier === 'toy' }"
+        >
+          <span
+            class="dot"
+            :class="row.state"
+            aria-hidden="true"
+          />
+          <div class="tier-copy">
+            <p class="tier-title">
+              {{ row.title }}
+              <code>{{ row.tier }}</code>
+            </p>
+            <p class="tier-detail">
+              {{ row.detail }}
+            </p>
+            <p
+              class="tier-bind"
+              :class="{ none: !row.bind, pinned: row.bind?.pinned }"
+              :title="row.bind ? bindTitle(row.bind) : undefined"
+            >
+              <template v-if="row.bind">
+                <span class="bind-provider">{{ row.bind.provider }}</span>
+                <span class="bind-policy">{{ row.bind.policy }}</span>
+              </template>
+              <template v-else>
+                {{ $t('settings.providers.unset') }}
+              </template>
+            </p>
+          </div>
+        </li>
+      </ol>
+
+      <div
+        class="wire"
+        aria-hidden="true"
+      />
+
+      <div
+        class="node provider-node"
+        :class="{ empty: providerLabels.length === 0 }"
+      >
+        <span
+          class="plug"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M9 3.5v4M15 3.5v4M7 7.5h10v3.2a5 5 0 0 1-10 0zM12 15.7v4.8" />
+          </svg>
+        </span>
+        <div class="node-copy">
+          <p class="node-title">
+            {{ providerLabels.length > 0 ? providerLabels.join(' + ') : $t('settings.providers.flow.noProvider') }}
+          </p>
+          <p class="node-detail">
+            {{ providerLabels.length > 0 ? 'Provider' : $t('settings.providers.flow.noKeyQuiet') }}
+          </p>
+        </div>
       </div>
     </div>
 
     <p class="foot">
       {{ $t('settings.providers.flow.escalateChain') }}
     </p>
-  </section>
+  </KitPanel>
 </template>
 
 <script setup lang="ts">
 import type { BotListItem, LlmProviderKind, LlmTierBind, ModelTier } from '@dostigus/shared'
 import { LLM_PROVIDER_KIND_LABELS } from '@dostigus/shared'
+import { KitPanel } from '@dostigus/ui-kit'
 import { bindCopy, tierSituations } from '../utils/provider-settings'
 
 const props = defineProps<{
@@ -178,33 +172,6 @@ const providerLabels = computed(() => {
 </script>
 
 <style scoped>
-.flow {
-  padding: 1.35rem 1.3rem 1.25rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--card);
-}
-
-.kicker {
-  margin: 0 0 0.4rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.7rem;
-  color: var(--accent);
-}
-
-h2 {
-  margin: 0 0 0.4rem;
-  font-size: 1.15rem;
-}
-
-.lead {
-  margin: 0 0 1.2rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
 .node {
   display: flex;
   align-items: center;
@@ -409,7 +376,7 @@ code {
 }
 
 .foot {
-  margin: 1rem 0 0;
+  margin: 0;
   color: var(--text-muted);
   font-size: 0.78rem;
   line-height: 1.6;

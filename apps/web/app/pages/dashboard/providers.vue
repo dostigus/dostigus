@@ -1,9 +1,6 @@
 <template>
   <div class="providers">
     <header class="head">
-      <p class="kicker">
-        {{ $t('settings.providers.kicker') }}
-      </p>
       <h1>{{ $t('settings.providers.title') }}</h1>
       <p class="lead">
         {{ $t('settings.providers.lead') }}
@@ -64,18 +61,19 @@
           ref="firstAdd"
           first
           :busy="busy"
+          :error="addError"
           @add="addProvider"
         />
 
-        <article
+        <KitPanel
           v-for="provider in providers"
           :key="provider.id"
+          as="article"
           class="provider"
         >
           <header class="p-head">
             <span
               class="p-mark"
-              :class="provider.kind"
               aria-hidden="true"
             >{{ KIND_MARKS[provider.kind] }}</span>
             <div class="p-copy">
@@ -99,14 +97,14 @@
               >
                 {{ provider.kind === 'openrouter' ? $t('settings.providers.replaceKey') : $t('settings.providers.edit') }}
               </KitButton>
-              <button
-                type="button"
-                class="danger-link"
+              <KitButton
+                variant="ghost"
+                size="sm"
                 :disabled="busy"
                 @click="removeId = provider.id"
               >
                 {{ $t('settings.providers.delete') }}
-              </button>
+              </KitButton>
             </div>
           </header>
 
@@ -129,14 +127,13 @@
               >
                 {{ $t('common.cancel') }}
               </KitButton>
-              <button
-                type="button"
-                class="danger"
+              <KitButton
+                size="sm"
                 :disabled="busy"
                 @click="removeProvider(provider.id)"
               >
                 {{ $t('settings.providers.deleteProvider') }}
-              </button>
+              </KitButton>
             </div>
           </div>
 
@@ -145,43 +142,44 @@
             class="edit"
             @submit.prevent="saveEdit(provider)"
           >
-            <label
+            <KitField
               v-if="provider.kind === 'openai-compatible'"
-              class="field"
+              :label="$t('settings.providers.add.baseUrl')"
+              :error="editErrorOn('baseUrl', provider)"
+              required
             >
-              <span>{{ $t('settings.providers.add.baseUrl') }}</span>
-              <input
+              <KitInput
                 v-model="editBaseUrl"
                 type="url"
                 placeholder="https://api.example.com/v1"
                 autocomplete="off"
-                required
-              >
-            </label>
-            <label class="field">
-              <span>{{ provider.kind === 'openrouter' ? $t('settings.providers.newOpenRouterKey') : $t('settings.providers.add.apiKey') }}</span>
-              <input
+              />
+            </KitField>
+            <KitField
+              :label="provider.kind === 'openrouter' ? $t('settings.providers.newOpenRouterKey') : $t('settings.providers.add.apiKey')"
+              :error="editErrorOn('apiKey', provider)"
+              :required="provider.kind === 'openrouter'"
+            >
+              <KitInput
                 v-model="editKey"
                 type="password"
                 :placeholder="provider.apiKeyMasked ? $t('settings.providers.pasteNew', { mask: provider.apiKeyMasked }) : 'sk-…'"
                 autocomplete="new-password"
                 spellcheck="false"
-                :required="provider.kind === 'openrouter'"
-              >
-            </label>
-            <label
+              />
+            </KitField>
+            <KitField
               v-if="provider.kind !== 'openrouter'"
-              class="field"
+              :label="$t('settings.providers.model')"
+              :error="editErrorOn('model', provider)"
             >
-              <span>{{ $t('settings.providers.model') }}</span>
-              <input
+              <KitInput
                 v-model="editModel"
-                type="text"
                 :placeholder="provider.kind === 'openai' ? OPENAI_SETTINGS_DEFAULT_MODEL : $t('settings.providers.add.modelId')"
                 autocomplete="off"
                 spellcheck="false"
-              >
-            </label>
+              />
+            </KitField>
             <div class="row-actions">
               <KitButton
                 variant="ghost"
@@ -242,125 +240,119 @@
             {{ providers.length === 1 ? $t('settings.providers.modelOnAllTiers') : $t('settings.providers.modelOnThisProvider') }}
             {{ $t('settings.providers.catalogOpenRouterOnly') }}
           </p>
-        </article>
+        </KitPanel>
 
         <SettingsProviderAdd
           v-if="providers.length > 0 && adding"
           ref="nextAdd"
           :first="false"
           :busy="busy"
+          :error="addError"
           @add="addProvider"
-          @cancel="adding = false"
+          @cancel="cancelAdd"
         />
-        <button
+        <KitButton
           v-else-if="providers.length > 0"
-          type="button"
+          variant="ghost"
           class="add-another"
           @click="adding = true"
         >
-          <span aria-hidden="true">+</span> {{ $t('settings.providers.addProvider') }}
-        </button>
+          <span aria-hidden="true">+</span>&nbsp;{{ $t('settings.providers.addProvider') }}
+        </KitButton>
 
-        <details
+        <KitPanel
           v-if="providers.length > 1 || hasLegacyPins"
-          class="more page-more"
+          as="div"
+          class="page-more"
         >
-          <summary>
-            <span>{{ $t('settings.providers.tiersByProvider') }}</span>
-            <span class="summary-hint">{{ $t('settings.providers.tiersByProviderHint') }}</span>
-          </summary>
-          <div
-            v-if="providers.length > 1"
-            class="bind-grid"
-          >
+          <details class="more">
+            <summary>
+              <span>{{ $t('settings.providers.tiersByProvider') }}</span>
+              <span class="summary-hint">{{ $t('settings.providers.tiersByProviderHint') }}</span>
+            </summary>
             <div
-              v-for="row in TIER_SITUATIONS"
-              :key="row.tier"
-              class="bind-row"
+              v-if="providers.length > 1"
+              class="bind-grid"
             >
-              <div class="bind-copy">
-                <p class="bind-title">
-                  {{ row.title }} <code>{{ row.tier }}</code>
-                </p>
-                <p class="bind-detail">
-                  {{ row.detail }}
-                </p>
+              <div
+                v-for="row in TIER_SITUATIONS"
+                :key="row.tier"
+                class="bind-row"
+              >
+                <div class="bind-copy">
+                  <p class="bind-title">
+                    {{ row.title }} <code>{{ row.tier }}</code>
+                  </p>
+                  <p class="bind-detail">
+                    {{ row.detail }}
+                  </p>
+                </div>
+                <div class="bind-select">
+                  <label
+                    class="kit-sr-only"
+                    :for="`${uid}-provider-${row.tier}`"
+                  >{{ $t('settings.providers.providerFor', { tier: row.tier }) }}</label>
+                  <KitSelect
+                    :id="`${uid}-provider-${row.tier}`"
+                    :model-value="effectiveBinds[row.tier]?.providerId ?? UNSET"
+                    :options="tierProviderOptions"
+                    :disabled="busy"
+                    @update:model-value="(value) => onTierProvider(row.tier, value === UNSET ? '' : value ?? '')"
+                  />
+                </div>
+                <div
+                  v-if="providerKind(effectiveBinds[row.tier]?.providerId) === 'openrouter'"
+                  class="bind-select"
+                >
+                  <label
+                    class="kit-sr-only"
+                    :for="`${uid}-policy-${row.tier}`"
+                  >{{ $t('settings.providers.policyFor', { tier: row.tier }) }}</label>
+                  <KitSelect
+                    :id="`${uid}-policy-${row.tier}`"
+                    :model-value="effectiveBinds[row.tier]?.policy.kind ?? 'auto'"
+                    :options="tierPolicyOptions(row.tier)"
+                    :disabled="busy"
+                    @update:model-value="(value) => onTierPolicy(row.tier, value ?? '')"
+                  />
+                </div>
               </div>
-              <select
-                :aria-label="$t('settings.providers.providerFor', { tier: row.tier })"
-                :value="effectiveBinds[row.tier]?.providerId ?? ''"
-                :disabled="busy"
-                @change="onTierProvider(row.tier, ($event.target as HTMLSelectElement).value)"
-              >
-                <option value="">
-                  {{ $t('settings.providers.unset') }}
-                </option>
-                <option
-                  v-for="provider in providers"
-                  :key="provider.id"
-                  :value="provider.id"
-                >
-                  {{ providerOptionLabel(provider) }}
-                </option>
-              </select>
-              <select
-                v-if="providerKind(effectiveBinds[row.tier]?.providerId) === 'openrouter'"
-                :aria-label="$t('settings.providers.policyFor', { tier: row.tier })"
-                :value="effectiveBinds[row.tier]?.policy.kind ?? 'auto'"
-                :disabled="busy"
-                @change="onTierPolicy(row.tier, ($event.target as HTMLSelectElement).value)"
-              >
-                <option value="free">
-                  Free
-                </option>
-                <option value="auto">
-                  Auto
-                </option>
-                <option
-                  v-if="effectiveBinds[row.tier]?.policy.kind === 'model'"
-                  value="model"
-                >
-                  {{ pinnedName(row.tier) }}
-                </option>
-              </select>
             </div>
-          </div>
 
-          <form
-            v-if="hasLegacyPins"
-            class="legacy"
-            @submit.prevent="saveLegacyPins"
-          >
-            <p class="bind-title">
-              {{ $t('settings.providers.catalog.legacyIds') }}
-            </p>
-            <p class="bind-detail">
-              {{ $t('settings.providers.legacyPinsHint') }}
-            </p>
-            <label
-              v-for="tier in MODEL_TIERS"
-              :key="tier"
-              class="field"
+            <form
+              v-if="hasLegacyPins"
+              class="legacy"
+              @submit.prevent="saveLegacyPins"
             >
-              <span>{{ MODEL_TIER_LABELS[tier] }}</span>
-              <input
-                v-model="modelOverrides[tier]"
-                type="text"
-                :placeholder="gateway?.defaultModels[tier]"
-                autocomplete="off"
+              <p class="bind-title">
+                {{ $t('settings.providers.catalog.legacyIds') }}
+              </p>
+              <p class="bind-detail">
+                {{ $t('settings.providers.legacyPinsHint') }}
+              </p>
+              <KitField
+                v-for="tier in MODEL_TIERS"
+                :key="tier"
+                :label="MODEL_TIER_LABELS[tier]"
               >
-            </label>
-            <div class="row-actions">
-              <KitButton
-                type="submit"
-                size="sm"
-                :disabled="busy"
-              >
-                {{ $t('common.save') }}
-              </KitButton>
-            </div>
-          </form>
-        </details>
+                <KitInput
+                  v-model="modelOverrides[tier]"
+                  :placeholder="gateway?.defaultModels[tier]"
+                  autocomplete="off"
+                />
+              </KitField>
+              <div class="row-actions">
+                <KitButton
+                  type="submit"
+                  size="sm"
+                  :disabled="busy"
+                >
+                  {{ $t('common.save') }}
+                </KitButton>
+              </div>
+            </form>
+          </details>
+        </KitPanel>
       </div>
     </div>
   </div>
@@ -377,6 +369,8 @@ import type {
   OpenRouterCatalogPublic,
   OpenRouterShelfSlot,
 } from '@dostigus/shared'
+import type { KitSelectOption } from '@dostigus/ui-kit'
+import type { ProviderFormField } from '../../utils/provider-settings'
 import {
   clearOpenRouterPins,
   defaultBaseUrlForKind,
@@ -389,10 +383,13 @@ import {
   pinOpenRouterShelf,
   pinOpenRouterTiers,
 } from '@dostigus/shared'
-import { KitButton } from '@dostigus/ui-kit'
-import { providerHealth, tierSituations } from '../../utils/provider-settings'
+import { KitButton, KitField, KitInput, KitPanel, KitSelect } from '@dostigus/ui-kit'
+import { providerErrorField, providerHealth, tierSituations } from '../../utils/provider-settings'
 
 type Binds = Partial<Record<ModelTier, LlmTierBind>>
+
+/** Reka Select items cannot carry an empty value. */
+const UNSET = '__unset'
 
 const KIND_MARKS: Record<LlmProviderKind, string> = {
   'openrouter': 'OR',
@@ -421,14 +418,17 @@ watch(gateway, (next) => {
   modelOverrides.value = { ...next?.modelOverrides }
 }, { immediate: true })
 
+const uid = useId()
 const busy = ref(false)
 const checking = ref(false)
 const flash = ref<{ text: string, error: boolean } | null>(null)
 const adding = ref(false)
+const addError = ref('')
 const editId = ref('')
 const editKey = ref('')
 const editBaseUrl = ref('')
 const editModel = ref('')
+const editError = ref('')
 const removeId = ref('')
 const advancedOpen = ref<Record<string, boolean>>({})
 const firstAdd = ref<{ reset: () => void } | null>(null)
@@ -477,6 +477,32 @@ function providerKind(id: string | undefined): LlmProviderKind | null {
 function providerOptionLabel(provider: LlmProviderPublic): string {
   const label = LLM_PROVIDER_KIND_LABELS[provider.kind]
   return provider.apiKeyMasked ? `${label} · ${provider.apiKeyMasked}` : label
+}
+
+const tierProviderOptions = computed<KitSelectOption[]>(() => [
+  { value: UNSET, label: t('settings.providers.unset') },
+  ...providers.value.map((provider) => ({ value: provider.id, label: providerOptionLabel(provider) })),
+])
+
+function tierPolicyOptions(tier: ModelTier): KitSelectOption[] {
+  const options: KitSelectOption[] = [
+    { value: 'free', label: 'Free' },
+    { value: 'auto', label: 'Auto' },
+  ]
+  if (effectiveBinds.value[tier]?.policy.kind === 'model') {
+    options.push({ value: 'model', label: pinnedName(tier) })
+  }
+  return options
+}
+
+function editErrorOn(field: ProviderFormField, provider: LlmProviderPublic): string | undefined {
+  const text = editError.value
+  return text && providerErrorField(text, provider.kind) === field ? text : undefined
+}
+
+function cancelAdd() {
+  adding.value = false
+  addError.value = ''
 }
 
 /** Only the unusual case. The routing card already says meta vs pinned. */
@@ -595,6 +621,7 @@ async function checkAll() {
 async function addProvider(input: { kind: LlmProviderKind, apiKey: string, baseUrl: string, defaultModel: string }) {
   busy.value = true
   flash.value = null
+  addError.value = ''
   const id = crypto.randomUUID()
   try {
     const saved = await put({
@@ -630,7 +657,7 @@ async function addProvider(input: { kind: LlmProviderKind, apiKey: string, baseU
       say(t('settings.providers.flashProviderAdded'))
     }
   } catch (error) {
-    say(errorText(error, t('settings.providers.saveFailed')), true)
+    addError.value = errorText(error, t('settings.providers.saveFailed'))
   } finally {
     busy.value = false
   }
@@ -642,11 +669,13 @@ function startEdit(provider: LlmProviderPublic) {
   editKey.value = ''
   editBaseUrl.value = provider.baseUrl ?? ''
   editModel.value = provider.defaultModel ?? ''
+  editError.value = ''
 }
 
 async function saveEdit(provider: LlmProviderPublic) {
   busy.value = true
   flash.value = null
+  editError.value = ''
   const key = editKey.value.trim()
   try {
     await put({
@@ -673,7 +702,7 @@ async function saveEdit(provider: LlmProviderPublic) {
       pings.value = next
     }
   } catch (error) {
-    say(errorText(error, t('settings.providers.saveFailed')), true)
+    editError.value = errorText(error, t('settings.providers.saveFailed'))
   } finally {
     busy.value = false
   }
@@ -806,24 +835,15 @@ onMounted(() => {
   margin-bottom: 1.4rem;
 }
 
-.kicker {
-  margin: 0 0 0.45rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.72rem;
-  color: var(--accent);
-}
-
 h1 {
-  margin: 0 0 0.45rem;
-  font-size: 1.7rem;
-  line-height: 1.2;
+  margin: 0 0 0.35rem;
+  font-size: 1.45rem;
 }
 
 .lead {
   margin: 0;
   color: var(--text-muted);
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 .banner {
@@ -894,16 +914,6 @@ h1 {
   color: var(--accent);
 }
 
-.provider {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1.15rem 1.2rem 1.1rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--card);
-}
-
 .p-head {
   display: flex;
   align-items: center;
@@ -921,14 +931,6 @@ h1 {
   font-weight: 800;
   font-size: 0.82rem;
   letter-spacing: 0.04em;
-}
-
-.p-mark.openrouter {
-  background: color-mix(in srgb, var(--bot-accent-10) 30%, var(--surface));
-}
-
-.p-mark.openai {
-  background: color-mix(in srgb, var(--bot-accent-07) 30%, var(--surface));
 }
 
 .p-copy {
@@ -973,20 +975,6 @@ code {
   color: var(--text-muted);
 }
 
-.danger-link {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.danger-link:hover:not(:disabled) {
-  color: var(--accent);
-}
-
 .confirm,
 .edit {
   display: flex;
@@ -1013,56 +1001,14 @@ code {
   gap: 0.5rem;
 }
 
-.danger {
-  appearance: none;
-  border: 1px solid var(--accent-dim);
-  background: transparent;
-  color: var(--accent);
-  border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  font: inherit;
-  font-size: 0.92rem;
-  cursor: pointer;
-}
-
-.danger:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-input,
-select {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  padding: 0.65rem 0.9rem;
-}
-
-input:focus,
-select:focus {
-  outline: 1px solid var(--accent-dim);
-}
-
 .more {
   border-top: 1px solid var(--line-soft);
   padding-top: 0.8rem;
 }
 
-.page-more {
-  padding: 0.9rem 1.2rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--card);
+.page-more .more {
+  border-top: 0;
+  padding-top: 0;
 }
 
 summary {
@@ -1104,23 +1050,7 @@ details[open] > summary {
 }
 
 .add-another {
-  appearance: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.85rem;
-  border: 1px dashed var(--line);
-  border-radius: var(--radius-card);
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  cursor: pointer;
-}
-
-.add-another:hover {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--text) 30%, var(--line));
+  align-self: flex-start;
 }
 
 .bind-grid {
@@ -1160,9 +1090,9 @@ details[open] > summary {
   font-size: 0.78rem;
 }
 
-.bind-row select {
-  padding: 0.45rem 0.8rem;
-  font-size: 0.85rem;
+.bind-select {
+  flex: 0 1 13rem;
+  min-width: 0;
 }
 
 .legacy {

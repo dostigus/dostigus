@@ -13,27 +13,27 @@
       </KitButton>
     </header>
 
-    <section
-      class="card invite"
-      :aria-label="$t('members.inviteAria')"
+    <KitPanel
+      class="invite"
+      :title="$t('members.inviteByEmail')"
+      :description="$t('members.inviteHint')"
     >
-      <h2>{{ $t('members.inviteByEmail') }}</h2>
-      <p class="hint">
-        {{ $t('members.inviteHint') }}
-      </p>
       <form
         class="invite-form"
         @submit.prevent="createInvite"
       >
-        <label class="field">
-          <span>{{ $t('auth.field.email') }}</span>
-          <input
+        <KitField
+          class="wide"
+          :label="$t('auth.field.email')"
+          :error="inviteError || undefined"
+          required
+        >
+          <KitInput
             v-model="inviteEmail"
             type="email"
             autocomplete="off"
-            required
-          >
-        </label>
+          />
+        </KitField>
         <KitButton
           type="submit"
           :disabled="inviting"
@@ -42,206 +42,191 @@
         </KitButton>
       </form>
 
-      <div
+      <KitField
         v-if="issuedUrl"
-        class="link-box"
+        :label="$t('members.inviteLink')"
+        :hint="$t('members.copyOnce')"
+        :error="copyError || undefined"
       >
-        <p class="hint">
-          {{ $t('members.copyOnce') }}
-        </p>
         <div class="copy-row">
-          <input
+          <KitInput
+            class="grow"
+            :model-value="issuedUrl"
             readonly
-            :value="issuedUrl"
-            :aria-label="$t('members.inviteLink')"
             @focus="selectLink"
-          >
-          <button
-            type="button"
-            class="ghost"
+          />
+          <KitButton
+            variant="ghost"
             @click="copyLink"
           >
             {{ copied ? $t('members.copied') : $t('members.copy') }}
-          </button>
+          </KitButton>
         </div>
-      </div>
+      </KitField>
 
-      <p
-        v-if="inviteMessage"
-        class="flash"
-        :class="{ error: inviteMessageError }"
-      >
-        {{ inviteMessage }}
-      </p>
-
-      <h3>{{ $t('members.pending') }}</h3>
+      <h3 class="subhead">
+        {{ $t('members.pending') }}
+      </h3>
       <p
         v-if="inviteLoadError"
-        class="banner"
+        class="note"
+        role="alert"
       >
-        {{ $t('members.loadInvitesFailed') }}
+        <KitChip tone="warn">
+          {{ $t('members.loadInvitesFailed') }}
+        </KitChip>
       </p>
       <p
         v-else-if="invites.length === 0"
-        class="meta"
+        class="hint"
       >
         {{ $t('members.noPending') }}
       </p>
       <ul
         v-else
-        class="people"
+        class="rows"
         :aria-label="$t('members.pendingAria')"
       >
-        <li
+        <KitListRow
           v-for="invite in invites"
           :key="invite.id"
-          class="person"
+          as="li"
+          :title="invite.email"
+          :subtitle="`${isExpired(invite.expiresAt) ? $t('members.expired') : $t('members.expires')} ${formatExpiry(invite.expiresAt)}`"
         >
-          <div class="who">
-            <p class="name">
-              {{ invite.email }}
-            </p>
-            <p class="meta">
-              {{ isExpired(invite.expiresAt) ? $t('members.expired') : $t('members.expires') }}
-              {{ formatExpiry(invite.expiresAt) }}
-            </p>
-          </div>
-          <div
-            v-if="revokeConfirmId === invite.id"
-            class="row-actions"
-          >
-            <button
-              type="button"
-              class="ghost"
-              @click="revokeConfirmId = ''"
-            >
-              {{ $t('common.cancel') }}
-            </button>
-            <button
-              type="button"
-              class="danger"
-              :disabled="busyInviteId === invite.id"
-              @click="revoke(invite.id)"
-            >
-              {{ busyInviteId === invite.id ? $t('members.revoking') : $t('members.revoke') }}
-            </button>
-          </div>
-          <div
-            v-else
-            class="row-actions"
-          >
-            <button
-              type="button"
-              class="ghost"
-              :disabled="busyInviteId === invite.id"
-              @click="rotate(invite.id)"
-            >
-              {{ busyInviteId === invite.id ? $t('members.working') : $t('members.newLink') }}
-            </button>
-            <button
-              type="button"
-              class="ghost"
-              @click="revokeConfirmId = invite.id"
-            >
-              {{ $t('members.revoke') }}
-            </button>
-          </div>
-        </li>
+          <template #trailing>
+            <template v-if="revokeConfirmId === invite.id">
+              <KitButton
+                variant="ghost"
+                size="sm"
+                @click="revokeConfirmId = ''"
+              >
+                {{ $t('common.cancel') }}
+              </KitButton>
+              <KitButton
+                size="sm"
+                :disabled="busyInviteId === invite.id"
+                @click="revoke(invite.id)"
+              >
+                {{ busyInviteId === invite.id ? $t('members.revoking') : $t('members.revoke') }}
+              </KitButton>
+            </template>
+            <template v-else>
+              <KitButton
+                variant="ghost"
+                size="sm"
+                :disabled="busyInviteId === invite.id"
+                @click="rotate(invite.id)"
+              >
+                {{ busyInviteId === invite.id ? $t('members.working') : $t('members.newLink') }}
+              </KitButton>
+              <KitButton
+                variant="ghost"
+                size="sm"
+                @click="revokeConfirmId = invite.id"
+              >
+                {{ $t('members.revoke') }}
+              </KitButton>
+            </template>
+          </template>
+        </KitListRow>
       </ul>
-    </section>
+      <p
+        v-if="inviteMessage"
+        class="note"
+        role="alert"
+      >
+        <KitChip tone="warn">
+          {{ inviteMessage }}
+        </KitChip>
+      </p>
+    </KitPanel>
 
     <p
       v-if="loadError"
-      class="banner"
+      class="note"
+      role="alert"
     >
-      {{ $t('members.loadFailed') }}
+      <KitChip tone="warn">
+        {{ $t('members.loadFailed') }}
+      </KitChip>
     </p>
 
-    <section
+    <KitPanel
       v-else-if="members.length === 0"
-      class="card empty"
+      class="empty"
     >
-      <GooseSticker
-        class="sticker"
-        name="peek"
-        alt=""
-      />
-      <p class="kicker">
-        {{ $t('members.title') }}
-      </p>
-      <h2>{{ $t('members.empty') }}</h2>
-      <p class="hint">
-        {{ $t('members.emptyHint') }}
-      </p>
-      <KitButton
-        type="button"
-        @click="addOpen = true"
-      >
-        {{ $t('members.addShort') }}
-      </KitButton>
-    </section>
-
-    <ul
-      v-else
-      class="people list"
-      aria-label="Members"
-    >
-      <li
-        v-for="member in members"
-        :key="member.id"
-        class="person"
-      >
-        <div class="who">
-          <p class="name">
-            {{ member.displayName }}
-          </p>
-          <p class="meta">
-            {{ member.email ?? member.username }}
-          </p>
-        </div>
-        <p
-          v-if="member.disabledAt"
-          class="meta"
-        >
-          {{ $t('members.disabled') }}
+      <div class="empty-body">
+        <GooseSticker
+          name="peek"
+          alt=""
+        />
+        <h2>{{ $t('members.empty') }}</h2>
+        <p class="hint">
+          {{ $t('members.emptyHint') }}
         </p>
-        <div
-          v-else-if="confirmId === member.id"
-          class="row-actions"
-        >
-          <button
-            type="button"
-            class="ghost"
-            @click="confirmId = ''"
-          >
-            {{ $t('common.cancel') }}
-          </button>
-          <button
-            type="button"
-            class="danger"
-            :disabled="busyId === member.id"
-            @click="turnOff(member.id)"
-          >
-            {{ busyId === member.id ? $t('members.turningOff') : $t('members.disable') }}
-          </button>
-        </div>
-        <button
-          v-else
+        <KitButton
           type="button"
-          class="ghost"
-          @click="confirmId = member.id"
+          @click="addOpen = true"
         >
-          {{ $t('members.disable') }}
-        </button>
-      </li>
-    </ul>
+          {{ $t('members.addShort') }}
+        </KitButton>
+      </div>
+    </KitPanel>
+
+    <KitPanel v-else>
+      <ul
+        class="rows"
+        :aria-label="$t('members.title')"
+      >
+        <KitListRow
+          v-for="member in members"
+          :key="member.id"
+          as="li"
+          :title="member.displayName"
+          :subtitle="member.email ?? member.username ?? undefined"
+        >
+          <template #trailing>
+            <KitChip v-if="member.disabledAt">
+              {{ $t('members.disabled') }}
+            </KitChip>
+            <template v-else-if="confirmId === member.id">
+              <KitButton
+                variant="ghost"
+                size="sm"
+                @click="confirmId = ''"
+              >
+                {{ $t('common.cancel') }}
+              </KitButton>
+              <KitButton
+                size="sm"
+                :disabled="busyId === member.id"
+                @click="turnOff(member.id)"
+              >
+                {{ busyId === member.id ? $t('members.turningOff') : $t('members.disable') }}
+              </KitButton>
+            </template>
+            <KitButton
+              v-else
+              variant="ghost"
+              size="sm"
+              @click="confirmId = member.id"
+            >
+              {{ $t('members.disable') }}
+            </KitButton>
+          </template>
+        </KitListRow>
+      </ul>
+    </KitPanel>
 
     <p
       v-if="message && !addOpen"
-      class="flash"
-      :class="{ error: messageError }"
+      class="note"
+      :role="messageError ? 'alert' : 'status'"
     >
-      {{ message }}
+      <KitChip :tone="messageError ? 'warn' : 'ok'">
+        {{ message }}
+      </KitChip>
     </p>
 
     <KitSheet
@@ -256,59 +241,69 @@
           alt=""
         />
       </template>
-      <form @submit.prevent="add">
-        <label class="field">
-          <span>{{ $t('auth.field.displayName') }}</span>
-          <input
+      <form
+        class="add-form"
+        @submit.prevent="add"
+      >
+        <KitField
+          :label="$t('auth.field.displayName')"
+          :error="addErrors.displayName"
+          required
+        >
+          <KitInput
             v-model="displayName"
-            type="text"
             autocomplete="off"
-            required
-          >
-        </label>
+          />
+        </KitField>
 
-        <label class="field">
-          <span>{{ $t('auth.field.login') }}</span>
-          <input
+        <KitField
+          :label="$t('auth.field.login')"
+          :error="addErrors.login"
+          required
+        >
+          <KitInput
             v-model="login"
-            type="text"
             autocomplete="off"
-            required
-          >
-        </label>
+          />
+        </KitField>
 
-        <label class="field">
-          <span>{{ $t('auth.field.password') }}</span>
-          <input
+        <KitField
+          :label="$t('auth.field.password')"
+          :hint="$t('auth.field.passwordMin')"
+          :error="addErrors.password"
+          required
+        >
+          <KitInput
             v-model="password"
             type="password"
             autocomplete="new-password"
-            required
             minlength="8"
-          >
-          <span class="field-hint">{{ $t('auth.field.passwordMin') }}</span>
-        </label>
+          />
+        </KitField>
 
-        <label class="field">
-          <span>{{ $t('auth.field.confirmPassword') }}</span>
-          <input
+        <KitField
+          :label="$t('auth.field.confirmPassword')"
+          :error="addErrors.confirm"
+          required
+        >
+          <KitInput
             v-model="confirm"
             type="password"
             autocomplete="new-password"
-            required
             minlength="8"
-          >
-        </label>
-
-        <p
-          v-if="message && addOpen"
-          class="flash"
-          :class="{ error: messageError }"
-        >
-          {{ message }}
-        </p>
+          />
+        </KitField>
 
         <div class="actions">
+          <p
+            v-if="addErrors.form"
+            class="note form-error"
+            role="alert"
+          >
+            <KitChip tone="warn">
+              {{ addErrors.form }}
+            </KitChip>
+          </p>
           <KitButton
             variant="ghost"
             type="button"
@@ -330,8 +325,10 @@
 
 <script setup lang="ts">
 import type { Invite, Member } from '@dostigus/shared'
-import { GooseSticker, KitButton, KitSheet } from '@dostigus/ui-kit'
+import type { MemberFormField } from '../../utils/member-form'
+import { GooseSticker, KitButton, KitChip, KitField, KitInput, KitListRow, KitPanel, KitSheet } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../../utils/host-status-copy'
+import { memberErrorField } from '../../utils/member-form'
 
 const { t } = useI18n()
 
@@ -352,6 +349,7 @@ const login = ref('')
 const password = ref('')
 const confirm = ref('')
 const adding = ref(false)
+const addErrors = ref<Partial<Record<MemberFormField | 'confirm', string>>>({})
 const busyId = ref('')
 const confirmId = ref('')
 const message = ref('')
@@ -359,11 +357,12 @@ const messageError = ref(false)
 
 const inviteEmail = ref('')
 const inviting = ref(false)
+const inviteError = ref('')
 const issuedUrl = ref('')
 const issuedId = ref('')
 const copied = ref(false)
+const copyError = ref('')
 const inviteMessage = ref('')
-const inviteMessageError = ref(false)
 const busyInviteId = ref('')
 const revokeConfirmId = ref('')
 
@@ -390,12 +389,12 @@ function selectLink(event: FocusEvent) {
 
 function inviteFailure(error: unknown, fallbackKey: string) {
   inviteMessage.value = hostStatusCopy(error, t, fallbackKey)
-  inviteMessageError.value = true
 }
 
 async function createInvite() {
   inviteMessage.value = ''
-  inviteMessageError.value = false
+  inviteError.value = ''
+  copyError.value = ''
   inviting.value = true
   copied.value = false
   try {
@@ -408,7 +407,7 @@ async function createInvite() {
     inviteEmail.value = ''
     await refreshInvites()
   } catch (error) {
-    inviteFailure(error, 'members.inviteFailed')
+    inviteError.value = hostStatusCopy(error, t, 'members.inviteFailed')
   } finally {
     inviting.value = false
   }
@@ -418,24 +417,24 @@ async function copyLink() {
   if (!issuedUrl.value) {
     return
   }
+  copyError.value = ''
   try {
     await navigator.clipboard.writeText(issuedUrl.value)
     copied.value = true
   } catch {
-    inviteMessage.value = t('members.selectAndCopy')
-    inviteMessageError.value = true
+    copyError.value = t('members.selectAndCopy')
   }
 }
 
 async function revoke(id: string) {
   busyInviteId.value = id
   inviteMessage.value = ''
-  inviteMessageError.value = false
   try {
     await $fetch(`/api/members/invites/${id}/revoke`, { method: 'POST' })
     if (issuedId.value === id) {
       issuedUrl.value = ''
       issuedId.value = ''
+      copyError.value = ''
     }
     revokeConfirmId.value = ''
     await refreshInvites()
@@ -449,7 +448,7 @@ async function revoke(id: string) {
 async function rotate(id: string) {
   busyInviteId.value = id
   inviteMessage.value = ''
-  inviteMessageError.value = false
+  copyError.value = ''
   copied.value = false
   try {
     const issued = await $fetch<{ invite: Invite, url: string }>(`/api/members/invites/${id}/rotate`, {
@@ -474,15 +473,16 @@ watch(addOpen, (isOpen) => {
   if (isOpen) {
     message.value = ''
     messageError.value = false
+    addErrors.value = {}
   }
 })
 
 async function add() {
   message.value = ''
   messageError.value = false
+  addErrors.value = {}
   if (password.value !== confirm.value) {
-    message.value = t('auth.error.passwordMismatch')
-    messageError.value = true
+    addErrors.value = { confirm: t('auth.error.passwordMismatch') }
     return
   }
   adding.value = true
@@ -509,8 +509,7 @@ async function add() {
       copied.value = false
     }
   } catch (error) {
-    message.value = hostStatusCopy(error, t, 'members.addFailed')
-    messageError.value = true
+    addErrors.value = { [memberErrorField(error)]: hostStatusCopy(error, t, 'members.addFailed') }
   } finally {
     adding.value = false
   }
@@ -554,209 +553,86 @@ async function turnOff(id: string) {
 }
 
 .head p,
-.hint,
-.meta {
+.hint {
   margin: 0;
   color: var(--text-muted);
   line-height: 1.5;
 }
 
-.card {
-  padding: 1.5rem 1.45rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--card);
-}
-
-.invite h2,
-.invite h3,
-.empty h2 {
-  margin: 0 0 0.4rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.invite h3 {
-  margin-top: 1.4rem;
-}
-
-.invite > .hint {
-  margin: 0 0 1rem;
+.note {
+  margin: 0;
 }
 
 .invite-form {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.35rem;
+  gap: 0.9rem;
 }
 
-.invite-form .field {
-  width: 100%;
-  margin-bottom: 0.35rem;
-}
-
-.link-box {
-  margin-top: 1rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--bg);
+.wide {
+  align-self: stretch;
 }
 
 .copy-row {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
-  align-items: center;
 }
 
-.copy-row input {
+.grow {
   flex: 1;
-  min-width: 0;
 }
 
-.banner {
-  margin: 0;
-  color: var(--accent);
-}
-
-.empty {
-  text-align: center;
-}
-
-.sticker {
-  margin-bottom: 0.35rem;
-}
-
-.kicker {
-  margin: 0 0 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.72rem;
-  color: var(--accent);
-}
-
-.empty .hint {
-  margin: 0 0 1.2rem;
-}
-
-.people {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.people.list {
-  margin: 0;
-}
-
-.invite .people {
-  margin-top: 0.75rem;
-}
-
-.person {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.15rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--card);
-}
-
-.invite .person {
-  background: var(--bg);
-}
-
-.who {
-  min-width: 0;
-}
-
-.name {
-  margin: 0;
+.subhead {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
   font-weight: 700;
 }
 
-.meta {
-  font-size: 0.85rem;
+.rows {
+  list-style: none;
+  margin: 0 -0.7rem;
+  padding: 0;
 }
 
-.row-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.45rem;
+.rows > li + li {
+  border-top: 1px solid var(--line-soft);
 }
 
-.field {
+.empty-body {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.9rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
 }
 
-.field-hint {
-  font-size: 0.78rem;
-}
-
-input {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 0.9rem;
-}
-
-input:focus {
-  outline: 1px solid var(--accent-dim);
-}
-
-.flash {
+.empty-body h2 {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 1.15rem;
 }
 
-.flash.error {
-  color: var(--accent);
+.empty-body .hint {
+  margin-bottom: 0.6rem;
+}
+
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
 }
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 0.6rem;
   margin-top: 0.35rem;
 }
 
-.ghost,
-.danger {
-  appearance: none;
-  border-radius: var(--radius);
-  padding: 0.55rem 1rem;
-  cursor: pointer;
-}
-
-.ghost {
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--text);
-}
-
-.danger {
-  border: 1px solid var(--accent-dim);
-  background: transparent;
-  color: var(--accent);
-}
-
-.ghost:disabled,
-.danger:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+.form-error {
+  margin-right: auto;
 }
 </style>
