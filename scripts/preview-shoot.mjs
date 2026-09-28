@@ -38,6 +38,16 @@ export const PREVIEW_SHOOT_STATES = {
     ready: { selector: '.bubble.system', count: 3 },
     viewport: DEFAULT_VIEWPORT,
   },
+  'readme-chat': {
+    seed: 'readme=1',
+    ready: {
+      selector: '.bubble',
+      count: 7,
+      none: ['.purpose', 'vite-error-overlay'],
+    },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'readme-chat waits for the Kitchen dinner thread (greeting + 6 fixture lines) and no Vite i18n overlay.',
+  },
   'providers-empty': {
     seed: 'settings=1',
     thenPath: '/dashboard/providers',
@@ -51,10 +61,10 @@ export const PREVIEW_SHOOT_STATES = {
       selector: '.provider',
       count: 1,
       any: ['.shelf .card:not(.skeleton)'],
-      none: ['.shelf [aria-busy="true"]'],
+      none: ['.shelf [aria-busy="true"]', 'vite-error-overlay'],
     },
     viewport: DEFAULT_VIEWPORT,
-    hint: 'providers-fixture waits for shelf cards (.shelf .card:not(.skeleton)), not the first-paint miss banner.',
+    hint: 'providers-fixture waits for shelf cards (.shelf .card:not(.skeleton)), not the first-paint miss banner, and no Vite i18n overlay.',
   },
   'settings-other': {
     seed: 'settings=1',

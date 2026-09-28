@@ -1,7 +1,7 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { ChatPart } from '@dostigus/shared'
 import type { HostSessionUser } from './owner-auth'
-import { addKitchenPantry, botThreadIdFor, createBot, createMember, createMessengerThread, createSchedule, findMemberSecretByLogin, findOwnerSecretByLogin, finishTurn, getBot, getKitchenRecipe, getLlmGatewaySettings, grantBot, insertMessage, insertThreadLine, listBots, listKitchenCooked, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, markKitchenCooked, ownerExists, pauseSchedule, saveKitchenRecipe, startTurn, upsertLlmGatewaySettings } from '@dostigus/db'
+import { addKitchenPantry, botThreadIdFor, createBot, createMember, createMessengerThread, createSchedule, findMemberSecretByLogin, findOwnerSecretByLogin, finishTurn, getBot, getKitchenRecipe, getLlmGatewaySettings, grantBot, insertMessage, insertThreadLine, listBots, listBotSkills, listKitchenCooked, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, markKitchenCooked, ownerExists, pauseSchedule, saveKitchenRecipe, startTurn, upsertBotSkill, upsertLlmGatewaySettings } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID, HOST_SCHEDULE_SHEET_ID } from '../../app/utils/host-sheets'
 import { previewChatLocation } from '../../app/utils/preview-hold'
@@ -103,6 +103,61 @@ export const PREVIEW_SYSTEM_LINES = [
   'Skill · notes · Удалено',
   'Бот · Field notes · учёба',
 ] as const
+
+/** README face Bots. Distinct flock marks and Kit accents. Hardcoded fixtures. */
+export const PREVIEW_README_MAIL_BOT_ID = 'readme-mail'
+export const PREVIEW_README_KITCHEN_BOT_ID = 'readme-kitchen'
+export const PREVIEW_README_READER_BOT_ID = 'readme-reader'
+
+export const PREVIEW_README_MAIL_BOT_NAME = 'Mail'
+export const PREVIEW_README_KITCHEN_BOT_NAME = 'Kitchen'
+export const PREVIEW_README_READER_BOT_NAME = 'Reader'
+
+/**
+ * Kitchen thread lines for `?readme=1`. First user line marks a thread
+ * already filled. No LLM call — these strings are the fixture.
+ */
+export const PREVIEW_README_KITCHEN_PREFIX = 'What is for dinner tonight?'
+
+export const PREVIEW_README_KITCHEN_LINES = [
+  { role: 'user', content: PREVIEW_README_KITCHEN_PREFIX },
+  {
+    role: 'assistant',
+    content: 'Fried rice if you still have an egg and soy. A light broth if you would rather use the chicken for soup.',
+  },
+  { role: 'user', content: 'Fried rice. What should I add from the fridge?' },
+  {
+    role: 'assistant',
+    content: 'Frozen peas and a chopped scallion are enough. Leftover cabbage is even better.',
+  },
+  { role: 'user', content: 'Write the recipe for two.' },
+  {
+    role: 'assistant',
+    content: [
+      '**Chicken fried rice (2)**',
+      '',
+      'Warm a wide pan. Cook 2 cups leftover rice with diced roast chicken, 1 egg, peas, and a scallion. Finish with soy.',
+    ].join('\n'),
+  },
+] as const
+
+export const PREVIEW_README_SKILLS = {
+  mail: {
+    id: 'inbox',
+    description: 'Triage mail and draft short replies.',
+    instructions: 'Sort incoming mail. Draft a short reply when asked. Do not invent folders or send mail.',
+  },
+  kitchen: {
+    id: 'dinner',
+    description: 'Suggest dinner from leftovers already in the kitchen.',
+    instructions: 'Suggest one dinner from what is already on hand. Keep the recipe short. Do not invent pantry items.',
+  },
+  reader: {
+    id: 'passages',
+    description: 'Keep short reading notes.',
+    instructions: 'Save a short passage note when asked. Do not invent books or quotes.',
+  },
+} as const
 
 /**
  * On only for `nuxt dev` with `DOSTIGUS_PREVIEW_SEED=1`.
@@ -225,6 +280,15 @@ export function previewRoomsRequested(value: unknown): boolean {
   return previewQueryOn(value)
 }
 
+/**
+ * `?readme=1` on GET. Seeds Mail, Kitchen, and Reader, opens the Kitchen
+ * thread with hardcoded dinner lines, and sets Locale `en`. HEAD ignores
+ * this query. A second visit does not duplicate Bots or Chat lines.
+ */
+export function previewReadmeRequested(value: unknown): boolean {
+  return previewQueryOn(value)
+}
+
 /** `?threads=1&as=member` signs in the preview Member. Any other value stays the Owner. */
 export function previewThreadAsMember(value: unknown): boolean {
   if (Array.isArray(value)) {
@@ -238,8 +302,9 @@ export function previewThreadAsMember(value: unknown): boolean {
  * `members=1` opens Members. `settings=1` opens `/dashboard`.
  * `providers=1` opens `/dashboard/providers`. A room opens
  * that Thread. Threads open `/` for the Owner and `/bots/<id>` for the
- * Member. Otherwise Chat, including `hold` and `activity`. Members,
- * settings, threads, and rooms do not keep `activity`.
+ * Member. `readme=1` opens the Kitchen Bot. Otherwise Chat, including
+ * `hold` and `activity`. Members, settings, threads, rooms, and readme
+ * do not keep `activity`.
  */
 export function previewSeedRedirect(input: {
   botId: string
@@ -253,6 +318,7 @@ export function previewSeedRedirect(input: {
   hold?: unknown
   activity?: unknown
   target?: unknown
+  readme?: unknown
 }): string {
   if (previewMembersRequested(input.members)) {
     return '/dashboard/members'
@@ -265,6 +331,9 @@ export function previewSeedRedirect(input: {
   }
   if (previewThreadsRequested(input.threads)) {
     return previewThreadAsMember(input.as) ? `/bots/${input.botId}` : '/'
+  }
+  if (previewReadmeRequested(input.readme)) {
+    return `/bots/${input.botId}`
   }
   return previewChatLocation(input.botId, input.hold, input.activity, input.target)
 }
@@ -308,6 +377,90 @@ export function readPreviewSeedHead(store: OpenedStore): PreviewSeedHeadResult {
 }
 
 /**
+ * Mail, Kitchen, and Reader for the README face. Hardcoded names, Skills,
+ * marks, and Kitchen Chat lines. A second call does not add Bots or lines.
+ * Seeds the fixture OpenRouter Provider so the quiet-key banner stays off.
+ */
+export function ensurePreviewReadme(store: OpenedStore, personId: string): string {
+  ensurePreviewOpenRouterProvider(store)
+  const specs = [
+    {
+      id: PREVIEW_README_MAIL_BOT_ID,
+      name: PREVIEW_README_MAIL_BOT_NAME,
+      avatarShape: 'owl',
+      avatarColor: '#1F7AE5',
+      label: 'Inbox',
+      description: 'Triage mail and draft short replies.',
+      skill: PREVIEW_README_SKILLS.mail,
+    },
+    {
+      id: PREVIEW_README_KITCHEN_BOT_ID,
+      name: PREVIEW_README_KITCHEN_BOT_NAME,
+      avatarShape: 'duck',
+      avatarColor: '#E47134',
+      label: 'Dinner',
+      description: 'Plan meals from what you already have.',
+      skill: PREVIEW_README_SKILLS.kitchen,
+    },
+    {
+      id: PREVIEW_README_READER_BOT_ID,
+      name: PREVIEW_README_READER_BOT_NAME,
+      avatarShape: 'heron',
+      avatarColor: '#8354E6',
+      label: 'Notes',
+      description: 'Read and mark short passages.',
+      skill: PREVIEW_README_SKILLS.reader,
+    },
+  ] as const
+  for (const spec of specs) {
+    if (!getBot(store, spec.id)) {
+      createBot(store, {
+        id: spec.id,
+        name: spec.name,
+        createdBy: personId,
+        avatarShape: spec.avatarShape,
+        avatarColor: spec.avatarColor,
+        label: spec.label,
+        description: spec.description,
+      })
+    }
+    const haveSkill = listBotSkills(store, spec.id).some((skill) => skill.id === spec.skill.id)
+    if (!haveSkill) {
+      upsertBotSkill(store, spec.id, spec.skill)
+    }
+  }
+  ensurePreviewReadmeKitchenLines(store, personId)
+  return PREVIEW_README_KITCHEN_BOT_ID
+}
+
+function ensurePreviewReadmeKitchenLines(store: OpenedStore, personId: string): void {
+  const existing = listMessages(store, PREVIEW_README_KITCHEN_BOT_ID)
+  if (existing.some((message) => message.content.startsWith(PREVIEW_README_KITCHEN_PREFIX))) {
+    return
+  }
+  let at = 0
+  for (const message of existing) {
+    const ms = Date.parse(message.createdAt)
+    if (ms > at) {
+      at = ms
+    }
+  }
+  const stamp = store.sqlite.prepare('UPDATE messages SET created_at = ? WHERE id = ?')
+  for (const line of PREVIEW_README_KITCHEN_LINES) {
+    at += 1
+    const last = line === PREVIEW_README_KITCHEN_LINES.at(-1)
+    const message = insertMessage(store, {
+      botId: PREVIEW_README_KITCHEN_BOT_ID,
+      role: line.role,
+      content: line.content,
+      personId: line.role === 'user' ? personId : null,
+      parts: last && line.role === 'assistant' ? previewKitchenParts() : undefined,
+    })
+    stamp.run(at, message.id)
+  }
+}
+
+/**
  * Ensure the preview Owner and the fixture preview Bot (`preview`).
  * A rename or a newer Bot does not replace that Chat.
  * `tall` appends preview layout lines once.
@@ -320,40 +473,47 @@ export function readPreviewSeedHead(store: OpenedStore): PreviewSeedHeadResult {
  * `threads` adds a preview Member, that Member's Bot, a grant for the
  * Member on Bot `preview`, and separate bot-threads.
  * `rooms` does that and adds a direct message plus a room with the shared Bot.
+ * `readme` seeds Mail, Kitchen, and Reader and opens Kitchen. It does not
+ * create fixture Bot `preview` when that row is still missing.
  * Throws OwnerAuthError 401 when the Store Owner is not this login.
  */
 export async function ensurePreviewCluster(
   store: OpenedStore,
   hashPassword: (password: string) => Promise<string>,
   verifyPassword: (hash: string, password: string) => Promise<boolean>,
-  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, system?: boolean, schedules?: boolean, threads?: boolean, rooms?: boolean } = {},
+  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, system?: boolean, schedules?: boolean, threads?: boolean, rooms?: boolean, readme?: boolean } = {},
 ): Promise<{ user: HostSessionUser, botId: string, member: HostSessionUser | null, roomId: string | null }> {
   const user = await ensurePreviewOwner(store, hashPassword, verifyPassword)
-  const botId = stablePreviewBotId(listBots(store))
-    ?? createBot(store, {
-      id: PREVIEW_BOT_ID,
-      name: DEFAULT_BOT_NAME,
-      createdBy: user.id,
-    }).bot.id
-  if (options.tall) {
-    ensurePreviewTallThread(store, botId, user.id)
+  const existingPreview = stablePreviewBotId(listBots(store))
+  const botId = options.readme
+    ? ensurePreviewReadme(store, user.id)
+    : existingPreview
+      ?? createBot(store, {
+        id: PREVIEW_BOT_ID,
+        name: DEFAULT_BOT_NAME,
+        createdBy: user.id,
+      }).bot.id
+  if (!options.readme) {
+    if (options.tall) {
+      ensurePreviewTallThread(store, botId, user.id)
+    }
+    if (options.parts) {
+      ensurePreviewPartsLine(store, botId)
+    }
+    if (options.kitchen) {
+      ensurePreviewKitchen(store, botId, user.id)
+    }
+    if (options.system) {
+      ensurePreviewSystemLines(store, botId, user.id)
+    }
+    if (options.schedules) {
+      ensurePreviewSchedules(store, botId, user.id)
+    }
   }
-  if (options.parts) {
-    ensurePreviewPartsLine(store, botId)
-  }
-  if (options.kitchen) {
-    ensurePreviewKitchen(store, botId, user.id)
-  }
-  if (options.system) {
-    ensurePreviewSystemLines(store, botId, user.id)
-  }
-  if (options.schedules) {
-    ensurePreviewSchedules(store, botId, user.id)
-  }
-  const member = options.threads || options.rooms
+  const member = !options.readme && (options.threads || options.rooms)
     ? await ensurePreviewThreads(store, hashPassword, user.id, botId)
     : null
-  const roomId = options.rooms && member
+  const roomId = !options.readme && options.rooms && member
     ? ensurePreviewRooms(store, user.id, member.id, botId)
     : null
   return { user, botId, member, roomId }

@@ -1,9 +1,9 @@
 import process from 'node:process'
 
 /**
- * Local Host preview entry. GET signs in the preview Owner, ensures the
- * fixture preview Bot (`preview`), and opens that Chat. The display name
- * may change. `?tall=1` fills a tall thread once. `?parts=1` adds one
+ * Local Host preview entry. GET signs in the preview Owner and, unless
+ * `?readme=1`, ensures the fixture preview Bot (`preview`) and opens that
+ * Chat. The display name may change. `?tall=1` fills a tall thread once. `?parts=1` adds one
  * assistant line with a Kit button and a status once. `?kitchen=1` adds one
  * assistant line with a Kitchen button once and fills empty Kitchen tables.
  * `?schedules=1` seeds this person's Schedules on Bot `preview`, wake Turns
@@ -23,10 +23,12 @@ import process from 'node:process'
  * `?rooms=1` also seeds a direct message and a room with Bot `preview`.
  * The room line mentions that Bot and stores one reply, then opens the room.
  * `?rooms=1&as=member` signs in the Member on that same room.
- * `?members=1` still opens Members. `?settings=1` opens Settings →
- * Провайдеры. `?providers=1` also saves the fixture OpenRouter Provider
- * when the Store has none, then opens that page. `?members=1` still wins.
- * HEAD ignores those queries. Not a domain Bot.
+ * `?members=1` still opens Members. `?settings=1` opens Dashboard
+ * Overview. `?providers=1` also saves the fixture OpenRouter Provider
+ * when the Store has none, then opens Dashboard → Providers.
+ * `?readme=1` seeds Mail, Kitchen, and Reader (hardcoded names, Skills,
+ * and Kitchen dinner lines) and opens Kitchen. Locale cookie is `en`.
+ * `?members=1` still wins. HEAD ignores those queries. Not a domain Bot.
  * Answers 404 unless `nuxt dev` is running with `DOSTIGUS_PREVIEW_SEED=1`.
  */
 export default defineEventHandler(async (event) => {
@@ -51,6 +53,7 @@ export default defineEventHandler(async (event) => {
         system: previewSystemRequested(query.system),
         threads: previewThreadsRequested(query.threads),
         rooms: previewRoomsRequested(query.rooms),
+        readme: previewReadmeRequested(query.readme),
       },
     )
     if (previewProvidersRequested(query.providers)) {
@@ -73,6 +76,7 @@ export default defineEventHandler(async (event) => {
       hold: query.hold,
       activity: query.activity,
       target: query.target,
+      readme: query.readme,
     }), 302)
   } catch (error) {
     if (error instanceof OwnerAuthError && error.statusCode === 401) {

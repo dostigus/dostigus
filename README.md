@@ -2,13 +2,13 @@
 
 Self-host household agent OS — Bots, Chat, and Schedules on your machine. Not another chatbot UI.
 
-![Chat with Skill and self-settings system lines](docs/images/chat-system.png)
+![Kitchen Chat on the Host with Mail and Reader in the sidebar](docs/images/chat-system.png)
 
-*Chat on the Host: a Bot thread with Skill and self-settings system lines.*
+*Kitchen thread on a lived-in Host, with Mail and Reader in the sidebar.*
 
 ![Providers shelf with OpenRouter catalog](docs/images/providers.png)
 
-*Settings → Providers: an OpenRouter key on the shelf, with Model tiers and the live catalog.*
+*Dashboard → Providers: an OpenRouter key on the shelf, with Model tiers and the live catalog.*
 
 ## Why
 
@@ -16,13 +16,14 @@ Grok Bot and OpenClaw-style desktop agents keep the loop on someone else’s box
 
 You run a **Cluster**. You add **Household** Members. Bots talk through an **MCP surface** against that Store. You pick **Providers** — OpenRouter first, plus OpenAI and OpenAI-compatible — and bind **Model tiers** instead of baking a model list into the repo.
 
-Portable Module packages, Apply, and a marketplace are the direction, not day-1 shipping. This Host already runs Chat, Skills, Schedules, Artifacts, and Household Members. Do not read that as a store you browse and install.
+Day-1 the Host can **Export Pack** from a live Bot and **Apply from file** (preview, then write onto a Bot). That is not a marketplace. Module packages and git-URL Apply stay later — not a browseable store.
 
 ## What you get
 
 - **Cluster** — one Household’s running instance: Store, Bots, and settings. Not the git repo.
 - **Host** — the client app: Chat, Cards, and Sheets from the Kit.
 - **Bot** — a long-lived persona with Skills and MCP access. A Bot is not a Module package.
+- **Pack** — a portable recipe you Export from a Bot or Apply from a local file. Not a Bot and not a Module package.
 - **Skill** — instructions a Bot follows. Not executable UI.
 - **Schedule** — a Store row that says when the Host wakes a Bot.
 - **Artifact** — a persisted Cluster file (upload or Bot put), joined onto a Chat line.
@@ -39,7 +40,7 @@ Self-host is the intended path:
 docker compose -f docker/compose.yml up --build
 ```
 
-Open [http://localhost:3000/](http://localhost:3000/). Create the Owner. In **Settings → Providers**, add an OpenRouter (or other) key. Env, Store volume, and MCP token: [`docs/deploy.md`](docs/deploy.md).
+Open [http://localhost:3000/](http://localhost:3000/). Create the Owner. In **Dashboard → Providers**, add an OpenRouter (or other) key. Env, Store volume, and MCP token: [`docs/deploy.md`](docs/deploy.md).
 
 ### Develop
 
@@ -63,7 +64,7 @@ Scope: [`docs/SPEC.md`](docs/SPEC.md). Glossary: [`CONTEXT.md`](CONTEXT.md). Dec
 
 Early. Self-host first. MIT.
 
-Day-1 does **not** ship a Builder Apply marketplace, Share links or guests, a managed hosting product, or a weather Module seed as a product claim. Portable Module packages stay later. See [`docs/SPEC.md`](docs/SPEC.md).
+Day-1 Host **Export Pack** / **Apply from file** (preview → Bot). Marketplace, Module packages, and git-URL Apply stay later. This Host already runs Chat, Skills, Schedules, Artifacts, and Household Members. Do not read that as a store you browse and install. See [`docs/SPEC.md`](docs/SPEC.md).
 
 ## License
 

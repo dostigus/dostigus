@@ -278,9 +278,9 @@
     },
     "ariaChat": "Chat",
     "quietOwnerShort": "Replies stay quiet until you add an OpenRouter key.",
-    "emptyRoom": "Mention a Bot with @Name so it replies.",
+    "emptyRoom": "Mention a Bot with {'@'}Name so it replies.",
     "emptyDm": "Say hello.",
-    "mentionHint": "Mention a Bot with @Name so it replies.",
+    "mentionHint": "Mention a Bot with {'@'}Name so it replies.",
     "placeholderOrSend": "Add a message or just send",
     "kitchenDescriptionAlt": "Pantry, one recipe, and a cooked log.",
     "fallbackTitle": "Chat"

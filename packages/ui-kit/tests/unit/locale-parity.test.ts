@@ -18,6 +18,26 @@ it('keeps the Host i18n copies identical to the Kit dictionaries', () => {
   }
 })
 
+it('escapes literal @ so unplugin-vue-i18n does not treat chrome as linked messages', () => {
+  for (const locale of ['en', 'ru'] as const) {
+    const values = localeMessageKeys(HOST_LOCALE_MESSAGES[locale]).map((key) => {
+      const parts = key.split('.')
+      let current: unknown = HOST_LOCALE_MESSAGES[locale]
+      for (const part of parts) {
+        current = (current as Record<string, unknown>)[part]
+      }
+      return String(current)
+    })
+    for (const value of values) {
+      expect(value.replaceAll('{\'@\'}', ''), `${locale}: ${value}`).not.toMatch(/@/)
+    }
+  }
+  expect(HOST_LOCALE_MESSAGES.en.chat.emptyRoom).toContain('{\'@\'}Name')
+  expect(HOST_LOCALE_MESSAGES.en.chat.mentionHint).toContain('{\'@\'}Name')
+  expect(HOST_LOCALE_MESSAGES.ru.chat.emptyRoom).toContain('{\'@\'}Имя')
+  expect(HOST_LOCALE_MESSAGES.ru.chat.mentionHint).toContain('{\'@\'}Имя')
+})
+
 it('does not use the loanword Thread in RU chrome values', () => {
   const values = localeMessageKeys(HOST_LOCALE_MESSAGES.ru)
     .map((key) => {
