@@ -133,6 +133,19 @@ export const PREVIEW_SHOOT_STATES = {
     ready: { selector: '.kit-dialog .kit-row[data-selected]', count: 1 },
     viewport: DEFAULT_VIEWPORT,
   },
+  'bot-picker': {
+    seed: '',
+    clicks: ['.side-head .chrome[aria-haspopup="menu"]', '.kit-menu .kit-menu-item:first-child'],
+    ready: { selector: '.picker .kit-row', count: 2 },
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'thread-composer': {
+    seed: 'threads=1',
+    clicks: ['.side-head .chrome[aria-haspopup="menu"]', '.kit-menu .kit-menu-item:nth-child(3)'],
+    ready: { selector: '.composer .kit-field', count: 1, any: ['.composer .kit-row'] },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'thread-composer seeds the preview Member (?threads=1) so the group composer lists a person row.',
+  },
   'kitchen': {
     seed: 'kitchen=1',
     clicks: ['.kit-chat-parts .kit-button'],

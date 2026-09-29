@@ -7,29 +7,28 @@
       <HostMenuButton />
       <h2
         id="thread-composer-title"
-        class="sr-only"
+        class="kit-sr-only"
       >
         {{ heading }}
       </h2>
       <label class="search">
         <span class="to">{{ $t('host.threadCreate.to') }}</span>
-        <input
+        <KitInput
           ref="searchEl"
           v-model="query"
           type="search"
           :placeholder="kind === 'room' ? $t('host.threadCreate.findPersonOrBot') : $t('host.threadCreate.findPerson')"
           autocomplete="off"
           @keydown.enter.prevent
-        >
+        />
       </label>
-      <button
-        type="button"
-        class="back"
+      <KitButton
+        variant="close"
         :aria-label="$t('host.botPicker.back')"
         @click="dismiss"
       >
         ×
-      </button>
+      </KitButton>
     </header>
 
     <form
@@ -43,20 +42,19 @@
         {{ error }}
       </p>
 
-      <label
+      <KitField
         v-if="kind !== 'dm'"
-        class="field"
+        class="title"
+        :label="$t('host.threadCreate.titleLabel')"
+        required
       >
-        <span>{{ $t('host.threadCreate.titleLabel') }}</span>
-        <input
+        <KitInput
           v-model="title"
-          type="text"
           maxlength="80"
-          required
           autocomplete="off"
           :placeholder="$t('host.threadCreate.titlePlaceholder')"
-        >
-      </label>
+        />
+      </KitField>
 
       <p
         v-if="kind === 'room'"
@@ -85,80 +83,85 @@
           v-for="person in visiblePeople"
           :key="person.id"
         >
-          <button
-            type="button"
-            class="row"
-            :class="{ current: personIds.includes(person.id) }"
+          <KitListRow
+            as="button"
+            :selected="personIds.includes(person.id)"
             :aria-pressed="kind === 'dm' ? undefined : personIds.includes(person.id)"
             :disabled="busy"
             @click="togglePerson(person.id)"
           >
-            <HostBotAvatar
-              :name="person.displayName"
-              :seed="person.id"
-            />
-            <span class="copy">
-              <span class="name-row">
+            <template #leading>
+              <HostBotAvatar
+                :name="person.displayName"
+                :seed="person.id"
+              />
+            </template>
+            <template #title>
+              <span class="line">
                 <span class="name">{{ person.displayName }}</span>
                 <span class="tag">{{ $t('host.threadCreate.person') }}</span>
               </span>
-            </span>
-            <span
+            </template>
+            <template
               v-if="kind !== 'dm'"
-              class="tick"
-              :class="{ on: personIds.includes(person.id) }"
-              aria-hidden="true"
+              #trailing
             >
-              <svg
-                v-if="personIds.includes(person.id)"
-                viewBox="0 0 24 24"
+              <span
+                class="tick"
+                :class="{ on: personIds.includes(person.id) }"
+                aria-hidden="true"
               >
-                <path d="M6 12.5l4 4 8-8.5" />
-              </svg>
-            </span>
-          </button>
+                <svg
+                  v-if="personIds.includes(person.id)"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M6 12.5l4 4 8-8.5" />
+                </svg>
+              </span>
+            </template>
+          </KitListRow>
         </li>
         <li
           v-for="bot in visibleBots"
           :key="bot.id"
         >
-          <button
-            type="button"
-            class="row"
-            :class="{ current: botIds.includes(bot.id) }"
+          <KitListRow
+            as="button"
+            :selected="botIds.includes(bot.id)"
             :aria-pressed="botIds.includes(bot.id)"
             :disabled="busy || botBlocked(bot.id)"
+            :subtitle="botBlocked(bot.id) ? $t('host.threadCreate.noSharedAccess') : undefined"
             @click="toggleBot(bot.id)"
           >
-            <HostBotAvatar
-              :name="bot.name"
-              :seed="bot.id"
-              :shape="bot.manifest.avatarShape"
-              :avatar-color="bot.manifest.avatarColor"
-            />
-            <span class="copy">
-              <span class="name-row">
+            <template #leading>
+              <HostBotAvatar
+                :name="bot.name"
+                :seed="bot.id"
+                :shape="bot.manifest.avatarShape"
+                :avatar-color="bot.manifest.avatarColor"
+              />
+            </template>
+            <template #title>
+              <span class="line">
                 <span class="name">{{ bot.name }}</span>
                 <span class="tag">Bot</span>
               </span>
+            </template>
+            <template #trailing>
               <span
-                v-if="botBlocked(bot.id)"
-                class="preview"
-              >{{ $t('host.threadCreate.noSharedAccess') }}</span>
-            </span>
-            <span
-              class="tick"
-              :class="{ on: botIds.includes(bot.id) }"
-              aria-hidden="true"
-            >
-              <svg
-                v-if="botIds.includes(bot.id)"
-                viewBox="0 0 24 24"
+                class="tick"
+                :class="{ on: botIds.includes(bot.id) }"
+                aria-hidden="true"
               >
-                <path d="M6 12.5l4 4 8-8.5" />
-              </svg>
-            </span>
-          </button>
+                <svg
+                  v-if="botIds.includes(bot.id)"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M6 12.5l4 4 8-8.5" />
+                </svg>
+              </span>
+            </template>
+          </KitListRow>
         </li>
       </ul>
 
@@ -169,20 +172,21 @@
         {{ query.trim() ? $t('host.threadCreate.emptyPeople') : $t('host.threadCreate.emptyNone') }}
       </p>
 
-      <button
+      <KitButton
         v-if="kind !== 'dm'"
         type="submit"
         class="submit"
         :disabled="busy || !canSubmit"
       >
         {{ busy ? $t('host.threadCreate.submitBusy') : $t('host.threadCreate.submit') }}
-      </button>
+      </KitButton>
     </form>
   </section>
 </template>
 
 <script setup lang="ts">
 import type { HouseholdPerson, ThreadListItem } from '@dostigus/shared'
+import { KitButton, KitField, KitInput, KitListRow } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../utils/host-status-copy'
 
 type RoomAudience = {
@@ -207,7 +211,7 @@ const personIds = ref<string[]>([])
 const botIds = ref<string[]>([])
 const busy = ref(false)
 const error = ref('')
-const searchEl = ref<HTMLInputElement | null>(null)
+const searchEl = ref<InstanceType<typeof KitInput> | null>(null)
 
 const { t } = useI18n()
 
@@ -386,10 +390,6 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--line);
 }
 
-.head:focus-within {
-  border-bottom-color: var(--accent);
-}
-
 .search {
   flex: 1;
   min-width: 0;
@@ -405,35 +405,6 @@ onUnmounted(() => {
   font-size: 1rem;
 }
 
-.search input,
-.field input {
-  font: inherit;
-  color: inherit;
-}
-
-.search input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  padding: 0.35rem 0;
-  background: transparent;
-  font-size: 1.05rem;
-}
-
-.search input:focus,
-.field input:focus {
-  outline: none;
-}
-
-.search input::placeholder,
-.field input::placeholder {
-  color: var(--text-muted);
-}
-
-.search input::-webkit-search-cancel-button {
-  cursor: pointer;
-}
-
 .body {
   flex: 1;
   min-height: 0;
@@ -444,41 +415,20 @@ onUnmounted(() => {
   padding: 0.9rem 0.7rem 1.4rem;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+.title {
   margin: 0 0.55rem;
 }
 
-.field span,
 .hint,
 .error {
   margin: 0;
+  padding: 0 0.7rem;
   line-height: 1.45;
 }
 
-.field span,
 .hint {
   color: var(--text-muted);
   font-size: 0.85rem;
-}
-
-.field input {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 0.55rem 0.7rem;
-}
-
-.field input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.hint,
-.error {
-  padding: 0 0.7rem;
 }
 
 .error {
@@ -491,82 +441,30 @@ onUnmounted(() => {
   padding: 0;
 }
 
-.row {
-  appearance: none;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  text-align: left;
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  padding: 0.5rem 0.65rem;
-  cursor: pointer;
-}
-
-.row:hover:not(:disabled),
-.row.current {
-  background: color-mix(in srgb, var(--text) 8%, transparent);
-}
-
-.row:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.row:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.copy {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.08rem;
-}
-
-.name-row {
-  min-width: 0;
+.line {
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
+  min-width: 0;
 }
 
 .name {
   min-width: 0;
-  font-weight: 700;
-  font-size: 1rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tag,
-.preview {
+.tag {
+  flex: none;
   color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 400;
 }
 
-.tag {
-  flex: none;
-}
-
-.preview {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .tick {
   display: grid;
   place-items: center;
-  flex: none;
   width: 1.2rem;
   height: 1.2rem;
   border-radius: 999px;
@@ -589,59 +487,8 @@ onUnmounted(() => {
   background: var(--accent);
 }
 
-.back {
-  appearance: none;
-  flex: none;
-  width: 2.15rem;
-  height: 2.15rem;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 1.45rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.back:hover {
-  color: var(--text);
-}
-
-.back:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .submit {
   align-self: flex-start;
   margin: 0.2rem 0.7rem 0;
-  appearance: none;
-  border: 0;
-  border-radius: 999px;
-  padding: 0.55rem 1rem;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.submit:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 </style>

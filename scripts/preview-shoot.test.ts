@@ -42,6 +42,8 @@ it('names the preview states agents are asked to shoot', () => {
     'plus-menu',
     'account-menu',
     'search',
+    'bot-picker',
+    'thread-composer',
     'kitchen',
     'kitchen-end',
   ])
@@ -59,6 +61,11 @@ it('opens Sheets with a click chain after hydration', () => {
   expect(PREVIEW_SHOOT_STATES['account-menu'].clicks).toEqual(['.foot .user-btn'])
   expect(PREVIEW_SHOOT_STATES.search.clicks).toEqual(['.side-head .chrome:first-child'])
   expect(PREVIEW_SHOOT_STATES.search.ready).toEqual({ selector: '.kit-dialog .kit-row[data-selected]', count: 1 })
+  expect(PREVIEW_SHOOT_STATES['bot-picker'].clicks.at(-1)).toBe('.kit-menu .kit-menu-item:first-child')
+  expect(PREVIEW_SHOOT_STATES['bot-picker'].ready).toEqual({ selector: '.picker .kit-row', count: 2 })
+  expect(PREVIEW_SHOOT_STATES['thread-composer'].seed).toBe('threads=1')
+  expect(PREVIEW_SHOOT_STATES['thread-composer'].clicks.at(-1)).toBe('.kit-menu .kit-menu-item:nth-child(3)')
+  expect(PREVIEW_SHOOT_STATES['thread-composer'].ready.any).toEqual(['.composer .kit-row'])
   expect(PREVIEW_SHOOT_STATES.kitchen.seed).toBe('kitchen=1')
   expect(PREVIEW_SHOOT_STATES.kitchen.clicks).toEqual(['.kit-chat-parts .kit-button'])
   expect(PREVIEW_SHOOT_STATES.kitchen.ready).toEqual({ selector: '.kit-sheet .kitchen .xp', count: 1 })
