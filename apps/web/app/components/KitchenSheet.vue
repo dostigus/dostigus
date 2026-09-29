@@ -2,7 +2,7 @@
   <div class="kitchen">
     <p
       v-if="loadError"
-      class="flash"
+      class="error"
       role="alert"
     >
       {{ loadError }}
@@ -18,7 +18,10 @@
         {{ kitchen.xp }} XP
       </p>
 
-      <section :aria-label="$t('sheet.kitchen.pantry')">
+      <section
+        class="group"
+        :aria-label="$t('sheet.kitchen.pantry')"
+      >
         <h2>{{ $t('sheet.kitchen.pantry') }}</h2>
         <p
           v-if="kitchen.pantry.length === 0"
@@ -28,54 +31,63 @@
         </p>
         <ul
           v-else
-          class="list"
+          class="rows"
         >
-          <li
+          <KitListRow
             v-for="item in kitchen.pantry"
             :key="item.id"
+            as="li"
+            :title="item.name"
           >
-            <span>{{ item.name }}</span>
-            <span
+            <template
               v-if="item.qty"
-              class="qty"
-            >{{ item.qty }}</span>
-          </li>
+              #trailing
+            >
+              {{ item.qty }}
+            </template>
+          </KitListRow>
         </ul>
         <form
-          class="add"
+          class="form"
           @submit.prevent="addPantry"
         >
-          <label class="field">
-            <span>{{ $t('sheet.kitchen.name') }}</span>
-            <input
-              v-model="pantryName"
-              type="text"
-              :maxlength="KITCHEN_NAME_MAX"
-              autocomplete="off"
+          <div class="pair">
+            <KitField
+              :label="$t('sheet.kitchen.name')"
+              :error="errors.pantry"
               required
-              :disabled="busy"
             >
-          </label>
-          <label class="field">
-            <span>{{ $t('sheet.kitchen.qty') }}</span>
-            <input
-              v-model="pantryQty"
-              type="text"
-              :maxlength="KITCHEN_QTY_MAX"
-              autocomplete="off"
-              :disabled="busy"
+              <KitInput
+                v-model="pantryName"
+                :maxlength="KITCHEN_NAME_MAX"
+                autocomplete="off"
+                :disabled="busy"
+              />
+            </KitField>
+            <KitField :label="$t('sheet.kitchen.qty')">
+              <KitInput
+                v-model="pantryQty"
+                :maxlength="KITCHEN_QTY_MAX"
+                autocomplete="off"
+                :disabled="busy"
+              />
+            </KitField>
+          </div>
+          <div class="actions">
+            <KitButton
+              type="submit"
+              :disabled="busy || !pantryName.trim()"
             >
-          </label>
-          <KitButton
-            type="submit"
-            :disabled="busy || !pantryName.trim()"
-          >
-            {{ $t('sheet.kitchen.add') }}
-          </KitButton>
+              {{ $t('sheet.kitchen.add') }}
+            </KitButton>
+          </div>
         </form>
       </section>
 
-      <section :aria-label="$t('sheet.kitchen.cooked')">
+      <section
+        class="group"
+        :aria-label="$t('sheet.kitchen.cooked')"
+      >
         <h2>{{ $t('sheet.kitchen.cooked') }}</h2>
         <p
           v-if="kitchen.cooked.length === 0"
@@ -85,53 +97,70 @@
         </p>
         <ul
           v-else
-          class="list"
+          class="rows"
         >
-          <li
+          <KitListRow
             v-for="entry in kitchen.cooked"
             :key="entry.id"
+            as="li"
+            :title="entry.label"
           >
-            <span>{{ entry.label }}</span>
-            <span class="qty">{{ entry.xp }} XP</span>
-          </li>
+            <template #trailing>
+              {{ entry.xp }} XP
+            </template>
+          </KitListRow>
         </ul>
-        <KitButton
-          type="button"
-          :disabled="busy"
-          @click="markCooked"
+        <div class="actions">
+          <KitButton
+            :disabled="busy"
+            @click="markCooked"
+          >
+            {{ $t('sheet.kitchen.markCooked') }}
+          </KitButton>
+        </div>
+        <p
+          v-if="errors.cooked"
+          class="error"
+          role="alert"
         >
-          {{ $t('sheet.kitchen.markCooked') }}
-        </KitButton>
+          {{ errors.cooked }}
+        </p>
       </section>
 
-      <section :aria-label="$t('sheet.kitchen.recipe')">
+      <section
+        class="group"
+        :aria-label="$t('sheet.kitchen.recipe')"
+      >
         <h2>{{ $t('sheet.kitchen.recipe') }}</h2>
-        <label class="field">
-          <span>{{ $t('sheet.kitchen.name') }}</span>
-          <input
-            v-model="recipeName"
-            type="text"
-            :maxlength="KITCHEN_NAME_MAX"
-            autocomplete="off"
-            :disabled="busy"
+        <div class="form">
+          <KitField
+            :label="$t('sheet.kitchen.name')"
+            :error="errors.recipe"
           >
-        </label>
-        <label class="field">
-          <span>{{ $t('sheet.kitchen.ingredients') }}</span>
-          <textarea
-            v-model="ingredients"
-            rows="4"
-            :maxlength="KITCHEN_INGREDIENTS_MAX"
-            :disabled="busy"
-          />
-        </label>
-        <KitButton
-          type="button"
-          :disabled="busy || !recipeName.trim()"
-          @click="saveRecipe"
-        >
-          {{ $t('sheet.kitchen.saveRecipe') }}
-        </KitButton>
+            <KitInput
+              v-model="recipeName"
+              :maxlength="KITCHEN_NAME_MAX"
+              autocomplete="off"
+              :disabled="busy"
+            />
+          </KitField>
+          <KitField :label="$t('sheet.kitchen.ingredients')">
+            <KitTextarea
+              v-model="ingredients"
+              :rows="4"
+              :maxlength="KITCHEN_INGREDIENTS_MAX"
+              :disabled="busy"
+            />
+          </KitField>
+          <div class="actions">
+            <KitButton
+              :disabled="busy || !recipeName.trim()"
+              @click="saveRecipe"
+            >
+              {{ $t('sheet.kitchen.saveRecipe') }}
+            </KitButton>
+          </div>
+        </div>
       </section>
     </template>
   </div>
@@ -140,13 +169,15 @@
 <script setup lang="ts">
 import type { KitchenSnapshot } from '@dostigus/shared'
 import { KITCHEN_INGREDIENTS_MAX, KITCHEN_NAME_MAX, KITCHEN_QTY_MAX } from '@dostigus/shared'
-import { KitButton } from '@dostigus/ui-kit'
+import { KitButton, KitField, KitInput, KitListRow, KitTextarea } from '@dostigus/ui-kit'
 
 type KitchenBody = { kitchen: KitchenSnapshot }
+type KitchenErrorField = 'pantry' | 'cooked' | 'recipe'
 
 const { t } = useI18n()
 const kitchen = ref<KitchenSnapshot | null>(null)
 const loadError = ref('')
+const errors = ref<Partial<Record<KitchenErrorField, string>>>({})
 const busy = ref(false)
 const pantryName = ref('')
 const pantryQty = ref('')
@@ -181,7 +212,7 @@ async function addPantry() {
     return
   }
   busy.value = true
-  loadError.value = ''
+  errors.value = {}
   try {
     const body = await $fetch<KitchenBody>('/api/kitchen/pantry', {
       method: 'POST',
@@ -194,7 +225,7 @@ async function addPantry() {
     pantryQty.value = ''
     apply(body.kitchen, false)
   } catch (error) {
-    loadError.value = messageOf(error)
+    errors.value = { pantry: messageOf(error) }
   } finally {
     busy.value = false
   }
@@ -205,7 +236,7 @@ async function markCooked() {
     return
   }
   busy.value = true
-  loadError.value = ''
+  errors.value = {}
   const label = recipeName.value.trim() || kitchen.value?.recipe?.name || undefined
   try {
     const body = await $fetch<KitchenBody>('/api/kitchen/cooked', {
@@ -214,7 +245,7 @@ async function markCooked() {
     })
     apply(body.kitchen, false)
   } catch (error) {
-    loadError.value = messageOf(error)
+    errors.value = { cooked: messageOf(error) }
   } finally {
     busy.value = false
   }
@@ -226,7 +257,7 @@ async function saveRecipe() {
     return
   }
   busy.value = true
-  loadError.value = ''
+  errors.value = {}
   try {
     const body = await $fetch<KitchenBody>('/api/kitchen/recipe', {
       method: 'PUT',
@@ -237,7 +268,7 @@ async function saveRecipe() {
     })
     apply(body.kitchen, true)
   } catch (error) {
-    loadError.value = messageOf(error)
+    errors.value = { recipe: messageOf(error) }
   } finally {
     busy.value = false
   }
@@ -255,10 +286,26 @@ function messageOf(error: unknown): string {
 </script>
 
 <style scoped>
-.kitchen {
+.kitchen,
+.group,
+.form {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+}
+
+.kitchen {
+  gap: 0.9rem;
+}
+
+.group {
+  gap: 0.55rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+.form {
+  gap: 0.9rem;
+  margin: 0;
 }
 
 .xp {
@@ -266,83 +313,46 @@ function messageOf(error: unknown): string {
   font-weight: 700;
 }
 
-h2 {
-  margin: 0 0 0.5rem;
-  font-size: 0.95rem;
-}
-
-.list {
-  list-style: none;
-  margin: 0 0 0.75rem;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.list li {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--bg);
-}
-
-.qty,
-.muted {
-  color: var(--text-muted);
-}
-
-.muted {
-  margin: 0 0 0.75rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.7rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.add {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.5rem;
-}
-
-.add .field {
-  flex: 1 1 8rem;
-  margin-bottom: 0;
-}
-
-input,
-textarea {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text);
-  border-radius: var(--radius);
-  padding: 0.7rem 0.85rem;
-  font: inherit;
-}
-
-textarea {
-  min-height: 4.5rem;
-  resize: vertical;
-}
-
-input:focus,
-textarea:focus {
-  outline: 1px solid var(--accent-dim);
-}
-
-.flash {
+.group h2 {
   margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.rows {
+  list-style: none;
+  margin: 0 -0.7rem;
+  padding: 0;
+}
+
+.rows > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 0.6rem;
+}
+
+.actions {
+  display: flex;
+}
+
+.error,
+.muted {
+  margin: 0;
+}
+
+.error {
   color: var(--accent);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.muted {
+  color: var(--text-muted);
 }
 </style>
