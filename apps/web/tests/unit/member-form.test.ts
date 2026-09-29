@@ -14,3 +14,11 @@ it('keeps errors that name no single field at the form', () => {
   expect(memberErrorField(new Error('network'))).toBe('form')
   expect(memberErrorField(undefined)).toBe('form')
 })
+
+it('keeps an error at the form when its field is not on that form', () => {
+  const displayName = { statusMessage: 'Display name is required' }
+  const password = { statusMessage: 'Password must be at least 8 characters' }
+  expect(memberErrorField(displayName, ['login', 'password'])).toBe('form')
+  expect(memberErrorField(password, ['login', 'password'])).toBe('password')
+  expect(memberErrorField({ statusMessage: 'Username must be at least 2 characters' }, ['displayName', 'password'])).toBe('form')
+})

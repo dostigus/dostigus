@@ -1,136 +1,155 @@
 <template>
   <HostAuthShell>
-    <div v-if="phase === 'loading'">
-      <p class="kicker">
-        {{ $t('auth.invite.kicker') }}
-      </p>
-      <h1>{{ $t('auth.invite.loadingTitle') }}</h1>
-      <p class="hint">
-        {{ $t('auth.invite.loadingHint') }}
-      </p>
-    </div>
+    <KitPanel
+      v-if="phase === 'loading'"
+      :aria-labelledby="headId"
+      aria-busy="true"
+    >
+      <HostAuthHead
+        :id="headId"
+        :title="$t('auth.invite.loadingTitle')"
+        :hint="$t('auth.invite.loadingHint')"
+      />
+    </KitPanel>
 
-    <div v-else-if="phase === 'session'">
-      <p class="kicker">
-        {{ $t('auth.invite.kicker') }}
-      </p>
-      <h1>{{ $t('auth.invite.sessionTitle') }}</h1>
-      <p class="hint">
-        {{ $t('auth.invite.sessionHint') }}
-      </p>
-      <p
-        v-if="message"
-        class="flash error"
-      >
-        {{ message }}
-      </p>
-      <button
-        type="button"
-        class="solid"
-        :disabled="busy"
-        @click="signOutAndContinue"
-      >
-        {{ busy ? $t('auth.invite.signOutBusy') : $t('auth.invite.signOut') }}
-      </button>
-    </div>
+    <KitPanel
+      v-else-if="phase === 'session'"
+      :aria-labelledby="headId"
+    >
+      <HostAuthHead
+        :id="headId"
+        :title="$t('auth.invite.sessionTitle')"
+        :hint="$t('auth.invite.sessionHint')"
+      />
+      <template #actions>
+        <p
+          v-if="message"
+          class="error"
+          role="alert"
+        >
+          {{ message }}
+        </p>
+        <KitButton
+          :disabled="busy"
+          @click="signOutAndContinue"
+        >
+          {{ busy ? $t('auth.invite.signOutBusy') : $t('auth.invite.signOut') }}
+        </KitButton>
+      </template>
+    </KitPanel>
 
-    <div v-else-if="phase === 'invalid'">
-      <p class="kicker">
-        {{ $t('auth.invite.kicker') }}
-      </p>
-      <h1>{{ $t('auth.invite.invalidTitle') }}</h1>
-      <p class="hint">
-        {{ $t('auth.invite.invalidHint') }}
-      </p>
-      <NuxtLink
-        class="text-link"
-        to="/login"
-      >
-        {{ $t('auth.invite.signInLink') }}
-      </NuxtLink>
-    </div>
+    <KitPanel
+      v-else-if="phase === 'invalid'"
+      :aria-labelledby="headId"
+    >
+      <HostAuthHead
+        :id="headId"
+        :title="$t('auth.invite.invalidTitle')"
+        :hint="$t('auth.invite.invalidHint')"
+      />
+      <template #actions>
+        <NuxtLink
+          class="text-link"
+          to="/login"
+        >
+          {{ $t('auth.invite.signInLink') }}
+        </NuxtLink>
+      </template>
+    </KitPanel>
 
-    <form
+    <KitPanel
       v-else
+      as="form"
+      :aria-labelledby="headId"
       @submit.prevent="submit"
     >
-      <p class="kicker">
-        {{ $t('auth.invite.kicker') }}
-      </p>
-      <h1>{{ $t('auth.invite.joinTitle') }}</h1>
-      <p class="hint">
-        {{ $t('auth.invite.joinHint') }}
-      </p>
+      <HostAuthHead
+        :id="headId"
+        :title="$t('auth.invite.joinTitle')"
+        :hint="$t('auth.invite.joinHint')"
+      />
 
-      <label class="field">
-        <span>{{ $t('auth.field.email') }}</span>
-        <input
-          :value="email"
+      <KitField
+        :label="$t('auth.field.email')"
+        :error="errors.login"
+      >
+        <KitInput
+          :model-value="email"
           type="email"
           readonly
           autocomplete="username"
-        >
-      </label>
+        />
+      </KitField>
 
-      <label class="field">
-        <span>{{ $t('auth.field.displayName') }}</span>
-        <input
+      <KitField
+        :label="$t('auth.field.displayName')"
+        :error="errors.displayName"
+        required
+      >
+        <KitInput
           v-model="displayName"
-          type="text"
           autocomplete="name"
-          required
-        >
-      </label>
+        />
+      </KitField>
 
-      <label class="field">
-        <span>{{ $t('auth.field.password') }}</span>
-        <input
+      <KitField
+        :label="$t('auth.field.password')"
+        :hint="$t('auth.field.passwordMin')"
+        :error="errors.password"
+        required
+      >
+        <KitInput
           v-model="password"
           type="password"
           autocomplete="new-password"
-          required
           minlength="8"
-        >
-        <span class="field-hint">{{ $t('auth.field.passwordMin') }}</span>
-      </label>
+        />
+      </KitField>
 
-      <label class="field">
-        <span>{{ $t('auth.field.confirmPassword') }}</span>
-        <input
+      <KitField
+        :label="$t('auth.field.confirmPassword')"
+        :error="errors.confirm"
+        required
+      >
+        <KitInput
           v-model="confirm"
           type="password"
           autocomplete="new-password"
-          required
           minlength="8"
+        />
+      </KitField>
+
+      <template #actions>
+        <p
+          v-if="errors.form"
+          class="error"
+          role="alert"
         >
-      </label>
-
-      <p
-        v-if="message"
-        class="flash error"
-      >
-        {{ message }}
-      </p>
-
-      <button
-        type="submit"
-        class="solid"
-        :disabled="busy"
-      >
-        {{ busy ? $t('auth.invite.submitBusy') : $t('auth.invite.submit') }}
-      </button>
-    </form>
+          {{ errors.form }}
+        </p>
+        <KitButton
+          type="submit"
+          :disabled="busy"
+        >
+          {{ busy ? $t('auth.invite.submitBusy') : $t('auth.invite.submit') }}
+        </KitButton>
+      </template>
+    </KitPanel>
   </HostAuthShell>
 </template>
 
 <script setup lang="ts">
+import type { MemberFormField } from '../../utils/member-form'
+import { KitButton, KitField, KitInput, KitPanel } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../../utils/host-status-copy'
+import { memberErrorField } from '../../utils/member-form'
 
 definePageMeta({ layout: false })
 
 const { t } = useI18n()
 useHead({ title: () => t('auth.invite.titleDoc') })
 
+const headId = useId()
 const route = useRoute()
 const token = computed(() => {
   const value = route.params.token
@@ -144,6 +163,7 @@ const password = ref('')
 const confirm = ref('')
 const busy = ref(false)
 const message = ref('')
+const errors = ref<Partial<Record<MemberFormField | 'confirm', string>>>({})
 const rejected = ref(false)
 
 const inviteKey = computed(() => `invite-${token.value}`)
@@ -192,9 +212,9 @@ async function signOutAndContinue() {
 }
 
 async function submit() {
-  message.value = ''
+  errors.value = {}
   if (password.value !== confirm.value) {
-    message.value = t('auth.error.passwordMismatch')
+    errors.value = { confirm: t('auth.error.passwordMismatch') }
     return
   }
   busy.value = true
@@ -223,10 +243,10 @@ async function submit() {
       return
     }
     if (statusCode === 409 && statusMessage.includes('Sign out')) {
-      message.value = hostStatusCopy(error, t, 'auth.error.signOutFirst')
+      errors.value = { form: hostStatusCopy(error, t, 'auth.error.signOutFirst') }
       return
     }
-    message.value = hostStatusCopy(error, t, 'auth.error.fallbackJoin')
+    errors.value = { [memberErrorField(error, ['login', 'displayName', 'password'])]: hostStatusCopy(error, t, 'auth.error.fallbackJoin') }
   } finally {
     busy.value = false
   }
@@ -234,85 +254,12 @@ async function submit() {
 </script>
 
 <style scoped>
-.kicker {
-  margin: 0 0 0.45rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.72rem;
+.error {
+  flex: 1 1 100%;
+  margin: 0;
   color: var(--accent);
-}
-
-h1 {
-  margin: 0 0 0.55rem;
-  font-size: 1.65rem;
-  font-weight: 700;
-}
-
-.hint {
-  margin: 0 0 1.25rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.95rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.field-hint {
-  font-size: 0.78rem;
-}
-
-input {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 0.9rem;
-}
-
-input:focus {
-  outline: 1px solid var(--accent-dim);
-}
-
-input[readonly] {
-  color: var(--text-muted);
-  background: var(--surface);
-}
-
-.flash {
-  margin: 0 0 1rem;
   font-size: 0.9rem;
-}
-
-.flash.error {
-  color: var(--accent);
-}
-
-.solid {
-  appearance: none;
-  width: 100%;
-  border: 0;
-  border-radius: var(--radius);
-  padding: 0.75rem 1.1rem;
-  background: var(--accent);
-  color: var(--accent-ink);
-  cursor: pointer;
   font-weight: 600;
-}
-
-.solid:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.solid:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 
 .text-link {

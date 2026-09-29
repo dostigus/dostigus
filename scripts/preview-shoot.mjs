@@ -41,6 +41,13 @@ const PROVIDERS_SHELF_READY = {
 
 const PROVIDERS_SHELF_HINT = 'Providers secondary states seed the fixture OpenRouter Provider (?providers=1) and wait for shelf cards. Outbound HTTPS to openrouter.ai is required.'
 
+/** nuxt-auth-utils session cookie. Deleting it leaves the Locale cookie. */
+export const SESSION_COOKIE = 'nuxt-session'
+
+const EMPTY_STORE_HINT = 'needs a Store with no Owner: restart pnpm preview:host on a fresh DATABASE_URL (for example file:.data/auth.sqlite) and shoot it before any /preview-seed state.'
+
+const ONBOARDING_READY = { selector: 'input[autocomplete="new-password"]', count: 2 }
+
 /** One invocation, one PNG. Seeds reuse preview-seed query flags. */
 export const PREVIEW_SHOOT_STATES = {
   'chat': {
@@ -238,6 +245,71 @@ export const PREVIEW_SHOOT_STATES = {
     clip: '.composer',
     viewport: DEFAULT_VIEWPORT,
   },
+  'onboarding': {
+    seed: false,
+    thenPath: '/onboarding',
+    ready: ONBOARDING_READY,
+    viewport: DEFAULT_VIEWPORT,
+    hint: `onboarding ${EMPTY_STORE_HINT}`,
+  },
+  'onboarding-error': {
+    seed: false,
+    thenPath: '/onboarding',
+    fill: [
+      { selector: 'input[autocomplete="username"]', text: 'preview' },
+      { selector: 'input[autocomplete="new-password"]', index: 0, text: 'preview-owner' },
+      { selector: 'input[autocomplete="new-password"]', index: 1, text: 'preview-other' },
+    ],
+    clicks: ['form [type="submit"]'],
+    ready: { ...ONBOARDING_READY, any: ['[role="alert"]'] },
+    viewport: DEFAULT_VIEWPORT,
+    hint: `onboarding-error types two different passwords and submits. It ${EMPTY_STORE_HINT}`,
+  },
+  'home-empty': {
+    seed: false,
+    thenPath: '/onboarding',
+    fill: [
+      { selector: 'input[autocomplete="username"]', text: 'preview' },
+      { selector: 'input[autocomplete="new-password"]', index: 0, text: 'preview-owner' },
+      { selector: 'input[autocomplete="new-password"]', index: 1, text: 'preview-owner' },
+    ],
+    clicks: ['form [type="submit"]'],
+    ready: { selector: '.empty .kit-button', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: `home-empty creates the preview Owner through /onboarding and waits for the empty Home. It ${EMPTY_STORE_HINT}`,
+  },
+  'login': {
+    seed: '',
+    signOut: true,
+    thenPath: '/login',
+    ready: { selector: 'input[autocomplete="current-password"]', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'login-error': {
+    seed: '',
+    signOut: true,
+    thenPath: '/login',
+    fill: [
+      { selector: 'input[autocomplete="username"]', text: 'preview' },
+      { selector: 'input[autocomplete="current-password"]', text: 'not-the-password' },
+    ],
+    clicks: ['form [type="submit"]'],
+    ready: { selector: 'input[autocomplete="current-password"]', count: 1, any: ['[role="alert"]'] },
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'invite': {
+    seed: '',
+    invite: true,
+    ready: { selector: 'input[type="email"][readonly]', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'invite issues a fresh Invite as the preview Owner, drops the session cookie, and opens the Invite link.',
+  },
+  'invite-invalid': {
+    seed: false,
+    thenPath: '/invite/preview-missing',
+    ready: { selector: 'a[href="/login"]', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+  },
 }
 
 /** Sheets animate in for 180ms. Wait past that before the capture. */
@@ -287,7 +359,11 @@ export function previewShootOutputPath(name, dir = DEFAULT_SHOOT_DIR) {
   return join(dir, `${name}.png`)
 }
 
+/** `seed: false` opens `thenPath` signed out, with no preview-seed visit. */
 export function previewSeedPath(state) {
+  if (state.seed === false) {
+    return null
+  }
   return state.seed ? `/preview-seed?${state.seed}` : '/preview-seed'
 }
 
@@ -665,6 +741,39 @@ export function buildTypeExpression(selector, text) {
   })()`
 }
 
+/** Sets each input through its native setter so `v-model` sees the input event. */
+export function buildFillExpression(fields) {
+  return `(() => {
+    ${HYDRATED_GUARD}
+    const fields = ${JSON.stringify(fields)}
+    const nodes = fields.map((field) => document.querySelectorAll(field.selector)[field.index ?? 0])
+    if (nodes.some((node) => !node)) {
+      return false
+    }
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+    nodes.forEach((node, i) => {
+      setter.call(node, fields[i].text)
+      node.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    return true
+  })()`
+}
+
+/** Issues an Invite as the signed-in Owner and resolves to the link path. */
+export function buildInviteExpression(email) {
+  return `fetch('/api/members/invites', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email: ${JSON.stringify(email)} }),
+  }).then(async (response) => {
+    if (!response.ok) {
+      return { ok: false, status: response.status }
+    }
+    const issued = await response.json()
+    return { ok: true, path: new URL(issued.url).pathname }
+  })`
+}
+
 /** Hands a file input one drawn PNG and one text file, as a pick would. */
 export function buildAttachExpression(selector) {
   return `(() => {
@@ -761,6 +870,19 @@ async function clickWhenReady(cdp, sessionId, selector, waitMs) {
   fail(`preview-shoot: click target ${selector} did not appear.`)
 }
 
+async function issueInvite(cdp, sessionId) {
+  const result = await cdp.send('Runtime.evaluate', {
+    expression: buildInviteExpression(`preview-invite-${Date.now()}@example.com`),
+    awaitPromise: true,
+    returnByValue: true,
+  }, sessionId)
+  const issued = result.result?.value
+  if (!issued?.ok) {
+    fail(`preview-shoot: POST /api/members/invites answered ${issued?.status ?? 'nothing'} for the preview Owner.`)
+  }
+  return issued.path
+}
+
 async function capturePng(cdp, sessionId, clip) {
   const shot = await cdp.send('Page.captureScreenshot', {
     format: 'png',
@@ -806,9 +928,22 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     cdp = await Cdp.connect(version.webSocketDebuggerUrl)
     const sessionId = await attachPage(cdp)
     await setViewport(cdp, sessionId, state.viewport)
-    await navigate(cdp, sessionId, `${base}${previewSeedPath(state)}`)
-    if (state.thenPath) {
-      await navigate(cdp, sessionId, `${base}${state.thenPath}`)
+    const seedPath = previewSeedPath(state)
+    if (seedPath) {
+      await navigate(cdp, sessionId, `${base}${seedPath}`)
+    }
+    let thenPath = state.thenPath
+    if (state.invite) {
+      thenPath = await issueInvite(cdp, sessionId)
+    }
+    if (state.signOut || state.invite) {
+      await cdp.send('Network.deleteCookies', { name: SESSION_COOKIE, url: base }, sessionId)
+    }
+    if (thenPath) {
+      await navigate(cdp, sessionId, `${base}${thenPath}`)
+    }
+    if (state.fill) {
+      await runWhenReady(cdp, sessionId, buildFillExpression(state.fill), `fill target ${state.fill[0].selector}`, waitMs)
     }
     for (const selector of state.clicks ?? []) {
       await clickWhenReady(cdp, sessionId, selector, waitMs)
@@ -826,7 +961,7 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     if (state.reveal) {
       await cdp.send('Runtime.evaluate', { expression: buildRevealExpression(state.reveal) }, sessionId)
     }
-    if (state.clicks?.length || state.type || state.attach || state.reveal) {
+    if (state.clicks?.length || state.type || state.fill || state.attach || state.reveal) {
       await sleep(CLICK_SETTLE_MS)
     }
     const clip = state.clip ? await clipRect(cdp, sessionId, state.clip, state.viewport) : undefined

@@ -6,9 +6,6 @@
       size="md"
       alt=""
     />
-    <p class="kicker">
-      {{ $t('host.empty.title') }}
-    </p>
     <h1>{{ $t('host.empty.none') }}</h1>
     <p class="hint">
       <template v-if="isOwner">
@@ -52,14 +49,6 @@ const { openThreadCreate } = useHostThreadCreate()
 
 .sticker {
   margin-bottom: 0.35rem;
-}
-
-.kicker {
-  margin: 0 0 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.72rem;
-  color: var(--accent);
 }
 
 h1 {

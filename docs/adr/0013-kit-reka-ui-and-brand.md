@@ -175,6 +175,20 @@ not restyled.
   Host `+` menu opens the picker or composer from that event and
   cancels the return to the trigger. The pane's search field keeps
   focus.
+- Sign-in (`/login`), Create Owner (`/onboarding`), and Invite join
+  (`/invite/:token`) are a `KitPanel` (`as="form"` where they submit)
+  with `KitField`, `KitInput`, and `KitButton`, on the same
+  `HostAuthShell` Brand strip. The page `h1` and hint stay inside the
+  panel body (`HostAuthHead`) and name it through `aria-labelledby`,
+  because a `KitPanel` title is an `h2`. Kickers are gone. A password
+  mismatch sits under Confirm password, and `memberErrorField` routes
+  API errors to a field the form shows, else to one `--accent` line
+  above the submit. `KitInput` gains a read-only state (muted text) for
+  the Invite email and the one-time Invite link. The first-run Home
+  drops its kicker, and the Bot purpose Card chips are `KitChip`
+  buttons. The Card surface and its type-your-own pill stay Host CSS:
+  a `KitPanel` is `--card` black on the black Chat pane, and the pill
+  is composer chrome. No new Kit primitive.
 - `vitest` compiles Kit SFCs with `@vitejs/plugin-vue` and renders them
   with Vue's server renderer. That test checks the Field wiring, the
   Reka roles, and the barrel.

@@ -166,6 +166,14 @@ it('draws the pane close as a quiet muted button on Host tokens', async () => {
   expect(rule).toContain('border-radius: 999px')
 })
 
+it('mutes a read-only Kit input so it does not read as editable', async () => {
+  const html = await render(KitInput, { modelValue: 'ada@example.com', type: 'email', readonly: true })
+  expect(html).toMatch(/<input[^>]*\sreadonly/)
+  const css = readFileSync(join(import.meta.dirname, '../../src/kit.css'), 'utf8')
+  const rule = css.slice(css.indexOf('.kit-input[readonly] {'), css.indexOf('}', css.indexOf('.kit-input[readonly] {')))
+  expect(rule).toContain('color: var(--text-muted')
+})
+
 it('lets a pane focus a Kit input on open', () => {
   const src = readFileSync(join(import.meta.dirname, '../../src/components/KitInput.vue'), 'utf8')
   expect(src).toContain('ref="el"')

@@ -284,6 +284,85 @@ it('builds the Kitchen Sheet from Kit form and row primitives', () => {
   expect(style).not.toContain('var(--bot-accent')
 })
 
+it('builds sign-in, Create Owner, and Invite join on Kit form and surface primitives', () => {
+  const shell = read('app/components/HostAuthShell.vue')
+  const head = read('app/components/HostAuthHead.vue')
+  const login = read('app/pages/login.vue')
+  const onboarding = read('app/pages/onboarding.vue')
+  const invite = read('app/pages/invite/[token].vue')
+  const pages = [login, onboarding, invite]
+
+  for (const src of pages) {
+    expect(src).toMatch(/import \{[^}]*KitButton[^}]*KitField[^}]*KitInput[^}]*KitPanel[^}]*\} from '@dostigus\/ui-kit'/)
+    expect(src).toContain('as="form"')
+    expect(src).toContain('@submit.prevent="submit"')
+    expect(src).toContain('<HostAuthHead')
+    expect(src).toContain(':aria-labelledby="headId"')
+    expect(src).toContain('<template #actions>')
+    expect(src).toContain('role="alert"')
+    expect(src).toContain('memberErrorField(error, [')
+    expect(src).toContain('autocomplete="username"')
+  }
+  expect(login).toContain('\'/api/auth/login\'')
+  expect(login).toContain('autocomplete="current-password"')
+  expect(login.match(/<KitField\b/g)).toHaveLength(2)
+  expect(onboarding).toContain('\'/api/auth/register\'')
+  expect(onboarding.match(/<KitField\b/g)).toHaveLength(3)
+  expect(invite).toContain('`/api/invites/$')
+  expect(invite).toContain('encodeURIComponent(token.value)')
+  expect(invite).toContain('\'/api/auth/logout\'')
+  expect(invite.match(/<KitField\b/g)).toHaveLength(4)
+  expect(invite.match(/<KitPanel\b/g)).toHaveLength(4)
+  expect(invite).toMatch(/<KitInput\s+:model-value="email"\s+type="email"\s+readonly/)
+  expect(invite).toContain('to="/login"')
+  for (const src of [onboarding, invite]) {
+    expect(src.match(/autocomplete="new-password"/g)).toHaveLength(2)
+    expect(src.match(/minlength="8"/g)).toHaveLength(2)
+    expect(src).toContain(':hint="$t(\'auth.field.passwordMin\')"')
+    expect(src).toContain('errors.value = { confirm: t(\'auth.error.passwordMismatch\') }')
+  }
+
+  for (const src of [...pages, shell, head]) {
+    const style = src.slice(src.indexOf('<style'))
+    expect(src).not.toMatch(/<(?:input|button|select|textarea|label|details|summary)\b/)
+    expect(src).not.toMatch(/class="(?:kicker|field|field-hint|solid|flash|card)\b/)
+    expect(src).not.toMatch(/\.kicker\b/)
+    expect(style).not.toMatch(/(?:^|[\s,])(?:input|button|label)\b[^{]*\{/m)
+    expect(style).not.toMatch(/^\.(?:field|solid|flash|card|kicker)\b/m)
+    expect(style).not.toMatch(/radial-gradient|box-shadow|filter:|text-transform|letter-spacing/)
+    expect(style).not.toContain('border-radius')
+    expect(style).not.toContain('var(--radius-sm)')
+    expect(style).not.toContain('var(--bot-accent')
+    expect(style).not.toMatch(/#[0-9a-f]{3,8}\b/i)
+  }
+  expect(shell).toContain('<HostMark />')
+  expect(shell).toContain('width: min(26rem, 100%)')
+  expect(shell).not.toContain('KitPanel')
+})
+
+it('keeps the first-run Home and the Bot purpose Card on Kit chrome', () => {
+  const empty = read('app/components/HostBotEmpty.vue')
+  const purpose = read('app/components/BotPurposeCard.vue')
+  const purposeStyle = purpose.slice(purpose.indexOf('<style'))
+
+  expect(empty).not.toMatch(/kicker|host\.empty\.title/)
+  expect(empty.slice(empty.indexOf('<style'))).not.toMatch(/text-transform|letter-spacing|var\(--bot-accent/)
+
+  expect(purpose).toContain('import { KitChip } from \'@dostigus/ui-kit\'')
+  expect(purpose).toMatch(/<KitChip\s+v-for="option in BOT_PURPOSE_OPTIONS"[^>]*as="button"/)
+  expect(purpose).toContain('class="kit-sr-only"')
+  expect(purpose).not.toMatch(/class="(?:chip|sr-only)"/)
+  expect(purposeStyle).not.toMatch(/^\.(?:chip|sr-only)\b/m)
+  expect(purpose.match(/<input\b/g)).toHaveLength(1)
+  expect(purpose.match(/<button\b/g)).toHaveLength(1)
+  expect(purpose).toContain('class="send"')
+  expect(purposeStyle).not.toMatch(/radial-gradient|box-shadow|var\(--bot-accent/)
+  expect(purposeStyle).not.toMatch(/#[0-9a-f]{3,8}\b/i)
+  for (const [, radius] of purposeStyle.matchAll(/border-radius: ([^;]+);/g)) {
+    expect(radius).toMatch(/^(?:var\(--radius(?:-card)?\)|999px)$/)
+  }
+})
+
 it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   const mark = read('app/components/HostMark.vue')
   const sidebar = read('app/components/HostSidebar.vue')

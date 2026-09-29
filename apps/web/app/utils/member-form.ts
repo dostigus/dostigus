@@ -19,9 +19,14 @@ const FIELD_BY_KEY: Partial<Record<StatusKey, MemberFormField>> = {
   'auth.error.passwordMax': 'password',
 }
 
-/** The Add Member field an API error sits under. `form` when it names no single field. */
-export function memberErrorField(error: unknown): MemberFormField {
+/**
+ * The account form field an API error sits under (Add Member, sign-in,
+ * Create Owner, Invite join). `form` when it names no single field, or
+ * names one that is not in `shown`.
+ */
+export function memberErrorField(error: unknown, shown?: readonly MemberFormField[]): MemberFormField {
   const message = hostStatusMessage(error)
   const key = HOST_STATUS_MESSAGE_KEYS[message as keyof typeof HOST_STATUS_MESSAGE_KEYS]
-  return (key && FIELD_BY_KEY[key]) ?? 'form'
+  const field = (key && FIELD_BY_KEY[key]) ?? 'form'
+  return !shown || shown.includes(field) ? field : 'form'
 }

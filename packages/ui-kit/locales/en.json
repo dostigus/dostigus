@@ -52,7 +52,6 @@
       "needsOwner": "This Host needs an Owner first."
     },
     "onboarding": {
-      "kicker": "First visit",
       "title": "Create your Owner",
       "hint": "This Host needs one Owner. Choose a name or email and a password.",
       "submit": "Create Owner",
@@ -60,7 +59,6 @@
       "titleDoc": "Dostigus · Create Owner"
     },
     "login": {
-      "kicker": "Host",
       "title": "Welcome back",
       "hint": "Sign in with your email or username.",
       "submit": "Sign in",
@@ -68,7 +66,6 @@
       "titleDoc": "Dostigus · Sign in"
     },
     "invite": {
-      "kicker": "Invite",
       "loadingTitle": "Checking this link",
       "loadingHint": "One moment.",
       "sessionTitle": "Sign out first",
@@ -123,7 +120,6 @@
       "hint": "Choose a chat from the list."
     },
     "empty": {
-      "title": "Threads",
       "none": "No Threads yet",
       "ownerHint": "Create a Bot or a group Chat to start.",
       "memberHint": "The Owner can share a Bot or add you to a Chat.",
@@ -240,7 +236,7 @@
     },
     "purpose": {
       "prompt": "What should this Bot be for?",
-      "hint": "One main thing — I'll tune from there.",
+      "hint": "One main thing. I'll tune from there.",
       "own": "Or type your own",
       "send": "Send",
       "personal": "Personal",

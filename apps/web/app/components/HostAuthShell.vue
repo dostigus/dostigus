@@ -4,7 +4,7 @@
       <HostMark />
     </header>
     <main class="stage">
-      <div class="card">
+      <div class="column">
         <slot />
       </div>
     </main>
@@ -33,11 +33,7 @@
   padding: 2.25rem 1.4rem 3rem;
 }
 
-.card {
+.column {
   width: min(26rem, 100%);
-  padding: 1.7rem 1.5rem 1.6rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--card);
 }
 </style>
