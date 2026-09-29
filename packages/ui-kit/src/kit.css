@@ -461,6 +461,10 @@
   cursor: not-allowed;
 }
 
+.kit-input[readonly] {
+  color: var(--text-muted, #a4a4a4);
+}
+
 .kit-input--multiline {
   min-height: 6.5rem;
   resize: vertical;
