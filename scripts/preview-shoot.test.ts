@@ -5,6 +5,8 @@ import {
   buildAttachExpression,
   buildClickExpression,
   buildClipExpression,
+  buildFillExpression,
+  buildInviteExpression,
   buildReadyExpression,
   buildRevealExpression,
   buildScrollEndExpression,
@@ -23,6 +25,7 @@ import {
   previewShootUsage,
   resolveChromePath,
   resolvePreviewShootState,
+  SESSION_COOKIE,
 } from './preview-shoot.mjs'
 
 const src = readFileSync(join(import.meta.dirname, 'preview-shoot.mjs'), 'utf8')
@@ -59,7 +62,47 @@ it('names the preview states agents are asked to shoot', () => {
     'composer-multiline',
     'composer-attachments',
     'composer-room',
+    'onboarding',
+    'onboarding-error',
+    'home-empty',
+    'login',
+    'login-error',
+    'invite',
+    'invite-invalid',
   ])
+})
+
+it('shoots the signed-out login, onboarding, and Invite pages', () => {
+  for (const name of ['onboarding', 'onboarding-error', 'home-empty', 'invite-invalid'] as const) {
+    expect(previewSeedPath(PREVIEW_SHOOT_STATES[name])).toBeNull()
+  }
+  for (const name of ['onboarding', 'onboarding-error', 'home-empty'] as const) {
+    expect(PREVIEW_SHOOT_STATES[name].thenPath).toBe('/onboarding')
+    expect(PREVIEW_SHOOT_STATES[name].hint).toContain('fresh DATABASE_URL')
+  }
+  expect(PREVIEW_SHOOT_STATES['home-empty'].fill.map((field) => field.text)).toEqual(['preview', 'preview-owner', 'preview-owner'])
+  expect(PREVIEW_SHOOT_STATES['home-empty'].ready.selector).toBe('.empty .kit-button')
+  expect(PREVIEW_SHOOT_STATES['onboarding-error'].ready.any).toEqual(['[role="alert"]'])
+
+  for (const name of ['login', 'login-error'] as const) {
+    expect(previewSeedPath(PREVIEW_SHOOT_STATES[name])).toBe('/preview-seed')
+    expect(PREVIEW_SHOOT_STATES[name].signOut).toBe(true)
+    expect(PREVIEW_SHOOT_STATES[name].thenPath).toBe('/login')
+  }
+  expect(PREVIEW_SHOOT_STATES['login-error'].clicks).toEqual(['form [type="submit"]'])
+  expect(PREVIEW_SHOOT_STATES.invite.invite).toBe(true)
+  expect(PREVIEW_SHOOT_STATES.invite.ready.selector).toBe('input[type="email"][readonly]')
+  expect(PREVIEW_SHOOT_STATES['invite-invalid'].ready.selector).toBe('a[href="/login"]')
+
+  expect(src).toContain('Network.deleteCookies')
+  expect(SESSION_COOKIE).toBe('nuxt-session')
+  const fill = buildFillExpression([{ selector: 'input', index: 1, text: 'x' }])
+  expect(fill).toContain('isHydrating')
+  expect(fill).toContain('HTMLInputElement.prototype')
+  expect(fill).toContain('new Event(\'input\', { bubbles: true })')
+  const invite = buildInviteExpression('a@example.com')
+  expect(invite).toContain('/api/members/invites')
+  expect(invite).toContain('new URL(issued.url).pathname')
 })
 
 it('shoots the Chat composer pill at rest, multiline, with attachments, and in a room', () => {

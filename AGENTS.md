@@ -506,6 +506,13 @@ explicit ready marker (not network idle), and writes a PNG under
 | `composer-multiline` | `/preview-seed`, three lines typed | `.composer-row.multiline .send` | 1440×900, clip `.composer` @2x |
 | `composer-attachments` | `/preview-seed`, a PNG and a `.txt` set on the file input | two `.pending-chip.ready` | 1440×900, clip `.composer` @2x |
 | `composer-room` | `?rooms=1` | `.composer-row:not(.has-lead) textarea` | 1440×900, clip `.composer` @2x |
+| `onboarding` | none, signed out, `/onboarding` | two `input[autocomplete="new-password"]` | 1440×900 |
+| `onboarding-error` | same as `onboarding`, two different passwords, submit | `[role="alert"]` | 1440×900 |
+| `home-empty` | same as `onboarding`, preview Owner login and password, submit | `.empty .kit-button` | 1440×900 |
+| `login` | `/preview-seed`, drop the session cookie, `/login` | `input[autocomplete="current-password"]` | 1440×900 |
+| `login-error` | same as `login`, a wrong password, submit | `[role="alert"]` | 1440×900 |
+| `invite` | `/preview-seed`, issue an Invite, drop the session cookie, open the link | `input[type="email"][readonly]` | 1440×900 |
+| `invite-invalid` | none, signed out, `/invite/preview-missing` | `a[href="/login"]` | 1440×900 |
 
 The four `composer*` states shoot the Chat composer pill
 (`ChatComposerPill.vue`, shared by `/bots/:id` and `/threads/:id`).
@@ -520,6 +527,13 @@ first). `kitchen` and `kitchen-end` click the first Chat button on Bot
 `preview`, so run them on a Store where `?parts=1` has not added
 **Open demo** first. `?threads=1` on the same Store adds the preview Member, so
 Closet «Who can see this Bot» has a row.
+
+`onboarding`, `onboarding-error`, and `home-empty` need a Store with no
+Owner. Start `pnpm preview:host` on a fresh `DATABASE_URL` (for example
+`file:.data/auth.sqlite`) and shoot them first: any `/preview-seed` visit
+creates the preview Owner. `home-empty` creates that same preview Owner
+through the form, so later states on that Store still pass the preview
+gate.
 
 `providers-empty` needs a Store with no Provider (a prior
 `providers-fixture` on the same `DATABASE_URL` leaves the fixture;
