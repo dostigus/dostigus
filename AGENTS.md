@@ -497,6 +497,15 @@ explicit ready marker (not network idle), and writes a PNG under
 | `search` | `/preview-seed`, click the sidebar lupa (`.side-head .chrome:first-child`) | one `.kit-dialog .kit-row[data-selected]` | 1440×900 |
 | `kitchen` | `?kitchen=1`, click **Open Kitchen** (`.kit-chat-parts .kit-button`) | `.kit-sheet .kitchen .xp` | 1440×900 |
 | `kitchen-end` | same as `kitchen`, Sheet scrolled to the end | `.kit-sheet .kitchen .xp` | 1440×900 |
+| `composer` | `/preview-seed` | one-line `.composer-row` with `.attach` | 1440×900, clip `.composer` @2x |
+| `composer-multiline` | `/preview-seed`, three lines typed | `.composer-row.multiline .send` | 1440×900, clip `.composer` @2x |
+| `composer-attachments` | `/preview-seed`, a PNG and a `.txt` set on the file input | two `.pending-chip.ready` | 1440×900, clip `.composer` @2x |
+| `composer-room` | `?rooms=1` | `.composer-row:not(.has-lead) textarea` | 1440×900, clip `.composer` @2x |
+
+The four `composer*` states shoot the Chat composer pill
+(`ChatComposerPill.vue`, shared by `/bots/:id` and `/threads/:id`).
+`composer-attachments` uploads real Artifacts through `POST /api/artifacts`
+on that Store.
 
 Sheet states click after Nuxt hydrates (`$nuxt.isHydrating` is false)
 and wait 400ms for the Sheet animation. `pnpm shoot:preview <state> --narrow`

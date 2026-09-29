@@ -2,9 +2,12 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import {
+  buildAttachExpression,
   buildClickExpression,
+  buildClipExpression,
   buildReadyExpression,
   buildScrollEndExpression,
+  buildTypeExpression,
   chromeCandidates,
   DEFAULT_SHOOT_DIR,
   DEFAULT_VIEWPORT,
@@ -46,7 +49,36 @@ it('names the preview states agents are asked to shoot', () => {
     'thread-composer',
     'kitchen',
     'kitchen-end',
+    'composer',
+    'composer-multiline',
+    'composer-attachments',
+    'composer-room',
   ])
+})
+
+it('shoots the Chat composer pill at rest, multiline, with attachments, and in a room', () => {
+  expect(PREVIEW_SHOOT_STATES.composer.ready).toEqual({ selector: '.composer-row:not(.multiline) .attach', count: 1 })
+  expect(PREVIEW_SHOOT_STATES['composer-multiline'].type.selector).toBe('.composer textarea')
+  expect(PREVIEW_SHOOT_STATES['composer-multiline'].type.text.split('\n')).toHaveLength(3)
+  expect(PREVIEW_SHOOT_STATES['composer-multiline'].ready.selector).toBe('.composer-row.multiline .send')
+  expect(PREVIEW_SHOOT_STATES['composer-attachments'].attach).toBe('.composer input[type="file"]')
+  expect(PREVIEW_SHOOT_STATES['composer-attachments'].ready).toEqual({ selector: '.pending-chip.ready', count: 2 })
+  expect(PREVIEW_SHOOT_STATES['composer-room'].seed).toBe('rooms=1')
+  for (const name of ['composer', 'composer-multiline', 'composer-attachments', 'composer-room']) {
+    expect(PREVIEW_SHOOT_STATES[name].clip).toBe('.composer')
+  }
+
+  const type = buildTypeExpression('.composer textarea', 'a\nb')
+  expect(type).toContain('isHydrating')
+  expect(type).toContain('HTMLTextAreaElement.prototype')
+  expect(type).toContain('new Event(\'input\', { bubbles: true })')
+  const attach = buildAttachExpression('.composer input[type="file"]')
+  expect(attach).toContain('isHydrating')
+  expect(attach).toContain('new DataTransfer()')
+  expect(attach).toContain('image/png')
+  expect(attach).toContain('text/plain')
+  expect(attach).toContain('new Event(\'change\', { bubbles: true })')
+  expect(buildClipExpression('.composer')).toContain('getBoundingClientRect')
 })
 
 it('opens Sheets with a click chain after hydration', () => {
@@ -182,5 +214,6 @@ it('documents shoot:preview next to preview-seed in AGENTS.md', () => {
   expect(agents).toContain('.shelf .card:not(.skeleton)')
   expect(agents).not.toContain('cards or miss banner')
   expect(agents).toContain('`readme-chat`')
+  expect(agents).toContain('`composer-attachments`')
   expect(agents).toContain('{\'@\'}')
 })
