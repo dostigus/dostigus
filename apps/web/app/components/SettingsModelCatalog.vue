@@ -347,7 +347,7 @@ h4 {
   margin: 0;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 0.9rem;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -367,8 +367,8 @@ code {
   flex: none;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.72rem;
-  padding: 0.05rem 0.4rem;
-  border-radius: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
   background: color-mix(in srgb, var(--text) 8%, transparent);
   color: var(--text-muted);
 }
@@ -434,7 +434,7 @@ code {
   max-height: 26rem;
   overflow: auto;
   border: 1px solid var(--line);
-  border-radius: 0.9rem;
+  border-radius: var(--radius);
 }
 
 .model {
@@ -504,7 +504,7 @@ code {
   max-height: 16rem;
   overflow: auto;
   border: 1px solid var(--line);
-  border-radius: 0.9rem;
+  border-radius: var(--radius);
   background: var(--bg);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.74rem;
