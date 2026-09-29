@@ -88,7 +88,7 @@ it('leads Providers with Bots ↔ Providers, key-first OpenRouter, shelf, and he
   expect(add).toContain('settings.providers.add.connectOpenRouter')
   expect(add).toContain('openai-compatible')
   expect(add).toContain('LLM_PROVIDER_KIND_LABELS')
-  expect(shelf).toContain('settings.providers.shelf.routingOff')
+  expect(shelf).toContain('settings.providers.shelf.useRouting')
   expect(shelf).toContain('OPENROUTER_SHELF_LABELS')
   expect(shelf).toContain('settings.providers.shelf.vision')
   expect(advanced).toContain('settings.providers.catalog.all')

@@ -46,6 +46,44 @@ it('builds Members and Providers from Kit form and surface primitives', () => {
   expect(add).toContain('providerErrorField')
 })
 
+it('builds Providers secondary chrome on Kit surfaces and Host tokens', () => {
+  const providers = read('app/pages/dashboard/providers.vue')
+  const health = read('app/components/SettingsProviderHealth.vue')
+  const shelf = read('app/components/SettingsOpenRouterShelf.vue')
+  const catalog = read('app/components/SettingsModelCatalog.vue')
+  const add = read('app/components/SettingsProviderAdd.vue')
+
+  expect(health).toContain('<KitPanel')
+  expect(health).toContain('role="status"')
+
+  expect(shelf).toContain('<KitListRow')
+  expect(shelf).toContain('as="button"')
+  expect(shelf).toContain('settings.providers.shelf.useRouting')
+  expect(shelf).not.toMatch(/<button\b/)
+  expect(shelf).not.toMatch(/class="(?:radio|alt-pin|alt-copy|alt-name|alt-meta)"/)
+
+  expect(providers).not.toMatch(/<(?:details|summary)\b/)
+  expect(providers.match(/class="disclosure"/g)).toHaveLength(2)
+  expect(providers).toContain(':aria-expanded="Boolean(advancedOpen[provider.id])"')
+  expect(providers).toContain(':aria-expanded="tiersOpen"')
+  expect(providers.match(/:aria-controls="/g)).toHaveLength(2)
+
+  for (const src of [providers, health, shelf, catalog]) {
+    const style = src.slice(src.indexOf('<style'))
+    expect(style).not.toMatch(/radial-gradient|box-shadow/)
+    expect(style).not.toContain('var(--bot-accent')
+    expect(style).not.toMatch(/#[0-9a-f]{3,8}\b/i)
+    expect(style).not.toMatch(/^summary\b|::-webkit-details-marker/m)
+    for (const [, radius] of style.matchAll(/border-radius: ([^;]+);/g)) {
+      expect(radius).toMatch(/^(?:var\(--radius(?:-card)?\)|999px)$/)
+    }
+  }
+  const pageStyle = providers.slice(providers.indexOf('<style'))
+  expect(pageStyle).not.toMatch(/^\.(?:confirm|edit)[^{]*\{[^}]*(?:background|border-radius)/m)
+
+  expect(add).toContain('baseUrl: kind.value === \'openai-compatible\' ? baseUrl.value.trim() : \'\'')
+})
+
 it('builds Closet, Schedule, and Add Member Sheets from Kit form primitives', () => {
   const closet = read('app/components/BotSettingsSheet.vue')
   const schedule = read('app/components/ScheduleSheet.vue')

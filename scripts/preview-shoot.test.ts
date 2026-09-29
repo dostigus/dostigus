@@ -6,6 +6,7 @@ import {
   buildClickExpression,
   buildClipExpression,
   buildReadyExpression,
+  buildRevealExpression,
   buildScrollEndExpression,
   buildTypeExpression,
   chromeCandidates,
@@ -37,6 +38,11 @@ it('names the preview states agents are asked to shoot', () => {
     'settings-other',
     'members',
     'narrow',
+    'providers-health',
+    'providers-shelf',
+    'providers-edit',
+    'providers-confirm',
+    'providers-details',
     'closet',
     'closet-end',
     'schedule-new',
@@ -106,6 +112,25 @@ it('opens Sheets with a click chain after hydration', () => {
   expect(click).toContain('isHydrating')
   expect(click).toContain('querySelector(".identity")')
   expect(buildScrollEndExpression('.kit-sheet--end')).toContain('scrollHeight')
+})
+
+it('shoots Providers secondary chrome on the fixture shelf', () => {
+  const secondary = ['providers-health', 'providers-shelf', 'providers-edit', 'providers-confirm', 'providers-details'] as const
+  for (const name of secondary) {
+    const state = PREVIEW_SHOOT_STATES[name]
+    expect(previewSeedPath(state)).toBe('/preview-seed?providers=1')
+    expect(state.ready.any).toEqual(PREVIEW_SHOOT_STATES['providers-fixture'].ready.any)
+    expect(state.ready.none).toContain('vite-error-overlay')
+    expect(state.clip).toBeTruthy()
+  }
+  expect(PREVIEW_SHOOT_STATES['providers-health'].clip).toBe('.providers .health')
+  expect(PREVIEW_SHOOT_STATES['providers-shelf'].reveal).toBe('.provider .shelf')
+  expect(PREVIEW_SHOOT_STATES['providers-edit'].clicks).toEqual(['.provider .p-actions .kit-button:first-child'])
+  expect(PREVIEW_SHOOT_STATES['providers-edit'].ready.selector).toBe('.provider .edit')
+  expect(PREVIEW_SHOOT_STATES['providers-confirm'].clicks).toEqual(['.provider .p-actions .kit-button:last-child'])
+  expect(PREVIEW_SHOOT_STATES['providers-confirm'].ready.selector).toBe('.provider .confirm')
+  expect(PREVIEW_SHOOT_STATES['providers-details'].ready.selector).toBe('.provider .more .advanced')
+  expect(buildRevealExpression('.provider .more')).toContain('scrollIntoView')
 })
 
 it('shoots any state at 390px with --narrow', () => {

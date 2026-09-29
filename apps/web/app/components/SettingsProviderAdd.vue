@@ -160,7 +160,7 @@ function submit() {
   emit('add', {
     kind: kind.value,
     apiKey: key,
-    baseUrl: baseUrl.value.trim(),
+    baseUrl: kind.value === 'openai-compatible' ? baseUrl.value.trim() : '',
     defaultModel: defaultModel.value.trim(),
   })
 }

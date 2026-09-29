@@ -3,33 +3,34 @@
     class="shelf"
     :aria-label="$t('settings.providers.shelf.aria')"
   >
-    <button
-      type="button"
+    <div
       class="route"
       :class="{ on: mode === 'meta' }"
-      :aria-pressed="mode === 'meta'"
-      :disabled="busy || mode === 'meta'"
-      @click="emit('meta')"
     >
-      <span
-        class="radio"
-        aria-hidden="true"
-      />
-      <span class="route-copy">
-        <span class="route-title">
-          {{ mode === 'meta' ? $t('settings.providers.shelf.routingOn') : $t('settings.providers.shelf.routingOff') }}
-          <KitChip
-            v-if="mode === 'meta'"
-            tone="ok"
-          >
-            {{ $t('settings.providers.shelf.now') }}
-          </KitChip>
-        </span>
-        <span class="route-detail">
+      <div class="route-copy">
+        <p class="route-title">
+          {{ $t('settings.providers.shelf.routingOn') }}
+        </p>
+        <p class="route-detail">
           {{ $t('settings.providers.shelf.routingDetail') }}
-        </span>
-      </span>
-    </button>
+        </p>
+      </div>
+      <KitChip
+        v-if="mode === 'meta'"
+        tone="ok"
+      >
+        {{ $t('settings.providers.shelf.now') }}
+      </KitChip>
+      <KitButton
+        v-else
+        variant="ghost"
+        size="sm"
+        :disabled="busy"
+        @click="emit('meta')"
+      >
+        {{ $t('settings.providers.shelf.useRouting') }}
+      </KitButton>
+    </div>
 
     <div class="shelf-head">
       <p class="shelf-title">
@@ -151,40 +152,45 @@
             <li
               v-for="alt in card.alts"
               :key="alt.id"
-              :class="{ on: card.pinnedId === alt.id }"
             >
-              <span class="alt-copy">
-                <span
-                  class="alt-name"
-                  :title="alt.id"
-                >{{ alt.name }}</span>
-                <span class="alt-meta">
-                  {{ modelPriceCopy(alt, hostLocale) }}<template v-if="alt.vision"> · {{ $t('settings.providers.shelf.vision') }}</template>
-                </span>
-              </span>
-              <button
-                type="button"
-                class="alt-pin"
-                :aria-label="card.pinnedId === alt.id ? $t('settings.providers.shelf.pinnedName', { name: alt.name }) : $t('settings.providers.shelf.pinName', { name: alt.name })"
-                :title="card.pinnedId === alt.id ? $t('settings.providers.shelf.pinned') : $t('settings.providers.shelf.pin')"
-                :disabled="busy || card.pinnedId === alt.id"
+              <KitListRow
+                v-if="card.pinnedId === alt.id"
+                selected
+              >
+                <template #title>
+                  <span :title="alt.id">{{ alt.name }}</span>
+                </template>
+                <template #subtitle>
+                  {{ altMeta(alt) }}
+                </template>
+                <template #trailing>
+                  <span
+                    class="alt-mark"
+                    aria-hidden="true"
+                  >✓</span>
+                  <span class="kit-sr-only">{{ $t('settings.providers.shelf.pinned') }}</span>
+                </template>
+              </KitListRow>
+              <KitListRow
+                v-else
+                as="button"
+                :aria-label="$t('settings.providers.shelf.pinName', { name: alt.name })"
+                :disabled="busy"
                 @click="emit('pin', card.slot, alt.id)"
               >
-                <svg
-                  v-if="card.pinnedId === alt.id"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M6.5 12.5l3.6 3.5L17.5 8.5" />
-                </svg>
-                <svg
-                  v-else
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-              </button>
+                <template #title>
+                  <span :title="alt.id">{{ alt.name }}</span>
+                </template>
+                <template #subtitle>
+                  {{ altMeta(alt) }}
+                </template>
+                <template #trailing>
+                  <span
+                    class="alt-mark"
+                    aria-hidden="true"
+                  >+</span>
+                </template>
+              </KitListRow>
             </li>
           </ul>
 
@@ -221,7 +227,7 @@ import {
   openRouterRoutingMode,
   shelfSlotPin,
 } from '@dostigus/shared'
-import { KitButton, KitChip } from '@dostigus/ui-kit'
+import { KitButton, KitChip, KitListRow } from '@dostigus/ui-kit'
 import { catalogErrorCopy, modelPriceCopy } from '../utils/provider-settings'
 
 const props = defineProps<{
@@ -283,6 +289,11 @@ const cards = computed(() => OPENROUTER_SHELF_SLOTS.map((slot) => {
   }
 }))
 
+function altMeta(model: OpenRouterCatalogModel): string {
+  const price = modelPriceCopy(model, hostLocale.value)
+  return model.vision ? `${price} · ${t('settings.providers.shelf.vision')}` : price
+}
+
 function scoreOf(slot: OpenRouterShelfSlot, model: OpenRouterCatalogModel): number | null {
   const value = slot === 'coding' ? (model.coding ?? model.intelligence) : model.intelligence
   return value == null ? null : Math.round(value)
@@ -297,68 +308,39 @@ function scoreOf(slot: OpenRouterShelfSlot, model: OpenRouterCatalogModel): numb
   gap: 0.9rem;
 }
 
-.route {
-  appearance: none;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.8rem;
-  width: 100%;
-  padding: 0.95rem 1rem;
+/* Routing, shelf cards, and the miss banner are domain composites nested in the Provider KitPanel. A second KitPanel would be a card in a card. */
+.route,
+.card,
+.banner {
   border: 1px solid var(--line);
-  border-radius: 1.1rem;
+  border-radius: var(--radius);
   background: var(--bg);
-  color: inherit;
-  text-align: left;
-  font: inherit;
-  cursor: pointer;
 }
 
-.route:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--text) 28%, var(--line));
+.route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.9rem;
+  padding: 0.95rem 1rem;
 }
 
 .route.on {
   border-color: color-mix(in srgb, var(--live) 45%, var(--line));
-  background: color-mix(in srgb, var(--live) 6%, var(--bg));
-}
-
-.route:disabled {
-  cursor: default;
-}
-
-.route:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.radio {
-  flex: none;
-  width: 1.05rem;
-  height: 1.05rem;
-  margin-top: 0.15rem;
-  border-radius: 999px;
-  border: 2px solid var(--text-muted);
-}
-
-.route.on .radio {
-  border-color: var(--live);
-  background: radial-gradient(circle, var(--live) 0 45%, transparent 50%);
 }
 
 .route-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  flex: 1 1 16rem;
+  min-width: 0;
 }
 
 .route-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  margin: 0;
   font-weight: 700;
 }
 
 .route-detail {
+  margin: 0.2rem 0 0;
   color: var(--text-muted);
   font-size: 0.85rem;
   line-height: 1.45;
@@ -398,14 +380,10 @@ function scoreOf(slot: OpenRouterShelfSlot, model: OpenRouterCatalogModel): numb
   gap: 0.6rem;
   min-width: 0;
   padding: 0.95rem 0.95rem 0.85rem;
-  border: 1px solid var(--line);
-  border-radius: 1.1rem;
-  background: var(--bg);
 }
 
 .card.on {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .card-head {
@@ -432,8 +410,8 @@ function scoreOf(slot: OpenRouterShelfSlot, model: OpenRouterCatalogModel): numb
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.7rem;
-  padding: 0.05rem 0.4rem;
-  border-radius: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
   background: color-mix(in srgb, var(--text) 8%, transparent);
   color: var(--text-muted);
 }
@@ -448,7 +426,7 @@ code {
   width: 100%;
   min-width: 0;
   padding: 0.65rem 0.7rem;
-  border-radius: 0.85rem;
+  border-radius: var(--radius);
   background: var(--surface);
 }
 
@@ -492,69 +470,15 @@ code {
   gap: 0.15rem;
 }
 
+/* KitListRow pads 0.7rem inline; this lines alt names up with the card copy. */
 .alts li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.3rem 0;
+  margin-inline: -0.7rem;
 }
 
-.alt-copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.alt-name {
-  font-size: 0.82rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.alt-meta {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-}
-
-.alt-pin {
-  appearance: none;
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  border: 1px solid var(--line);
-  background: transparent;
+.alt-mark {
   color: var(--text);
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.alt-pin:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--text) 30%, var(--line));
-}
-
-.alt-pin svg {
-  width: 0.9rem;
-  height: 0.9rem;
-  fill: none;
-  stroke: currentcolor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.alts li.on .alt-pin {
-  border-color: transparent;
-  color: var(--accent);
-}
-
-.alt-pin:disabled {
-  cursor: default;
-  opacity: 0.7;
+  font-size: 1.2rem;
+  line-height: 1;
 }
 
 .pinned-elsewhere,
@@ -570,9 +494,7 @@ code {
   align-items: flex-start;
   gap: 0.35rem;
   padding: 0.95rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
-  border-radius: 1.1rem;
-  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
 }
 
 .banner-title {

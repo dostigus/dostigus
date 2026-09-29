@@ -210,16 +210,26 @@
               @meta="restoreMeta(provider.id)"
               @refresh="loadCatalog(provider.id, true)"
             />
-            <details
-              class="more"
-              :open="advancedOpen[provider.id]"
-              @toggle="onAdvancedToggle(provider.id, $event)"
-            >
-              <summary>
-                <span>{{ $t('settings.providers.details') }}</span>
-                <span class="summary-hint">{{ $t('settings.providers.detailsSummaryHint') }}</span>
-              </summary>
+            <div class="more">
+              <KitListRow
+                as="button"
+                class="disclosure"
+                :title="$t('settings.providers.details')"
+                :subtitle="$t('settings.providers.detailsSummaryHint')"
+                :aria-expanded="Boolean(advancedOpen[provider.id])"
+                :aria-controls="`${uid}-details-${provider.id}`"
+                @click="toggleAdvanced(provider.id)"
+              >
+                <template #trailing>
+                  <span
+                    class="chevron"
+                    aria-hidden="true"
+                  >›</span>
+                </template>
+              </KitListRow>
               <SettingsModelCatalog
+                v-show="advancedOpen[provider.id]"
+                :id="`${uid}-details-${provider.id}`"
                 :provider-id="provider.id"
                 :providers="providers"
                 :catalog="catalogs[provider.id] ?? null"
@@ -230,7 +240,7 @@
                 @pin="(tier, modelId) => pinTier(provider.id, tier, modelId)"
                 @refresh="loadCatalog(provider.id, true)"
               />
-            </details>
+            </div>
           </template>
           <p
             v-else-if="provider.kind !== 'openrouter'"
@@ -265,11 +275,27 @@
           as="div"
           class="page-more"
         >
-          <details class="more">
-            <summary>
-              <span>{{ $t('settings.providers.tiersByProvider') }}</span>
-              <span class="summary-hint">{{ $t('settings.providers.tiersByProviderHint') }}</span>
-            </summary>
+          <KitListRow
+            as="button"
+            class="disclosure"
+            :title="$t('settings.providers.tiersByProvider')"
+            :subtitle="$t('settings.providers.tiersByProviderHint')"
+            :aria-expanded="tiersOpen"
+            :aria-controls="`${uid}-tiers`"
+            @click="tiersOpen = !tiersOpen"
+          >
+            <template #trailing>
+              <span
+                class="chevron"
+                aria-hidden="true"
+              >›</span>
+            </template>
+          </KitListRow>
+          <div
+            v-show="tiersOpen"
+            :id="`${uid}-tiers`"
+            class="tiers"
+          >
             <div
               v-if="providers.length > 1"
               class="bind-grid"
@@ -351,7 +377,7 @@
                 </KitButton>
               </div>
             </form>
-          </details>
+          </div>
         </KitPanel>
       </div>
     </div>
@@ -383,7 +409,7 @@ import {
   pinOpenRouterShelf,
   pinOpenRouterTiers,
 } from '@dostigus/shared'
-import { KitButton, KitField, KitInput, KitPanel, KitSelect } from '@dostigus/ui-kit'
+import { KitButton, KitField, KitInput, KitListRow, KitPanel, KitSelect } from '@dostigus/ui-kit'
 import { providerErrorField, providerHealth, tierSituations } from '../../utils/provider-settings'
 
 type Binds = Partial<Record<ModelTier, LlmTierBind>>
@@ -431,6 +457,7 @@ const editModel = ref('')
 const editError = ref('')
 const removeId = ref('')
 const advancedOpen = ref<Record<string, boolean>>({})
+const tiersOpen = ref(false)
 const firstAdd = ref<{ reset: () => void } | null>(null)
 const nextAdd = ref<{ reset: () => void } | null>(null)
 
@@ -802,10 +829,10 @@ async function saveLegacyPins() {
   }
 }
 
-function onAdvancedToggle(providerId: string, event: Event) {
+function toggleAdvanced(providerId: string) {
   advancedOpen.value = {
     ...advancedOpen.value,
-    [providerId]: (event.target as HTMLDetailsElement).open,
+    [providerId]: !advancedOpen.value[providerId],
   }
 }
 
@@ -926,7 +953,7 @@ h1 {
   flex: none;
   width: 2.6rem;
   height: 2.6rem;
-  border-radius: 0.85rem;
+  border-radius: var(--radius);
   background: var(--surface);
   font-weight: 800;
   font-size: 0.82rem;
@@ -969,8 +996,8 @@ h1 {
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.74rem;
-  padding: 0.05rem 0.4rem;
-  border-radius: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
   background: color-mix(in srgb, var(--text) 8%, transparent);
   color: var(--text-muted);
 }
@@ -980,14 +1007,14 @@ code {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: 1.1rem;
-  background: var(--bg);
+  padding-block: 1rem;
+  border-block: 1px solid var(--line-soft);
 }
 
 .confirm {
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .confirm p {
@@ -1002,51 +1029,22 @@ code {
 }
 
 .more {
-  border-top: 1px solid var(--line-soft);
-  padding-top: 0.8rem;
-}
-
-.page-more .more {
-  border-top: 0;
-  padding-top: 0;
-}
-
-summary {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
   gap: 0.6rem;
-  cursor: pointer;
-  font-weight: 700;
-  list-style: none;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 0.6rem;
 }
 
-summary::-webkit-details-marker {
-  display: none;
-}
-
-summary::before {
-  content: '';
-  align-self: center;
-  width: 0.45rem;
-  height: 0.45rem;
-  border-right: 2px solid var(--text-muted);
-  border-bottom: 2px solid var(--text-muted);
-  transform: rotate(-45deg);
+.chevron {
+  color: var(--text);
+  font-size: 1.5rem;
+  line-height: 1;
   transition: transform 140ms ease;
 }
 
-details[open] > summary::before {
-  transform: rotate(45deg);
-}
-
-details[open] > summary {
-  margin-bottom: 0.6rem;
-}
-
-.summary-hint {
-  color: var(--text-muted);
-  font-weight: 400;
-  font-size: 0.8rem;
+.disclosure[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
 }
 
 .add-another {
@@ -1100,6 +1098,12 @@ details[open] > summary {
   flex-direction: column;
   gap: 0.7rem;
   margin-top: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
 }
 
 @media (max-width: 30rem) {

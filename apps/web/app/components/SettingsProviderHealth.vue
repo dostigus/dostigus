@@ -1,58 +1,62 @@
 <template>
-  <section
+  <KitPanel
+    as="section"
     class="health"
     :class="health.tone"
     role="status"
     aria-live="polite"
   >
-    <span
-      class="orb"
-      aria-hidden="true"
-    >
-      <svg
-        v-if="health.tone === 'ok'"
-        viewBox="0 0 24 24"
+    <div class="row">
+      <span
+        class="glyph"
+        aria-hidden="true"
       >
-        <path d="M6.5 12.5l3.6 3.5L17.5 8.5" />
-      </svg>
-      <svg
-        v-else-if="health.tone === 'error'"
-        viewBox="0 0 24 24"
+        <svg
+          v-if="health.tone === 'ok'"
+          viewBox="0 0 24 24"
+        >
+          <path d="M6.5 12.5l3.6 3.5L17.5 8.5" />
+        </svg>
+        <svg
+          v-else-if="health.tone === 'error'"
+          viewBox="0 0 24 24"
+        >
+          <path d="M12 7v6M12 16.6v.4" />
+        </svg>
+        <svg
+          v-else-if="health.tone === 'idle'"
+          viewBox="0 0 24 24"
+        >
+          <path d="M9 3.5v4M15 3.5v4M7 7.5h10v3.2a5 5 0 0 1-10 0zM12 15.7v4.8" />
+        </svg>
+        <svg
+          v-else
+          viewBox="0 0 24 24"
+        >
+          <path d="M12 7.5v5l3 1.8" />
+        </svg>
+      </span>
+      <div class="copy">
+        <p class="title">
+          {{ health.title }}
+        </p>
+        <p class="detail">
+          {{ health.detail }}
+        </p>
+      </div>
+      <div
+        v-if="$slots.default"
+        class="actions"
       >
-        <path d="M12 7v6M12 16.6v.4" />
-      </svg>
-      <svg
-        v-else-if="health.tone === 'idle'"
-        viewBox="0 0 24 24"
-      >
-        <path d="M9 3.5v4M15 3.5v4M7 7.5h10v3.2a5 5 0 0 1-10 0zM12 15.7v4.8" />
-      </svg>
-      <svg
-        v-else
-        viewBox="0 0 24 24"
-      >
-        <path d="M12 7.5v5l3 1.8" />
-      </svg>
-    </span>
-    <div class="copy">
-      <p class="title">
-        {{ health.title }}
-      </p>
-      <p class="detail">
-        {{ health.detail }}
-      </p>
+        <slot />
+      </div>
     </div>
-    <div
-      v-if="$slots.default"
-      class="actions"
-    >
-      <slot />
-    </div>
-  </section>
+  </KitPanel>
 </template>
 
 <script setup lang="ts">
 import type { ProviderHealth } from '../utils/provider-settings'
+import { KitPanel } from '@dostigus/ui-kit'
 
 defineProps<{
   health: ProviderHealth
@@ -62,47 +66,40 @@ defineProps<{
 <style scoped>
 .health {
   --tone: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 0.95rem;
-  padding: 1rem 1.15rem;
-  border: 1px solid color-mix(in srgb, var(--tone) 40%, var(--line));
-  border-radius: var(--radius-card);
-  background:
-    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--tone) 14%, transparent), transparent 60%),
-    var(--card);
 }
 
 .health.ok {
   --tone: var(--live);
 }
 
-.health.degraded,
-.health.checking {
-  --tone: var(--bot-accent-04);
-}
-
-.health.error {
+.health.error,
+.health.degraded {
   --tone: var(--accent);
 }
 
-.orb {
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+}
+
+.glyph {
   display: grid;
   place-items: center;
   flex: none;
   width: 2.6rem;
   height: 2.6rem;
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, var(--line));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--tone) 22%, var(--surface));
+  background: var(--surface);
   color: var(--tone);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tone) 10%, transparent);
 }
 
-.checking .orb {
-  animation: health-pulse 1.4s ease-in-out infinite;
+.checking .glyph {
+  animation: health-wait 1.4s ease-in-out infinite;
 }
 
-.orb svg {
+.glyph svg {
   width: 1.3rem;
   height: 1.3rem;
   fill: none;
@@ -136,14 +133,14 @@ defineProps<{
   gap: 0.45rem;
 }
 
-@keyframes health-pulse {
+@keyframes health-wait {
   50% {
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--tone) 4%, transparent);
+    opacity: 0.55;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .checking .orb {
+  .checking .glyph {
     animation: none;
   }
 }
