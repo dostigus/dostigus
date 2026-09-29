@@ -136,6 +136,16 @@ not restyled.
   the Host sidebar.
 - Dashboard Members and Providers moved onto the primitives in
   [#155](https://github.com/dostigus/dostigus/pull/155).
+- Providers secondary chrome followed with no new Kit primitive. The
+  health tile is a `KitPanel` with a flat glyph (no radial glow). The
+  Details and Model tiers disclosures are a pressable `KitListRow`
+  with `aria-expanded` and a `›` chevron, the Closet row pattern. The
+  alternate shelf models are pressable `KitListRow`s, and routing is
+  a `KitChip` or a `KitButton`. Edit and delete confirm sit inside the
+  Provider `KitPanel` between `--line-soft` rules, not in an inset
+  box. The routing block and shelf cards stay Host CSS on
+  `--radius`, `--line`, and `--bg`, because a nested `KitPanel` would
+  be a card in a card.
 - The Bot closet Sheet (fields, Schedules, Pack, who can see), Pack
   export and Pack apply, the Schedule Sheet, and the Host `+` menu Add
   Member Sheet use `KitField`, `KitInput`, `KitTextarea`, `KitSelect`,
