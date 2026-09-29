@@ -42,6 +42,8 @@ it('names the preview states agents are asked to shoot', () => {
     'plus-menu',
     'account-menu',
     'search',
+    'kitchen',
+    'kitchen-end',
   ])
 })
 
@@ -57,6 +59,10 @@ it('opens Sheets with a click chain after hydration', () => {
   expect(PREVIEW_SHOOT_STATES['account-menu'].clicks).toEqual(['.foot .user-btn'])
   expect(PREVIEW_SHOOT_STATES.search.clicks).toEqual(['.side-head .chrome:first-child'])
   expect(PREVIEW_SHOOT_STATES.search.ready).toEqual({ selector: '.kit-dialog .kit-row[data-selected]', count: 1 })
+  expect(PREVIEW_SHOOT_STATES.kitchen.seed).toBe('kitchen=1')
+  expect(PREVIEW_SHOOT_STATES.kitchen.clicks).toEqual(['.kit-chat-parts .kit-button'])
+  expect(PREVIEW_SHOOT_STATES.kitchen.ready).toEqual({ selector: '.kit-sheet .kitchen .xp', count: 1 })
+  expect(PREVIEW_SHOOT_STATES['kitchen-end'].scrollEnd).toBe('.kit-sheet')
   const click = buildClickExpression('.identity')
   expect(click).toContain('isHydrating')
   expect(click).toContain('querySelector(".identity")')

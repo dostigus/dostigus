@@ -493,12 +493,16 @@ explicit ready marker (not network idle), and writes a PNG under
 | `plus-menu` | `/preview-seed`, click the sidebar `+` | four `.kit-menu .kit-menu-item` | 1440×900 |
 | `account-menu` | `/preview-seed`, click `.foot .user-btn` | three `.kit-menu .kit-menu-item` (Settings, Members, sign out) | 1440×900 |
 | `search` | `/preview-seed`, click the sidebar lupa (`.side-head .chrome:first-child`) | one `.kit-dialog .kit-row[data-selected]` | 1440×900 |
+| `kitchen` | `?kitchen=1`, click **Open Kitchen** (`.kit-chat-parts .kit-button`) | `.kit-sheet .kitchen .xp` | 1440×900 |
+| `kitchen-end` | same as `kitchen`, Sheet scrolled to the end | `.kit-sheet .kitchen .xp` | 1440×900 |
 
 Sheet states click after Nuxt hydrates (`$nuxt.isHydrating` is false)
 and wait 400ms for the Sheet animation. `pnpm shoot:preview <state> --narrow`
 shoots any state at 390×844 and writes `<state>-narrow.png`.
 `schedule` needs one Schedule on Bot `preview` (add it in the Closet
-first). `?threads=1` on the same Store adds the preview Member, so
+first). `kitchen` and `kitchen-end` click the first Chat button on Bot
+`preview`, so run them on a Store where `?parts=1` has not added
+**Open demo** first. `?threads=1` on the same Store adds the preview Member, so
 Closet «Who can see this Bot» has a row.
 
 `providers-empty` needs a Store with no Provider (a prior
