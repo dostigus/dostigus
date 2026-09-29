@@ -1,8 +1,11 @@
 import type { Component } from 'vue'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { uiKitComponents } from '../../src/components'
+import KitButton from '../../src/components/KitButton.vue'
 import KitChip from '../../src/components/KitChip.vue'
 import KitField from '../../src/components/KitField.vue'
 import KitInput from '../../src/components/KitInput.vue'
@@ -143,6 +146,30 @@ it('lays out a list row with leading, copy, and trailing slots', async () => {
   const still = await render(KitListRow, { title: 'Owner' })
   expect(still).not.toContain('kit-row--interactive')
   expect(still).not.toContain('kit-row-subtitle')
+})
+
+it('keeps a disabled pressable row dimmed without the hover tint', async () => {
+  const html = await render(KitListRow, { as: 'button', title: 'Kitchen', disabled: true })
+  expect(html).toMatch(/<button[^>]*\sdisabled/)
+  const css = readFileSync(join(import.meta.dirname, '../../src/kit.css'), 'utf8')
+  expect(css).toContain('.kit-row--interactive:hover:not(:disabled, [aria-disabled=\'true\'])')
+  expect(css).not.toMatch(/\.kit-row--interactive:hover\s*\{/)
+})
+
+it('draws the pane close as a quiet muted button on Host tokens', async () => {
+  const html = await render(KitButton, { 'variant': 'close', 'aria-label': 'Back' }, { default: () => '×' })
+  expect(html).toMatch(/^<button type="button" class="kit-button kit-button--close" aria-label="Back">/)
+  const css = readFileSync(join(import.meta.dirname, '../../src/kit.css'), 'utf8')
+  const rule = css.slice(css.indexOf('.kit-button--close {'), css.indexOf('}', css.indexOf('.kit-button--close {')))
+  expect(rule).toContain('background: transparent')
+  expect(rule).toContain('color: var(--text-muted')
+  expect(rule).toContain('border-radius: 999px')
+})
+
+it('lets a pane focus a Kit input on open', () => {
+  const src = readFileSync(join(import.meta.dirname, '../../src/components/KitInput.vue'), 'utf8')
+  expect(src).toContain('ref="el"')
+  expect(src).toMatch(/defineExpose\(\{\s*focus: \(\) => el\.value\?\.focus\(\),\s*\}\)/)
 })
 
 it('exports every primitive from the Kit barrel', () => {

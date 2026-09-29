@@ -258,6 +258,24 @@
   font-size: 0.92rem;
 }
 
+.kit-button--close {
+  flex: none;
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted, #a4a4a4);
+  font-size: 1.45rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.kit-button--close:hover:not(:disabled) {
+  filter: none;
+  color: var(--text, #ffffff);
+}
+
 .kit-chat-parts {
   display: flex;
   flex-wrap: wrap;
@@ -765,7 +783,7 @@ button.kit-chip:disabled {
   cursor: pointer;
 }
 
-.kit-row--interactive:hover {
+.kit-row--interactive:hover:not(:disabled, [aria-disabled='true']) {
   background: color-mix(in srgb, var(--text, #ffffff) 6%, transparent);
 }
 

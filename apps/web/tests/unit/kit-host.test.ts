@@ -125,6 +125,10 @@ it('builds the Host + menu and the account menu on KitMenu', () => {
     expect(style).not.toContain('box-shadow')
   }
   expect(plus.match(/<KitMenuItem\b/g)).toHaveLength(4)
+  expect(plus).toContain('@close-auto-focus="onCloseAutoFocus"')
+  expect(plus).toMatch(/function onFindBot\(\) \{\s*openPane = \(\) => \{/)
+  expect(plus).toMatch(/function onThread\(kind: MessengerThreadKind\) \{\s*openPane = \(\) => \{/)
+  expect(plus).toContain('event.preventDefault()')
   expect(plus).toContain('v-model:open="open"')
   expect(account).toContain('<KitMenuSeparator')
   expect(account.match(/:as="NuxtLink"/g)).toHaveLength(2)
@@ -162,6 +166,50 @@ it('builds Host Search from KitInput and KitListRow in the bare Kit dialog', () 
   expect(style).not.toMatch(/(?:^|[\s,])input\b[^{]*\{/m)
   expect(style).not.toMatch(/#[0-9a-f]{3,8}\b/i)
   expect(style).not.toContain('var(--bot-accent')
+})
+
+it('builds the Bot picker and the thread composer on Kit primitives', () => {
+  const picker = read('app/components/BotPicker.vue')
+  const composer = read('app/components/ThreadComposer.vue')
+
+  expect(picker).toMatch(/import \{[^}]*KitButton[^}]*KitInput[^}]*KitListRow[^}]*\} from '@dostigus\/ui-kit'/)
+  expect(composer).toMatch(/import \{[^}]*KitButton[^}]*KitField[^}]*KitInput[^}]*KitListRow[^}]*\} from '@dostigus\/ui-kit'/)
+
+  for (const src of [picker, composer]) {
+    const style = src.slice(src.indexOf('<style'))
+    expect(src).toContain('<KitInput\n          ref="searchEl"')
+    expect(src).toContain('type="search"')
+    expect(src).toContain('@keydown.enter.prevent')
+    expect(src).toContain('searchEl.value?.focus()')
+    expect(src).toContain('variant="close"')
+    expect(src).toContain(':aria-label="$t(\'host.botPicker.back\')"')
+    expect(src).toContain('as="button"')
+    expect(src).toContain('#leading')
+    expect(src).toContain('class="kit-sr-only"')
+    expect(src).toContain('\'Escape\'')
+
+    expect(src).not.toMatch(/<(?:input|button|textarea|select)\b/)
+    expect(src).not.toMatch(/class="(?:row|back|copy|field|preview|sr-only)"/)
+    expect(style).not.toMatch(/^\.(?:row|back|copy|field|preview|sr-only|name-row)\b/m)
+    expect(style).not.toMatch(/(?:^|[\s,])(?:input|button)\b[^{]*\{/m)
+    expect(style).not.toContain(':focus')
+    expect(style).not.toContain(':hover')
+    expect(style).not.toMatch(/#[0-9a-f]{3,8}\b/i)
+    expect(style).not.toContain('var(--bot-accent')
+  }
+
+  expect(picker.match(/<KitListRow\b/g)).toHaveLength(3)
+  expect(picker).toContain(':selected="isCurrent(bot.id)"')
+  expect(picker).toContain(':subtitle="bot.lastMessage?.content || undefined"')
+  expect(picker).toContain(':disabled="busy"')
+
+  expect(composer.match(/<KitListRow\b/g)).toHaveLength(2)
+  expect(composer).toContain(':aria-pressed="botIds.includes(bot.id)"')
+  expect(composer).toContain(':disabled="busy || botBlocked(bot.id)"')
+  expect(composer).toContain('#trailing')
+  expect(composer.match(/<KitField\b/g)).toHaveLength(1)
+  expect(composer).toContain('maxlength="80"')
+  expect(composer).toMatch(/<KitButton\s+v-if="kind !== 'dm'"\s+type="submit"/)
 })
 
 it('builds the Kitchen Sheet from Kit form and row primitives', () => {

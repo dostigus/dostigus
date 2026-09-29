@@ -492,6 +492,8 @@ explicit ready marker (not network idle), and writes a PNG under
 | `member-add` | `/preview-seed`, `+` menu, Add Member | two `.kit-sheet input[type="password"]` | 1440×900 |
 | `plus-menu` | `/preview-seed`, click the sidebar `+` | four `.kit-menu .kit-menu-item` | 1440×900 |
 | `account-menu` | `/preview-seed`, click `.foot .user-btn` | three `.kit-menu .kit-menu-item` (Settings, Members, sign out) | 1440×900 |
+| `bot-picker` | `/preview-seed`, `+` menu, Find or create Bot | two `.picker .kit-row` (create + Bot `preview`) and the search input focused | 1440×900 |
+| `thread-composer` | `?threads=1`, `+` menu, Create group | a `.composer .kit-row` and the search input focused | 1440×900 |
 | `search` | `/preview-seed`, click the sidebar lupa (`.side-head .chrome:first-child`) | one `.kit-dialog .kit-row[data-selected]` | 1440×900 |
 | `kitchen` | `?kitchen=1`, click **Open Kitchen** (`.kit-chat-parts .kit-button`) | `.kit-sheet .kitchen .xp` | 1440×900 |
 | `kitchen-end` | same as `kitchen`, Sheet scrolled to the end | `.kit-sheet .kitchen .xp` | 1440×900 |

@@ -7,29 +7,28 @@
       <HostMenuButton />
       <h2
         id="bot-picker-title"
-        class="sr-only"
+        class="kit-sr-only"
       >
         {{ isOwner ? $t('host.botPicker.titleOwner') : $t('host.botPicker.titleMember') }}
       </h2>
       <label class="search">
         <span class="to">{{ $t('host.botPicker.to') }}</span>
-        <input
+        <KitInput
           ref="searchEl"
           v-model="query"
           type="search"
           :placeholder="isOwner ? $t('host.botPicker.titleOwner') : $t('host.botPicker.titleMember')"
           autocomplete="off"
           @keydown.enter.prevent
-        >
+        />
       </label>
-      <button
-        type="button"
-        class="back"
+      <KitButton
+        variant="close"
         :aria-label="$t('host.botPicker.back')"
         @click="dismiss"
       >
         ×
-      </button>
+      </KitButton>
     </header>
 
     <div class="body">
@@ -45,61 +44,56 @@
         :aria-label="$t('host.botPicker.bots')"
       >
         <li v-if="isOwner">
-          <button
-            type="button"
-            class="row"
+          <KitListRow
+            as="button"
+            :title="busy ? $t('host.botPicker.createBusy') : $t('host.botPicker.create')"
             :disabled="busy"
             @click="createNew"
           >
-            <span
-              class="plus"
-              aria-hidden="true"
-            >+</span>
-            <span class="copy">
-              <span class="name">{{ busy ? $t('host.botPicker.createBusy') : $t('host.botPicker.create') }}</span>
-            </span>
-          </button>
+            <template #leading>
+              <span
+                class="plus"
+                aria-hidden="true"
+              >+</span>
+            </template>
+          </KitListRow>
         </li>
         <li v-else>
-          <button
-            type="button"
-            class="row"
+          <KitListRow
+            as="button"
+            :title="busy ? $t('host.botPicker.createBusy') : $t('host.botPicker.create')"
             :disabled="busy"
             @click="createNew"
           >
-            <span
-              class="plus"
-              aria-hidden="true"
-            >+</span>
-            <span class="copy">
-              <span class="name">{{ busy ? $t('host.botPicker.createBusy') : $t('host.botPicker.create') }}</span>
-            </span>
-          </button>
+            <template #leading>
+              <span
+                class="plus"
+                aria-hidden="true"
+              >+</span>
+            </template>
+          </KitListRow>
         </li>
         <li
           v-for="bot in visible"
           :key="bot.id"
         >
-          <button
-            type="button"
-            class="row"
-            :class="{ current: isCurrent(bot.id) }"
+          <KitListRow
+            as="button"
+            :title="bot.name"
+            :subtitle="bot.lastMessage?.content || undefined"
+            :selected="isCurrent(bot.id)"
+            :aria-current="isCurrent(bot.id) ? 'page' : undefined"
             @click="emit('openBot', bot.id)"
           >
-            <HostBotAvatar
-              :name="bot.name"
-              :seed="bot.id"
-              :shape="bot.manifest.avatarShape"
-              :avatar-color="bot.manifest.avatarColor"
-            />
-            <span class="copy">
-              <span class="name">{{ bot.name }}</span>
-              <span
-                v-if="bot.lastMessage?.content"
-                class="preview"
-              >{{ bot.lastMessage.content }}</span>
-            </span>
-          </button>
+            <template #leading>
+              <HostBotAvatar
+                :name="bot.name"
+                :seed="bot.id"
+                :shape="bot.manifest.avatarShape"
+                :avatar-color="bot.manifest.avatarColor"
+              />
+            </template>
+          </KitListRow>
         </li>
       </ul>
 
@@ -116,6 +110,7 @@
 <script setup lang="ts">
 import type { Bot, BotListItem } from '@dostigus/shared'
 import { DEFAULT_BOT_NAME, randomBotAppearance } from '@dostigus/shared'
+import { KitButton, KitInput, KitListRow } from '@dostigus/ui-kit'
 
 const props = defineProps<{
   bots: BotListItem[]
@@ -133,7 +128,7 @@ const { isOwner } = useHostAccount()
 const query = ref('')
 const busy = ref(false)
 const error = ref('')
-const searchEl = ref<HTMLInputElement | null>(null)
+const searchEl = ref<InstanceType<typeof KitInput> | null>(null)
 
 const visible = computed(() => filterBotsByName(props.bots, query.value))
 
@@ -212,10 +207,6 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--line);
 }
 
-.head:focus-within {
-  border-bottom-color: var(--accent);
-}
-
 .search {
   flex: 1;
   min-width: 0;
@@ -229,29 +220,6 @@ onUnmounted(() => {
   color: var(--text-muted);
   font-weight: 700;
   font-size: 1rem;
-}
-
-.search input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  padding: 0.35rem 0;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 1.05rem;
-}
-
-.search input:focus {
-  outline: none;
-}
-
-.search input::placeholder {
-  color: var(--text-muted);
-}
-
-.search input::-webkit-search-cancel-button {
-  cursor: pointer;
 }
 
 .body {
@@ -278,122 +246,12 @@ onUnmounted(() => {
   padding: 0.4rem 0.55rem 0.6rem;
 }
 
-.row {
-  appearance: none;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  text-align: left;
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  padding: 0.55rem 0.7rem;
-  cursor: pointer;
-}
-
-.row:hover:not(:disabled),
-.row.current {
-  background: color-mix(in srgb, var(--text) 8%, transparent);
-}
-
-.row:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.row:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.back {
-  appearance: none;
-  flex: none;
-  width: 2.15rem;
-  height: 2.15rem;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 1.45rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.back:hover {
-  color: var(--text);
-}
-
-.back:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .plus {
   width: 2.4rem;
-  flex: none;
   text-align: center;
   color: var(--text-muted);
   font-size: 1.35rem;
   font-weight: 700;
   line-height: 1;
-}
-
-.copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.08rem;
-}
-
-.name-row {
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-}
-
-.name {
-  min-width: 0;
-  font-weight: 700;
-  font-size: 1rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.private {
-  flex: none;
-  color: var(--accent);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.preview {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 400;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 </style>

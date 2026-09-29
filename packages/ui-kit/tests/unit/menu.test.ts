@@ -41,6 +41,12 @@ it('puts Reka menu wiring on the Host trigger and portals the items', async () =
   expect(html).not.toContain('Find or create a Bot')
 })
 
+it('forwards the Reka close focus event so an item can keep focus where it moved it', () => {
+  const menu = readFileSync(join(src, 'components/KitMenu.vue'), 'utf8')
+  expect(menu).toContain('@close-auto-focus="emit(\'closeAutoFocus\', $event)"')
+  expect(menu).toContain('closeAutoFocus: [event: Event]')
+})
+
 it('disables the trigger and reports open state', async () => {
   const off = await render(KitMenu, { disabled: true }, {
     trigger: () => h('button', { class: 'user-btn' }, 'Nick'),
