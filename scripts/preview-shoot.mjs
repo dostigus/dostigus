@@ -127,6 +127,12 @@ export const PREVIEW_SHOOT_STATES = {
     ready: { selector: '.kit-menu .kit-menu-item', count: 3 },
     viewport: DEFAULT_VIEWPORT,
   },
+  'search': {
+    seed: '',
+    clicks: ['.side-head .chrome:first-child'],
+    ready: { selector: '.kit-dialog .kit-row[data-selected]', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+  },
 }
 
 /** Sheets animate in for 180ms. Wait past that before the capture. */

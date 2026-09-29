@@ -10,7 +10,7 @@
         class="finder"
         @keydown="onKeydown"
       >
-        <label class="query">
+        <div class="query">
           <svg
             class="loupe"
             viewBox="0 0 24 24"
@@ -23,14 +23,14 @@
             />
             <path d="M16 16.5L20 20.5" />
           </svg>
-          <span class="sr-only">Search</span>
-          <input
+          <KitInput
             v-model="query"
             type="search"
+            :aria-label="$t('host.search.aria')"
             :placeholder="$t('host.search.placeholder')"
             autocomplete="off"
-          >
-        </label>
+          />
+        </div>
         <p
           v-if="hits.length === 0"
           class="empty"
@@ -48,34 +48,37 @@
             v-for="(hit, index) in hits"
             :key="hit.key"
           >
-            <button
-              type="button"
-              class="hit"
+            <KitListRow
+              as="button"
               role="option"
+              :selected="index === active"
               :aria-selected="index === active"
               :aria-label="hitLabel(hit)"
+              :subtitle="hit.subtitle"
               @mouseenter="active = index"
               @click="choose(hit)"
             >
-              <HostBotAvatar
-                v-if="hit.kind !== 'settings'"
-                :name="hit.title"
-                :seed="hit.botId ?? hit.key"
-                :shape="shapeOf(hit.botId)"
-                :avatar-color="colorOf(hit.botId)"
-                :live="hit.kind === 'bot' && hit.botId ? isLive(hit.botId) : false"
-                size="md"
-              />
-              <span
-                v-else
-                class="settings-mark"
-                aria-hidden="true"
-              >
-                <svg viewBox="0 0 24 24">
-                  <path d="M5 7h14M5 12h14M5 17h10" />
-                </svg>
-              </span>
-              <span class="copy">
+              <template #leading>
+                <HostBotAvatar
+                  v-if="hit.kind !== 'settings'"
+                  :name="hit.title"
+                  :seed="hit.botId ?? hit.key"
+                  :shape="shapeOf(hit.botId)"
+                  :avatar-color="colorOf(hit.botId)"
+                  :live="hit.kind === 'bot' && hit.botId ? isLive(hit.botId) : false"
+                  size="md"
+                />
+                <span
+                  v-else
+                  class="settings-mark"
+                  aria-hidden="true"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <path d="M5 7h14M5 12h14M5 17h10" />
+                  </svg>
+                </span>
+              </template>
+              <template #title>
                 <span class="line">
                   <span class="name">{{ hit.title }}</span>
                   <span
@@ -83,16 +86,14 @@
                     class="tag"
                   >{{ hit.tag }}</span>
                 </span>
-                <span
-                  v-if="hit.subtitle"
-                  class="sub"
-                >{{ hit.subtitle }}</span>
-              </span>
-              <span
+              </template>
+              <template
                 v-if="hit.shortcut"
-                class="key"
-              >{{ hit.shortcut }}</span>
-            </button>
+                #trailing
+              >
+                {{ hit.shortcut }}
+              </template>
+            </KitListRow>
           </li>
         </ul>
       </div>
@@ -102,7 +103,7 @@
 
 <script setup lang="ts">
 import type { HostSearchHit, HostSearchMessage } from '../utils/host-search'
-import { KitDialog } from '@dostigus/ui-kit'
+import { KitDialog, KitInput, KitListRow } from '@dostigus/ui-kit'
 import { hostSearchHits, hostSearchShortcutIndex, hostSettingsCatalog } from '../utils/host-search'
 
 const { open, closeSearch } = useHostSearch()
@@ -310,13 +311,17 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 .loupe {
+  position: absolute;
+  inset-inline-start: 0.9rem;
+  top: 50%;
   width: 1.05rem;
   height: 1.05rem;
-  flex: none;
+  transform: translateY(-50%);
   fill: none;
   stroke: currentcolor;
   stroke-width: 1.8;
   stroke-linecap: round;
+  pointer-events: none;
 }
 
 .finder {
@@ -328,44 +333,16 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 .query {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--text) 4%, transparent);
-  padding: 0.55rem 0.75rem;
+  position: relative;
   color: var(--text-muted);
 }
 
 .query:focus-within {
-  border-color: color-mix(in srgb, var(--text) 28%, var(--line));
   color: var(--text);
 }
 
-.query input {
-  width: 100%;
-  min-width: 0;
-  appearance: none;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 0.95rem;
-  padding: 0;
-}
-
-.query input:focus {
-  outline: none;
-}
-
-.query input::placeholder {
-  color: var(--text-muted);
-}
-
-.query input::-webkit-search-cancel-button {
-  cursor: pointer;
+.query .kit-input {
+  padding-inline-start: 2.45rem;
 }
 
 .empty {
@@ -384,31 +361,6 @@ function onKeydown(event: KeyboardEvent) {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-}
-
-.hit {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  width: 100%;
-  min-width: 0;
-  padding: 0.42rem 0.5rem;
-  border: 0;
-  border-radius: 0.85rem;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.hit[aria-selected='true'] {
-  background: color-mix(in srgb, var(--text) 9%, transparent);
-}
-
-.hit:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
 }
 
 .settings-mark {
@@ -431,14 +383,6 @@ function onKeydown(event: KeyboardEvent) {
   stroke-linecap: round;
 }
 
-.copy {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.08rem;
-}
-
 .line {
   display: flex;
   align-items: baseline;
@@ -447,8 +391,7 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 .name {
-  font-weight: 700;
-  font-size: 0.95rem;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -459,32 +402,5 @@ function onKeydown(event: KeyboardEvent) {
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
-}
-
-.sub {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.key {
-  flex: none;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  letter-spacing: 0.01em;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 </style>
