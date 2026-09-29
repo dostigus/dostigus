@@ -79,7 +79,7 @@ it('keeps the search Sheet on the Kit dialog and the messages route', () => {
   expect(sheet).toContain('chrome="bare"')
   expect(sheet).toContain('hostSearchHits')
   expect(sheet).not.toContain('search-title')
-  expect(sheet).not.toContain('#title')
+  expect(sheet.slice(sheet.indexOf('<KitDialog'), sheet.indexOf('<KitListRow'))).not.toContain('#title')
   expect(sheet).toContain('hostSearchHits')
   const shell = readFileSync(join(webRoot, '../../packages/ui-kit/src/components/SheetShell.vue'), 'utf8')
   expect(shell).toContain('chrome !== \'bare\'')

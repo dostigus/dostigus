@@ -492,6 +492,7 @@ explicit ready marker (not network idle), and writes a PNG under
 | `member-add` | `/preview-seed`, `+` menu, Add Member | two `.kit-sheet input[type="password"]` | 1440×900 |
 | `plus-menu` | `/preview-seed`, click the sidebar `+` | four `.kit-menu .kit-menu-item` | 1440×900 |
 | `account-menu` | `/preview-seed`, click `.foot .user-btn` | three `.kit-menu .kit-menu-item` (Settings, Members, sign out) | 1440×900 |
+| `search` | `/preview-seed`, click the sidebar lupa (`.side-head .chrome:first-child`) | one `.kit-dialog .kit-row[data-selected]` | 1440×900 |
 
 Sheet states click after Nuxt hydrates (`$nuxt.isHydrating` is false)
 and wait 400ms for the Sheet animation. `pnpm shoot:preview <state> --narrow`

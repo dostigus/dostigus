@@ -133,6 +133,37 @@ it('builds the Host + menu and the account menu on KitMenu', () => {
   expect(read('app/layouts/host.vue')).toContain('closest(\'[role="menu"]\')')
 })
 
+it('builds Host Search from KitInput and KitListRow in the bare Kit dialog', () => {
+  const search = read('app/components/HostSearch.vue')
+  const style = search.slice(search.indexOf('<style'))
+
+  expect(search).toMatch(/import \{[^}]*KitInput[^}]*KitListRow[^}]*\} from '@dostigus\/ui-kit'/)
+  expect(search).toContain('chrome="bare"')
+  expect(search).not.toContain('<KitField')
+  expect(search).toContain('<KitInput')
+  expect(search).toContain('type="search"')
+  expect(search).toContain(':aria-label="$t(\'host.search.aria\')"')
+  expect(search.indexOf('class="loupe"')).toBeLessThan(search.indexOf('<KitInput'))
+  expect(search).toContain('<KitListRow')
+  expect(search).toContain('as="button"')
+  expect(search).toContain(':selected="index === active"')
+  expect(search).toContain('role="option"')
+  for (const slot of ['#leading', '#title', '#trailing']) {
+    expect(search).toContain(slot)
+  }
+  expect(search).toContain('@keydown="onKeydown"')
+  for (const key of ['ArrowDown', 'ArrowUp', 'Enter']) {
+    expect(search).toContain(`'${key}'`)
+  }
+
+  expect(search).not.toMatch(/<(?:input|button)\b/)
+  expect(search).not.toMatch(/class="(?:hit|copy|sub|key|sr-only)"/)
+  expect(style).not.toMatch(/^\.(?:hit|copy|sub|key|sr-only)\b/m)
+  expect(style).not.toMatch(/(?:^|[\s,])input\b[^{]*\{/m)
+  expect(style).not.toMatch(/#[0-9a-f]{3,8}\b/i)
+  expect(style).not.toContain('var(--bot-accent')
+})
+
 it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   const mark = read('app/components/HostMark.vue')
   const sidebar = read('app/components/HostSidebar.vue')
