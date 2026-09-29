@@ -403,7 +403,7 @@
         "otherProvider": "Another Provider…",
         "openRouterHint": "Paste the key from openrouter.ai. Casual OpenRouter is that key plus free / auto.",
         "keyHint": "The key stays on this Host.",
-        "connectHint": "One key — and Bots start thinking. OpenRouter picks the model; the rest is optional.",
+        "connectHint": "One key and Bots start thinking. OpenRouter picks the model; the rest is optional.",
         "baseUrl": "Base URL",
         "model": "Model",
         "modelHint": "One model on every Model tier while this is the only Provider.",

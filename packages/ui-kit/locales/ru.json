@@ -403,7 +403,7 @@
         "otherProvider": "Другой Provider…",
         "openRouterHint": "Вставьте ключ с openrouter.ai. Для повседневного OpenRouter достаточно ключа и free / auto.",
         "keyHint": "Ключ остаётся на этом Host.",
-        "connectHint": "Один ключ — и Bots начинают думать. Модель OpenRouter подберёт сам, остальное по желанию.",
+        "connectHint": "Один ключ, и Bots начинают думать. Модель OpenRouter подберёт сам, остальное по желанию.",
         "baseUrl": "Base URL",
         "model": "Model",
         "modelHint": "Одна модель на все Model tiers, пока это единственный Provider.",
