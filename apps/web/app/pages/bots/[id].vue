@@ -173,12 +173,23 @@
             {{ $t('chat.retry') }}
           </button>
         </p>
-        <div class="composer-foot">
-          <div
-            ref="composerRowEl"
-            class="composer-row"
-            :class="{ multiline: composerMultiline }"
-          >
+        <input
+          ref="fileInputEl"
+          type="file"
+          class="sr-only"
+          multiple
+          accept="image/*,application/pdf,text/plain,text/markdown,.md,.txt,.pdf"
+          @change="onFileInput"
+        >
+        <ChatComposerPill
+          :tall="pendingAttachments.length > 0"
+          attach
+          :attach-disabled="!bot"
+          :show-send="Boolean(draft.trim() || canSendAttachments)"
+          :send-disabled="sending || !bot || attachmentsUploading"
+          @attach="pickFiles()"
+        >
+          <template #tray>
             <ul
               v-if="pendingAttachments.length"
               class="pending-chips"
@@ -231,64 +242,24 @@
                 </button>
               </li>
             </ul>
-            <div class="composer-line">
-              <input
-                ref="fileInputEl"
-                type="file"
-                class="sr-only"
-                multiple
-                accept="image/*,application/pdf,text/plain,text/markdown,.md,.txt,.pdf"
-                @change="onFileInput"
-              >
-              <button
-                type="button"
-                class="attach"
-                :disabled="!bot"
-                :aria-label="$t('chat.aria.attach')"
-                :title="$t('chat.aria.attach')"
-                @click="pickFiles()"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-              </button>
-              <label class="draft">
-                <span class="sr-only">{{ $t('chat.aria.message') }}</span>
-                <textarea
-                  ref="draftEl"
-                  v-model="draft"
-                  rows="1"
-                  maxlength="16000"
-                  :placeholder="pendingAttachments.length > 0
-                    ? $t('chat.placeholderOrSend')
-                    : $t('chat.placeholderFor', { name: bot?.name ?? 'Bot' })"
-                  :disabled="!bot"
-                  @keydown.enter.exact.prevent="send"
-                  @paste="onAttachPaste"
-                  @focus="listening = true"
-                  @blur="listening = false"
-                />
-              </label>
-              <button
-                v-if="draft.trim() || canSendAttachments"
-                type="submit"
-                class="send"
-                :disabled="sending || !bot || attachmentsUploading"
-                :aria-label="$t('chat.aria.send')"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M12 19V6M7 11l5-5 5 5" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
+          </template>
+          <label class="draft">
+            <span class="sr-only">{{ $t('chat.aria.message') }}</span>
+            <textarea
+              v-model="draft"
+              rows="1"
+              maxlength="16000"
+              :placeholder="pendingAttachments.length > 0
+                ? $t('chat.placeholderOrSend')
+                : $t('chat.placeholderFor', { name: bot?.name ?? 'Bot' })"
+              :disabled="!bot"
+              @keydown.enter.exact.prevent="send"
+              @paste="onAttachPaste"
+              @focus="listening = true"
+              @blur="listening = false"
+            />
+          </label>
+        </ChatComposerPill>
       </form>
 
       <button
@@ -401,13 +372,8 @@ function pendingMeta(item: PendingAttachment) {
 }
 
 const draft = ref('')
-const draftEl = ref<HTMLTextAreaElement | null>(null)
 const pageEl = ref<HTMLElement | null>(null)
 const composerEl = ref<HTMLFormElement | null>(null)
-const composerRowEl = ref<HTMLElement | null>(null)
-const composerMultiline = ref(false)
-/** Bumps when a newer corner ease should win over an in-flight one. */
-let composerRadiusTicket = 0
 const sending = ref(false)
 const botPending = ref(false)
 const sendError = ref('')
@@ -558,64 +524,6 @@ function showMarkError() {
   }, 4000))
 }
 
-/**
- * Pill on one line; a concentric corner once the field is taller than that
- * or the attachment tray sits inside it.
- * Easing `9999px` down to 28px stays a pill until the last moment, so the
- * transition is pinned to the corner already on screen (half the row).
- */
-function measureComposer() {
-  const el = draftEl.value
-  if (!el) {
-    setComposerMultiline(false)
-    return
-  }
-  if (pendingAttachments.value.length > 0) {
-    setComposerMultiline(true)
-    return
-  }
-  const style = getComputedStyle(el)
-  const line = Number.parseFloat(style.lineHeight)
-  const pad = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
-  if (!Number.isFinite(line) || line <= 0) {
-    setComposerMultiline(el.value.includes('\n'))
-    return
-  }
-  const oneLine = line + (Number.isFinite(pad) ? pad : 0)
-  setComposerMultiline(el.scrollHeight > oneLine + line * 0.5)
-}
-
-function setComposerMultiline(next: boolean) {
-  if (next === composerMultiline.value) {
-    return
-  }
-  const row = composerRowEl.value
-  const reduce = typeof window !== 'undefined'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  if (!row || reduce) {
-    if (row) {
-      row.style.transition = ''
-      row.style.borderRadius = ''
-    }
-    composerMultiline.value = next
-    return
-  }
-  const ticket = ++composerRadiusTicket
-  const used = `${row.getBoundingClientRect().height / 2}px`
-  row.style.transition = 'none'
-  row.style.borderRadius = used
-  composerMultiline.value = next
-  nextTick(() => {
-    if (ticket !== composerRadiusTicket || !row.isConnected) {
-      return
-    }
-    void row.offsetWidth
-    row.style.transition = ''
-    row.style.borderRadius = ''
-  })
-}
-
-let composerObserver: ResizeObserver | null = null
 let composerFrameObserver: ResizeObserver | null = null
 let pillObserver: ResizeObserver | null = null
 
@@ -723,14 +631,6 @@ function syncPillClearance() {
 onMounted(() => {
   bindAttachmentWindow()
   greetOnOpen()
-  measureComposer()
-  const el = draftEl.value
-  if (el && typeof ResizeObserver !== 'undefined') {
-    composerObserver = new ResizeObserver(() => {
-      measureComposer()
-    })
-    composerObserver.observe(el)
-  }
   const form = composerEl.value
   if (form && typeof ResizeObserver !== 'undefined') {
     composerFrameObserver = new ResizeObserver(() => {
@@ -761,16 +661,11 @@ onUnmounted(() => {
   clearMarkTimers()
   threadScrollEl?.removeEventListener('scroll', onThreadScroll)
   threadScrollEl = null
-  composerObserver?.disconnect()
   composerFrameObserver?.disconnect()
   pillObserver?.disconnect()
   if (botId.value) {
     setLive(botId.value, false)
   }
-})
-
-watch([draft, () => pendingAttachments.value.length], () => {
-  nextTick(measureComposer)
 })
 
 watch(botId, () => {
@@ -1237,76 +1132,9 @@ async function onPackApplied(id: string) {
   pointer-events: none;
 }
 
-/* Footer band: only the bottom half of the row, plus a hair past its
-   edge. Used radius never passes the midline, so this seals the lower
-   pockets and the strip under the field without filling the top pockets. */
-.composer-foot {
-  position: relative;
-}
-
-.composer-foot::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  left: 0;
-  right: 0;
-  top: 50%;
-  bottom: -2px;
-  background: var(--bg-chat);
-  pointer-events: none;
-}
-
-.composer-row,
-.send-error {
-  pointer-events: auto;
-}
-
-.composer-row {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  --composer-button: 2.25rem;
-  --composer-pad: 0.3rem;
-  --composer-rim: 1px;
-  /* Anything inset by --composer-pad shares the button bend, so the
-     outer corner is that bend plus the pad and the rim (concentric). */
-  --composer-inner-radius: calc(var(--composer-button) / 2);
-  gap: var(--composer-pad);
-  overflow: hidden;
-  /* Equal on every side so each circle sits concentric with its end cap. */
-  padding: var(--composer-pad);
-  border: var(--composer-rim) solid var(--composer-line);
-  border-radius: 9999px;
-  background: var(--composer);
-  /* Corner and fill share one clock so the stroke does not hitch; the rim
-     answers hover and focus on its own short step. */
-  transition-property: border-radius, border-color, background-color;
-  transition-duration: 640ms, 160ms, 640ms;
-  transition-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-}
-
-.composer-row:hover,
-.composer-row:focus-within {
-  border-color: var(--composer-line-strong);
-}
-
-.composer-row.multiline {
-  border-radius: calc(var(--composer-inner-radius) + var(--composer-pad) + var(--composer-rim));
-}
-
-.composer-line {
-  display: flex;
-  gap: 0.25rem;
-  align-items: center;
-}
-
-.composer-row.multiline .composer-line {
-  align-items: flex-end;
-}
-
 .send-error {
   margin: 0;
+  pointer-events: auto;
   color: var(--accent);
   font-size: 0.88rem;
   display: flex;
@@ -1328,53 +1156,6 @@ async function onPackApplied(id: string) {
 .retry:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.attach,
-.send {
-  appearance: none;
-  display: grid;
-  place-items: center;
-  width: var(--composer-button);
-  height: var(--composer-button);
-  flex: none;
-  border: 0;
-  border-radius: 999px;
-  padding: 0;
-  cursor: pointer;
-}
-
-/* Ghost twin of Send: same circle, a soft fill and a hairline rim drawn
-   inside so the footprint stays exactly the Send diameter. */
-.attach {
-  background: color-mix(in srgb, var(--text) 7%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent);
-  color: var(--text);
-  transition: background-color 160ms ease;
-}
-
-.attach:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 13%, transparent);
-}
-
-.attach:focus-visible,
-.send:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.attach:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.attach svg {
-  width: 1.15rem;
-  height: 1.15rem;
-  fill: none;
-  stroke: currentcolor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
 }
 
 .drop-mask {
@@ -1530,32 +1311,6 @@ async function onPackApplied(id: string) {
   stroke-linecap: round;
 }
 
-.send {
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.send:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.send svg {
-  width: 1.15rem;
-  height: 1.15rem;
-  fill: none;
-  stroke: currentcolor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.draft {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1568,27 +1323,7 @@ async function onPackApplied(id: string) {
   border: 0;
 }
 
-textarea {
-  width: 100%;
-  resize: none;
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  /* One line is exactly the 2.25rem button box: 1.45rem + 2 × 0.4rem. */
-  padding: 0.4rem 0.25rem;
-  line-height: 1.45rem;
-  min-height: 2.25rem;
-  max-height: 8rem;
-  field-sizing: content;
-}
-
-textarea:focus {
-  outline: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .composer-row,
   .cue-slot,
   .cue {
     transition: none;

@@ -26,6 +26,11 @@ export const DEFAULT_VIEWPORT = { width: 1440, height: 900 }
 export const NARROW_VIEWPORT = { width: 390, height: 844 }
 export const DEFAULT_SHOOT_DIR = '.preview-shots'
 
+const COMPOSER_MULTILINE_TEXT = 'Dinner for four tonight\nNo mushrooms, one of us is vegetarian\nUnder forty minutes'
+
+/** Pixels of page kept around a `clip` selector. Clips shoot at 2x. */
+const CLIP_PAD_PX = 12
+
 /** One invocation, one PNG. Seeds reuse preview-seed query flags. */
 export const PREVIEW_SHOOT_STATES = {
   'chat': {
@@ -160,6 +165,33 @@ export const PREVIEW_SHOOT_STATES = {
     scrollEnd: '.kit-sheet',
     viewport: DEFAULT_VIEWPORT,
     hint: 'kitchen-end clicks the first Chat button on Bot preview. A prior ?parts=1 on the same Store puts Open demo first; use a fresh DATABASE_URL.',
+  },
+  'composer': {
+    seed: '',
+    ready: { selector: '.composer-row:not(.multiline) .attach', count: 1 },
+    clip: '.composer',
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'composer-multiline': {
+    seed: '',
+    type: { selector: '.composer textarea', text: COMPOSER_MULTILINE_TEXT },
+    ready: { selector: '.composer-row.multiline .send', count: 1 },
+    clip: '.composer',
+    viewport: DEFAULT_VIEWPORT,
+  },
+  'composer-attachments': {
+    seed: '',
+    attach: '.composer input[type="file"]',
+    ready: { selector: '.pending-chip.ready', count: 2 },
+    clip: '.composer',
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'composer-attachments uploads a fixture PNG and a text file through POST /api/artifacts; both chips must reach ready.',
+  },
+  'composer-room': {
+    seed: 'rooms=1',
+    ready: { selector: '.composer-row:not(.has-lead) textarea', count: 1 },
+    clip: '.composer',
+    viewport: DEFAULT_VIEWPORT,
   },
 }
 
@@ -562,6 +594,105 @@ export function buildScrollEndExpression(selector) {
   })()`
 }
 
+const HYDRATED_GUARD = `const nuxt = document.querySelector('#__nuxt')?.__vue_app__?.config.globalProperties.$nuxt
+    if (!nuxt || nuxt.isHydrating) {
+      return false
+    }`
+
+/** Sets a textarea through its native setter so `v-model` sees the input event. */
+export function buildTypeExpression(selector, text) {
+  return `(() => {
+    ${HYDRATED_GUARD}
+    const node = document.querySelector(${JSON.stringify(selector)})
+    if (!node) {
+      return false
+    }
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set
+    setter.call(node, ${JSON.stringify(text)})
+    node.dispatchEvent(new Event('input', { bubbles: true }))
+    return true
+  })()`
+}
+
+/** Hands a file input one drawn PNG and one text file, as a pick would. */
+export function buildAttachExpression(selector) {
+  return `(() => {
+    ${HYDRATED_GUARD}
+    const input = document.querySelector(${JSON.stringify(selector)})
+    if (!input) {
+      return false
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = 160
+    canvas.height = 160
+    const g = canvas.getContext('2d')
+    g.fillStyle = '#2b2b2b'
+    g.fillRect(0, 0, 160, 160)
+    g.fillStyle = '#f25630'
+    g.beginPath()
+    g.arc(80, 80, 44, 0, Math.PI * 2)
+    g.fill()
+    const bytes = atob(canvas.toDataURL('image/png').split(',')[1])
+    const png = new Uint8Array(bytes.length)
+    for (let i = 0; i < bytes.length; i += 1) {
+      png[i] = bytes.charCodeAt(i)
+    }
+    const list = new DataTransfer()
+    list.items.add(new File([png], 'plate.png', { type: 'image/png' }))
+    list.items.add(new File(['Pantry: rice, lentils, onions, lemons\\n'], 'pantry-notes.txt', { type: 'text/plain' }))
+    input.files = list.files
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    return true
+  })()`
+}
+
+export function buildClipExpression(selector) {
+  return `(() => {
+    const node = document.querySelector(${JSON.stringify(selector)})
+    if (!node) {
+      return null
+    }
+    const r = node.getBoundingClientRect()
+    return { x: r.left, y: r.top, width: r.width, height: r.height }
+  })()`
+}
+
+async function runWhenReady(cdp, sessionId, expression, label, waitMs) {
+  const deadline = Date.now() + waitMs
+  while (Date.now() <= deadline) {
+    const result = await cdp.send('Runtime.evaluate', {
+      expression,
+      returnByValue: true,
+    }, sessionId)
+    if (result.result?.value === true) {
+      await sleep(CLICK_SETTLE_MS)
+      return
+    }
+    await sleep(150)
+  }
+  fail(`preview-shoot: ${label} did not appear.`)
+}
+
+async function clipRect(cdp, sessionId, selector, viewport) {
+  const result = await cdp.send('Runtime.evaluate', {
+    expression: buildClipExpression(selector),
+    returnByValue: true,
+  }, sessionId)
+  const rect = result.result?.value
+  if (!rect) {
+    fail(`preview-shoot: clip target ${selector} did not appear.`)
+  }
+  const x = Math.max(0, rect.x - CLIP_PAD_PX)
+  const y = Math.max(0, rect.y - CLIP_PAD_PX)
+  return {
+    x,
+    y,
+    width: Math.min(viewport.width, rect.x + rect.width + CLIP_PAD_PX) - x,
+    height: Math.min(viewport.height, rect.y + rect.height + CLIP_PAD_PX) - y,
+    scale: 2,
+  }
+}
+
 async function clickWhenReady(cdp, sessionId, selector, waitMs) {
   const expression = buildClickExpression(selector)
   const deadline = Date.now() + waitMs
@@ -579,11 +710,12 @@ async function clickWhenReady(cdp, sessionId, selector, waitMs) {
   fail(`preview-shoot: click target ${selector} did not appear.`)
 }
 
-async function capturePng(cdp, sessionId) {
+async function capturePng(cdp, sessionId, clip) {
   const shot = await cdp.send('Page.captureScreenshot', {
     format: 'png',
     fromSurface: true,
     captureBeyondViewport: false,
+    ...(clip ? { clip } : {}),
   }, sessionId)
   return Buffer.from(shot.data, 'base64')
 }
@@ -630,14 +762,21 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     for (const selector of state.clicks ?? []) {
       await clickWhenReady(cdp, sessionId, selector, waitMs)
     }
+    if (state.type) {
+      await runWhenReady(cdp, sessionId, buildTypeExpression(state.type.selector, state.type.text), `type target ${state.type.selector}`, waitMs)
+    }
+    if (state.attach) {
+      await runWhenReady(cdp, sessionId, buildAttachExpression(state.attach), `file input ${state.attach}`, waitMs)
+    }
     await waitForReady(cdp, sessionId, state.ready, waitMs, state.hint)
     if (state.scrollEnd) {
       await cdp.send('Runtime.evaluate', { expression: buildScrollEndExpression(state.scrollEnd) }, sessionId)
     }
-    if (state.clicks?.length) {
+    if (state.clicks?.length || state.type || state.attach) {
       await sleep(CLICK_SETTLE_MS)
     }
-    const png = await capturePng(cdp, sessionId)
+    const clip = state.clip ? await clipRect(cdp, sessionId, state.clip, state.viewport) : undefined
+    const png = await capturePng(cdp, sessionId, clip)
     await mkdir(dirname(outPath), { recursive: true })
     await writeFile(outPath, png)
     note(`preview-shoot: wrote ${outPath}`)

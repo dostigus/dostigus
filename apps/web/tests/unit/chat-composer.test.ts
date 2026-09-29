@@ -2,19 +2,31 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 
-const chat = readFileSync(join(import.meta.dirname, '../../app/pages/bots/[id].vue'), 'utf8')
+const app = join(import.meta.dirname, '../../app')
+const chat = readFileSync(join(app, 'pages/bots/[id].vue'), 'utf8')
+const room = readFileSync(join(app, 'pages/threads/[id].vue'), 'utf8')
+const pillSrc = readFileSync(join(app, 'components/ChatComposerPill.vue'), 'utf8')
+const tokens = readFileSync(join(app, 'assets/css/main.css'), 'utf8')
 
-function block(start: string, end: string): string {
-  const from = chat.indexOf(start)
-  const to = chat.indexOf(end, from + start.length)
+function blockIn(src: string, start: string, end: string): string {
+  const from = src.indexOf(start)
+  const to = src.indexOf(end, from + start.length)
   expect(from).toBeGreaterThan(-1)
   expect(to).toBeGreaterThan(from)
-  return chat.slice(from, to)
+  return src.slice(from, to)
+}
+
+function block(start: string, end: string): string {
+  return blockIn(chat, start, end)
+}
+
+function pillBlock(start: string, end: string): string {
+  return blockIn(pillSrc, start, end)
 }
 
 it('overlays a slim composer on one scrolling Chat pane', () => {
-  const composer = block('.composer {', '.composer-row,')
-  const row = block('.composer-row {', '.composer-row.multiline')
+  const composer = block('.composer {', '.send-error {')
+  const row = pillBlock('.composer-row {', '.composer-row:hover')
   const thread = block('.thread {', '.bubble {')
 
   expect(composer).toContain('position: absolute')
@@ -24,8 +36,8 @@ it('overlays a slim composer on one scrolling Chat pane', () => {
   expect(composer).toContain('--composer-gap')
   expect(composer).not.toContain('background: transparent')
   expect(composer).not.toContain('background: var(--composer)')
-  const foot = block('.composer-foot {', '.composer-foot::before')
-  const band = block('.composer-foot::before {', '.composer-row,')
+  const foot = pillBlock('.composer-foot {', '.composer-foot::before')
+  const band = pillBlock('.composer-foot::before {', '.composer-row {')
   expect(foot).not.toContain('background:')
   expect(band).toContain('top: 50%')
   expect(band).toContain('bottom: -2px')
@@ -36,15 +48,23 @@ it('overlays a slim composer on one scrolling Chat pane', () => {
   expect(row).toContain('padding: var(--composer-pad);')
   expect(row).toContain('--composer-inner-radius: calc(var(--composer-button) / 2);')
   expect(row).toContain('flex-direction: column')
-  const tall = block('.composer-row.multiline {', '.composer-line {')
+  expect(row).toContain('border-radius: 9999px')
+  expect(row).toContain('pointer-events: auto')
+  const tall = pillBlock('.composer-row.multiline {', '.composer-line {')
   expect(tall).toContain('calc(var(--composer-inner-radius) + var(--composer-pad) + var(--composer-rim))')
-  const line = block('.composer-line {', '.composer-row.multiline .composer-line')
+  const line = pillBlock('.composer-line {', '.composer-row.multiline .composer-line')
   expect(line).toContain('align-items: center')
-  const trayAt = chat.indexOf('class="pending-chips"')
-  expect(trayAt).toBeGreaterThan(chat.indexOf('class="composer-row"'))
-  expect(trayAt).toBeLessThan(chat.indexOf('class="composer-line"'))
+  const trayAt = pillSrc.indexOf('<slot name="tray" />')
+  expect(trayAt).toBeGreaterThan(pillSrc.indexOf('class="composer-row"'))
+  expect(trayAt).toBeLessThan(pillSrc.indexOf('class="composer-line"'))
+  const pillAt = chat.indexOf('<ChatComposerPill')
+  const chipsAt = chat.indexOf('class="pending-chips"')
+  expect(chat.indexOf('<template #tray>')).toBeGreaterThan(pillAt)
+  expect(chipsAt).toBeGreaterThan(chat.indexOf('<template #tray>'))
+  expect(chipsAt).toBeLessThan(chat.indexOf('</ChatComposerPill>'))
+  expect(chat).toContain(':tall="pendingAttachments.length > 0"')
   expect(chat).toContain(`:placeholder="pendingAttachments.length > 0
-                    ? $t('chat.placeholderOrSend')`)
+                ? $t('chat.placeholderOrSend')`)
   expect(row).not.toContain('safe-area')
   expect(thread).toContain('var(--composer-clearance)')
   expect(thread).toContain('var(--thread-end-gap)')
@@ -107,4 +127,45 @@ it('clears pending chips with the draft, before the send POST waits on the reply
   expect(cleared).toBeGreaterThan(optimistic)
   expect(cleared).toBeLessThan(post)
   expect(deliver.lastIndexOf('clearAttachments()')).toBe(cleared)
+})
+
+it('draws Attach as a ghost twin of Send, one circle size on one centerline', () => {
+  const circles = pillBlock('.attach,\n.send {', '/* Ghost twin of Send')
+  expect(circles).toContain('width: var(--composer-button)')
+  expect(circles).toContain('height: var(--composer-button)')
+  expect(circles).toContain('border-radius: 999px')
+  const ghost = pillBlock('.attach {', '.attach:hover')
+  expect(ghost).toContain('background: color-mix(in srgb, var(--text) 9%, transparent)')
+  expect(ghost).toContain('box-shadow: inset 0 0 0 1px')
+  const field = pillBlock('.composer-line :slotted(textarea) {', '/* With no Attach circle')
+  expect(field).toContain('line-height: 1.45rem')
+  expect(field).toContain('padding: 0.4rem 0.25rem')
+  expect(field).toContain('min-height: 2.25rem')
+  expect(field).toContain('field-sizing: content')
+  expect(pillSrc).toContain('prefers-reduced-motion: reduce')
+})
+
+it('keeps the composer a recessed well with a rim that brightens on hover and focus', () => {
+  expect(tokens).toContain('--composer: color-mix(in srgb, var(--surface) 70%, var(--bg-chat));')
+  expect(tokens).toContain('--composer-line: color-mix(in srgb, var(--text) 22%, var(--composer));')
+  expect(tokens).toContain('--composer-line-strong: color-mix(in srgb, var(--text) 42%, var(--composer));')
+  const hover = pillBlock('.composer-row:hover,', '.composer-row.multiline {')
+  expect(hover).toContain('.composer-row:focus-within')
+  expect(hover).toContain('border-color: var(--composer-line-strong)')
+})
+
+it('gives the Room composer the same pill and seal as Bot Chat', () => {
+  expect(room).toContain('<ChatComposerPill')
+  expect(room).not.toContain('class="composer-row"')
+  expect(room).not.toContain('.composer-row {')
+  const composer = blockIn(room, '.composer {', '.mention-hint {')
+  expect(composer).toContain('var(--bg-chat) calc(var(--composer-gap) + 2px)')
+  expect(composer).toContain('pointer-events: none')
+  expect(chat).not.toContain('.composer-row {')
+  expect(chat).not.toContain('measureComposer')
+})
+
+it('asks for an optional line once attachments are pending, with no trailing period', () => {
+  const ru = JSON.parse(readFileSync(join(import.meta.dirname, '../../i18n/locales/ru.json'), 'utf8'))
+  expect(ru.chat.placeholderOrSend).toBe('Добавьте сообщение или просто отправьте')
 })
