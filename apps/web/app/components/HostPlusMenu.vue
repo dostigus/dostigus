@@ -3,6 +3,7 @@
     v-model:open="open"
     :side="rail ? 'right' : 'bottom'"
     :align="rail ? 'end' : 'start'"
+    @close-auto-focus="onCloseAutoFocus"
   >
     <template #trigger>
       <button
@@ -57,24 +58,47 @@ defineProps<{
 const route = useRoute()
 const { isOwner } = useHostAccount()
 const { open, closePlusMenu } = useHostPlusMenu()
-const { openCreate, closeCreate } = useHostCreate()
-const { openThreadCreate, closeThreadCreate } = useHostThreadCreate()
+const { open: createOpen, openCreate, closeCreate } = useHostCreate()
+const { open: threadOpen, openThreadCreate, closeThreadCreate } = useHostThreadCreate()
 const { openMemberAdd, closeMemberAdd } = useHostMemberAdd()
 
 watch(() => route.fullPath, () => {
   closePlusMenu()
 })
 
+/**
+ * The modal menu traps focus until it unmounts, so a pane opened from
+ * `select` loses the focus it takes on mount. Open the Bot picker or the
+ * thread composer once the menu has closed. Returns true when a pane mounts.
+ */
+let openPane: (() => boolean) | null = null
+
 function onFindBot() {
-  closeThreadCreate()
-  closeMemberAdd()
-  openCreate()
+  openPane = () => {
+    const mounts = !createOpen.value || threadOpen.value
+    closeThreadCreate()
+    closeMemberAdd()
+    openCreate()
+    return mounts
+  }
 }
 
 function onThread(kind: MessengerThreadKind) {
-  closeCreate()
-  closeMemberAdd()
-  openThreadCreate(kind)
+  openPane = () => {
+    const mounts = !threadOpen.value
+    closeCreate()
+    closeMemberAdd()
+    openThreadCreate(kind)
+    return mounts
+  }
+}
+
+function onCloseAutoFocus(event: Event) {
+  const run = openPane
+  openPane = null
+  if (run?.()) {
+    event.preventDefault()
+  }
 }
 
 function onMember() {

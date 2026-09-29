@@ -160,7 +160,11 @@ not restyled.
   dismisses a pane, the same look as the Sheet close. `variant="icon"`
   stays the `--accent` round action. `KitInput` exposes `focus()` so a
   pane can focus its search field on open. A disabled pressable
-  `KitListRow` drops the hover tint.
+  `KitListRow` drops the hover tint. `KitMenu` forwards Reka
+  `closeAutoFocus`: a modal menu traps focus until it unmounts, so the
+  Host `+` menu opens the picker or composer from that event and
+  cancels the return to the trigger. The pane's search field keeps
+  focus.
 - `vitest` compiles Kit SFCs with `@vitejs/plugin-vue` and renders them
   with Vue's server renderer. That test checks the Field wiring, the
   Reka roles, and the barrel.

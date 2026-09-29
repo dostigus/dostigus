@@ -125,6 +125,10 @@ it('builds the Host + menu and the account menu on KitMenu', () => {
     expect(style).not.toContain('box-shadow')
   }
   expect(plus.match(/<KitMenuItem\b/g)).toHaveLength(4)
+  expect(plus).toContain('@close-auto-focus="onCloseAutoFocus"')
+  expect(plus).toMatch(/function onFindBot\(\) \{\s*openPane = \(\) => \{/)
+  expect(plus).toMatch(/function onThread\(kind: MessengerThreadKind\) \{\s*openPane = \(\) => \{/)
+  expect(plus).toContain('event.preventDefault()')
   expect(plus).toContain('v-model:open="open"')
   expect(account).toContain('<KitMenuSeparator')
   expect(account.match(/:as="NuxtLink"/g)).toHaveLength(2)

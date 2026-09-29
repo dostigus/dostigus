@@ -20,6 +20,7 @@
         :side-offset="6"
         :collision-padding="8"
         loop
+        @close-auto-focus="emit('closeAutoFocus', $event)"
       >
         <slot />
       </DropdownMenuContent>
@@ -48,6 +49,11 @@ withDefaults(defineProps<{
   disabled: false,
   modal: true,
 })
+
+const emit = defineEmits<{
+  /** Reka returns focus to the trigger on close. Call `preventDefault()` to keep it where an item moved it. */
+  closeAutoFocus: [event: Event]
+}>()
 
 const open = defineModel<boolean>('open', { default: false })
 </script>
