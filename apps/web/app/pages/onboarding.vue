@@ -1,82 +1,94 @@
 <template>
   <HostAuthShell>
-    <form @submit.prevent="submit">
-      <p class="kicker">
-        {{ $t('auth.onboarding.kicker') }}
-      </p>
-      <h1>{{ $t('auth.onboarding.title') }}</h1>
-      <p class="hint">
-        {{ $t('auth.onboarding.hint') }}
-      </p>
+    <KitPanel
+      as="form"
+      :aria-labelledby="headId"
+      @submit.prevent="submit"
+    >
+      <HostAuthHead
+        :id="headId"
+        :title="$t('auth.onboarding.title')"
+        :hint="$t('auth.onboarding.hint')"
+      />
 
-      <label class="field">
-        <span>{{ $t('auth.field.login') }}</span>
-        <input
+      <KitField
+        :label="$t('auth.field.login')"
+        :error="errors.login"
+        required
+      >
+        <KitInput
           v-model="login"
-          type="text"
           autocomplete="username"
-          required
-        >
-      </label>
+        />
+      </KitField>
 
-      <label class="field">
-        <span>{{ $t('auth.field.password') }}</span>
-        <input
+      <KitField
+        :label="$t('auth.field.password')"
+        :hint="$t('auth.field.passwordMin')"
+        :error="errors.password"
+        required
+      >
+        <KitInput
           v-model="password"
           type="password"
           autocomplete="new-password"
-          required
           minlength="8"
-        >
-        <span class="field-hint">{{ $t('auth.field.passwordMin') }}</span>
-      </label>
+        />
+      </KitField>
 
-      <label class="field">
-        <span>{{ $t('auth.field.confirmPassword') }}</span>
-        <input
+      <KitField
+        :label="$t('auth.field.confirmPassword')"
+        :error="errors.confirm"
+        required
+      >
+        <KitInput
           v-model="confirm"
           type="password"
           autocomplete="new-password"
-          required
           minlength="8"
+        />
+      </KitField>
+
+      <template #actions>
+        <p
+          v-if="errors.form"
+          class="error"
+          role="alert"
         >
-      </label>
-
-      <p
-        v-if="message"
-        class="flash error"
-      >
-        {{ message }}
-      </p>
-
-      <button
-        type="submit"
-        class="solid"
-        :disabled="busy"
-      >
-        {{ busy ? $t('auth.onboarding.submitBusy') : $t('auth.onboarding.submit') }}
-      </button>
-    </form>
+          {{ errors.form }}
+        </p>
+        <KitButton
+          type="submit"
+          :disabled="busy"
+        >
+          {{ busy ? $t('auth.onboarding.submitBusy') : $t('auth.onboarding.submit') }}
+        </KitButton>
+      </template>
+    </KitPanel>
   </HostAuthShell>
 </template>
 
 <script setup lang="ts">
+import type { MemberFormField } from '../utils/member-form'
+import { KitButton, KitField, KitInput, KitPanel } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../utils/host-status-copy'
+import { memberErrorField } from '../utils/member-form'
 
 const { t } = useI18n()
 useHead({ title: () => t('auth.onboarding.titleDoc') })
 
+const headId = useId()
 const { fetch: refreshSession } = useUserSession()
 const login = ref('')
 const password = ref('')
 const confirm = ref('')
 const busy = ref(false)
-const message = ref('')
+const errors = ref<Partial<Record<MemberFormField | 'confirm', string>>>({})
 
 async function submit() {
-  message.value = ''
+  errors.value = {}
   if (password.value !== confirm.value) {
-    message.value = t('auth.error.passwordMismatch')
+    errors.value = { confirm: t('auth.error.passwordMismatch') }
     return
   }
   busy.value = true
@@ -92,7 +104,7 @@ async function submit() {
     clearNuxtData('owner-auth-status')
     await navigateTo('/')
   } catch (error) {
-    message.value = hostStatusCopy(error, t, 'auth.error.fallbackCreateOwner')
+    errors.value = { [memberErrorField(error, ['login', 'password'])]: hostStatusCopy(error, t, 'auth.error.fallbackCreateOwner') }
   } finally {
     busy.value = false
   }
@@ -100,79 +112,11 @@ async function submit() {
 </script>
 
 <style scoped>
-.kicker {
-  margin: 0 0 0.45rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.72rem;
+.error {
+  flex: 1 1 100%;
+  margin: 0;
   color: var(--accent);
-}
-
-h1 {
-  margin: 0 0 0.55rem;
-  font-size: 1.65rem;
-  font-weight: 700;
-}
-
-.hint {
-  margin: 0 0 1.25rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.95rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.field-hint {
-  font-size: 0.78rem;
-}
-
-input {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 0.9rem;
-}
-
-input:focus {
-  outline: 1px solid var(--accent-dim);
-}
-
-.flash {
-  margin: 0 0 1rem;
   font-size: 0.9rem;
-}
-
-.flash.error {
-  color: var(--accent);
-}
-
-.solid {
-  appearance: none;
-  width: 100%;
-  border: 0;
-  border-radius: var(--radius);
-  padding: 0.75rem 1.1rem;
-  background: var(--accent);
-  color: var(--accent-ink);
-  cursor: pointer;
   font-weight: 600;
-}
-
-.solid:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.solid:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 </style>

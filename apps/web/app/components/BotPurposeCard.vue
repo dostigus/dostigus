@@ -11,23 +11,22 @@
       role="group"
       :aria-label="$t('chat.purpose.prompt')"
     >
-      <button
+      <KitChip
         v-for="option in BOT_PURPOSE_OPTIONS"
         :key="option"
-        type="button"
-        class="chip"
+        as="button"
         :disabled="busy"
         @click="emit('answer', option)"
       >
         {{ purposeLabel(option) }}
-      </button>
+      </KitChip>
     </div>
     <form
       class="own"
       @submit.prevent="submit"
     >
       <label class="field">
-        <span class="sr-only">{{ $t('chat.purpose.own') }}</span>
+        <span class="kit-sr-only">{{ $t('chat.purpose.own') }}</span>
         <input
           v-model="draft"
           type="text"
@@ -57,6 +56,7 @@
 
 <script setup lang="ts">
 import { BOT_PURPOSE_OPTIONS } from '@dostigus/shared'
+import { KitChip } from '@dostigus/ui-kit'
 
 defineProps<{
   busy?: boolean
@@ -116,32 +116,6 @@ function submit() {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-}
-
-.chip {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--bg-chat);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 0.4rem 0.85rem;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.chip:hover:not(:disabled) {
-  border-color: var(--accent);
-}
-
-.chip:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.chip:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 
 .own {
@@ -208,17 +182,5 @@ function submit() {
   stroke-width: 2.2;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 </style>
