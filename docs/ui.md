@@ -143,7 +143,7 @@ Reka UI `Dialog` is the primitive. The Kit wrappers are:
 | `SheetShell` | `sheet` or `modal` | Frame: overlay, title, description, Close, body |
 | `KitSheet` | drawer | Bottom Sheet, or a right-edge Sheet (`edge="end"`) |
 | `KitDialog` | modal | Centered Sheet |
-| `KitButton` | — | `solid`, `ghost`, or `icon` |
+| `KitButton` | — | `solid`, `ghost`, `icon` (`--accent` round), or `close` (quiet muted `×` that dismisses a pane) |
 
 See [ADR 0013](adr/0013-kit-reka-ui-and-brand.md).
 

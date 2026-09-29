@@ -26,7 +26,7 @@ wrappers set the Sheet kind:
 - `KitSheet` — drawer (bottom Sheet)
 - `KitDialog` — modal (centered Sheet)
 
-`KitButton` is the styled action (`solid`, `ghost`, `icon`).
+`KitButton` is the styled action (`solid`, `ghost`, `icon`, `close`).
 
 **Brand** files live only under `packages/ui-kit/assets/brand/`. The sixteen
 PNGs are the ones supplied for this change. No extra poses.
@@ -153,6 +153,14 @@ not restyled.
   owns keyboard, outside-click close, and focus return; the highlighted
   item has a 6% `--text` tint and keyboard focus a 2px `--accent-dim`
   ring. Other Host popovers move onto it when they are next touched.
+- The Host Bot picker (`BotPicker`) and the new-chat composer
+  (`ThreadComposer`, the «To:» pane for a direct message, group, or
+  room) use `KitInput`, `KitListRow`, `KitField`, and `KitButton`.
+  `KitButton` gains `variant="close"`: the quiet muted `×` that
+  dismisses a pane, the same look as the Sheet close. `variant="icon"`
+  stays the `--accent` round action. `KitInput` exposes `focus()` so a
+  pane can focus its search field on open. A disabled pressable
+  `KitListRow` drops the hover tint.
 - `vitest` compiles Kit SFCs with `@vitejs/plugin-vue` and renders them
   with Vue's server renderer. That test checks the Field wiring, the
   Reka roles, and the barrel.

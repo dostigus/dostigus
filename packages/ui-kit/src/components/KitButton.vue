@@ -15,7 +15,8 @@
 <script setup lang="ts">
 withDefaults(defineProps<{
   type?: 'button' | 'submit' | 'reset'
-  variant?: 'solid' | 'ghost' | 'icon'
+  /** `close` is the quiet × that dismisses a pane, same look as the Sheet close. */
+  variant?: 'solid' | 'ghost' | 'icon' | 'close'
   /** `sm` fits a Chat bubble. `md` is the page control. */
   size?: 'md' | 'sm'
   disabled?: boolean
