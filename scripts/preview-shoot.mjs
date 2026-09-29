@@ -31,6 +31,16 @@ const COMPOSER_MULTILINE_TEXT = 'Dinner for four tonight\nNo mushrooms, one of u
 /** Pixels of page kept around a `clip` selector. Clips shoot at 2x. */
 const CLIP_PAD_PX = 12
 
+/** Providers states wait for the fixture shelf, as `providers-fixture` does. */
+const PROVIDERS_SHELF_READY = {
+  selector: '.provider',
+  count: 1,
+  any: ['.shelf .card:not(.skeleton)'],
+  none: ['.shelf [aria-busy="true"]', 'vite-error-overlay'],
+}
+
+const PROVIDERS_SHELF_HINT = 'Providers secondary states seed the fixture OpenRouter Provider (?providers=1) and wait for shelf cards. Outbound HTTPS to openrouter.ai is required.'
+
 /** One invocation, one PNG. Seeds reuse preview-seed query flags. */
 export const PREVIEW_SHOOT_STATES = {
   'chat': {
@@ -62,12 +72,7 @@ export const PREVIEW_SHOOT_STATES = {
   },
   'providers-fixture': {
     seed: 'providers=1',
-    ready: {
-      selector: '.provider',
-      count: 1,
-      any: ['.shelf .card:not(.skeleton)'],
-      none: ['.shelf [aria-busy="true"]', 'vite-error-overlay'],
-    },
+    ready: PROVIDERS_SHELF_READY,
     viewport: DEFAULT_VIEWPORT,
     hint: 'providers-fixture waits for shelf cards (.shelf .card:not(.skeleton)), not the first-paint miss banner, and no Vite i18n overlay.',
   },
@@ -87,6 +92,46 @@ export const PREVIEW_SHOOT_STATES = {
     thenPath: '/dashboard/providers',
     ready: { selector: '.providers h1', count: 1 },
     viewport: NARROW_VIEWPORT,
+  },
+  'providers-health': {
+    seed: 'providers=1',
+    ready: PROVIDERS_SHELF_READY,
+    clip: '.providers .health',
+    viewport: DEFAULT_VIEWPORT,
+    hint: PROVIDERS_SHELF_HINT,
+  },
+  'providers-shelf': {
+    seed: 'providers=1',
+    ready: PROVIDERS_SHELF_READY,
+    reveal: '.provider .shelf',
+    clip: '.provider .shelf',
+    viewport: DEFAULT_VIEWPORT,
+    hint: PROVIDERS_SHELF_HINT,
+  },
+  'providers-edit': {
+    seed: 'providers=1',
+    clicks: ['.provider .p-actions .kit-button:first-child'],
+    ready: { ...PROVIDERS_SHELF_READY, selector: '.provider .edit' },
+    clip: '.provider',
+    viewport: DEFAULT_VIEWPORT,
+    hint: PROVIDERS_SHELF_HINT,
+  },
+  'providers-confirm': {
+    seed: 'providers=1',
+    clicks: ['.provider .p-actions .kit-button:last-child'],
+    ready: { ...PROVIDERS_SHELF_READY, selector: '.provider .confirm' },
+    clip: '.provider',
+    viewport: DEFAULT_VIEWPORT,
+    hint: PROVIDERS_SHELF_HINT,
+  },
+  'providers-details': {
+    seed: 'providers=1',
+    clicks: ['.provider .more > :first-child'],
+    ready: { ...PROVIDERS_SHELF_READY, selector: '.provider .more .advanced' },
+    reveal: '.provider .more',
+    clip: '.provider',
+    viewport: DEFAULT_VIEWPORT,
+    hint: PROVIDERS_SHELF_HINT,
   },
   'closet': {
     seed: '',
@@ -585,6 +630,12 @@ export function buildClickExpression(selector) {
   })()`
 }
 
+export function buildRevealExpression(selector) {
+  return `(() => {
+    document.querySelector(${JSON.stringify(selector)})?.scrollIntoView({ block: 'start' })
+  })()`
+}
+
 export function buildScrollEndExpression(selector) {
   return `(() => {
     const node = document.querySelector(${JSON.stringify(selector)})
@@ -772,7 +823,10 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     if (state.scrollEnd) {
       await cdp.send('Runtime.evaluate', { expression: buildScrollEndExpression(state.scrollEnd) }, sessionId)
     }
-    if (state.clicks?.length || state.type || state.attach) {
+    if (state.reveal) {
+      await cdp.send('Runtime.evaluate', { expression: buildRevealExpression(state.reveal) }, sessionId)
+    }
+    if (state.clicks?.length || state.type || state.attach || state.reveal) {
       await sleep(CLICK_SETTLE_MS)
     }
     const clip = state.clip ? await clipRect(cdp, sessionId, state.clip, state.viewport) : undefined

@@ -485,6 +485,11 @@ explicit ready marker (not network idle), and writes a PNG under
 | `settings-other` | `?settings=1` then `/dashboard/cluster` | `.cluster input[name="timezone"]` | 1440×900 |
 | `members` | `?members=1` | `.members h1` | 1440×900 |
 | `narrow` | `?settings=1` then `/dashboard/providers` | `.providers h1` | 390×844 |
+| `providers-health` | `?providers=1`, clip the health panel | fixture shelf cards | 1440×900 |
+| `providers-shelf` | `?providers=1`, scroll to and clip `.provider .shelf` | fixture shelf cards | 1440×900 |
+| `providers-edit` | `?providers=1`, click **Replace key** | `.provider .edit` | 1440×900 |
+| `providers-confirm` | `?providers=1`, click **Delete** | `.provider .confirm` | 1440×900 |
+| `providers-details` | `?providers=1`, open **Details** and scroll to it | `.provider .more .advanced` | 1440×900 |
 | `closet` | `/preview-seed`, click `.identity` | `.kit-sheet--end .mark` | 1440×900 |
 | `closet-end` | same as `closet`, Sheet scrolled to the end | `.kit-sheet--end .mark` | 1440×900 |
 | `schedule-new` | `closet`, then click `#schedules-heading + .kit-button` | `.kit-sheet--end .schedule form` | 1440×900 |
@@ -518,7 +523,10 @@ Closet «Who can see this Bot» has a row.
 
 `providers-empty` needs a Store with no Provider (a prior
 `providers-fixture` on the same `DATABASE_URL` leaves the fixture;
-use a fresh file or remove the Provider on the page). Optional
+use a fresh file or remove the Provider on the page). Shoot it before
+any `providers-*` fixture state. Those five secondary states clip one
+surface at 2x; a state with `reveal` scrolls that selector into view
+before the capture. Optional
 `PREVIEW_SMOKE_URL` (default `http://localhost:3000`),
 `PREVIEW_SHOOT_DIR` (default `.preview-shots`), `CHROME_PATH`.
 Missing Host prints a stderr hint to start `pnpm preview:host`.
