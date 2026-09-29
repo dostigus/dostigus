@@ -133,6 +133,21 @@ export const PREVIEW_SHOOT_STATES = {
     ready: { selector: '.kit-dialog .kit-row[data-selected]', count: 1 },
     viewport: DEFAULT_VIEWPORT,
   },
+  'kitchen': {
+    seed: 'kitchen=1',
+    clicks: ['.kit-chat-parts .kit-button'],
+    ready: { selector: '.kit-sheet .kitchen .xp', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'kitchen clicks the first Chat button on Bot preview. A prior ?parts=1 on the same Store puts Open demo first; use a fresh DATABASE_URL.',
+  },
+  'kitchen-end': {
+    seed: 'kitchen=1',
+    clicks: ['.kit-chat-parts .kit-button'],
+    ready: { selector: '.kit-sheet .kitchen .xp', count: 1 },
+    scrollEnd: '.kit-sheet',
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'kitchen-end clicks the first Chat button on Bot preview. A prior ?parts=1 on the same Store puts Open demo first; use a fresh DATABASE_URL.',
+  },
 }
 
 /** Sheets animate in for 180ms. Wait past that before the capture. */

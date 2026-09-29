@@ -164,6 +164,40 @@ it('builds Host Search from KitInput and KitListRow in the bare Kit dialog', () 
   expect(style).not.toContain('var(--bot-accent')
 })
 
+it('builds the Kitchen Sheet from Kit form and row primitives', () => {
+  const kitchen = read('app/components/KitchenSheet.vue')
+  const style = kitchen.slice(kitchen.indexOf('<style'))
+
+  expect(kitchen).toMatch(/import \{[^}]*KitButton[^}]*KitField[^}]*KitInput[^}]*KitListRow[^}]*KitTextarea[^}]*\} from '@dostigus\/ui-kit'/)
+  expect(kitchen.match(/<KitField\b/g)).toHaveLength(4)
+  expect(kitchen.match(/<KitInput\b/g)).toHaveLength(3)
+  expect(kitchen.match(/<KitTextarea\b/g)).toHaveLength(1)
+  expect(kitchen.match(/<KitListRow\b/g)).toHaveLength(2)
+  expect(kitchen.match(/<KitButton\b/g)).toHaveLength(3)
+  expect(kitchen).toContain('as="li"')
+  expect(kitchen).toContain('#trailing')
+  for (const key of ['name', 'qty', 'ingredients', 'add', 'markCooked', 'saveRecipe', 'emptyPantry', 'emptyCooked', 'loading']) {
+    expect(kitchen).toContain(`sheet.kitchen.${key}`)
+  }
+  for (const route of ['\'/api/kitchen\'', '\'/api/kitchen/pantry\'', '\'/api/kitchen/cooked\'', '\'/api/kitchen/recipe\'']) {
+    expect(kitchen).toContain(route)
+  }
+  expect(kitchen).toContain(':error="errors.pantry"')
+  expect(kitchen).toContain(':error="errors.recipe"')
+  expect(kitchen).toContain('errors.cooked')
+  expect(kitchen).not.toContain('KitSheet')
+
+  expect(kitchen).not.toMatch(/<(?:input|textarea|select|button|label)\b/)
+  expect(kitchen).not.toMatch(/class="(?:field|list|add|qty|flash)"/)
+  expect(style).not.toMatch(/(?:^|[\s,])(?:input|textarea|select|label)\b[^{]*\{/m)
+  expect(style).not.toMatch(/^\.(?:field|list|add|qty|flash)\b/m)
+  expect(style).not.toContain(':focus')
+  expect(style).not.toContain('var(--bg)')
+  expect(style).not.toContain('border-radius')
+  expect(style).not.toMatch(/#[0-9a-f]{3,8}\b/i)
+  expect(style).not.toContain('var(--bot-accent')
+})
+
 it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   const mark = read('app/components/HostMark.vue')
   const sidebar = read('app/components/HostSidebar.vue')
