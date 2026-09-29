@@ -136,35 +136,22 @@
         >
           {{ sendError }}
         </p>
-        <div class="composer-foot">
-          <div class="composer-row">
-            <label class="draft">
-              <span class="sr-only">{{ $t('chat.aria.message') }}</span>
-              <textarea
-                v-model="draft"
-                rows="1"
-                maxlength="16000"
-                :placeholder="$t('chat.placeholder')"
-                :disabled="!thread || sending"
-                @keydown.enter.exact.prevent="send"
-              />
-            </label>
-            <button
-              v-if="draft.trim()"
-              type="submit"
-              class="send"
-              :disabled="sending || !thread"
-              :aria-label="$t('chat.aria.send')"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M12 19V6M7 11l5-5 5 5" />
-              </svg>
-            </button>
-          </div>
-        </div>
+        <ChatComposerPill
+          :show-send="Boolean(draft.trim())"
+          :send-disabled="sending || !thread"
+        >
+          <label class="draft">
+            <span class="sr-only">{{ $t('chat.aria.message') }}</span>
+            <textarea
+              v-model="draft"
+              rows="1"
+              maxlength="16000"
+              :placeholder="$t('chat.placeholder')"
+              :disabled="!thread || sending"
+              @keydown.enter.exact.prevent="send"
+            />
+          </label>
+        </ChatComposerPill>
       </form>
     </div>
     <KitSheet
@@ -509,6 +496,7 @@ async function send() {
 }
 
 .composer {
+  --composer-gap: calc(0.85rem + env(safe-area-inset-bottom, 0px));
   position: absolute;
   z-index: 2;
   left: 0;
@@ -517,90 +505,18 @@ async function send() {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  padding: 0.35rem var(--thread-inset) calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.35rem var(--thread-inset) var(--composer-gap);
+  background: linear-gradient(
+    to top,
+    var(--bg-chat) calc(var(--composer-gap) + 2px),
+    transparent calc(var(--composer-gap) + 2px)
+  );
   pointer-events: none;
 }
 
 .mention-hint {
   pointer-events: none;
   font-size: 0.82rem;
-}
-
-.composer-foot {
-  position: relative;
-}
-
-.composer-row,
-.send-error {
-  pointer-events: auto;
-}
-
-.composer-row {
-  display: flex;
-  gap: 0.25rem;
-  align-items: flex-end;
-  padding: 0.3rem 0.4rem;
-  border: 1px solid var(--composer-line);
-  border-radius: 9999px;
-  background: var(--composer);
-  transition: border-color 160ms cubic-bezier(0.45, 0, 0.55, 1);
-}
-
-.composer-row:hover,
-.composer-row:focus-within {
-  border-color: var(--composer-line-strong);
-}
-
-.draft {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-}
-
-.draft textarea {
-  width: 100%;
-  resize: none;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  line-height: 1.4;
-  padding: 0.45rem 0.35rem;
-  max-height: 8rem;
-}
-
-.draft textarea:focus {
-  outline: none;
-}
-
-.send {
-  appearance: none;
-  display: grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  flex: none;
-  border: 0;
-  border-radius: 999px;
-  padding: 0;
-  background: var(--accent);
-  color: var(--accent-ink);
-  cursor: pointer;
-}
-
-.send:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.send svg {
-  width: 1.15rem;
-  height: 1.15rem;
-  fill: none;
-  stroke: currentcolor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .sr-only {

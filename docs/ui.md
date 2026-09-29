@@ -10,7 +10,9 @@ These are Dostigus Host tokens: deep charcoal canvas (`#121212`), Sheet chrome
 | `--bg` | `#121212` | Sidebar / app chrome canvas |
 | `--bg-chat` | `#000000` | Chat pane background |
 | `--surface` | `#262626` | Elevated strips, inner wells, Chat bubbles |
-| `--composer` | `color-mix(in srgb, var(--text) 12%, var(--surface))` | Composer fill only. A step lighter than `--surface` |
+| `--composer` | `color-mix(in srgb, var(--surface) 70%, var(--bg-chat))` (~`#1b1b1b`) | Composer fill only. A recessed well between the Chat canvas and `--surface` |
+| `--composer-line` | `color-mix(in srgb, var(--text) 22%, var(--composer))` (~`#4d4d4d`) | Composer rim at rest |
+| `--composer-line-strong` | `color-mix(in srgb, var(--text) 42%, var(--composer))` (~`#7a7a7a`) | Composer rim on hover and focus |
 | `--sheet` | `#212121` | Sliding Sheet chrome (`KitSheet` / `KitDialog`) |
 | `--card` | `#000000` | Content cards / page panels on `--bg` |
 | `--text` | `#FFFFFF` | Primary copy |
@@ -60,14 +62,29 @@ fallback), so the first line is not flush under the pill when the thread
 is scrolled to the top. When the thread is scrolled above
 the bottom, a circular control centered on the pane, just above the
 field, scrolls to the latest line. Reduced motion jumps without the
-smooth scroll. A `1px` edge,
-`color-mix(in srgb, var(--text) 8%, var(--composer))`, stays a step
-lighter than that fill. One line keeps the full pill radius. Two or
-more lines use `--radius-card` (~28px).
-The corner eases (~640ms, ease-in-out) from the visible pill into that
-radius, and the rim and fill share that timing. Reduced motion snaps. A
-transition that starts at `9999px` stays a pill until the last moment, so
-it is not a softer ease.
+smooth scroll.
+
+The pill is one Host component, `ChatComposerPill.vue`, shared by Bot
+Chat (`/bots/:id`) and Room and direct-message Threads (`/threads/:id`).
+Its `1px` rim is `--composer-line` at rest and `--composer-line-strong`
+on hover and `:focus-within` (a 160ms step), so the field reads as a
+control. The Attach **+** is a ghost circle with its own soft fill
+(`--text` 9%) and an inset hairline, the same `2.25rem` as Send. One
+textarea line is that same box (`1.45rem` line + `2 × 0.4rem`), and the
+row pads `0.3rem` on every side, so both circles share the row's
+centerline. On two or more lines they stay pinned to the bottom
+together. Pending attachment chips sit inside the row, above the field.
+Images show a thumbnail. Other files show an icon, the name, and the
+size. With a chip pending, the placeholder is «Добавьте сообщение или
+просто отправьте» (EN «Add a message or just send»).
+
+One line keeps the full pill radius. Two or more lines, or a chip tray,
+use a concentric corner: the circle radius plus the pad plus the rim
+(`1.125rem + 0.3rem + 1px`, ~24px). That is also half of a one-line
+row, so the corner eases (~640ms, ease-in-out) from the corner already
+on screen with no jump. Reduced motion snaps. A transition that starts
+at `9999px` would stay a pill until the last moment, so the ease is
+pinned to the used corner first.
 
 `--bot-accent-01`…`16` are a separate Bot avatar palette — not the Host
 `--accent`. See below.
