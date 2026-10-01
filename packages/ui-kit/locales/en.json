@@ -156,7 +156,7 @@
       "needTitle": "Give this Chat a title.",
       "createFailed": "Could not create the Chat.",
       "alreadyInChat": "You are already in this Chat.",
-      "noOtherPeople": "No other people in the Household yet.",
+      "noOtherPeople": "No other people in the Collective yet.",
       "peopleAndBot": "People and Bot",
       "people": "People",
       "emptyNone": "No one to add.",
@@ -185,7 +185,7 @@
       "addFailed": "Could not add to this Chat.",
       "already": "Already in this Chat.",
       "loadFailed": "Could not load people and Bots.",
-      "noneToAdd": "Everyone in the Household is already here.",
+      "noneToAdd": "Everyone in the Collective is already here.",
       "noMatch": "No matching people or Bots."
     },
     "threadCase": {
@@ -234,7 +234,7 @@
       "settingsOther": "Other",
       "settingsOtherHint": "Settings · Cluster timezone and http allowlist",
       "members": "Members",
-      "membersHint": "Household on this Host",
+      "membersHint": "Collective on this Host",
       "botSettings": "Parameters",
       "botSettingsHint": "{name} name, label, and appearance"
     },
@@ -343,7 +343,7 @@
       "providersHint": "LLM for Bots",
       "account": "Account",
       "members": "Members",
-      "membersHint": "Household on this Host",
+      "membersHint": "Collective on this Host",
       "settings": "Settings",
       "settingsHint": "Owner account"
     },
@@ -651,7 +651,7 @@
     "saveFailed": "Could not save.",
     "loadFailed": "Could not load.",
     "labelOptional": "Label (optional)",
-    "noOtherMembers": "No other people in the Household yet.",
+    "noOtherMembers": "No other people in the Collective yet.",
     "colorToken": "Color {token}",
     "openSchedulesFailed": "Could not open Schedules.",
     "openAccessFailed": "Could not open access.",

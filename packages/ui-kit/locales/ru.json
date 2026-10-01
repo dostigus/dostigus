@@ -156,7 +156,7 @@
       "needTitle": "Дайте чату название.",
       "createFailed": "Не удалось создать чат.",
       "alreadyInChat": "Вы уже в этом чате.",
-      "noOtherPeople": "В Household пока нет других людей.",
+      "noOtherPeople": "В коллективе пока нет других людей.",
       "peopleAndBot": "Люди и Bot",
       "people": "Люди",
       "emptyNone": "Некого добавить.",
@@ -185,7 +185,7 @@
       "addFailed": "Не удалось добавить в чат.",
       "already": "Уже в этом чате.",
       "loadFailed": "Не удалось загрузить людей и Bot.",
-      "noneToAdd": "Все из Household уже здесь.",
+      "noneToAdd": "Все из коллектива уже здесь.",
       "noMatch": "Никого не нашли."
     },
     "threadCase": {
@@ -234,7 +234,7 @@
       "settingsOther": "Прочее",
       "settingsOtherHint": "Settings · часовой пояс Cluster и http allowlist",
       "members": "Members",
-      "membersHint": "Household на этом Host",
+      "membersHint": "Коллектив на этом Host",
       "botSettings": "Параметры",
       "botSettingsHint": "{name}: имя, метка и внешний вид"
     },
@@ -343,7 +343,7 @@
       "providersHint": "LLM для Bots",
       "account": "Аккаунт",
       "members": "Members",
-      "membersHint": "Household на этом Host",
+      "membersHint": "Коллектив на этом Host",
       "settings": "Настройки",
       "settingsHint": "Аккаунт Owner"
     },
@@ -651,7 +651,7 @@
     "saveFailed": "Не получилось сохранить.",
     "loadFailed": "Не получилось загрузить.",
     "labelOptional": "Метка (необязательно)",
-    "noOtherMembers": "В Household пока нет других участников.",
+    "noOtherMembers": "В коллективе пока нет других участников.",
     "colorToken": "Цвет {token}",
     "openSchedulesFailed": "Не получилось открыть расписания",
     "openAccessFailed": "Не получилось открыть доступ",
