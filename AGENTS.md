@@ -507,6 +507,8 @@ explicit ready marker (not network idle), and writes a PNG under
 | `composer-attachments` | `/preview-seed`, a PNG and a `.txt` set on the file input | two `.pending-chip.ready` | 1440×900, clip `.composer` @2x |
 | `composer-room` | `?rooms=1` | `.composer-row.has-lead .attach` | 1440×900, clip `.composer` @2x |
 | `composer-room-mention` | `?rooms=1`, `@` typed | `.mention-picker [role="option"][data-selected]` | 1440×900, clip `.composer` @2x |
+| `thread-roster` | `?rooms=1`, click `.identity` | `.kit-sheet--end .add-row` (people + Bot on Preview room) | 1440×900 |
+| `thread-roster-add` | same as `thread-roster`, then click **Add** (`.add-row`) | `.kit-sheet--end .candidate` (Bot **Private notes**) | 1440×900 |
 | `onboarding` | none, signed out, `/onboarding` | two `input[autocomplete="new-password"]` | 1440×900 |
 | `onboarding-error` | same as `onboarding`, two different passwords, submit | `[role="alert"]` | 1440×900 |
 | `home-empty` | same as `onboarding`, preview Owner login and password, submit | `.empty .kit-button` | 1440×900 |

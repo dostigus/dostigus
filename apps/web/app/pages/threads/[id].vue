@@ -25,9 +25,12 @@
       <div class="bots-toggle">
         <HostMenuButton />
       </div>
-      <div
+      <button
+        type="button"
         class="identity"
-        :aria-label="thread?.title ?? $t('chat.fallbackTitle')"
+        :disabled="!thread"
+        :aria-label="$t('host.threadRoster.openAria', { title: thread?.title ?? $t('chat.fallbackTitle') })"
+        @click="rosterOpen = true"
       >
         <span class="identity-copy">
           <HostBotAvatar
@@ -39,7 +42,18 @@
           />
           <span class="name">{{ thread?.title ?? $t('chat.fallbackTitle') }}</span>
         </span>
-      </div>
+        <span
+          class="cue-slot"
+          aria-hidden="true"
+        >
+          <svg
+            class="cue"
+            viewBox="0 0 24 24"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </span>
+      </button>
 
       <ol
         ref="threadEl"
@@ -211,6 +225,13 @@
         {{ openSheet?.body }}
       </p>
     </KitSheet>
+    <ThreadRosterSheet
+      v-if="thread"
+      v-model:open="rosterOpen"
+      :thread="thread"
+      :viewer-id="user?.id ?? ''"
+      @added="onParticipantAdded"
+    />
   </div>
 </template>
 
@@ -262,6 +283,14 @@ function onOpenSheet(sheetId: string, targetId?: string) {
   sheetTargetId.value = targetId ?? ''
   openSheet.value = sheet
   sheetOpen.value = true
+}
+const rosterOpen = ref(false)
+
+async function onParticipantAdded(next: ThreadListItem) {
+  if (data.value) {
+    data.value = { ...data.value, thread: next }
+  }
+  await Promise.all([refresh(), refreshThreads()])
 }
 const replyBot = ref<ThreadParticipantView | null>(null)
 const threadEl = ref<HTMLElement | null>(null)
@@ -391,6 +420,7 @@ onUnmounted(() => {
 })
 
 watch(threadId, () => {
+  rosterOpen.value = false
   draft.value = ''
   sendError.value = ''
   clearAttachments()
@@ -466,13 +496,31 @@ async function send() {
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
+  min-width: 0;
   max-width: min(18rem, calc(100% - 6.5rem));
+  appearance: none;
   border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
   background: color-mix(in srgb, var(--sheet) 62%, transparent);
   backdrop-filter: blur(14px);
+  color: inherit;
   border-radius: 999px;
   padding: 0.18rem 0.7rem;
+  cursor: pointer;
+  font: inherit;
   box-shadow: 0 0.35rem 1.1rem rgb(0 0 0 / 28%);
+}
+
+.identity:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--sheet) 78%, transparent);
+}
+
+.identity:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.identity:disabled {
+  cursor: default;
 }
 
 .identity-copy {
@@ -480,6 +528,53 @@ async function send() {
   align-items: center;
   gap: 0.45rem;
   min-width: 0;
+}
+
+.cue-slot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    width 180ms ease,
+    margin-inline-start 180ms ease,
+    opacity 160ms ease;
+}
+
+.identity:hover:not(:disabled) .cue-slot,
+.identity:focus-visible .cue-slot {
+  width: 1.05rem;
+  margin-inline-start: 0.32rem;
+  opacity: 1;
+}
+
+.cue {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--text-muted);
+  transform: translateX(-0.2rem);
+  transition: transform 180ms ease, color 160ms ease;
+}
+
+.identity:hover:not(:disabled) .cue,
+.identity:focus-visible .cue {
+  transform: none;
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cue-slot,
+  .cue {
+    transition: none;
+  }
 }
 
 .name {

@@ -63,6 +63,8 @@ it('names the preview states agents are asked to shoot', () => {
     'composer-attachments',
     'composer-room',
     'composer-room-mention',
+    'thread-roster',
+    'thread-roster-add',
     'onboarding',
     'onboarding-error',
     'home-empty',

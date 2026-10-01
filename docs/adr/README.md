@@ -55,7 +55,7 @@ English.
 | [0021](0021-chat-activity-status.md) | Chat activity status row (amended 2026-09-24: thinking, tool, typing; status-line sweep) |
 | [0022](0022-chat-assistant-markdown.md) | Chat assistant Markdown body (amended 2026-09-24: Artifact image preview via Kit/GET is [0034](0034-artifacts.md); raw `<img>` / MD images stay forbidden; amended 2026-09-25: GFM tables on the assistant allowlist; lone or malformed `|` stays plain text) |
 | [0023](0023-household-member-invites.md) | Household Member Invites (an Invite does not grant Bots; [0024](0024-threads-and-bot-visibility.md)) |
-| [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility (amended 2026-09-24: personal Bot + grants) |
+| [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility (amended 2026-09-24: personal Bot + grants; amended 2026-10-01: roster Sheet, add a person or Bot after create, first Bot makes a `group` a `room`) |
 | [0025](0025-chat-bubble-parts.md) | Chat bubble parts (Bot visibility stays [0024](0024-threads-and-bot-visibility.md); Artifact refs are the join, not `parts_json` [0034](0034-artifacts.md)) |
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
 | [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets; Wake tools [0032](0032-chat-llm-context-assembly.md); amended 2026-09-26: visible Wake is the Schedule name, `wakeText` is LLM-only) |

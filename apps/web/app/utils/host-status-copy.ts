@@ -28,6 +28,8 @@ export const HOST_STATUS_MESSAGE_KEYS = {
   'A group needs at least two people': 'host.threadCreate.pickPeople',
   'A direct message is one person and another person': 'host.threadCreate.pickPerson',
   'Name this Thread': 'host.threadCreate.nameThread',
+  'Already in this Thread': 'host.threadRoster.already',
+  'A direct message does not take more people or Bots': 'host.threadRoster.dmHint',
   'Cluster timezone must be an IANA name': 'settings.other.timezone.invalid',
   'HTTP allowlist entries are hostnames only': 'settings.other.allowlist.invalid',
   'HTTP allowlist entries are hostnames': 'settings.other.allowlist.invalid',
