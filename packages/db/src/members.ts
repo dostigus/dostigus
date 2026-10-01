@@ -1,4 +1,4 @@
-import type { Member } from '@dostigus/shared'
+import type { Member, MemberRole } from '@dostigus/shared'
 import type { MemberRecord } from './map'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
@@ -30,7 +30,7 @@ function asMemberRecord(row: unknown): MemberRecord | undefined {
   return value
 }
 
-const MEMBER_COLUMNS = `id, display_name, email, username, password_hash, created_at, disabled_at, locale`
+const MEMBER_COLUMNS = `id, display_name, email, username, password_hash, created_at, disabled_at, locale, role`
 
 function isUniqueViolation(error: unknown): boolean {
   if (!error || typeof error !== 'object' || !('code' in error)) {
@@ -153,9 +153,9 @@ export function createMember(
   try {
     store.sqlite.prepare(`
       INSERT INTO members (
-        id, display_name, email, username, password_hash, created_at, disabled_at, locale
+        id, display_name, email, username, password_hash, created_at, disabled_at, locale, role
       )
-      VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)
+      VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 'member')
     `).run(id, displayName, email, username, hash, createdAt)
   } catch (error) {
     if (isUniqueViolation(error) || loginTaken(store, email, username)) {
@@ -227,6 +227,38 @@ export function disableMember(store: OpenedStore, id: string): Member {
     throw new StoreError('Member not found', 404)
   }
   return updated
+}
+
+/** Owner only. The Owner is not a Member row, so there is no `owner` role. See ADR 0042. */
+export function setMemberRole(store: OpenedStore, id: string, role: unknown): Member {
+  if (role !== 'admin' && role !== 'member') {
+    throw new StoreError('Role must be admin or member', 400)
+  }
+  const current = getMember(store, id)
+  if (!current) {
+    throw new StoreError('Member not found', 404)
+  }
+  if (current.role !== role) {
+    store.sqlite.prepare(`
+      UPDATE members
+      SET role = ?
+      WHERE id = ?
+    `).run(role satisfies MemberRole, id)
+  }
+  const updated = getMember(store, id)
+  if (!updated) {
+    throw new StoreError('Member not found', 404)
+  }
+  return updated
+}
+
+/** A disabled Admin keeps the role on the row but opens nothing. */
+export function memberIsAdmin(store: OpenedStore, id: string | null | undefined): boolean {
+  if (!id) {
+    return false
+  }
+  const member = getMember(store, id)
+  return Boolean(member && !member.disabledAt && member.role === 'admin')
 }
 
 /** Display name for a Host user message. Empty when personId is unknown. */
