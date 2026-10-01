@@ -27,7 +27,15 @@ _Avoid_: tenant, workspace, site, instance (unqualified).
 
 **Owner**:
 Primary account that controls the Cluster. Exactly one Owner per Cluster.
-_Avoid_: admin, user (unqualified).
+_Avoid_: Admin (a separate role), user (unqualified).
+
+**Admin**:
+Planned v1 role between the Owner and a Member
+([ADR 0040](docs/adr/0040-collective-host-direction.md)). Not a
+second Owner; the Cluster keeps one Owner. An Admin may create and
+share Bots. Other rights land with the roles ADR. Not in this Host
+yet.
+_Avoid_: Owner, superuser, moderator.
 
 **Member**:
 A Household account on this Cluster, under the single Owner. Signs in on the
@@ -272,7 +280,11 @@ list and open. That person's bot-thread rows
 stay. The Host stores `bot_grants`. Migration `0013_bot_grants` copied
 former `shared` Bots into one grant per Member row that existed then,
 including a disabled Member, and dropped `visibility`. Module data
-stays in the Cluster Store.
+stays in the Cluster Store. A **shared Bot** is a Bot that someone
+other than its creator may open through a grant. Under
+[ADR 0040](docs/adr/0040-collective-host-direction.md) the Owner or
+an Admin shares, or a Member with the share permission. Until the
+roles ADR lands, the creator grant rights above stay.
 _Avoid_: public, secret, hidden.
 
 **Orchestrator**:
@@ -522,8 +534,19 @@ Smart / Coding are quality slots, not Model tier names.
 _Avoid_: fast, smart, opus (aliases).
 
 **Household**:
-The Owner and the Members on one Cluster. One Cluster is one Household.
-_Avoid_: team, org, family.
+The Owner and the Members on one Cluster: the accounts of the
+Collective. One Cluster is one Household. The Store, routes, and
+[ADR 0012](docs/adr/0012-household-members.md) keep this name.
+Positioning says Collective.
+_Avoid_: team, org, family (positioning words; use Collective).
+
+**Collective**:
+The 1…N people on one Cluster: a family, a startup, or a small
+enterprise. The product direction is the **Collective Host**: a
+messenger, personal and shared Bots, and MCP to external systems
+([ADR 0040](docs/adr/0040-collective-host-direction.md)). Its
+accounts are the Household.
+_Avoid_: CRM, tenant, org, workspace, team (as the product noun).
 
 **Invite**:
 A one-shot link the Owner creates so someone can become a Member. The Store
