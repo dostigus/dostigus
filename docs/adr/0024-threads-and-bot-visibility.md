@@ -2,7 +2,9 @@
 
 - Status: accepted
 - Date: 2026-09-23
-- Amended: 2026-09-24, 2026-10-01
+- Amended: 2026-09-24, 2026-10-01 (roster Sheet); 2026-10-01
+  (share permission direction
+  [ADR 0042](0042-admin-role-and-share-permission.md))
 
 Household accounts stay [ADR 0012](0012-household-members.md). Invites
 stay [ADR 0023](0023-household-member-invites.md). This record settles
@@ -42,7 +44,11 @@ now. A later Invite does not receive those Bots. Someone grants again.
 
 Who may grant or revoke: the Owner, on any Bot; the creator, on their
 own Bot. A grantee cannot re-share unless they are also the Owner or
-the creator under those rules.
+the creator under those rules. When
+[ADR 0042](0042-admin-role-and-share-permission.md) is in the Host,
+the Owner and an Admin may grant any Bot; a Member grants only a
+Bot they created and does not grant someone else's shared Bot. This
+Host still uses Owner + creator as above.
 
 Revoke cuts list and open for that person. Store rows stay, including
 that person's bot-thread messages. Same spirit as keeping data when
@@ -80,7 +86,8 @@ This ADR does not add a Bot fork or clone (copy Skills without memory).
 Out of scope: durable memory across bot-threads; Skill proposals from
 grantees; a Bot fork or clone; peeking another person's bot-thread on
 a granted Bot; auto-grant when a Bot is added to a room; auto-grant to
-a future Invite; roles beyond Owner and Member.
+a future Invite; roles beyond Owner, Admin, and Member
+([ADR 0042](0042-admin-role-and-share-permission.md)).
 
 Turning off a Member's sign-in leaves their Bots in place. The Owner
 still sees them. Lines keep `personId` and the author's name
@@ -251,7 +258,9 @@ kind `room`; the title and the people stay. The new person reads the
 existing lines. Leave, kick, and rename stay later.
 
 Outside these milestones: SMTP, guests, Share link, and any role
-besides Owner and Member. No Org entity. `listen=all` stays later.
+besides Owner, Admin, and Member
+([ADR 0042](0042-admin-role-and-share-permission.md)). No Org
+entity. `listen=all` stays later.
 Durable memory across bot-threads, Skill proposals from grantees, and
 Bot fork or clone stay out.
 

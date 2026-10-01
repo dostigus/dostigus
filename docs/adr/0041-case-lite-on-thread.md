@@ -2,6 +2,8 @@
 
 - Status: accepted
 - Date: 2026-10-01
+- Amended: 2026-10-01 — Admin does not gate Case or roster add
+  ([ADR 0042](0042-admin-role-and-share-permission.md)).
 
 Collective Host direction stays
 [ADR 0040](0040-collective-host-direction.md). Threads and Bot
@@ -43,10 +45,10 @@ No assignee. No due date. No priority.
 ### Who edits
 
 Any person Participant on that Thread may write the Case. There
-is no Admin gate. The roles ADR is not done yet
-([ADR 0040](0040-collective-host-direction.md)). A Bot session
-does not write a Case. The Owner has no extra Case right beyond
-being a person Participant.
+is no Admin gate
+([ADR 0042](0042-admin-role-and-share-permission.md)). A Bot
+session does not write a Case. The Owner has no extra Case
+right beyond being a person Participant.
 
 The same people who can `GET` the Thread can read its Case.
 
@@ -168,8 +170,8 @@ JSON blob would hide the status from a later inbox filter.
 - Inbox filters, a Case list, assignee / due / priority, Case
   on a `dm` or bot-thread, a separate Case page, and Case MCP
   tools stay later or rejected as below.
-- The roles ADR may later narrow who writes a Case. Until then
-  any person Participant writes.
+- [ADR 0042](0042-admin-role-and-share-permission.md) keeps any
+  person Participant. Admin does not gate Case or roster add.
 
 ## Alternatives
 
@@ -178,8 +180,9 @@ JSON blob would hide the status from a later inbox filter.
   `group` and `room`.
 - Assignee, due date, or priority in v1 — rejected. Three
   fields only.
-- An Admin-only write gate — rejected until the roles ADR.
-  v1 is any person Participant.
+- An Admin-only write gate — rejected.
+  [ADR 0042](0042-admin-role-and-share-permission.md) keeps any
+  person Participant.
 - A separate Case page or `/cases` chrome — rejected. Roster
   Sheet plus the identity-pill line.
 - A Case row on every new `group` or `room` — rejected. No Case

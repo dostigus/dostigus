@@ -3,7 +3,9 @@
 - Status: accepted
 - Date: 2026-10-01
 - Amended: 2026-10-01 — Case-lite Store shape, API, and glossary
-  term **Case** are [ADR 0041](0041-case-lite-on-thread.md).
+  term **Case** are [ADR 0041](0041-case-lite-on-thread.md);
+  Admin role, share permission, and Store shape are
+  [ADR 0042](0042-admin-role-and-share-permission.md).
 
 Nick locked the direction below on 2026-10-01. This record sets
 direction and order only. It does not change [SPEC](../SPEC.md)
@@ -53,9 +55,10 @@ stages, or forecasts.
 
 v1 roles are **Owner**, **Admin**, and **Member**. The Cluster keeps
 exactly one Owner. An Admin is not a second Owner. An Admin may
-create and share Bots for the Collective. The roles ADR decides
-which other Owner-only surfaces (Members, Settings, Dashboard) an
-Admin opens. An arbitrary permission matrix is later.
+create and share Bots for the Collective. Store shape, share
+permission, and which Owner-only surfaces an Admin opens are
+[ADR 0042](0042-admin-role-and-share-permission.md). An arbitrary
+permission matrix is later.
 
 ### Bots
 
@@ -63,7 +66,8 @@ Admin opens. An arbitrary permission matrix is later.
   [ADR 0024](0024-threads-and-bot-visibility.md) today.
 - A **shared Bot** is a Bot that someone other than its creator may
   open through a grant. The Owner or an Admin shares a Bot. A Member
-  shares only with the share permission the roles ADR adds.
+  shares only a Bot they created
+  ([ADR 0042](0042-admin-role-and-share-permission.md)).
 - Bots move between people and Clusters as Packs
   ([ADR 0039](0039-pack-vs-bot-portable-recipe.md)), not by copying
   a Manifest by hand.
@@ -114,11 +118,11 @@ A library or Pages surface is a new product area and waits.
 
 - Docs only. No Store migration, route, Host UI, or MCP surface
   change in this record.
-- The SPEC line "Roles beyond Owner and Member" stays out of scope
-  until the roles ADR lands. Until then
+- Roles and the share permission are
+  [ADR 0042](0042-admin-role-and-share-permission.md). Until that
+  implementation PR,
   [ADR 0024](0024-threads-and-bot-visibility.md) creator grant
-  rights stay as they are. The roles ADR decides how they narrow
-  to the share permission.
+  rights stay as they are in this Host.
 - Glossary: [`CONTEXT.md`](../../CONTEXT.md) adds **Collective** and
   **Admin**, defines a shared Bot under Bot visibility, and points
   Household at Collective. Household stays the Store, route, and
@@ -129,10 +133,11 @@ A library or Pages surface is a new product area and waits.
 - Follow-up: a Rooms gap audit of the shipped Host files GitHub
   issues. That audit is a separate task. This PR has no
   implementation.
-- Later records: the roles ADR (Admin plus the share permission),
-  and a Bot connection to an external MCP server. The Host has no
-  external MCP client today. Case-lite is
-  [ADR 0041](0041-case-lite-on-thread.md).
+- Later records: a Bot connection to an external MCP server. The
+  Host has no external MCP client today. Case-lite is
+  [ADR 0041](0041-case-lite-on-thread.md). Admin and the share
+  permission are
+  [ADR 0042](0042-admin-role-and-share-permission.md).
 - Later copy: the README tagline and Host strings such as
   "Household on this Host" move to Collective positioning in their
   own PR.
