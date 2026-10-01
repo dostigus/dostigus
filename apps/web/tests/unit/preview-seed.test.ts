@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { createBot, getLlmGatewaySettings, listBots, listBotSkills, listBotThreadMessages, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, openStore, readKitchen, updateBot } from '@dostigus/db'
+import { createBot, getLlmGatewaySettings, listBots, listBotSkills, listBotThreadMessages, listKitchenPantry, listMembers, listMessages, listSchedules, listThreadMessages, listTurns, openStore, readKitchen, updateBot } from '@dostigus/db'
 import { DEFAULT_BOT_NAME, mentionedRoomBot } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import { OwnerAuthError, registerClusterOwner } from '../../server/utils/owner-auth'
@@ -43,6 +43,7 @@ import {
   previewCatalogSkipsKeyProbe,
   previewKitchenParts,
   previewKitchenRequested,
+  previewMembersAsAdmin,
   previewMembersRequested,
   previewParts,
   previewPartsRequested,
@@ -619,4 +620,21 @@ it('seeds Mail, Kitchen, and Reader with hardcoded Kitchen dinner lines once', a
   expect(listMessages(store, PREVIEW_README_KITCHEN_BOT_ID)).toHaveLength(kitchenLines.length)
   expect(listMessages(store, PREVIEW_README_MAIL_BOT_ID)).toHaveLength(1)
   expect(listMessages(store, PREVIEW_README_READER_BOT_ID)).toHaveLength(1)
+})
+
+it('seeds a preview Admin with ?members=1 and signs that Admin in with as=admin', async () => {
+  const store = memoryStore()
+  const first = await ensurePreviewCluster(store, hashPassword, verifyPassword, { members: true })
+  expect(first.admin?.username).toBe('preview-admin')
+  expect(first.admin?.role).toBe('member')
+  const rows = listMembers(store)
+  expect(rows.find((row) => row.username === 'preview-admin')?.role).toBe('admin')
+  expect(rows.find((row) => row.username === 'preview-member')?.role).toBe('member')
+  const second = await ensurePreviewCluster(store, hashPassword, verifyPassword, { members: true })
+  expect(second.admin?.id).toBe(first.admin?.id)
+  expect(listMembers(store)).toHaveLength(2)
+  expect(previewMembersAsAdmin('admin')).toBe(true)
+  expect(previewMembersAsAdmin(['admin'])).toBe(true)
+  expect(previewMembersAsAdmin('member')).toBe(false)
+  expect(previewSeedRedirect({ botId: 'preview', members: '1', as: 'admin' })).toBe('/dashboard/members')
 })

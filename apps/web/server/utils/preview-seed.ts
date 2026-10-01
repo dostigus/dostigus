@@ -1,7 +1,7 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { ChatPart } from '@dostigus/shared'
 import type { HostSessionUser } from './owner-auth'
-import { addKitchenPantry, botThreadIdFor, createBot, createMember, createMessengerThread, createSchedule, findMemberSecretByLogin, findOwnerSecretByLogin, finishTurn, getBot, getKitchenRecipe, getLlmGatewaySettings, grantBot, insertMessage, insertThreadLine, listBots, listBotSkills, listKitchenCooked, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, markKitchenCooked, ownerExists, pauseSchedule, saveKitchenRecipe, startTurn, upsertBotSkill, upsertLlmGatewaySettings } from '@dostigus/db'
+import { addKitchenPantry, botThreadIdFor, createBot, createMember, createMessengerThread, createSchedule, findMemberSecretByLogin, findOwnerSecretByLogin, finishTurn, getBot, getKitchenRecipe, getLlmGatewaySettings, grantBot, insertMessage, insertThreadLine, listBots, listBotSkills, listKitchenCooked, listKitchenPantry, listMessages, listSchedules, listThreadMessages, listTurns, markKitchenCooked, ownerExists, pauseSchedule, saveKitchenRecipe, setMemberRole, startTurn, upsertBotSkill, upsertLlmGatewaySettings } from '@dostigus/db'
 import { DEFAULT_BOT_NAME } from '@dostigus/shared'
 import { HOST_DEMO_SHEET_ID, HOST_KITCHEN_SHEET_ID, HOST_SCHEDULE_SHEET_ID } from '../../app/utils/host-sheets'
 import { previewChatLocation } from '../../app/utils/preview-hold'
@@ -21,6 +21,9 @@ export const PREVIEW_OWNER_PASSWORD = 'preview-owner'
 /** Local preview Member. Created by `?threads=1`. */
 export const PREVIEW_MEMBER_LOGIN = 'preview-member'
 export const PREVIEW_MEMBER_PASSWORD = 'preview-member'
+/** Local preview Admin. Created by `?members=1`. See ADR 0042. */
+export const PREVIEW_ADMIN_LOGIN = 'preview-admin'
+export const PREVIEW_ADMIN_PASSWORD = 'preview-admin'
 
 /** Member-created Bot. The Owner sees it. Id stays `preview-private`. */
 export const PREVIEW_PRIVATE_BOT_ID = 'preview-private'
@@ -289,6 +292,14 @@ export function previewReadmeRequested(value: unknown): boolean {
   return previewQueryOn(value)
 }
 
+/** `?members=1&as=admin` signs in the preview Admin. Any other value stays the Owner. */
+export function previewMembersAsAdmin(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.includes('admin')
+  }
+  return value === 'admin'
+}
+
 /** `?threads=1&as=member` signs in the preview Member. Any other value stays the Owner. */
 export function previewThreadAsMember(value: unknown): boolean {
   if (Array.isArray(value)) {
@@ -473,6 +484,7 @@ function ensurePreviewReadmeKitchenLines(store: OpenedStore, personId: string): 
  * `threads` adds a preview Member, that Member's Bot, a grant for the
  * Member on Bot `preview`, and separate bot-threads.
  * `rooms` does that and adds a direct message plus a room with the shared Bot.
+ * `members` adds the preview Member and a preview Admin for the Members list.
  * `readme` seeds Mail, Kitchen, and Reader and opens Kitchen. It does not
  * create fixture Bot `preview` when that row is still missing.
  * Throws OwnerAuthError 401 when the Store Owner is not this login.
@@ -481,8 +493,8 @@ export async function ensurePreviewCluster(
   store: OpenedStore,
   hashPassword: (password: string) => Promise<string>,
   verifyPassword: (hash: string, password: string) => Promise<boolean>,
-  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, system?: boolean, schedules?: boolean, threads?: boolean, rooms?: boolean, readme?: boolean } = {},
-): Promise<{ user: HostSessionUser, botId: string, member: HostSessionUser | null, roomId: string | null }> {
+  options: { tall?: boolean, parts?: boolean, kitchen?: boolean, system?: boolean, schedules?: boolean, threads?: boolean, rooms?: boolean, readme?: boolean, members?: boolean } = {},
+): Promise<{ user: HostSessionUser, botId: string, member: HostSessionUser | null, admin: HostSessionUser | null, roomId: string | null }> {
   const user = await ensurePreviewOwner(store, hashPassword, verifyPassword)
   const existingPreview = stablePreviewBotId(listBots(store))
   const botId = options.readme
@@ -516,7 +528,8 @@ export async function ensurePreviewCluster(
   const roomId = !options.readme && options.rooms && member
     ? ensurePreviewRooms(store, user.id, member.id, botId)
     : null
-  return { user, botId, member, roomId }
+  const admin = options.members ? await ensurePreviewAdmin(store, hashPassword) : null
+  return { user, botId, member, admin, roomId }
 }
 
 export function previewPartsContent(): string {
@@ -772,6 +785,36 @@ function previewLineExists(store: OpenedStore, botId: string, prefix: string): b
   return listMessages(store, botId).some((message) => message.content.startsWith(prefix))
 }
 
+async function ensurePreviewMemberRow(
+  store: OpenedStore,
+  hashPassword: (password: string) => Promise<string>,
+) {
+  return findMemberSecretByLogin(store, PREVIEW_MEMBER_LOGIN) ?? await createMember(store, {
+    displayName: 'Preview Member',
+    username: PREVIEW_MEMBER_LOGIN,
+    passwordHash: await hashPassword(PREVIEW_MEMBER_PASSWORD),
+  })
+}
+
+/**
+ * The preview Member (role `member`) and a preview Admin, so the Members
+ * list shows the Admin chip and the Owner's make Admin / remove Admin.
+ * A later visit puts the preview Admin back on role `admin`.
+ */
+export async function ensurePreviewAdmin(
+  store: OpenedStore,
+  hashPassword: (password: string) => Promise<string>,
+): Promise<HostSessionUser> {
+  await ensurePreviewMemberRow(store, hashPassword)
+  const existing = findMemberSecretByLogin(store, PREVIEW_ADMIN_LOGIN)
+  const created = existing ?? await createMember(store, {
+    displayName: 'Preview Admin',
+    username: PREVIEW_ADMIN_LOGIN,
+    passwordHash: await hashPassword(PREVIEW_ADMIN_PASSWORD),
+  })
+  return toMemberSession(setMemberRole(store, created.id, 'admin'))
+}
+
 /**
  * One preview Member, their private Bot, and one user line on each
  * bot-thread the demo opens. A second call does not append those lines.
@@ -782,12 +825,7 @@ export async function ensurePreviewThreads(
   ownerId: string,
   sharedBotId: string,
 ): Promise<HostSessionUser> {
-  const existing = findMemberSecretByLogin(store, PREVIEW_MEMBER_LOGIN)
-  const member = existing ?? await createMember(store, {
-    displayName: 'Preview Member',
-    username: PREVIEW_MEMBER_LOGIN,
-    passwordHash: await hashPassword(PREVIEW_MEMBER_PASSWORD),
-  })
+  const member = await ensurePreviewMemberRow(store, hashPassword)
   if (!getBot(store, PREVIEW_PRIVATE_BOT_ID)) {
     createBot(store, {
       id: PREVIEW_PRIVATE_BOT_ID,

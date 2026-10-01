@@ -456,6 +456,43 @@ async function main() {
   }
   note('GET /preview-seed?members=1 302 /dashboard/members; HEAD ignored the query')
 
+  const admin = await request('/preview-seed?members=1&as=admin')
+  const adminPath = locationPath(admin.response.headers.get('location'))
+  if (admin.response.status !== 302 || adminPath !== '/dashboard/members') {
+    fail(`GET /preview-seed?members=1&as=admin expected 302 /dashboard/members, got ${admin.response.status} ${adminPath ?? admin.text.slice(0, 200)}`)
+  }
+  const adminSession = cookieHeader(admin.response)
+  if (!adminSession) {
+    fail('GET /preview-seed?members=1&as=admin did not set a session cookie')
+  }
+  const adminMembers = await request('/api/members', { cookie: adminSession })
+  if (adminMembers.response.status !== 200) {
+    fail(`GET /api/members as preview Admin expected 200, got ${adminMembers.response.status} ${adminMembers.text.slice(0, 200)}`)
+  }
+  const adminRows = JSON.parse(adminMembers.text).members ?? []
+  const adminRow = adminRows.find((row) => row.username === 'preview-admin')
+  if (adminRow?.role !== 'admin') {
+    fail(`GET /api/members expected preview-admin with role admin, got ${JSON.stringify(adminRow ?? null)}`)
+  }
+  for (const [method, path] of [['GET', '/api/settings/timezone'], ['PUT', `/api/members/${adminRow.id}/role`]]) {
+    const denied = await request(path, {
+      method,
+      cookie: adminSession,
+      json: method === 'PUT' ? { role: 'member' } : undefined,
+    })
+    if (denied.response.status !== 403) {
+      fail(`${method} ${path} as preview Admin expected 403, got ${denied.response.status} ${denied.text.slice(0, 200)}`)
+    }
+  }
+  for (const path of ['/dashboard/cluster', '/dashboard/settings']) {
+    const page = await request(path, { cookie: adminSession })
+    const pagePath = locationPath(page.response.headers.get('location'))
+    if (page.response.status !== 302 || pagePath !== '/dashboard') {
+      fail(`GET ${path} as preview Admin expected 302 /dashboard, got ${page.response.status} ${pagePath ?? ''}`)
+    }
+  }
+  note('GET /preview-seed?members=1&as=admin opens Members; Admin gets 403 on Cluster settings and role changes')
+
   const activityHead = assertPreviewHead(await request('/preview-seed?activity=typing', { method: 'HEAD' }))
   if (activityHead.status !== 302 || activityHead.location !== `/bots/${botId}`) {
     fail(`HEAD /preview-seed?activity=typing expected 302 /bots/${botId}, got ${activityHead.status} ${activityHead.location ?? ''}`)
