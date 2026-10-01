@@ -188,6 +188,25 @@
       "noneToAdd": "Everyone in the Household is already here.",
       "noMatch": "No matching people or Bots."
     },
+    "threadCase": {
+      "heading": "Case",
+      "add": "Add Case",
+      "addHint": "A status, a label, and the next action for this Chat.",
+      "open": "Open",
+      "done": "Done",
+      "doneToggle": "Done",
+      "label": "Label",
+      "nextAction": "Next action",
+      "noText": "No label or next action yet.",
+      "edit": "Edit",
+      "markDone": "Mark done",
+      "reopen": "Reopen",
+      "saveFailed": "Could not save the Case.",
+      "labelTooLong": "Label must be 40 characters or fewer.",
+      "nextActionTooLong": "Next action must be 120 characters or fewer.",
+      "lineAria": "Case {status}: {summary}. Open the Case",
+      "lineAddAria": "Add a Case to this Chat"
+    },
     "botPicker": {
       "titleOwner": "Find or create a Bot",
       "titleMember": "Find a Bot",

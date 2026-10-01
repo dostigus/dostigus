@@ -188,6 +188,25 @@
       "noneToAdd": "Все из Household уже здесь.",
       "noMatch": "Никого не нашли."
     },
+    "threadCase": {
+      "heading": "Case",
+      "add": "Добавить Case",
+      "addHint": "Статус, метка и следующий шаг для этого чата.",
+      "open": "Открыт",
+      "done": "Готово",
+      "doneToggle": "Готово",
+      "label": "Метка",
+      "nextAction": "Следующий шаг",
+      "noText": "Пока нет метки и следующего шага.",
+      "edit": "Изменить",
+      "markDone": "Отметить готовым",
+      "reopen": "Открыть снова",
+      "saveFailed": "Не удалось сохранить Case.",
+      "labelTooLong": "Метка не длиннее 40 символов.",
+      "nextActionTooLong": "Следующий шаг не длиннее 120 символов.",
+      "lineAria": "Case {status}: {summary}. Открыть Case",
+      "lineAddAria": "Добавить Case в этот чат"
+    },
     "botPicker": {
       "titleOwner": "Найти или создать Bot",
       "titleMember": "Найти Bot",

@@ -10,6 +10,13 @@
       v-if="mode === 'roster'"
       class="roster"
     >
+      <ThreadCaseBlock
+        v-if="canAdd"
+        class="case-block"
+        :thread="thread"
+        :auto-edit="caseEdit"
+        @saved="emit('updated', $event)"
+      />
       <KitListRow
         v-if="canAdd"
         as="button"
@@ -236,10 +243,13 @@ type RoomAudience = {
 const props = defineProps<{
   thread: ThreadListItem
   viewerId: string
+  /** Open the Case form when the Thread has no Case yet. */
+  caseEdit?: boolean
 }>()
 
 const emit = defineEmits<{
   added: [thread: ThreadListItem]
+  updated: [thread: ThreadListItem]
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
@@ -356,6 +366,11 @@ async function add(kind: 'person' | 'bot', id: string) {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+}
+
+.case-block {
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--line);
 }
 
 .group {

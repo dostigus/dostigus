@@ -509,6 +509,8 @@ explicit ready marker (not network idle), and writes a PNG under
 | `composer-room-mention` | `?rooms=1`, `@` typed | `.mention-picker [role="option"][data-selected]` | 1440×900, clip `.composer` @2x |
 | `thread-roster` | `?rooms=1`, click `.identity` | `.kit-sheet--end .add-row` (people + Bot on Preview room) | 1440×900 |
 | `thread-roster-add` | same as `thread-roster`, then click **Add** (`.add-row`) | `.kit-sheet--end .candidate` (Bot **Private notes**) | 1440×900 |
+| `thread-case` | `?rooms=1` | `.identity-stack .case-line` (Case line under the identity pill) | 1440×900 |
+| `thread-case-edit` | `?rooms=1`, click the Case line | `.kit-sheet--end .case input[name="label"]` (only while the room has no Case) | 1440×900 |
 | `onboarding` | none, signed out, `/onboarding` | two `input[autocomplete="new-password"]` | 1440×900 |
 | `onboarding-error` | same as `onboarding`, two different passwords, submit | `[role="alert"]` | 1440×900 |
 | `home-empty` | same as `onboarding`, preview Owner login and password, submit | `.empty .kit-button` | 1440×900 |

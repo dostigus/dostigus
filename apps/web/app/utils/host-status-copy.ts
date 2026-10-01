@@ -30,6 +30,8 @@ export const HOST_STATUS_MESSAGE_KEYS = {
   'Name this Thread': 'host.threadCreate.nameThread',
   'Already in this Thread': 'host.threadRoster.already',
   'A direct message does not take more people or Bots': 'host.threadRoster.dmHint',
+  'Case label must be 40 characters or fewer': 'host.threadCase.labelTooLong',
+  'Case next action must be 120 characters or fewer': 'host.threadCase.nextActionTooLong',
   'Cluster timezone must be an IANA name': 'settings.other.timezone.invalid',
   'HTTP allowlist entries are hostnames only': 'settings.other.allowlist.invalid',
   'HTTP allowlist entries are hostnames': 'settings.other.allowlist.invalid',
