@@ -138,6 +138,16 @@ it('shoots the Chat composer pill at rest, multiline, with attachments, and in a
   expect(buildClipExpression('.composer')).toContain('getBoundingClientRect')
 })
 
+it('runs fill before clicks in the shoot runner', () => {
+  const fillAt = src.indexOf('if (state.fill)')
+  const clicksAt = src.indexOf('for (const selector of state.clicks')
+  const typeAt = src.indexOf('if (state.type)')
+  expect(fillAt).toBeGreaterThan(-1)
+  expect(clicksAt).toBeGreaterThan(fillAt)
+  expect(typeAt).toBeGreaterThan(clicksAt)
+  expect(agents).toContain('then `clicks`')
+})
+
 it('opens Sheets with a click chain after hydration', () => {
   expect(PREVIEW_SHOOT_STATES.closet.clicks).toEqual(['.identity'])
   expect(PREVIEW_SHOOT_STATES['closet-end'].scrollEnd).toBe('.kit-sheet--end')
@@ -281,6 +291,7 @@ it('rewrites localhost to IPv6 the same way the preview smoke does', () => {
 
 it('documents shoot:preview next to preview-seed in AGENTS.md', () => {
   expect(agents).toContain('pnpm shoot:preview system')
+  expect(agents).toContain('pnpm preview:wait')
   expect(agents).toContain('.preview-shots/')
   expect(agents).toContain('OPENROUTER_TEST_KEY')
   expect(agents).toContain('54rem')
@@ -292,4 +303,7 @@ it('documents shoot:preview next to preview-seed in AGENTS.md', () => {
   expect(agents).toContain('`readme-chat`')
   expect(agents).toContain('`composer-attachments`')
   expect(agents).toContain('{\'@\'}')
+  expect(agents).toContain('symlink')
+  expect(agents).toContain('There is no ordered')
+  expect(agents).toContain('`?case=1`')
 })

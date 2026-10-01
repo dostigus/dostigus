@@ -89,7 +89,8 @@ Central nested JSON:
 
 `packages/ui-kit/locales/{en,ru}.json`
 
-Host chrome and Kit strings the Host uses share that pair. A
+Host chrome and Kit strings the Host uses share that pair.
+`apps/web/i18n/locales` is a symlink to that directory. A
 new language is copy `en.json` → `xx.json` and translate. Do
 not split a second Host-only tree on day-1.
 

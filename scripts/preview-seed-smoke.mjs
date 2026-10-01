@@ -27,6 +27,7 @@
  * HEAD ignores `?activity=` and does not set a session cookie.
  *
  *   pnpm preview:host
+ *   pnpm preview:wait
  *   pnpm smoke:preview
  *
  * CI does not boot `nuxt dev`. `pnpm check` runs the same redirect
