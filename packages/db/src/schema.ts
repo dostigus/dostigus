@@ -123,6 +123,10 @@ export const threads = sqliteTable('threads', {
   /** Group and room name. Empty on a dm and a bot-thread; the inbox derives those titles. */
   title: text('title').notNull().default(''),
   createdAt: integer('created_at').notNull(),
+  /** Case on a group or room (ADR 0041). All three null until the first write. */
+  caseStatus: text('case_status'),
+  caseLabel: text('case_label'),
+  caseNextAction: text('case_next_action'),
 }, (table) => [
   index('threads_bot_id_idx').on(table.botId),
 ])

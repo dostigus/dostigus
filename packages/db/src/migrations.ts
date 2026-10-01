@@ -501,6 +501,14 @@ ALTER TABLE \`bots\` ADD \`installed_pack_id\` text;
 ALTER TABLE \`schedules\` ADD \`installed_pack_id\` text;
 `,
   },
+  {
+    id: '0026_thread_case',
+    sql: `
+ALTER TABLE \`threads\` ADD \`case_status\` text;
+ALTER TABLE \`threads\` ADD \`case_label\` text;
+ALTER TABLE \`threads\` ADD \`case_next_action\` text;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

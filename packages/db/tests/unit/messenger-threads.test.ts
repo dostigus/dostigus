@@ -35,6 +35,14 @@ function applyMemberLocale(sqlite: DatabaseSync) {
   sqlite.exec(migration.sql)
 }
 
+function applyThreadCase(sqlite: DatabaseSync) {
+  const migration = STORE_MIGRATIONS.find((item) => item.id === '0026_thread_case')
+  if (!migration) {
+    throw new Error('missing 0026_thread_case')
+  }
+  sqlite.exec(migration.sql)
+}
+
 function applyBeforeMessenger(sqlite: DatabaseSync) {
   for (const migration of STORE_MIGRATIONS) {
     if (migration.id === '0012_messenger_threads') {
@@ -59,6 +67,7 @@ it('keeps bot-thread lines and allows a person line with no Bot', () => {
     throw new Error('missing 0012_messenger_threads')
   }
   sqlite.exec(migration.sql)
+  applyThreadCase(sqlite)
 
   expect(listMessages(store, created.bot.id)[0]?.botId).toBe(created.bot.id)
   const title = sqlite.prepare('SELECT title FROM threads LIMIT 1').get() as { title: string }

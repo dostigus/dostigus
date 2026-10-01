@@ -201,6 +201,7 @@ export {
   listMessengerBots,
   listRoomBotAudience,
   type RoomBotAudience,
+  updateThreadCase,
 } from './threads'
 export {
   accumulateTurnUsage,

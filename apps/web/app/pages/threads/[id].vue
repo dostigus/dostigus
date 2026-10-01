@@ -1,5 +1,8 @@
 <template>
-  <div class="page">
+  <div
+    class="page"
+    :class="{ 'has-case': hasCase }"
+  >
     <p
       v-if="loadError"
       class="banner"
@@ -25,35 +28,42 @@
       <div class="bots-toggle">
         <HostMenuButton />
       </div>
-      <button
-        type="button"
-        class="identity"
-        :disabled="!thread"
-        :aria-label="$t('host.threadRoster.openAria', { title: thread?.title ?? $t('chat.fallbackTitle') })"
-        @click="rosterOpen = true"
-      >
-        <span class="identity-copy">
-          <HostBotAvatar
-            :name="thread?.mark.name ?? $t('chat.fallbackTitle')"
-            :seed="thread?.mark.seed ?? ''"
-            :shape="thread?.mark.shape ?? ''"
-            :avatar-color="thread?.mark.color"
-            size="sm"
-          />
-          <span class="name">{{ thread?.title ?? $t('chat.fallbackTitle') }}</span>
-        </span>
-        <span
-          class="cue-slot"
-          aria-hidden="true"
+      <div class="identity-stack">
+        <button
+          type="button"
+          class="identity"
+          :disabled="!thread"
+          :aria-label="$t('host.threadRoster.openAria', { title: thread?.title ?? $t('chat.fallbackTitle') })"
+          @click="openRoster(false)"
         >
-          <svg
-            class="cue"
-            viewBox="0 0 24 24"
+          <span class="identity-copy">
+            <HostBotAvatar
+              :name="thread?.mark.name ?? $t('chat.fallbackTitle')"
+              :seed="thread?.mark.seed ?? ''"
+              :shape="thread?.mark.shape ?? ''"
+              :avatar-color="thread?.mark.color"
+              size="sm"
+            />
+            <span class="name">{{ thread?.title ?? $t('chat.fallbackTitle') }}</span>
+          </span>
+          <span
+            class="cue-slot"
+            aria-hidden="true"
           >
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </span>
-      </button>
+            <svg
+              class="cue"
+              viewBox="0 0 24 24"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </span>
+        </button>
+        <ThreadCaseLine
+          v-if="hasCase"
+          :value="thread?.case ?? null"
+          @open="openRoster(true)"
+        />
+      </div>
 
       <ol
         ref="threadEl"
@@ -230,7 +240,9 @@
       v-model:open="rosterOpen"
       :thread="thread"
       :viewer-id="user?.id ?? ''"
+      :case-edit="caseEdit"
       @added="onParticipantAdded"
+      @updated="onThreadUpdated"
     />
   </div>
 </template>
@@ -238,7 +250,7 @@
 <script setup lang="ts">
 import type { Message, ThreadListItem, ThreadParticipantView } from '@dostigus/shared'
 import type { HostSheetEntry } from '../../utils/host-sheets'
-import { mentionedRoomBot } from '@dostigus/shared'
+import { isCaseThreadKind, mentionedRoomBot } from '@dostigus/shared'
 import { assistantBubbleUsesMarkdown, KitChatParts, KitMarkdown, KitSheet, localizeGatewayErrorReply } from '@dostigus/ui-kit'
 import { hostChatParts, hostSheetById } from '../../utils/host-sheets'
 
@@ -285,6 +297,12 @@ function onOpenSheet(sheetId: string, targetId?: string) {
   sheetOpen.value = true
 }
 const rosterOpen = ref(false)
+const caseEdit = ref(false)
+
+function openRoster(forCase: boolean) {
+  caseEdit.value = forCase
+  rosterOpen.value = true
+}
 
 async function onParticipantAdded(next: ThreadListItem) {
   if (data.value) {
@@ -292,10 +310,18 @@ async function onParticipantAdded(next: ThreadListItem) {
   }
   await Promise.all([refresh(), refreshThreads()])
 }
+
+async function onThreadUpdated(next: ThreadListItem) {
+  if (data.value) {
+    data.value = { ...data.value, thread: next }
+  }
+  await refreshThreads()
+}
 const replyBot = ref<ThreadParticipantView | null>(null)
 const threadEl = ref<HTMLElement | null>(null)
 
 const thread = computed(() => data.value?.thread ?? null)
+const hasCase = computed(() => Boolean(thread.value && isCaseThreadKind(thread.value.kind)))
 const timeline = computed(() => data.value?.messages ?? [])
 const loadError = computed(() => Boolean(error.value))
 const gatewayUnset = computed(() => readyData.value?.configured === false)
@@ -472,6 +498,10 @@ async function send() {
   --thread-top-gap: 3.5rem;
 }
 
+.page.has-case {
+  --thread-top-gap: 5.25rem;
+}
+
 .stage {
   position: relative;
   flex: 1;
@@ -488,16 +518,25 @@ async function send() {
   left: 0.65rem;
 }
 
-.identity {
+.identity-stack {
   position: absolute;
   z-index: 4;
   top: 0.55rem;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: max-content;
+  max-width: min(24rem, calc(100% - 6.5rem));
+}
+
+.identity {
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  max-width: min(18rem, calc(100% - 6.5rem));
+  max-width: min(18rem, 100%);
   appearance: none;
   border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
   background: color-mix(in srgb, var(--sheet) 62%, transparent);

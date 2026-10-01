@@ -13,6 +13,32 @@ export type MessengerThreadKind = (typeof MESSENGER_THREAD_KINDS)[number]
 
 export const THREAD_TITLE_MAX = 80
 
+/** A Case sits on a `group` or `room` only. See ADR 0041. */
+export const CASE_THREAD_KINDS = ['group', 'room'] as const
+
+export const CASE_STATUSES = ['open', 'done'] as const
+
+export type CaseStatus = (typeof CASE_STATUSES)[number]
+
+export const CASE_LABEL_MAX = 40
+
+export const CASE_NEXT_ACTION_MAX = 120
+
+/** Status, label, and next action on one Thread. Not a ticket. */
+export type ThreadCase = {
+  status: CaseStatus
+  label: string
+  nextAction: string
+}
+
+export function isCaseThreadKind(value: string): value is (typeof CASE_THREAD_KINDS)[number] {
+  return (CASE_THREAD_KINDS as readonly string[]).includes(value)
+}
+
+export function isCaseStatus(value: unknown): value is CaseStatus {
+  return typeof value === 'string' && (CASE_STATUSES as readonly string[]).includes(value)
+}
+
 export function isThreadKind(value: string): value is ThreadKind {
   return (THREAD_KINDS as readonly string[]).includes(value)
 }
@@ -56,6 +82,8 @@ export type ThreadListItem = {
   lastMessage: BotLastMessage | null
   participants: ThreadParticipantView[]
   mark: ThreadMark
+  /** Null until the first Case write, and always null on a `dm` or bot-thread. */
+  case: ThreadCase | null
 }
 
 /**

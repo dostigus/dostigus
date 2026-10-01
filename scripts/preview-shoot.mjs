@@ -267,6 +267,19 @@ export const PREVIEW_SHOOT_STATES = {
     viewport: DEFAULT_VIEWPORT,
     hint: 'thread-roster-add opens Add on the Preview room roster; ?rooms=1 seeds the Member Bot Private notes, which every person there can already open.',
   },
+  'thread-case': {
+    seed: 'rooms=1',
+    ready: { selector: '.identity-stack .case-line', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'thread-case shows the Case line under the Preview room identity pill (Add Case until the first PATCH /api/threads/preview-room/case).',
+  },
+  'thread-case-edit': {
+    seed: 'rooms=1',
+    clicks: ['.identity-stack .case-line'],
+    ready: { selector: '.kit-sheet--end .case input[name="label"]', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'thread-case-edit taps the Case line; the roster Sheet opens on the Case form only while the Preview room has no Case yet. Use a fresh DATABASE_URL after a Case save.',
+  },
   'onboarding': {
     seed: false,
     thenPath: '/onboarding',
