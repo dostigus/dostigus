@@ -504,20 +504,32 @@ function otherPerson(participants: ThreadParticipantView[], viewerId: string) {
 
 function lastMessage(store: OpenedStore, threadId: string): ThreadListItem['lastMessage'] {
   const row = store.sqlite.prepare(`
-    SELECT content, created_at FROM messages
+    SELECT id, content, created_at FROM messages
     WHERE thread_id = ?
     ORDER BY created_at DESC, rowid DESC
     LIMIT 1
-  `).get(threadId) as { content: string, created_at: number } | undefined
+  `).get(threadId) as { id: string, content: string, created_at: number } | undefined
   if (!row) {
     return null
   }
-  const oneLine = row.content.replace(/\s+/g, ' ').trim()
+  const oneLine = row.content.replace(/\s+/g, ' ').trim() || artifactFilenames(store, row.id)
   const content = oneLine.length <= 140 ? oneLine : `${oneLine.slice(0, 139)}…`
   return {
     content,
     createdAt: new Date(row.created_at).toISOString(),
   }
+}
+
+/** Preview for a line with no text: the joined Artifact filenames, in join order. */
+function artifactFilenames(store: OpenedStore, messageId: string): string {
+  const rows = store.sqlite.prepare(`
+    SELECT artifacts.filename AS filename
+    FROM message_artifacts
+    JOIN artifacts ON artifacts.id = message_artifacts.artifact_id
+    WHERE message_artifacts.message_id = ?
+    ORDER BY message_artifacts.created_at, message_artifacts.rowid
+  `).all(messageId) as { filename: string }[]
+  return rows.map((row) => row.filename.replace(/\s+/g, ' ').trim()).filter(Boolean).join(', ')
 }
 
 function activityMs(item: ThreadListItem): number {
