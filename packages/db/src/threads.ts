@@ -1,8 +1,12 @@
-import type { Bot, BotViewer, ThreadListItem, ThreadMark, ThreadParticipantView } from '@dostigus/shared'
+import type { Bot, BotViewer, ThreadCase, ThreadListItem, ThreadMark, ThreadParticipantView } from '@dostigus/shared'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
 import {
   botThreadPersonId,
+  CASE_LABEL_MAX,
+  CASE_NEXT_ACTION_MAX,
+  isCaseStatus,
+  isCaseThreadKind,
   isMessengerThreadKind,
   ownerDisplayName,
   THREAD_TITLE_MAX,
@@ -21,6 +25,9 @@ type ThreadRecord = {
   bot_id: string | null
   title: string
   created_at: number
+  case_status: string | null
+  case_label: string | null
+  case_next_action: string | null
 }
 
 export function listHouseholdPeople(store: OpenedStore) {
@@ -286,6 +293,56 @@ export function addMessengerParticipant(
   return requireListItem(store, current.id, input.actorId)
 }
 
+/**
+ * Writes the Case on a `group` or `room` (ADR 0041). Any person
+ * participant may write. The first write creates the Case with status
+ * `open` unless the body sets it. A `dm` or bot-thread is not found.
+ */
+export function updateThreadCase(
+  store: OpenedStore,
+  input: { threadId: string, actorId: string, status?: unknown, label?: unknown, nextAction?: unknown },
+): ThreadListItem {
+  const current = getMessengerThread(store, input.threadId, input.actorId)
+  if (!isCaseThreadKind(current.kind)) {
+    throw new StoreError('Thread not found', 404)
+  }
+  if (input.status === undefined && input.label === undefined && input.nextAction === undefined) {
+    throw new StoreError('Send a Case status, label, or next action', 400)
+  }
+  if (input.status !== undefined && !isCaseStatus(input.status)) {
+    throw new StoreError('Case status must be open or done', 400)
+  }
+  const label = caseText(input.label, CASE_LABEL_MAX, `Case label must be ${CASE_LABEL_MAX} characters or fewer`)
+  const nextAction = caseText(
+    input.nextAction,
+    CASE_NEXT_ACTION_MAX,
+    `Case next action must be ${CASE_NEXT_ACTION_MAX} characters or fewer`,
+  )
+  const status = input.status ?? current.case?.status ?? 'open'
+  store.sqlite.prepare(`
+    UPDATE threads
+    SET case_status = ?,
+      case_label = COALESCE(?, case_label, ''),
+      case_next_action = COALESCE(?, case_next_action, '')
+    WHERE id = ?
+  `).run(status, label ?? null, nextAction ?? null, current.id)
+  return requireListItem(store, current.id, input.actorId)
+}
+
+function caseText(value: unknown, max: number, tooLong: string): string | undefined {
+  if (value === undefined) {
+    return undefined
+  }
+  if (typeof value !== 'string') {
+    throw new StoreError('Case label and next action are text', 400)
+  }
+  const trimmed = value.trim()
+  if (trimmed.length > max) {
+    throw new StoreError(tooLong, 400)
+  }
+  return trimmed
+}
+
 export function listMessengerBots(store: OpenedStore, threadId: string, personId: string): Bot[] {
   getMessengerThread(store, threadId, personId)
   const rows = store.sqlite.prepare(`
@@ -397,7 +454,8 @@ function uniqueIds(values: string[]): string[] {
 
 function selectThread(store: OpenedStore, id: string): ThreadRecord | undefined {
   return store.sqlite.prepare(`
-    SELECT id, kind, bot_id, title, created_at FROM threads WHERE id = ?
+    SELECT id, kind, bot_id, title, created_at, case_status, case_label, case_next_action
+    FROM threads WHERE id = ?
   `).get(id) as ThreadRecord | undefined
 }
 
@@ -482,6 +540,18 @@ function readThreadListItem(
     lastMessage: lastMessage(store, thread.id),
     participants,
     mark,
+    case: caseFor(thread),
+  }
+}
+
+function caseFor(thread: ThreadRecord): ThreadCase | null {
+  if (!isCaseThreadKind(thread.kind) || !isCaseStatus(thread.case_status)) {
+    return null
+  }
+  return {
+    status: thread.case_status,
+    label: thread.case_label ?? '',
+    nextAction: thread.case_next_action ?? '',
   }
 }
 
@@ -634,5 +704,6 @@ function botInboxRow(store: OpenedStore, bot: Bot, viewerId: string): ThreadList
       shape: bot.manifest.avatarShape,
       color: bot.manifest.avatarColor,
     },
+    case: null,
   }
 }

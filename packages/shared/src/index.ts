@@ -341,8 +341,15 @@ export {
   SkillInputError,
 } from './skill'
 export {
+  CASE_LABEL_MAX,
+  CASE_NEXT_ACTION_MAX,
+  CASE_STATUSES,
+  CASE_THREAD_KINDS,
+  type CaseStatus,
   type HouseholdPerson,
   insertRoomMention,
+  isCaseStatus,
+  isCaseThreadKind,
   isMessengerThreadKind,
   isThreadKind,
   mentionedRoomBot,
@@ -353,6 +360,7 @@ export {
   roomMentionQuery,
   THREAD_KINDS,
   THREAD_TITLE_MAX,
+  type ThreadCase,
   type ThreadKind,
   type ThreadListItem,
   type ThreadMark,
