@@ -454,12 +454,13 @@ them on the assistant line.
   Host writes a visible system Wake on that `group` or `room` (Case
   label, else Thread title, else «Case») and runs a Bot turn there with
   Wake tools. The LLM `wakeText` is the next action with the label as
-  context. The turn runs for the first person Participant (Turn
-  journal `trigger` `wake`, no `scheduleId`). A reply already in flight
-  for that Bot on that Thread waits for the next tick. There is no
-  catch-up cutoff. Host UI: the Case block in the roster Sheet sets
-  and clears it (Bot picker over Bot Participants); the line under the
-  identity pill shows the time.
+  context. The turn runs for an Owner person Participant if one is
+  on the Thread; otherwise the first person Participant by insert
+  order (Turn journal `trigger` `wake`, no `scheduleId`). A reply
+  already in flight for that Bot on that Thread waits for the next
+  tick. There is no catch-up cutoff. Host UI: the Case block in the
+  roster Sheet sets and clears it (Bot picker over Bot Participants);
+  the line under the identity pill shows the time.
 - **MCP.** The Bot creates, lists, updates, pauses, resumes, and deletes
   with `dostigus_schedules_list`, `dostigus_schedules_create`,
   `dostigus_schedules_update`, `dostigus_schedules_pause`,

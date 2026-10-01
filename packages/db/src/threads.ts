@@ -505,7 +505,7 @@ export type CaseFollowUpClaim
       outcome: 'fire'
       threadId: string
       botId: string
-      /** The person the Bot turn runs for: the first person Participant. */
+      /** Owner person Participant if one is on the Thread; else first person. */
       personId: string
       title: string
       label: string
@@ -538,24 +538,33 @@ export function claimCaseFollowUp(store: OpenedStore, due: DueCaseFollowUp): Cas
   if (!due.botId || !onThread || !getBot(store, due.botId)) {
     return { outcome: 'skipped_bot' }
   }
-  const person = store.sqlite.prepare(`
-    SELECT ref_id FROM thread_participants
-    WHERE thread_id = ? AND kind = 'person'
-    ORDER BY rowid ASC
-    LIMIT 1
-  `).get(thread.id) as { ref_id: string } | undefined
-  if (!person) {
+  const personId = personIdForCaseWake(store, thread.id)
+  if (!personId) {
     return { outcome: 'skipped_bot' }
   }
   return {
     outcome: 'fire',
     threadId: thread.id,
     botId: due.botId,
-    personId: person.ref_id,
+    personId,
     title: thread.title,
     label: thread.case_label ?? '',
     nextAction: thread.case_next_action ?? '',
   }
+}
+
+/** Prefer the Cluster Owner when they are a person Participant. */
+function personIdForCaseWake(store: OpenedStore, threadId: string): string | undefined {
+  const people = store.sqlite.prepare(`
+    SELECT ref_id FROM thread_participants
+    WHERE thread_id = ? AND kind = 'person'
+    ORDER BY rowid ASC
+  `).all(threadId) as { ref_id: string }[]
+  if (people.length === 0) {
+    return undefined
+  }
+  const owner = people.find((row) => getOwner(store, row.ref_id))
+  return owner?.ref_id ?? people[0]?.ref_id
 }
 
 function caseText(value: unknown, max: number, tooLong: string): string | undefined {

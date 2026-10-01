@@ -152,6 +152,7 @@ it('claims a due follow-up once and says who the turn runs for', () => {
     outcome: 'fire',
     threadId: thread.id,
     botId: expi.id,
+    personId: owner.id,
     title: 'Ops',
     label: 'Deploy',
     nextAction: 'Check the canary',
@@ -162,6 +163,44 @@ it('claims a due follow-up once and says who the turn runs for', () => {
     followUpAt: null,
     followUpBotId: null,
   })
+})
+
+it('prefers an Owner person Participant over the first person by insert order', () => {
+  const { store, owner, grace, expi, thread } = room()
+  const people = store.sqlite.prepare(`
+    SELECT ref_id FROM thread_participants
+    WHERE thread_id = ? AND kind = 'person'
+    ORDER BY rowid ASC
+  `).all(thread.id) as { ref_id: string }[]
+  expect(people.map((row) => row.ref_id)).toEqual([grace.id, owner.id])
+  updateThreadCase(store, {
+    threadId: thread.id,
+    actorId: grace.id,
+    followUpAt: '2026-10-01T10:05:00Z',
+    followUpBotId: expi.id,
+  }, clock)
+  const [due] = listDueCaseFollowUps(store, Date.parse('2026-10-01T10:05:00Z'))
+  expect(claimCaseFollowUp(store, due!)).toMatchObject({ outcome: 'fire', personId: owner.id })
+})
+
+it('falls back to the first person Participant when the Owner is not on the Thread', () => {
+  const { store, grace, lin, expi } = room()
+  grantBot(store, expi.id, lin.id)
+  const thread = createMessengerThread(store, {
+    kind: 'room',
+    title: 'Books',
+    actorId: grace.id,
+    personIds: [lin.id],
+    botIds: [expi.id],
+  })
+  updateThreadCase(store, {
+    threadId: thread.id,
+    actorId: grace.id,
+    followUpAt: '2026-10-01T10:05:00Z',
+    followUpBotId: expi.id,
+  }, clock)
+  const [due] = listDueCaseFollowUps(store, Date.parse('2026-10-01T10:05:00Z'))
+  expect(claimCaseFollowUp(store, due!)).toMatchObject({ outcome: 'fire', personId: lin.id })
 })
 
 it('skips and clears when the Bot left the Thread, and keeps the Case open', () => {
