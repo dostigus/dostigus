@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0040, so the next ADR
-is **0041**. Name it `0041-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0041, so the next ADR
+is **0042**. Name it `0042-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one.
 
@@ -71,4 +71,5 @@ English.
 | [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) (amended 2026-09-26: Thread chrome is chat / чат) |
 | [0038](0038-dashboard-chrome.md) | Dashboard chrome (own layout; Settings is one page; Members under Account; no `/settings` or `/members` redirects) |
 | [0039](0039-pack-vs-bot-portable-recipe.md) | Pack vs Bot portable recipe (Pack ≠ Bot ≠ Module package; Export Pack vs Export Bot backup; HTML `ui/` in a sandboxed iframe; amended 2026-09-28: RU translit, Export Sheet, seed Skill filter, Export stamps snapshot, Schedule provenance; amended 2026-09-28: URL / git Apply) |
-| [0040](0040-collective-host-direction.md) | Collective Host product direction (Collective of 1…N people; messenger + personal / shared Bots + MCP to external systems; Rooms gaps, then Case-lite; roles Owner / Admin / Member; Packs for verticals; no Pages, sales pipeline, light theme, or SaaS cloud in v1) |
+| [0040](0040-collective-host-direction.md) | Collective Host product direction (Collective of 1…N people; messenger + personal / shared Bots + MCP to external systems; Rooms gaps, then Case-lite [0041](0041-case-lite-on-thread.md); roles Owner / Admin / Member; Packs for verticals; no Pages, sales pipeline, light theme, or SaaS cloud in v1) |
+| [0041](0041-case-lite-on-thread.md) | Case-lite on a Thread (Case on `group` / `room` only; status `open` \| `done`, label ≤40, nextAction ≤120; person Participant PATCH; nullable `threads` columns; no inbox filter; docs only) |

@@ -92,7 +92,7 @@ surrounding chrome words. See
 _Avoid_: language (unqualified), i18n (as a product noun),
 treating timezone as Locale, translating Bot / Pack / Host / Cluster /
 Skill / Schedule / Provider / Policy / Artifact / Member /
-Household.
+Household / Case.
 
 **Chat**:
 The lines a person reads and writes on a Thread in the Host.
@@ -159,6 +159,9 @@ Kinds are labels, not separate products: `dm` (person and person),
 own bot-thread with that Bot. A `room` is how a Bot joins a Thread with
 more than one person. Personal use stays that bot-thread. There is no
 private write on a shared chat timeline.
+A `group` or a `room` may carry a Case
+([ADR 0041](docs/adr/0041-case-lite-on-thread.md)). A `dm` and a
+bot-thread do not.
 Host chrome says chat / чат, not Thread
 ([ADR 0037](docs/adr/0037-host-ui-i18n.md)).
 _Avoid_: channel, conversation (unqualified), Thread as a RU
@@ -167,6 +170,18 @@ UI loanword.
 **Participant**:
 A person or a Bot on a Thread. A person is the Owner or a Member.
 _Avoid_: user, attendee.
+
+**Case**:
+A thin layer on one `group` or `room` Thread: status (`open` |
+`done`), a free-string **label** (max 40), and a **next action**
+(max 120). Not a ticket tracker. No assignee, due date, or
+priority. No Case until the first write; an untouched Thread has
+`case: null`. `done` does not archive the Thread. v1 has no inbox
+filter. Store columns live on `threads`. See
+[ADR 0041](docs/adr/0041-case-lite-on-thread.md). Not in this Host
+yet.
+_Avoid_: Ticket, Issue, Case-lite (as a UI noun; that is the
+wedge name), treating a Case as a second Thread.
 
 **Card**:
 Inline structured UI in the Chat (button, table, status). Day-1 renders
@@ -591,7 +606,10 @@ _Avoid_: public share, invite (unqualified).
 - Chat lines belong to a Thread. Each person who can open a Bot has
   their own bot-thread. A `room` is the Thread that includes a Bot and
   more than one person. `dm` and `group` are Threads among people. See
-  [ADR 0024](docs/adr/0024-threads-and-bot-visibility.md).
+  [ADR 0024](docs/adr/0024-threads-and-bot-visibility.md). A Case sits
+  on a `group` or a `room` only
+  ([ADR 0041](docs/adr/0041-case-lite-on-thread.md)). Not in this
+  Host yet.
 - While a Bot reply is in flight, Chat may show Activity on that Thread.
   The Activity phase is ephemeral. The Owner and a Member see the same
   row. See
