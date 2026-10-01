@@ -378,7 +378,7 @@ function isMine(message: ChatMessage) {
 }
 
 function speaker(message: ChatMessage): string | null {
-  if (isMine(message)) {
+  if (isMine(message) || message.role === 'system') {
     return null
   }
   if (message.role === 'assistant') {
