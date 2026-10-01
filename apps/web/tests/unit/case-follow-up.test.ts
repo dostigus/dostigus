@@ -10,7 +10,7 @@ import {
   openStore,
   updateThreadCase,
 } from '@dostigus/db'
-import { caseFollowUpLine, caseFollowUpWakeText, MEMBER_QUIET_ASSISTANT_REPLY } from '@dostigus/shared'
+import { caseFollowUpLine, caseFollowUpWakeText, MEMBER_QUIET_ASSISTANT_REPLY, STUB_ASSISTANT_REPLY } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import { clearChatActivityPhases, setChatActivityPhase } from '../../server/utils/chat-activity-phase'
 import { flushScheduleWakes, runScheduleTick } from '../../server/utils/schedule-ticker'
@@ -66,7 +66,7 @@ it('writes the Wake on the room, runs the Bot turn there, and clears the follow-
   const lines = listThreadMessages(store, thread.id)
   expect(lines.map((line) => [line.role, line.content, line.botId])).toEqual([
     ['system', 'Deploy', expi.id],
-    ['assistant', MEMBER_QUIET_ASSISTANT_REPLY, expi.id],
+    ['assistant', STUB_ASSISTANT_REPLY, expi.id],
   ])
   expect(getMessengerThread(store, thread.id, owner.id).case).toMatchObject({
     status: 'open',
@@ -74,11 +74,47 @@ it('writes the Wake on the room, runs the Bot turn there, and clears the follow-
     followUpBotId: null,
   })
   const turns = listTurns(store, { threadId: thread.id })
-  expect(turns.map((turn) => [turn.trigger, turn.botId, turn.scheduleId])).toEqual([['wake', expi.id, null]])
+  expect(turns.map((turn) => [turn.trigger, turn.botId, turn.personId, turn.scheduleId])).toEqual([
+    ['wake', expi.id, owner.id, null],
+  ])
 
   runScheduleTick({ store, now: DUE_AT + 60_000, env: {} })
   await flushScheduleWakes()
   expect(listThreadMessages(store, thread.id)).toHaveLength(2)
+})
+
+it('uses Member quiet-reply copy when the Owner is not on the Thread', async () => {
+  const store = openStore('file::memory:')
+  opened.push(store)
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const grace = createMember(store, { displayName: 'Grace', username: 'grace', passwordHash: 'hash:grace' })
+  const lin = createMember(store, { displayName: 'Lin', username: 'lin', passwordHash: 'hash:lin' })
+  const expi = createBot(store, { name: 'Expi', createdBy: owner.id }).bot
+  grantBot(store, expi.id, grace.id)
+  grantBot(store, expi.id, lin.id)
+  const thread = createMessengerThread(store, {
+    kind: 'room',
+    title: 'Books',
+    actorId: grace.id,
+    personIds: [lin.id],
+    botIds: [expi.id],
+  })
+  updateThreadCase(store, {
+    threadId: thread.id,
+    actorId: grace.id,
+    label: 'Read',
+    followUpAt: new Date(DUE_AT).toISOString(),
+    followUpBotId: expi.id,
+  }, { now: SET_AT, env: {} })
+
+  runScheduleTick({ store, now: DUE_AT, env: {} })
+  await flushScheduleWakes()
+  const lines = listThreadMessages(store, thread.id)
+  expect(lines.map((line) => [line.role, line.content])).toEqual([
+    ['system', 'Read'],
+    ['assistant', MEMBER_QUIET_ASSISTANT_REPLY],
+  ])
+  expect(listTurns(store, { threadId: thread.id }).map((turn) => turn.personId)).toEqual([lin.id])
 })
 
 it('waits while that Bot is replying on the Thread', async () => {
