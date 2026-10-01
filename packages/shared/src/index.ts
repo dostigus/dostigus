@@ -342,11 +342,15 @@ export {
 } from './skill'
 export {
   type HouseholdPerson,
+  insertRoomMention,
   isMessengerThreadKind,
   isThreadKind,
   mentionedRoomBot,
   MESSENGER_THREAD_KINDS,
   type MessengerThreadKind,
+  roomMentionMatches,
+  type RoomMentionQuery,
+  roomMentionQuery,
   THREAD_KINDS,
   THREAD_TITLE_MAX,
   type ThreadKind,
