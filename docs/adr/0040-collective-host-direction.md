@@ -7,7 +7,9 @@
   Admin role, share permission, and Store shape are
   [ADR 0042](0042-admin-role-and-share-permission.md);
   Owner-operator and Team audiences are
-  [ADR 0043](0043-target-personas.md).
+  [ADR 0043](0043-target-personas.md);
+  Case inbox + follow-up Wakes are
+  [ADR 0044](0044-case-inbox-and-follow-up-wakes.md).
 
 Nick locked the direction below on 2026-10-01. This record sets
 direction and order only. It does not change [SPEC](../SPEC.md)

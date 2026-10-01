@@ -7,6 +7,11 @@
   Case inbox + follow-up Wakes as the next must-have for
   Team are [ADR 0043](0043-target-personas.md). This
   record's on-thread v1 inbox stay stands.
+- Amended: 2026-10-01 — Case inbox filter and follow-up
+  Wakes are
+  [ADR 0044](0044-case-inbox-and-follow-up-wakes.md).
+  On-thread fields, person-Participant write, and no
+  `/cases` page still stand.
 
 Collective Host direction stays
 [ADR 0040](0040-collective-host-direction.md). Threads and Bot

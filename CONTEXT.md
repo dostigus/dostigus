@@ -128,13 +128,17 @@ _Avoid_: messenger, inbox (unqualified), context window
 (unqualified), prompt dump.
 
 **Wake**:
-A visible system Chat line the Host writes on a bot-thread when a
-Schedule fires. The line is the Schedule display name (the same
-string the Schedules list shows). It is not the wake prompt. The
-Host sends `wakeText` to the LLM on that turn only
-([ADR 0027](docs/adr/0027-bot-schedules.md)). The Host then runs a
-Bot turn. The Skill catalog matches a user turn. Wake tools are
-narrower than user slim, and there is no keyword expand
+A visible system Chat line the Host writes when it starts a Bot
+turn on its own. A personal Schedule fires a Wake on that
+person's bot-thread; the line is the Schedule display name
+([ADR 0027](docs/adr/0027-bot-schedules.md)). A Case follow-up
+fires a Wake on the `group` or `room` Thread that carries the
+Case; the line is the Case label (fallback Thread title, then
+«Case») ([ADR 0044](docs/adr/0044-case-inbox-and-follow-up-wakes.md)).
+It is not the wake prompt. The Host sends `wakeText` to the LLM
+on that turn only. The Host then runs a Bot turn. The Skill
+catalog matches a user turn. Wake tools are narrower than user
+slim, and there is no keyword expand
 ([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)). The stored
 line is `system`. Later history sends that name as `role: system`.
 Not an Activity row.
@@ -182,8 +186,10 @@ own bot-thread with that Bot. A `room` is how a Bot joins a Thread with
 more than one person. Personal use stays that bot-thread. There is no
 private write on a shared chat timeline.
 A `group` or a `room` may carry a Case
-([ADR 0041](docs/adr/0041-case-lite-on-thread.md)). A `dm` and a
-bot-thread do not.
+([ADR 0041](docs/adr/0041-case-lite-on-thread.md)). A Case follow-up
+Wake lands on that same Thread
+([ADR 0044](docs/adr/0044-case-inbox-and-follow-up-wakes.md)). A
+`dm` and a bot-thread do not carry a Case.
 Host chrome says chat / чат, not Thread
 ([ADR 0037](docs/adr/0037-host-ui-i18n.md)).
 _Avoid_: channel, conversation (unqualified), Thread as a RU
@@ -196,14 +202,22 @@ _Avoid_: user, attendee.
 **Case**:
 A thin layer on one `group` or `room` Thread: status (`open` |
 `done`), a free-string **label** (max 40), and a **next action**
-(max 120). Not a ticket tracker. No assignee, due date, or
-priority. No Case until the first write; an untouched Thread has
-`case: null`. `done` does not archive the Thread. v1 has no inbox
-filter. Store columns live on `threads`. See
-[ADR 0041](docs/adr/0041-case-lite-on-thread.md). Not in this Host
-yet.
+(max 120). Optional one-shot **follow-up** (`followUpAt` in the
+Cluster timezone, plus `followUpBotId` of a Bot Participant).
+Not a ticket tracker. No assignee, due date, SLA, or priority.
+No Case until the first write; an untouched Thread has
+`case: null`. `done` does not archive the Thread; it clears
+follow-up. Store columns live on `threads`. On-thread UI stays
+[ADR 0041](docs/adr/0041-case-lite-on-thread.md). A Case inbox
+is a filter chip on the messenger Threads list (open Cases the
+signed-in person is on), not a second inbox or a `/cases` page.
+Follow-up fires a Wake on that Thread
+([ADR 0044](docs/adr/0044-case-inbox-and-follow-up-wakes.md)).
+On-thread fields are in this Host. Inbox filter and follow-up
+are not.
 _Avoid_: Ticket, Issue, Case-lite (as a UI noun; that is the
-wedge name), treating a Case as a second Thread.
+wedge name), treating a Case as a second Thread, treating Case
+inbox as a separate product.
 
 **Card**:
 Inline structured UI in the Chat (button, table, status). Day-1 renders
@@ -370,15 +384,18 @@ _Avoid_: prompt (unqualified), tool, Module package, stock package.
 A Cluster Store row on the Host that says when the Host wakes a Bot.
 Not a Manifest field and not a Skill. A Skill says what; a Schedule
 says when. Many Schedules may belong to one person and one Bot, on
-that person's bot-thread (`botId`, `personId`). The Bot supplies the
-cadence (`daily` or `weekly`), the local `HH:MM`, optional weekdays
-when weekly, an optional display name, and the wake text. Empty name:
-the Host list falls back to truncated wake text. The Host owns the
-next fire instant. Closet Параметры shows a «Расписания» block for
-this person's rows on this Bot
-([ADR 0027](docs/adr/0027-bot-schedules.md)).
+that person's bot-thread (`botId`, `personId`). Personal Schedule
+fire stays bot-thread-only. A Case follow-up is a sibling Wake
+path on the Case Thread, not a Schedule row
+([ADR 0044](docs/adr/0044-case-inbox-and-follow-up-wakes.md)).
+The Bot supplies the cadence (`daily` or `weekly`), the local
+`HH:MM`, optional weekdays when weekly, an optional display name,
+and the wake text. Empty name: the Host list falls back to
+truncated wake text. The Host owns the next fire instant. Closet
+Параметры shows a «Расписания» block for this person's rows on
+this Bot ([ADR 0027](docs/adr/0027-bot-schedules.md)).
 _Avoid_: cron, crontab, alarm, reminder, Skill, Manifest field,
-Routines.
+Routines, stuffing Case follow-up into a personal Schedule.
 
 **Self-settings**:
 A person's request in Chat that the Bot change its own name, label,
@@ -664,8 +681,10 @@ _Avoid_: public share, invite (unqualified).
   more than one person. `dm` and `group` are Threads among people. See
   [ADR 0024](docs/adr/0024-threads-and-bot-visibility.md). A Case sits
   on a `group` or a `room` only
-  ([ADR 0041](docs/adr/0041-case-lite-on-thread.md)). Not in this
-  Host yet.
+  ([ADR 0041](docs/adr/0041-case-lite-on-thread.md)). On-thread fields
+  are in this Host. A Case inbox filter and follow-up Wakes are
+  [ADR 0044](docs/adr/0044-case-inbox-and-follow-up-wakes.md) and
+  are not in this Host yet.
 - While a Bot reply is in flight, Chat may show Activity on that Thread.
   The Activity phase is ephemeral. The Owner and a Member see the same
   row. See
@@ -677,10 +696,13 @@ _Avoid_: public share, invite (unqualified).
   the journal through the MCP surface. Chat does not receive those
   tools. See [ADR 0029](docs/adr/0029-turn-journal.md).
 - When a Schedule is due, the Host writes a Wake on that person's
-  bot-thread with that Bot, then runs the Bot turn. A room, a direct
-  message, and a group do not get that fire. Closet Параметры lists
-  this person's Schedules on this Bot. See
-  [ADR 0027](docs/adr/0027-bot-schedules.md). That turn uses the same
+  bot-thread with that Bot, then runs the Bot turn. A personal
+  Schedule does not fire on a room, a direct message, or a group.
+  Closet Параметры lists this person's Schedules on this Bot. See
+  [ADR 0027](docs/adr/0027-bot-schedules.md). A Case follow-up
+  may write a Wake on the Case Thread
+  ([ADR 0044](docs/adr/0044-case-inbox-and-follow-up-wakes.md));
+  that path is not in this Host yet. That turn uses the same
   Skill catalog as a user turn and a narrower tool list. It does not
   expand to Manifest write
   ([ADR 0032](docs/adr/0032-chat-llm-context-assembly.md)). It may

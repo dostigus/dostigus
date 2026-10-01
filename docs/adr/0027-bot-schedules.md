@@ -6,6 +6,7 @@
 - Amended: 2026-09-24 — Host UI: closet «Расписания» list, create Sheet, and detail Sheet are day-1. Optional `name` on the row. Run history is Turn journal rows ([ADR 0029](0029-turn-journal.md)). Card «Изменить» opens the same detail Sheet ([ADR 0030](0030-chat-cards-module-catalog.md)).
 - Amended: 2026-09-24 — Wake Skill catalog matches a user turn; Wake tools are narrower and there is no keyword expand ([ADR 0032](0032-chat-llm-context-assembly.md)). The Wake line and the ticker stay this record.
 - Amended: 2026-09-26 — Visible Wake is the Schedule display name (same string as the Schedules list). `wakeText` is the current-turn LLM prompt only. It is not stored as Chat content.
+- Amended: 2026-10-01 — Case follow-up may fire a Wake on the `group` / `room` Thread that carries the Case ([ADR 0044](0044-case-inbox-and-follow-up-wakes.md)). Personal Schedule fire stays bot-thread-only. Case follow-up is a sibling path, not a Schedule row.
 
 Chat turns stay [ADR 0011](0011-chat-mcp-tool-loop.md). Activity phases
 stay [ADR 0021](0021-chat-activity-status.md). Bot visibility and
