@@ -258,8 +258,12 @@ const openableBots = ref<BotListItem[]>([])
 const audience = ref<RoomAudience[]>([])
 const searchEl = ref<InstanceType<typeof KitInput> | null>(null)
 
-const people = computed(() => props.thread.participants.filter((p) => p.kind === 'person'))
-const bots = computed(() => props.thread.participants.filter((p) => p.kind === 'bot'))
+const people = computed(() => props.thread.participants
+  .filter((p) => p.kind === 'person')
+  .sort((a, b) => Number(b.id === props.viewerId) - Number(a.id === props.viewerId) || a.name.localeCompare(b.name)))
+const bots = computed(() => props.thread.participants
+  .filter((p) => p.kind === 'bot')
+  .sort((a, b) => a.name.localeCompare(b.name)))
 const canAdd = computed(() => props.thread.kind === 'group' || props.thread.kind === 'room')
 
 const visiblePeople = computed(() => {
