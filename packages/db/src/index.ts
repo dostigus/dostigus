@@ -191,6 +191,7 @@ export {
 export { type OpenedStore, openStore } from './store'
 export { StoreError } from './store-error'
 export {
+  addMessengerParticipant,
   appendMessengerAssistantLine,
   appendMessengerUserLine,
   createMessengerThread,
