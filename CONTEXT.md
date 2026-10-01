@@ -229,12 +229,14 @@ _Avoid_: theme, CSS app, per-bot design system.
 
 **Locale dictionary**:
 Central nested JSON for Host chrome and Kit strings the Host
-uses: `packages/ui-kit/locales/{en,ru}.json`. English is the
+uses: `packages/ui-kit/locales/{en,ru}.json`. Host
+`apps/web/i18n/locales` is a symlink to that directory. English is the
 key and type source. A new language is copy `en.json` →
 `xx.json` and translate. See
 [ADR 0037](docs/adr/0037-host-ui-i18n.md).
-_Avoid_: a second Host-only tree on day-1, one file per page,
-translating Chat bodies or MCP tool descriptions here.
+_Avoid_: a second Host-only tree on day-1, editing a copy under
+`apps/web/i18n/locales`, one file per page, translating Chat
+bodies or MCP tool descriptions here.
 
 **Brand**:
 The goose logo, the stickers, and the Bot marks shipped with the Kit. The
@@ -696,7 +698,8 @@ _Avoid_: public share, invite (unqualified).
   stores it on `Member.locale`. Signed-out Host uses cookie
   `dostigus_locale`. The Owner changes it on Settings →
   **Прочее**. Dictionaries live at
-  `packages/ui-kit/locales/{en,ru}.json`. Chat bodies, Skills,
+  `packages/ui-kit/locales/{en,ru}.json` (Host
+  `apps/web/i18n/locales` is a symlink to that pair). Chat bodies, Skills,
   MCP tool descriptions, and LLM replies are not dictionaries.
   See [ADR 0037](docs/adr/0037-host-ui-i18n.md). Cluster
   timezone is a different setting.

@@ -6,6 +6,7 @@
  * idle-only captures unreliable.
  *
  *   pnpm preview:host
+ *   pnpm preview:wait
  *   pnpm shoot:preview system
  *
  * PREVIEW_SMOKE_URL (default http://localhost:3000).

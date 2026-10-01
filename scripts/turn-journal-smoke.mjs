@@ -15,6 +15,7 @@
  * / token fields (the quiet path is not an LLM completion).
  *
  *   NUXT_AGENT_TOKEN=preview-agent pnpm preview:host
+ *   pnpm preview:wait
  *   NUXT_AGENT_TOKEN=preview-agent pnpm smoke:turns
  *
  * PREVIEW_SMOKE_URL (default http://localhost:3000).

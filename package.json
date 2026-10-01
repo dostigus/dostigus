@@ -32,6 +32,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview:host": "DOSTIGUS_PREVIEW_SEED=1 pnpm --filter @dostigus/web dev",
+    "preview:wait": "node scripts/preview-wait.mjs",
     "smoke:preview": "node scripts/preview-seed-smoke.mjs",
     "smoke:turns": "node scripts/turn-journal-smoke.mjs",
     "shoot:preview": "node scripts/preview-shoot.mjs",

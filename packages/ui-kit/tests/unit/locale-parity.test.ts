@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { lstatSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { HOST_LOCALE_MESSAGES, localeMessageKeys } from '../../src/locale'
@@ -13,6 +13,7 @@ it('keeps the same key set in EN and RU dictionaries', () => {
 it('keeps the Host i18n copies identical to the Kit dictionaries', () => {
   const kit = join(import.meta.dirname, '../../locales')
   const host = join(import.meta.dirname, '../../../../apps/web/i18n/locales')
+  expect(lstatSync(host).isSymbolicLink()).toBe(true)
   for (const file of ['en.json', 'ru.json']) {
     expect(readFileSync(join(host, file), 'utf8')).toBe(readFileSync(join(kit, file), 'utf8'))
   }

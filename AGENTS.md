@@ -267,7 +267,18 @@ or a smoke check:
 pnpm preview:host
 ```
 
-That starts `nuxt dev` with `DOSTIGUS_PREVIEW_SEED=1`. Then open
+That starts `nuxt dev` with `DOSTIGUS_PREVIEW_SEED=1`. It does not
+print a ready line. After it is in the background, poll `/health`:
+
+```
+pnpm preview:wait
+```
+
+That waits for `GET /health` → `{ ok: true }` (default 120s,
+`PREVIEW_SMOKE_WAIT_MS`; URL `PREVIEW_SMOKE_URL`, default
+`http://localhost:3000`). `smoke:preview`, `smoke:turns`, and
+`shoot:preview` already poll `/health`. Use `preview:wait` before
+curl or a browser. Then open
 **http://localhost:3000/preview-seed** (use `localhost`, not `127.0.0.1`).
 The route is **GET** and **HEAD**.
 
@@ -435,7 +446,8 @@ sets `content-length` to the GET JSON byte length (pretty in `nuxt dev`,
 compact in production) and ends the response with `event.node.res.end()`
 instead of `return null`.
 
-With `pnpm preview:host` already up, `pnpm smoke:preview` checks those
+If you just started the Host, run `pnpm preview:wait` before curl
+or a browser. With `pnpm preview:host` already up, `pnpm smoke:preview` checks those
 HEAD responses, that GET lands on `/bots/preview` (not a Bot chosen by
 the name **New Bot**), that renaming the Bot does not create another
 Bot, that `?tall=1` adds the tall thread once, that GET
@@ -525,7 +537,10 @@ The five `composer*` states shoot the Chat composer pill
 on that Store.
 
 Sheet states click after Nuxt hydrates (`$nuxt.isHydrating` is false)
-and wait 400ms for the Sheet animation. `pnpm shoot:preview <state> --narrow`
+and wait 400ms for the Sheet animation. Each shoot state runs `fill`
+(if any), then `clicks`, then `type` / `attach`. There is no ordered
+`steps` list and no `?case=1` seed. A `fill` cannot target a field
+that only appears after a click. `pnpm shoot:preview <state> --narrow`
 shoots any state at 390×844 and writes `<state>-narrow.png`.
 `schedule` needs one Schedule on Bot `preview` (add it in the Closet
 first). `kitchen` and `kitchen-end` click the first Chat button on Bot
@@ -552,12 +567,16 @@ Missing Host prints a stderr hint to start `pnpm preview:host`.
 Do not invent another `/tmp` CDP capture
 ([#106](https://github.com/dostigus/dostigus/issues/106)).
 
-Literal `@` in `apps/web/i18n/locales/{en,ru}.json` (and the matching
-Kit copies in `packages/ui-kit/locales/`) must be written as `{'@'}`.
+`apps/web/i18n/locales` is a **symlink** to `packages/ui-kit/locales`.
+Edit the Kit files (`packages/ui-kit/locales/{en,ru}.json`). Do not
+keep a second copy under `apps/web`. The Kit `locale-parity` test still
+reads both paths and expects the same bytes because they are the same
+files.
+
+Literal `@` in those dictionaries must be written as `{'@'}`.
 `unplugin-vue-i18n` treats `@Name` as a linked message and paints a
 full-page Vite overlay on `pnpm preview:host`, which `shoot:preview`
-then captures. Keep those two JSON trees byte-identical
-(`locale-parity` in the Kit).
+then captures.
 
 Turn journal harness (no screenshots). The preview Host and the smoke
 share one MCP bearer. The fixed preview token is `preview-agent`:
