@@ -194,7 +194,8 @@ async function startEdit() {
   error.value = ''
   editing.value = true
   await nextTick()
-  labelEl.value?.focus()
+  // The Sheet focus trap moves focus to its close button after this block mounts.
+  setTimeout(() => labelEl.value?.focus(), 0)
 }
 
 function cancel() {
