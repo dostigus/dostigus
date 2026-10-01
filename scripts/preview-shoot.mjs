@@ -253,6 +253,20 @@ export const PREVIEW_SHOOT_STATES = {
     viewport: DEFAULT_VIEWPORT,
     hint: 'composer-room-mention types @ in the Preview room composer; the picker lists the room Bot participants.',
   },
+  'thread-roster': {
+    seed: 'rooms=1',
+    clicks: ['.identity'],
+    ready: { selector: '.kit-sheet--end .add-row', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'thread-roster opens the Preview room identity pill; the Sheet lists the people and the Bot on that room.',
+  },
+  'thread-roster-add': {
+    seed: 'rooms=1',
+    clicks: ['.identity', '.kit-sheet--end .add-row'],
+    ready: { selector: '.kit-sheet--end .candidate', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'thread-roster-add opens Add on the Preview room roster; ?rooms=1 seeds the Member Bot Private notes, which every person there can already open.',
+  },
   'onboarding': {
     seed: false,
     thenPath: '/onboarding',

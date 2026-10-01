@@ -222,6 +222,70 @@ export function createMessengerThread(
   return requireListItem(store, id, actor.id)
 }
 
+/**
+ * Adds one person or one Bot to a `group` or `room` after create. A `dm`
+ * does not grow. A Bot joins only when every person participant can
+ * already open it; a person joins a `room` only when they can already open
+ * every Bot on it. Neither add writes `bot_grants`. The first Bot on a
+ * `group` makes it a `room`.
+ */
+export function addMessengerParticipant(
+  store: OpenedStore,
+  input: { threadId: string, actorId: string, kind: string, id: string },
+): ThreadListItem {
+  const current = getMessengerThread(store, input.threadId, input.actorId)
+  if (current.kind === 'dm') {
+    throw new StoreError('A direct message does not take more people or Bots', 400)
+  }
+  const refId = input.id.trim()
+  const people = current.participants.filter((participant) => participant.kind === 'person')
+  const botParticipants = current.participants.filter((participant) => participant.kind === 'bot')
+  let nextKind = current.kind
+
+  if (input.kind === 'person') {
+    const viewer = personViewer(store, refId)
+    if (people.some((person) => person.id === viewer.id)) {
+      throw new StoreError('Already in this Thread', 409)
+    }
+    if (people.length + 1 > PEOPLE_MAX) {
+      throw new StoreError('Too many people', 400)
+    }
+    for (const participant of botParticipants) {
+      const bot = getBot(store, participant.id)
+      if (bot && !viewerMaySeeBot(store, bot, viewer)) {
+        throw new StoreError('Every person in the room must already have access to that Bot', 400)
+      }
+    }
+  } else if (input.kind === 'bot') {
+    const bot = requireBot(store, refId)
+    if (botParticipants.some((participant) => participant.id === bot.id)) {
+      throw new StoreError('Already in this Thread', 409)
+    }
+    if (botParticipants.length + 1 > BOTS_MAX) {
+      throw new StoreError('Too many Bots', 400)
+    }
+    assertRoomBots(store, [bot], people.map((person) => person.id))
+    nextKind = 'room'
+  } else {
+    throw new StoreError('Add a person or a Bot', 400)
+  }
+
+  store.sqlite.exec('BEGIN')
+  try {
+    store.sqlite.prepare(`
+      INSERT INTO thread_participants (thread_id, kind, ref_id) VALUES (?, ?, ?)
+    `).run(current.id, input.kind, refId)
+    if (nextKind !== current.kind) {
+      store.sqlite.prepare('UPDATE threads SET kind = ? WHERE id = ?').run(nextKind, current.id)
+    }
+    store.sqlite.exec('COMMIT')
+  } catch (error) {
+    store.sqlite.exec('ROLLBACK')
+    throw error
+  }
+  return requireListItem(store, current.id, input.actorId)
+}
+
 export function listMessengerBots(store: OpenedStore, threadId: string, personId: string): Bot[] {
   getMessengerThread(store, threadId, personId)
   const rows = store.sqlite.prepare(`

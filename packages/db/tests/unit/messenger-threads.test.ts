@@ -2,6 +2,7 @@ import type { DatabaseSync } from 'node:sqlite'
 import { DatabaseSync as Sqlite } from 'node:sqlite'
 import { expect, it } from 'vitest'
 import {
+  addMessengerParticipant,
   appendMessengerUserLine,
   createBot,
   createMember,
@@ -219,5 +220,104 @@ it('previews an Artifact-only line by its filenames in the inbox', () => {
   const row = listInboxThreads(store, { id: member.id, role: 'member' })
     .find((item) => item.id === dm.id)
   expect(row?.lastMessage?.content).toBe('receipt.png, notes.md')
+  store.close()
+})
+
+it('adds a person and a Bot after create without granting, and turns a group into a room', () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const grace = createMember(store, { displayName: 'Grace', username: 'grace', passwordHash: 'hash:grace' })
+  const lin = createMember(store, { displayName: 'Lin', username: 'lin', passwordHash: 'hash:lin' })
+  const expi = createBot(store, { name: 'Expi', createdBy: owner.id }).bot
+  const notes = createBot(store, { name: 'Notes', createdBy: owner.id }).bot
+
+  const dm = createMessengerThread(store, { kind: 'dm', actorId: owner.id, personIds: [grace.id] })
+  expect(() => addMessengerParticipant(store, {
+    threadId: dm.id,
+    actorId: owner.id,
+    kind: 'person',
+    id: lin.id,
+  })).toThrow(/direct message/)
+
+  const group = createMessengerThread(store, {
+    kind: 'group',
+    title: 'Household',
+    actorId: owner.id,
+    personIds: [grace.id],
+  })
+  appendMessengerUserLine(store, { threadId: group.id, personId: owner.id, content: 'before Lin' })
+  expect(() => getMessengerThread(store, group.id, lin.id)).toThrow(StoreError)
+
+  const withLin = addMessengerParticipant(store, {
+    threadId: group.id,
+    actorId: grace.id,
+    kind: 'person',
+    id: lin.id,
+  })
+  expect(withLin.kind).toBe('group')
+  expect(getMessengerThread(store, group.id, lin.id).title).toBe('Household')
+  expect(listThreadMessages(store, group.id).map((line) => line.content)).toEqual(['before Lin'])
+  expect(() => addMessengerParticipant(store, {
+    threadId: group.id,
+    actorId: owner.id,
+    kind: 'person',
+    id: lin.id,
+  })).toThrow(/Already/)
+
+  expect(() => addMessengerParticipant(store, {
+    threadId: group.id,
+    actorId: owner.id,
+    kind: 'bot',
+    id: expi.id,
+  })).toThrow(/already have access/)
+  expect(getMessengerThread(store, group.id, owner.id).kind).toBe('group')
+  expect(listBotGrants(store, expi.id)).toEqual([])
+
+  grantBot(store, expi.id, grace.id)
+  grantBot(store, expi.id, lin.id)
+  const room = addMessengerParticipant(store, {
+    threadId: group.id,
+    actorId: lin.id,
+    kind: 'bot',
+    id: expi.id,
+  })
+  expect(room.kind).toBe('room')
+  expect(room.title).toBe('Household')
+  expect(room.participants.filter((p) => p.kind === 'person').map((p) => p.id).sort())
+    .toEqual([owner.id, grace.id, lin.id].sort())
+  expect(listBotGrants(store, expi.id).map((grant) => grant.personId).sort()).toEqual([grace.id, lin.id].sort())
+
+  grantBot(store, notes.id, grace.id)
+  expect(() => addMessengerParticipant(store, {
+    threadId: group.id,
+    actorId: owner.id,
+    kind: 'bot',
+    id: notes.id,
+  })).toThrow(/already have access/)
+  grantBot(store, notes.id, lin.id)
+  const twoBots = addMessengerParticipant(store, {
+    threadId: group.id,
+    actorId: owner.id,
+    kind: 'bot',
+    id: notes.id,
+  })
+  expect(twoBots.participants.filter((p) => p.kind === 'bot').map((p) => p.id).sort())
+    .toEqual([expi.id, notes.id].sort())
+
+  const newcomer = createMember(store, { displayName: 'Mo', username: 'mo', passwordHash: 'hash:mo' })
+  expect(() => addMessengerParticipant(store, {
+    threadId: group.id,
+    actorId: owner.id,
+    kind: 'person',
+    id: newcomer.id,
+  })).toThrow(/already have access/)
+  expect(listBotGrants(store, expi.id).map((grant) => grant.personId)).not.toContain(newcomer.id)
+
+  expect(() => addMessengerParticipant(store, {
+    threadId: group.id,
+    actorId: newcomer.id,
+    kind: 'person',
+    id: newcomer.id,
+  })).toThrow(/Thread not found/)
   store.close()
 })

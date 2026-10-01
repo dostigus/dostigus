@@ -166,6 +166,28 @@
       "needAccess": "Every person in the Chat must already have access to that Bot. Access is not granted automatically.",
       "nameThread": "Name this Chat."
     },
+    "threadRoster": {
+      "title": "In this Chat",
+      "openAria": "{title}, who is in this Chat",
+      "people": "People",
+      "bots": "Bots",
+      "you": "you",
+      "bot": "Bot",
+      "add": "Add",
+      "addAria": "Add a person or Bot",
+      "addTitle": "Add to this Chat",
+      "back": "Back to the list",
+      "find": "Find a person or Bot",
+      "addHint": "A Bot joins only when every person here can already open it. Adding does not grant access.",
+      "dmHint": "A direct message stays between two people.",
+      "noBotAccess": "Cannot open every Bot here.",
+      "adding": "Adding…",
+      "addFailed": "Could not add to this Chat.",
+      "already": "Already in this Chat.",
+      "loadFailed": "Could not load people and Bots.",
+      "noneToAdd": "Everyone in the Household is already here.",
+      "noMatch": "No matching people or Bots."
+    },
     "botPicker": {
       "titleOwner": "Find or create a Bot",
       "titleMember": "Find a Bot",

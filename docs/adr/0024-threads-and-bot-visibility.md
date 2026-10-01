@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-23
-- Amended: 2026-09-24
+- Amended: 2026-09-24, 2026-10-01
 
 Household accounts stay [ADR 0012](0012-household-members.md). Invites
 stay [ADR 0023](0023-household-member-invites.md). This record settles
@@ -238,6 +238,17 @@ a `room`. The create does not write grant rows. Add Member (Invite or a
 password) also starts from that menu for the Owner. A direct message
 stays on the same menu. There is no separate people-only item and no
 separate new-thread control on the rail.
+
+Amended 2026-10-01. The identity pill on a `dm`, `group`, or `room`
+opens a read-only roster Sheet: people, then every Bot on the Thread.
+Any person participant may open it. On a `group` or a `room`, any person
+participant may add one Household person or one Bot after create
+(`POST /api/threads/:id/participants`). A `dm` does not grow. A Bot
+joins only when every current person participant can already open it.
+A person joins a `room` only when they can already open every Bot on
+it. Neither add writes grant rows. The first Bot on a `group` stores
+kind `room`; the title and the people stay. The new person reads the
+existing lines. Leave, kick, and rename stay later.
 
 Outside these milestones: SMTP, guests, Share link, and any role
 besides Owner and Member. No Org entity. `listen=all` stays later.
