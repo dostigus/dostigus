@@ -2,6 +2,10 @@
 
 - Status: accepted
 - Date: 2026-10-01
+- Amended: 2026-10-01 — Case inbox + follow-up Wakes are
+  [ADR 0044](0044-case-inbox-and-follow-up-wakes.md).
+  This record still names the audiences and the
+  should-next nodes.
 
 Collective Host direction stays
 [ADR 0040](0040-collective-host-direction.md). Case stays

@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0043, so the next ADR
-is **0044**. Name it `0044-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0044, so the next ADR
+is **0045**. Name it `0045-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one.
 
@@ -58,7 +58,7 @@ English.
 | [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility (amended 2026-09-24: personal Bot + grants; amended 2026-10-01: roster Sheet, add a person or Bot after create, first Bot makes a `group` a `room`) |
 | [0025](0025-chat-bubble-parts.md) | Chat bubble parts (Bot visibility stays [0024](0024-threads-and-bot-visibility.md); Artifact refs are the join, not `parts_json` [0034](0034-artifacts.md)) |
 | [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
-| [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets; Wake tools [0032](0032-chat-llm-context-assembly.md); amended 2026-09-26: visible Wake is the Schedule name, `wakeText` is LLM-only) |
+| [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets; Wake tools [0032](0032-chat-llm-context-assembly.md); amended 2026-09-26: visible Wake is the Schedule name, `wakeText` is LLM-only; amended 2026-10-01: Case follow-up Wake on the Case Thread is a sibling path [0044](0044-case-inbox-and-follow-up-wakes.md); personal Schedule stays bot-thread-only) |
 | [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat (amended 2026-09-24: closet Schedule list stays [0027](0027-bot-schedules.md); Skill `description` + catalog [0032](0032-chat-llm-context-assembly.md)) |
 | [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows; amended 2026-09-25: modelId / modelTier / visionParts observability; amended 2026-09-25: servedModelId + token usage on the Turn; amended 2026-09-25: escalate may resolve more than once [0036](0036-llm-providers-tier-resolve-escalate.md); journal stays last successful / last attempted resolve + llmCallCount) |
 | [0030](0030-chat-cards-module-catalog.md) | Chat Cards for Schedule changes (amended 2026-09-24: no stock Module packages; Skill and self-settings success is a system Chat line, not a Card; meta Skills insert-if-missing on Bot create; Card «Изменить» opens closet detail; meta Skills catalog + read [0032](0032-chat-llm-context-assembly.md); amended 2026-09-26: day-1 marketplace track for Packs is [0039](0039-pack-vs-bot-portable-recipe.md); Module package Marketplace / Apply stays later) |
@@ -71,7 +71,8 @@ English.
 | [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) (amended 2026-09-26: Thread chrome is chat / чат) |
 | [0038](0038-dashboard-chrome.md) | Dashboard chrome (own layout; Settings is one page; Members under Account; no `/settings` or `/members` redirects) |
 | [0039](0039-pack-vs-bot-portable-recipe.md) | Pack vs Bot portable recipe (Pack ≠ Bot ≠ Module package; Export Pack vs Export Bot backup; HTML `ui/` in a sandboxed iframe; amended 2026-09-28: RU translit, Export Sheet, seed Skill filter, Export stamps snapshot, Schedule provenance; amended 2026-09-28: URL / git Apply) |
-| [0040](0040-collective-host-direction.md) | Collective Host product direction (Collective of 1…N people; messenger + personal / shared Bots + MCP to external systems; Rooms gaps, then Case-lite [0041](0041-case-lite-on-thread.md); roles Owner / Admin / Member [0042](0042-admin-role-and-share-permission.md); audiences Owner-operator and Team 2–15 [0043](0043-target-personas.md); Packs for verticals; no Pages, sales pipeline, light theme, or SaaS cloud in v1) |
-| [0041](0041-case-lite-on-thread.md) | Case-lite on a Thread (Case on `group` / `room` only; status `open` \| `done`, label ≤40, nextAction ≤120; person Participant PATCH; nullable `threads` columns; no inbox filter; Case inbox + follow-up Wakes later [0043](0043-target-personas.md); docs only) |
+| [0040](0040-collective-host-direction.md) | Collective Host product direction (Collective of 1…N people; messenger + personal / shared Bots + MCP to external systems; Rooms gaps, then Case-lite [0041](0041-case-lite-on-thread.md); roles Owner / Admin / Member [0042](0042-admin-role-and-share-permission.md); audiences Owner-operator and Team 2–15 [0043](0043-target-personas.md); Case inbox + follow-up Wakes [0044](0044-case-inbox-and-follow-up-wakes.md); Packs for verticals; no Pages, sales pipeline, light theme, or SaaS cloud in v1) |
+| [0041](0041-case-lite-on-thread.md) | Case-lite on a Thread (Case on `group` / `room` only; status `open` \| `done`, label ≤40, nextAction ≤120; person Participant PATCH; nullable `threads` columns; on-thread UI; Case inbox + follow-up Wakes [0044](0044-case-inbox-and-follow-up-wakes.md)) |
 | [0042](0042-admin-role-and-share-permission.md) | Admin role and share permission (`members.role` `admin` \| `member`; Owner stays [0010](0010-owner-auth-session.md); Admin opens Providers, Members invite/list, Dashboard read; Member grants only own personal Bots; Case / roster stay person Participant; Admin day-to-day / Owner keys [0043](0043-target-personas.md); docs only) |
-| [0043](0043-target-personas.md) | Target personas (Owner-operator = Collective N=1; Team 2–15 leads; Member secondary; Case inbox + follow-up Wakes next; Admin Cluster Bot list + Member onboarding should next; one MCP after first external Collective; docs only) |
+| [0043](0043-target-personas.md) | Target personas (Owner-operator = Collective N=1; Team 2–15 leads; Member secondary; Case inbox + follow-up Wakes [0044](0044-case-inbox-and-follow-up-wakes.md); Admin Cluster Bot list + Member onboarding should next; one MCP after first external Collective; docs only) |
+| [0044](0044-case-inbox-and-follow-up-wakes.md) | Case inbox and follow-up Wakes (filter chips on the messenger Threads list, `?caseStatus=open`; one-shot follow-up Wake on the Case Thread; `followUpAt` + `followUpBotId` on `threads`; amends [0027](0027-bot-schedules.md); docs only) |
