@@ -1,5 +1,5 @@
 export default defineEventHandler(async (event) => {
-  await requireOwnerSession(event)
+  await requireOwnerOrAdminSession(event)
   const id = getRouterParam(event, 'id') ?? ''
   try {
     const invite = revokeHouseholdInvite(useStore(), id)

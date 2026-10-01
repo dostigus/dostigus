@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
-import { isOwnerPath } from '../../app/utils/owner-paths'
+import { isAdminPath, isOwnerPath } from '../../app/utils/owner-paths'
 
 const apiRoot = join(import.meta.dirname, '../../server/api')
 
@@ -72,21 +72,13 @@ it('lets Owner and Member sessions read Bots and Chat', () => {
   }
 })
 
-it('keeps Bot writes, Settings, and Members with the Owner', () => {
+it('lets the Owner or an Admin use Providers, the Members list, and Invites', () => {
   const files = [
     'settings/llm-gateway.get.ts',
     'settings/llm-gateway.put.ts',
     'settings/llm-gateway/ping.post.ts',
     'settings/llm-gateway/providers/[id]/catalog.get.ts',
-    'settings/timezone.get.ts',
-    'settings/timezone.put.ts',
-    'settings/http-allowlist.get.ts',
-    'settings/http-allowlist.put.ts',
-    'settings/locale.get.ts',
-    'settings/locale.put.ts',
     'members/index.get.ts',
-    'members/index.post.ts',
-    'members/[id]/disable.post.ts',
     'members/invites/index.get.ts',
     'members/invites/index.post.ts',
     'members/invites/[id]/revoke.post.ts',
@@ -94,8 +86,32 @@ it('keeps Bot writes, Settings, and Members with the Owner', () => {
   ]
   for (const file of files) {
     const src = readFileSync(join(apiRoot, file), 'utf8')
+    const gated = src.includes('requireOwnerOrAdminSession') || src.includes('withOwnerOrAdminStore')
+    expect(gated, file).toBe(true)
+    expect(src, file).not.toContain('requireOwnerSession')
+    expect(src, file).not.toContain('withOwnerStore')
+    expect(src, file).not.toContain('withHostStore')
+    expect(src, file).not.toContain('requireHostSession')
+  }
+})
+
+it('keeps Cluster settings, Account Settings, Member writes, and roles with the Owner', () => {
+  const files = [
+    'settings/timezone.get.ts',
+    'settings/timezone.put.ts',
+    'settings/http-allowlist.get.ts',
+    'settings/http-allowlist.put.ts',
+    'settings/locale.get.ts',
+    'settings/locale.put.ts',
+    'members/index.post.ts',
+    'members/[id]/disable.post.ts',
+    'members/[id]/role.put.ts',
+  ]
+  for (const file of files) {
+    const src = readFileSync(join(apiRoot, file), 'utf8')
     const gated = src.includes('requireOwnerSession') || src.includes('withOwnerStore')
     expect(gated, file).toBe(true)
+    expect(src, file).not.toContain('OrAdmin')
     expect(src, file).not.toContain('withHostStore')
     expect(src, file).not.toContain('requireHostSession')
   }
@@ -181,11 +197,19 @@ it('sends a Member away from Dashboard and Members', () => {
   expect(isOwnerPath('/dashboardx')).toBe(false)
   expect(isOwnerPath('/bots/preview')).toBe(false)
   expect(isOwnerPath('/')).toBe(false)
+  expect(isAdminPath('/dashboard')).toBe(true)
+  expect(isAdminPath('/dashboard/providers')).toBe(true)
+  expect(isAdminPath('/dashboard/members')).toBe(true)
+  expect(isAdminPath('/dashboard/members/')).toBe(true)
+  expect(isAdminPath('/dashboard/cluster')).toBe(false)
+  expect(isAdminPath('/dashboard/settings')).toBe(false)
+  expect(isAdminPath('/bots/preview')).toBe(false)
   const src = readFileSync(
     join(import.meta.dirname, '../../app/middleware/owner.global.ts'),
     'utf8',
   )
   expect(src).toContain('isOwnerPath(to.path)')
+  expect(src).toContain('isAdminPath(to.path)')
   expect(src).not.toContain('OWNER_PATHS.has')
 })
 

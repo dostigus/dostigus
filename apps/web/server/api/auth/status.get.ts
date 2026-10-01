@@ -11,6 +11,7 @@ export default defineEventHandler(async (event) => {
     username: string | null
     displayName: string
     role: 'owner' | 'member'
+    admin: boolean
   } | null = null
 
   if (user?.id && user.role === 'member') {
@@ -22,6 +23,7 @@ export default defineEventHandler(async (event) => {
         username: member.username,
         displayName: member.displayName,
         role: 'member',
+        admin: member.role === 'admin',
       }
     }
   } else if (user?.id) {
@@ -32,6 +34,7 @@ export default defineEventHandler(async (event) => {
       username: user.username ?? owner?.username ?? null,
       displayName: owner ? ownerDisplayName(owner) : (user.displayName || 'Owner'),
       role: 'owner',
+      admin: false,
     }
   }
 

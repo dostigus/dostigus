@@ -5,7 +5,7 @@ type PingBody = {
 }
 
 export default defineEventHandler(async (event) => {
-  await requireOwnerSession(event)
+  await requireOwnerOrAdminSession(event)
   const body = await readBody<PingBody>(event).catch(() => ({} as PingBody))
   try {
     const stored = getLlmGatewaySettings(useStore())

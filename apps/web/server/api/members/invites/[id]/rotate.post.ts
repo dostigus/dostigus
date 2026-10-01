@@ -7,14 +7,15 @@ function originFromEvent(event: Parameters<typeof getRequestHeader>[0]): string 
 }
 
 export default defineEventHandler(async (event) => {
-  const session = await requireOwnerSession(event)
-  const createdBy = session.user?.id
-  if (!createdBy) {
-    throw createError({ statusCode: 401, statusMessage: 'Sign in required' })
-  }
+  const session = await requireOwnerOrAdminSession(event)
   const id = getRouterParam(event, 'id') ?? ''
   try {
-    const issued = rotateHouseholdInvite(useStore(), id, createdBy, originFromEvent(event))
+    const issued = rotateHouseholdInvite(
+      useStore(),
+      id,
+      inviteIssuerId(useStore(), session.user),
+      originFromEvent(event),
+    )
     return issued
   } catch (error) {
     throwOwnerAuthError(error)

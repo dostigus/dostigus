@@ -9,14 +9,15 @@ function originFromEvent(event: Parameters<typeof getRequestHeader>[0]): string 
 }
 
 export default defineEventHandler(async (event) => {
-  const session = await requireOwnerSession(event)
-  const createdBy = session.user?.id
-  if (!createdBy) {
-    throw createError({ statusCode: 401, statusMessage: 'Sign in required' })
-  }
+  const session = await requireOwnerOrAdminSession(event)
   const body = await readBody<CreateBody>(event).catch(() => ({} as CreateBody))
   try {
-    const issued = createHouseholdInvite(useStore(), body, createdBy, originFromEvent(event))
+    const issued = createHouseholdInvite(
+      useStore(),
+      body,
+      inviteIssuerId(useStore(), session.user),
+      originFromEvent(event),
+    )
     setResponseStatus(event, 201)
     return issued
   } catch (error) {
