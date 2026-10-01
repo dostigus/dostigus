@@ -241,9 +241,17 @@ export const PREVIEW_SHOOT_STATES = {
   },
   'composer-room': {
     seed: 'rooms=1',
-    ready: { selector: '.composer-row:not(.has-lead) textarea', count: 1 },
+    ready: { selector: '.composer-row.has-lead .attach', count: 1 },
     clip: '.composer',
     viewport: DEFAULT_VIEWPORT,
+  },
+  'composer-room-mention': {
+    seed: 'rooms=1',
+    type: { selector: '.composer textarea', text: '@' },
+    ready: { selector: '.mention-picker [role="option"][data-selected]', count: 1 },
+    clip: '.composer',
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'composer-room-mention types @ in the Preview room composer; the picker lists the room Bot participants.',
   },
   'onboarding': {
     seed: false,

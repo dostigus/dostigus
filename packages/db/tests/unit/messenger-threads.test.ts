@@ -9,7 +9,9 @@ import {
   createOwner,
   getMessengerThread,
   grantBot,
+  insertArtifactRow,
   insertThreadLine,
+  joinMessageArtifacts,
   listBotGrants,
   listInboxThreads,
   listMessages,
@@ -183,5 +185,39 @@ it('creates a dm once, a group, and a room only when every person can open the B
   expect(inbox.some((item) => item.kind === 'bot' && item.botId === shared.id)).toBe(true)
   expect(inbox.some((item) => item.kind === 'bot' && item.botId === priv.id)).toBe(true)
 
+  store.close()
+})
+
+it('previews an Artifact-only line by its filenames in the inbox', () => {
+  const store = memoryStore()
+  const owner = createOwner(store, { username: 'ada', passwordHash: 'hash:ada' })
+  const member = createMember(store, {
+    displayName: 'Grace',
+    username: 'grace',
+    passwordHash: 'hash:grace',
+  })
+  const dm = createMessengerThread(store, {
+    kind: 'dm',
+    actorId: owner.id,
+    personIds: [member.id],
+  })
+  const files = ['receipt.png', 'notes.md'].map((filename, index) => insertArtifactRow(store, {
+    filename,
+    mime: index === 0 ? 'image/png' : 'text/markdown',
+    byteSize: 12,
+    contentHash: `hash-${index}`,
+    actorPersonId: owner.id,
+  }))
+  const line = appendMessengerUserLine(store, {
+    threadId: dm.id,
+    personId: owner.id,
+    content: '',
+    allowEmpty: true,
+  })
+  joinMessageArtifacts(store, line.id, files.map((file) => file.id))
+
+  const row = listInboxThreads(store, { id: member.id, role: 'member' })
+    .find((item) => item.id === dm.id)
+  expect(row?.lastMessage?.content).toBe('receipt.png, notes.md')
   store.close()
 })

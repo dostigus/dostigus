@@ -120,12 +120,27 @@
         </li>
       </ol>
 
+      <div
+        v-if="dropActive"
+        class="drop-mask"
+        aria-hidden="true"
+      >
+        {{ $t('chat.dropFiles') }}
+      </div>
       <form
         class="composer"
         @submit.prevent="send"
       >
+        <ChatMentionPicker
+          v-if="mentionOpen"
+          :list-id="mentionListId"
+          :bots="mentionMatches"
+          :active="mentionActive"
+          @hover="mentionActive = $event"
+          @choose="chooseMention"
+        />
         <p
-          v-if="thread?.kind === 'room'"
+          v-else-if="thread?.kind === 'room'"
           class="mention-hint"
         >
           {{ $t('chat.mentionHint') }}
@@ -136,19 +151,45 @@
         >
           {{ sendError }}
         </p>
-        <ChatComposerPill
-          :show-send="Boolean(draft.trim())"
-          :send-disabled="sending || !thread"
+        <input
+          ref="fileInputEl"
+          type="file"
+          class="sr-only"
+          multiple
+          accept="image/*,application/pdf,text/plain,text/markdown,.md,.txt,.pdf"
+          @change="onFileInput"
         >
+        <ChatComposerPill
+          :tall="pendingAttachments.length > 0"
+          attach
+          :attach-disabled="!thread"
+          :show-send="Boolean(draft.trim() || canSendAttachments)"
+          :send-disabled="sending || !thread || attachmentsUploading"
+          @attach="pickFiles()"
+        >
+          <template #tray>
+            <ChatPendingAttachments
+              :items="pendingAttachments"
+              @remove="removeAttachment"
+            />
+          </template>
           <label class="draft">
             <span class="sr-only">{{ $t('chat.aria.message') }}</span>
             <textarea
+              ref="draftEl"
               v-model="draft"
               rows="1"
               maxlength="16000"
-              :placeholder="$t('chat.placeholder')"
+              :placeholder="pendingAttachments.length > 0 ? $t('chat.placeholderOrSend') : $t('chat.placeholder')"
               :disabled="!thread || sending"
-              @keydown.enter.exact.prevent="send"
+              :aria-controls="mentionOpen ? mentionListId : undefined"
+              :aria-activedescendant="mentionActiveId"
+              :aria-autocomplete="thread?.kind === 'room' ? 'list' : undefined"
+              @keydown="onDraftKeydown"
+              @input="syncMentionCaret"
+              @click="syncMentionCaret"
+              @keyup="syncMentionCaret"
+              @paste="onAttachPaste"
             />
           </label>
         </ChatComposerPill>
@@ -205,6 +246,7 @@ const { data, error, refresh } = await useFetch<Payload>(
 const { data: readyData } = await useFetch<{ configured: boolean }>('/api/chat/ready')
 
 const draft = ref('')
+const draftEl = ref<HTMLTextAreaElement | null>(null)
 const sending = ref(false)
 const sendError = ref('')
 const replying = ref(false)
@@ -287,14 +329,81 @@ function speaker(message: ChatMessage): string | null {
   return message.authorName || 'Someone'
 }
 
+const {
+  items: pendingAttachments,
+  fileInput: fileInputEl,
+  dropActive,
+  readyIds: readyArtifactIds,
+  uploading: attachmentsUploading,
+  canSendAttachments,
+  pick: pickFiles,
+  onFileInput,
+  remove: removeAttachment,
+  onPaste: onAttachPaste,
+  clear: clearAttachments,
+  bindWindow: bindAttachmentWindow,
+  unbindWindow: unbindAttachmentWindow,
+} = useComposerAttachments()
+
+const roomBots = computed(() => (
+  thread.value?.participants.filter((person) => person.kind === 'bot') ?? []
+))
+const mentionListId = 'room-mention-list'
+const {
+  open: mentionOpen,
+  matches: mentionMatches,
+  active: mentionActive,
+  syncCaret: syncMentionCaret,
+  choose: chooseMention,
+  onKeydown: onMentionKeydown,
+} = useRoomMentionPicker({
+  draft,
+  field: draftEl,
+  bots: roomBots,
+  enabled: computed(() => thread.value?.kind === 'room'),
+})
+const mentionActiveId = computed(() => {
+  const bot = mentionOpen.value ? mentionMatches.value[mentionActive.value] : null
+  return bot ? `${mentionListId}-${bot.id}` : undefined
+})
+
+function onDraftKeydown(event: KeyboardEvent) {
+  if (onMentionKeydown(event)) {
+    return
+  }
+  if (
+    event.key === 'Enter'
+    && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey
+    && !event.isComposing
+  ) {
+    event.preventDefault()
+    void send()
+  }
+}
+
+onMounted(() => {
+  bindAttachmentWindow()
+})
+
+onUnmounted(() => {
+  unbindAttachmentWindow()
+  clearAttachments()
+})
+
+watch(threadId, () => {
+  draft.value = ''
+  sendError.value = ''
+  clearAttachments()
+})
+
 async function send() {
   const content = draft.value.trim()
   const current = thread.value
-  if (!content || sending.value || !current) {
+  const artifactIds = [...readyArtifactIds.value]
+  if ((!content && artifactIds.length === 0) || sending.value || !current || attachmentsUploading.value) {
     return
   }
-  const bots = current.participants.filter((person) => person.kind === 'bot')
-  const mentioned = current.kind === 'room' ? mentionedRoomBot(content, bots) : null
+  const mentioned = current.kind === 'room' ? mentionedRoomBot(content, roomBots.value) : null
   sending.value = true
   sendError.value = ''
   draft.value = ''
@@ -303,8 +412,9 @@ async function send() {
   try {
     await $fetch(`/api/threads/${current.id}/messages`, {
       method: 'POST',
-      body: { content },
+      body: { content, artifactIds },
     })
+    clearAttachments()
     await Promise.all([refresh(), refreshThreads()])
   } catch {
     draft.value = content
@@ -517,6 +627,19 @@ async function send() {
 .mention-hint {
   pointer-events: none;
   font-size: 0.82rem;
+}
+
+.drop-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--bg-chat) 55%, transparent);
+  color: var(--text);
+  font-weight: 600;
+  border: 2px dashed color-mix(in srgb, var(--accent) 55%, var(--line));
 }
 
 .sr-only {

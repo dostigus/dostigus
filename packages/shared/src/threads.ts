@@ -99,6 +99,66 @@ export function mentionedRoomBot<T extends { id: string, name: string }>(
   return best?.bot ?? null
 }
 
+/** The `@` token that ends at the caret: where `@` sits and the text typed after it. */
+export type RoomMentionQuery = {
+  at: number
+  query: string
+}
+
+/**
+ * The `@` the room picker filters on. `@` must start the line or follow
+ * whitespace, the same as `mentionedRoomBot`, and the text from `@` to the
+ * caret stays on one line. The query may hold spaces, so a name such as
+ * `New Bot` still filters after `@New B`.
+ */
+export function roomMentionQuery(text: string, caret: number): RoomMentionQuery | null {
+  const before = text.slice(0, Math.max(0, caret))
+  const at = before.lastIndexOf('@')
+  if (at < 0) {
+    return null
+  }
+  if (at > 0 && !/\s/.test(before[at - 1] ?? '')) {
+    return null
+  }
+  const query = before.slice(at + 1)
+  if (query.includes('\n')) {
+    return null
+  }
+  return { at, query }
+}
+
+/** Bots whose name starts with the query, or with a word in it when the query is one word. */
+export function roomMentionMatches<T extends { name: string }>(bots: readonly T[], query: string): T[] {
+  const needle = query.toLowerCase()
+  const oneWord = !/\s/.test(needle)
+  return bots.filter((bot) => {
+    const name = bot.name.trim().toLowerCase()
+    if (!name) {
+      return false
+    }
+    return name.startsWith(needle) || (oneWord && name.split(/\s+/).some((word) => word.startsWith(needle)))
+  })
+}
+
+/**
+ * Replace the `@` token up to the caret with `@` plus the Bot name, in the
+ * form `mentionedRoomBot` matches. A space follows unless the next
+ * character already ends the mention.
+ */
+export function insertRoomMention(
+  text: string,
+  mention: RoomMentionQuery,
+  name: string,
+): { text: string, caret: number } {
+  const label = `@${name.trim()}`
+  const end = mention.at + 1 + mention.query.length
+  const after = text.slice(end)
+  const gap = /^[\s.,!?;:]/.test(after) ? '' : ' '
+  const next = `${text.slice(0, mention.at)}${label}${gap}${after}`
+  const caret = mention.at + label.length + (gap || /^\s/.test(after) ? 1 : 0)
+  return { text: next, caret }
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

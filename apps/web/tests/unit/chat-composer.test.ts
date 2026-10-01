@@ -58,7 +58,7 @@ it('overlays a slim composer on one scrolling Chat pane', () => {
   expect(trayAt).toBeGreaterThan(pillSrc.indexOf('class="composer-row"'))
   expect(trayAt).toBeLessThan(pillSrc.indexOf('class="composer-line"'))
   const pillAt = chat.indexOf('<ChatComposerPill')
-  const chipsAt = chat.indexOf('class="pending-chips"')
+  const chipsAt = chat.indexOf('<ChatPendingAttachments')
   expect(chat.indexOf('<template #tray>')).toBeGreaterThan(pillAt)
   expect(chipsAt).toBeGreaterThan(chat.indexOf('<template #tray>'))
   expect(chipsAt).toBeLessThan(chat.indexOf('</ChatComposerPill>'))
@@ -163,6 +163,30 @@ it('gives the Room composer the same pill and seal as Bot Chat', () => {
   expect(composer).toContain('pointer-events: none')
   expect(chat).not.toContain('.composer-row {')
   expect(chat).not.toContain('measureComposer')
+})
+
+it('attaches Artifacts on a dm, group, or room through the same tray as Bot Chat', () => {
+  const tray = readFileSync(join(app, 'components/ChatPendingAttachments.vue'), 'utf8')
+  expect(tray).toContain('class="pending-chips"')
+  for (const page of [chat, room]) {
+    expect(page).toContain('useComposerAttachments()')
+    expect(page).toContain('<ChatPendingAttachments')
+    expect(page).not.toContain('class="pending-chips"')
+    expect(page).toContain(':show-send="Boolean(draft.trim() || canSendAttachments)"')
+    expect(page).toContain('@paste="onAttachPaste"')
+  }
+  const pill = blockIn(room, '<ChatComposerPill', '</ChatComposerPill>')
+  expect(pill).toMatch(/\n\s+attach\n/)
+  const send = blockIn(room, 'async function send()', '</script>')
+  expect(send).toContain('body: { content, artifactIds }')
+  expect(send).toContain('(!content && artifactIds.length === 0)')
+})
+
+it('opens the @ Bot picker only on a room composer', () => {
+  expect(room).toContain('<ChatMentionPicker')
+  expect(room).toContain('enabled: computed(() => thread.value?.kind === \'room\')')
+  expect(room).toContain('participants.filter((person) => person.kind === \'bot\')')
+  expect(chat).not.toContain('ChatMentionPicker')
 })
 
 it('asks for an optional line once attachments are pending, with no trailing period', () => {

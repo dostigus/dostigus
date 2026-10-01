@@ -348,7 +348,17 @@ What the running Cluster does today:
   `. , ! ? ; :` after the name. The earliest `@` wins. When two names
   start at that same `@`, the longer name wins. One Bot replies per
   line. A line with no mention is stored and does not call the LLM
-  gateway. `listen=all` is not in this Host. Preview `?rooms=1` seeds
+  gateway. `listen=all` is not in this Host. In a `room` composer,
+  typing `@` opens a picker of the Bots that are participants on that
+  Thread. Arrow keys move, Enter or Tab inserts `@` plus the Bot's name,
+  Escape closes it. Inserting does not send. A `dm` or a `group` has no
+  picker, and there is no person `@`. A `dm`, `group`, or `room`
+  composer attaches Artifacts the same way a bot-thread does
+  ([ADR 0034](adr/0034-artifacts.md)). A file-only room line is stored
+  and does not call the LLM gateway. A room line that mentions a Bot and
+  joins an image uses triggering-line vision
+  ([ADR 0035](adr/0035-image-artifact-vision.md)). The inbox preview of
+  a line with no text is its Artifact filenames. Preview `?rooms=1` seeds
   the preview Member, a grant for that Member on Bot `preview`, a direct
   message, and a room on that Bot (the room line mentions that Bot and
   stores one reply), then opens the room. `?rooms=1&as=member` signs in

@@ -505,7 +505,8 @@ explicit ready marker (not network idle), and writes a PNG under
 | `composer` | `/preview-seed` | one-line `.composer-row` with `.attach` | 1440×900, clip `.composer` @2x |
 | `composer-multiline` | `/preview-seed`, three lines typed | `.composer-row.multiline .send` | 1440×900, clip `.composer` @2x |
 | `composer-attachments` | `/preview-seed`, a PNG and a `.txt` set on the file input | two `.pending-chip.ready` | 1440×900, clip `.composer` @2x |
-| `composer-room` | `?rooms=1` | `.composer-row:not(.has-lead) textarea` | 1440×900, clip `.composer` @2x |
+| `composer-room` | `?rooms=1` | `.composer-row.has-lead .attach` | 1440×900, clip `.composer` @2x |
+| `composer-room-mention` | `?rooms=1`, `@` typed | `.mention-picker [role="option"][data-selected]` | 1440×900, clip `.composer` @2x |
 | `onboarding` | none, signed out, `/onboarding` | two `input[autocomplete="new-password"]` | 1440×900 |
 | `onboarding-error` | same as `onboarding`, two different passwords, submit | `[role="alert"]` | 1440×900 |
 | `home-empty` | same as `onboarding`, preview Owner login and password, submit | `.empty .kit-button` | 1440×900 |
@@ -514,7 +515,7 @@ explicit ready marker (not network idle), and writes a PNG under
 | `invite` | `/preview-seed`, issue an Invite, drop the session cookie, open the link | `input[type="email"][readonly]` | 1440×900 |
 | `invite-invalid` | none, signed out, `/invite/preview-missing` | `a[href="/login"]` | 1440×900 |
 
-The four `composer*` states shoot the Chat composer pill
+The five `composer*` states shoot the Chat composer pill
 (`ChatComposerPill.vue`, shared by `/bots/:id` and `/threads/:id`).
 `composer-attachments` uploads real Artifacts through `POST /api/artifacts`
 on that Store.
