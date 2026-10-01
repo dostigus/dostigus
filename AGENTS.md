@@ -200,6 +200,12 @@ other table; names below are the `messages` case.
    `86400000`, `tag` equal to that `id`, `breakpoints` `true`. That
    journal file is the only file under `migrations/meta/`.
 
+When `members` gains a column, add that migration id to
+`MEMBER_COLUMN_MIGRATION_IDS` in
+[`packages/db/tests/unit/apply-member-columns.ts`](packages/db/tests/unit/apply-member-columns.ts).
+The bot-threads, messenger-threads, and bot-grants-migration replay tests
+stop at an early id and then call today's `createMember`.
+
 ## Local preview (Host)
 
 ```

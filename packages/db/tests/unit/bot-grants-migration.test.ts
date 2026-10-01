@@ -13,21 +13,12 @@ import {
   openStore,
   STORE_MIGRATIONS,
 } from '../../src/index'
-
-function applyMemberLocale(sqlite: DatabaseSync) {
-  for (const id of ['0022_member_locale', '0027_member_role']) {
-    const migration = STORE_MIGRATIONS.find((item) => item.id === id)
-    if (!migration) {
-      throw new Error(`missing ${id}`)
-    }
-    sqlite.exec(migration.sql)
-  }
-}
+import { applyMemberColumns } from './apply-member-columns'
 
 function applyBeforeGrants(sqlite: DatabaseSync) {
   for (const migration of STORE_MIGRATIONS) {
     if (migration.id === '0013_bot_grants') {
-      applyMemberLocale(sqlite)
+      applyMemberColumns(sqlite)
       return
     }
     sqlite.exec(migration.sql)

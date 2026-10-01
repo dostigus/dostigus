@@ -22,19 +22,10 @@ import {
   STORE_MIGRATIONS,
   StoreError,
 } from '../../src/index'
+import { applyMemberColumns } from './apply-member-columns'
 
 function memoryStore() {
   return openStore('file::memory:')
-}
-
-function applyMemberLocale(sqlite: DatabaseSync) {
-  for (const id of ['0022_member_locale', '0027_member_role']) {
-    const migration = STORE_MIGRATIONS.find((item) => item.id === id)
-    if (!migration) {
-      throw new Error(`missing ${id}`)
-    }
-    sqlite.exec(migration.sql)
-  }
 }
 
 function applyThreadCase(sqlite: DatabaseSync) {
@@ -48,7 +39,7 @@ function applyThreadCase(sqlite: DatabaseSync) {
 function applyBeforeMessenger(sqlite: DatabaseSync) {
   for (const migration of STORE_MIGRATIONS) {
     if (migration.id === '0012_messenger_threads') {
-      applyMemberLocale(sqlite)
+      applyMemberColumns(sqlite)
       return
     }
     sqlite.exec(migration.sql)
