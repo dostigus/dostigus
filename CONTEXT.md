@@ -29,6 +29,13 @@ _Avoid_: tenant, workspace, site, instance (unqualified).
 Primary account that controls the Cluster. Exactly one Owner per Cluster.
 _Avoid_: Admin (a separate role), user (unqualified).
 
+**Owner-operator**:
+The type-1 primary audience: one person on a Cluster with
+Bots. A Collective of N=1, not a different product. See
+[ADR 0043](docs/adr/0043-target-personas.md).
+_Avoid_: solo user (unqualified), treating Owner-operator as a
+second Host or SKU.
+
 **Admin**:
 A Household Member with `members.role` `admin`
 ([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
@@ -48,6 +55,9 @@ Host for Bot list and Chat. The product role **Member** is
 ([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
 **Member.locale** is this Member's Host UI
 Locale ([ADR 0037](docs/adr/0037-host-ui-i18n.md)).
+A Member with role `member` is a secondary audience:
+served (Bot list and Chat), not the roadmap lead
+([ADR 0043](docs/adr/0043-target-personas.md)).
 _Avoid_: user, guest, account (unqualified), invitee.
 
 **Member.locale**:
@@ -572,18 +582,35 @@ The Store, route, and code name for the accounts of the Collective
 Household. Host UI copy and positioning say Collective, not
 Household.
 _Avoid_: Household in Host UI copy (say Collective); team, org,
-family (positioning words; use Collective).
+family (positioning words; use Collective). The **Team**
+persona is an audience, not a synonym for Collective
+([ADR 0043](docs/adr/0043-target-personas.md)).
 
 **Collective**:
 The 1…N people on one Cluster: a family, a startup, or a small
 enterprise. The product direction is the **Collective Host**: a
 messenger, personal and shared Bots, and MCP to external systems
-([ADR 0040](docs/adr/0040-collective-host-direction.md)). Host UI
+([ADR 0040](docs/adr/0040-collective-host-direction.md)). Primary
+audiences are the **Owner-operator** (Collective N=1) and the
+**Team** of 2–15; product leads with Team
+([ADR 0043](docs/adr/0043-target-personas.md)). Host UI
 copy says Collective («коллектив» in RU). Its accounts are the
 Household in Store and code. v1 roles are Owner, Admin, and
 Member
 ([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
-_Avoid_: CRM, tenant, org, workspace, team (as the product noun).
+_Avoid_: CRM, tenant, org, workspace, team (as the product noun;
+the Team persona in
+[ADR 0043](docs/adr/0043-target-personas.md) is an audience,
+not a synonym for Collective).
+
+**Team**:
+The type-2 primary audience: 2–15 people on one Cluster who
+run work in Chat with Bots. Messenger + Bots. CRM-shaped
+work, not a sales CRM. Product leads with this audience.
+Collective stays the product noun. See
+[ADR 0043](docs/adr/0043-target-personas.md).
+_Avoid_: treating Team as a synonym for Collective, sales
+team, org, treating Team as Host UI copy (say Collective).
 
 **Invite**:
 A one-shot link the Owner creates so someone can become a Member. The Store
