@@ -62,6 +62,7 @@ it('names the preview states agents are asked to shoot', () => {
     'composer-multiline',
     'composer-attachments',
     'composer-room',
+    'composer-room-mention',
     'onboarding',
     'onboarding-error',
     'home-empty',
@@ -113,7 +114,10 @@ it('shoots the Chat composer pill at rest, multiline, with attachments, and in a
   expect(PREVIEW_SHOOT_STATES['composer-attachments'].attach).toBe('.composer input[type="file"]')
   expect(PREVIEW_SHOOT_STATES['composer-attachments'].ready).toEqual({ selector: '.pending-chip.ready', count: 2 })
   expect(PREVIEW_SHOOT_STATES['composer-room'].seed).toBe('rooms=1')
-  for (const name of ['composer', 'composer-multiline', 'composer-attachments', 'composer-room']) {
+  expect(PREVIEW_SHOOT_STATES['composer-room'].ready).toEqual({ selector: '.composer-row.has-lead .attach', count: 1 })
+  expect(PREVIEW_SHOOT_STATES['composer-room-mention'].seed).toBe('rooms=1')
+  expect(PREVIEW_SHOOT_STATES['composer-room-mention'].type).toEqual({ selector: '.composer textarea', text: '@' })
+  for (const name of ['composer', 'composer-multiline', 'composer-attachments', 'composer-room', 'composer-room-mention']) {
     expect(PREVIEW_SHOOT_STATES[name].clip).toBe('.composer')
   }
 
