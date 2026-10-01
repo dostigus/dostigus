@@ -1,6 +1,6 @@
 # Dostigus 🪿
 
-Self-host household agent OS — Bots, Chat, and Schedules on your machine. Not another chatbot UI.
+Self-host agent OS for a Collective — a family, a startup, or a small enterprise — with Bots, Chat, and Schedules on your machine. Not another chatbot UI.
 
 ![Kitchen Chat on the Host with Mail and Reader in the sidebar](docs/images/chat-system.png)
 
@@ -14,13 +14,13 @@ Self-host household agent OS — Bots, Chat, and Schedules on your machine. Not 
 
 Grok Bot and OpenClaw-style desktop agents keep the loop on someone else’s box, or on a laptop that has to stay awake. Dostigus is the other shape: **your Host**, a SQLite **Store**, and **your** keys.
 
-You run a **Cluster**. You add **Household** Members. Bots talk through an **MCP surface** against that Store. You pick **Providers** — OpenRouter first, plus OpenAI and OpenAI-compatible — and bind **Model tiers** instead of baking a model list into the repo.
+You run a **Cluster**. You add Members to your **Collective**. Bots talk through an **MCP surface** against that Store. You pick **Providers** — OpenRouter first, plus OpenAI and OpenAI-compatible — and bind **Model tiers** instead of baking a model list into the repo.
 
 Day-1 the Host can **Export Pack** from a live Bot and **Apply** from a local file, a public `.zip` URL, or an https git remote (preview, then write onto a Bot). That is not a marketplace. Module packages stay later — not a browseable store.
 
 ## What you get
 
-- **Cluster** — one Household’s running instance: Store, Bots, and settings. Not the git repo.
+- **Cluster** — one Collective’s running instance: Store, Bots, and settings. Not the git repo.
 - **Host** — the client app: Chat, Cards, and Sheets from the Kit.
 - **Bot** — a long-lived persona with Skills and MCP access. A Bot is not a Module package.
 - **Pack** — a portable recipe you Export from a Bot or Apply from a local file. Not a Bot and not a Module package.
@@ -29,7 +29,7 @@ Day-1 the Host can **Export Pack** from a live Bot and **Apply** from a local fi
 - **Artifact** — a persisted Cluster file (upload or Bot put), joined onto a Chat line.
 - **Provider** — an Owner-connected LLM gateway instance (OpenRouter, OpenAI, or OpenAI-compatible).
 - **Model tier** — `cheap` / `strong` / `code` (plus `toy`): each binds to a Provider + Policy.
-- **Household** — the Owner and the Members on one Cluster.
+- **Collective** — the Owner, Admins, and Members on one Cluster.
 - **MCP surface** — the tools a Bot (and the Host) use to read and write the Store.
 
 ## Quick start
@@ -64,7 +64,7 @@ Scope: [`docs/SPEC.md`](docs/SPEC.md). Glossary: [`CONTEXT.md`](CONTEXT.md). Dec
 
 Early. Self-host first. MIT.
 
-Day-1 Host **Export Pack** / **Apply** from file, public URL, or git (preview → Bot). Marketplace and Module packages stay later. This Host already runs Chat, Skills, Schedules, Artifacts, and Household Members. Do not read that as a store you browse and install. See [`docs/SPEC.md`](docs/SPEC.md).
+Day-1 Host **Export Pack** / **Apply** from file, public URL, or git (preview → Bot). Marketplace and Module packages stay later. This Host already runs Chat, Skills, Schedules, Artifacts, and Collective Members. Do not read that as a store you browse and install. See [`docs/SPEC.md`](docs/SPEC.md).
 
 ## License
 

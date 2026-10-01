@@ -75,7 +75,7 @@ export function hostSettingsCatalog(input: {
         id: 'members',
         title: tHost(locale, 'host.search.members'),
         subtitle: tHost(locale, 'host.search.membersHint'),
-        keywords: ['household', 'member'],
+        keywords: ['collective', 'коллектив', 'household', 'member'],
         href: '/dashboard/members',
         botId: null,
       },

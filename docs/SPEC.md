@@ -342,8 +342,8 @@ What the running Cluster does today:
   [ADR 0028](adr/0028-bot-self-settings-via-chat.md). See Self-settings.
 - `/health` stays `{ ok: true }`.
 - No seed/demo domain Bot. No Builder or Meal port. Preview
-  `?kitchen=1` is local tooling, not a domain Bot. Household on this Host is
-  the Owner plus Members ([ADR 0012](adr/0012-household-members.md)),
+  `?kitchen=1` is local tooling, not a domain Bot. The Collective on this Host
+  is the Owner plus Members (Household is the Store and code name) ([ADR 0012](adr/0012-household-members.md)),
   including Invites the Owner copies by hand
   ([ADR 0023](adr/0023-household-member-invites.md)).
 - Bot access is a personal Bot plus grants

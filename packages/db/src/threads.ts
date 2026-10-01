@@ -414,7 +414,7 @@ function personViewer(store: OpenedStore, personId: string): BotViewer {
   }
   const member = getMember(store, personId)
   if (!member || member.disabledAt) {
-    throw new StoreError('That person is not in this Household', 400)
+    throw new StoreError('That person is not in this Collective', 400)
   }
   return { id: personId, role: 'member' }
 }

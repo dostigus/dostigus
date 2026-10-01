@@ -53,9 +53,9 @@ it('gives Dashboard its own chrome without the Host Bot list', () => {
   expect(tHost('ru', 'dashboard.nav.clusterSettings')).toBe('Настройки кластера')
   expect(tHost('ru', 'dashboard.nav.settings')).toBe('Настройки')
   expect(tHost('en', 'dashboard.nav.members')).toBe('Members')
-  expect(tHost('en', 'dashboard.nav.membersHint')).toBe('Household on this Host')
+  expect(tHost('en', 'dashboard.nav.membersHint')).toBe('Collective on this Host')
   expect(tHost('ru', 'dashboard.nav.members')).toBe('Members')
-  expect(tHost('ru', 'dashboard.nav.membersHint')).toBe('Household на этом Host')
+  expect(tHost('ru', 'dashboard.nav.membersHint')).toBe('Коллектив на этом Host')
 })
 
 it('reuses HostUserMenu and omits Settings on the Dashboard rail', () => {

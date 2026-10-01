@@ -21,7 +21,7 @@ via git. The Platform is not a Cluster.
 _Avoid_: repo (unqualified), codebase (when you mean this monorepo).
 
 **Cluster**:
-One user’s (or Household’s) running instance: Store, Bots, Module packages,
+One user’s (or Collective’s) running instance: Store, Bots, Module packages,
 data. Not a git repo.
 _Avoid_: tenant, workspace, site, instance (unqualified).
 
@@ -566,18 +566,21 @@ Smart / Coding are quality slots, not Model tier names.
 _Avoid_: fast, smart, opus (aliases).
 
 **Household**:
-The Owner and the Members on one Cluster: the accounts of the
-Collective. One Cluster is one Household. The Store, routes, and
-[ADR 0012](docs/adr/0012-household-members.md) keep this name.
-Positioning says Collective.
-_Avoid_: team, org, family (positioning words; use Collective).
+The Store, route, and code name for the accounts of the Collective
+(`members`, Household helpers,
+[ADR 0012](docs/adr/0012-household-members.md)). One Cluster is one
+Household. Host UI copy and positioning say Collective, not
+Household.
+_Avoid_: Household in Host UI copy (say Collective); team, org,
+family (positioning words; use Collective).
 
 **Collective**:
 The 1…N people on one Cluster: a family, a startup, or a small
 enterprise. The product direction is the **Collective Host**: a
 messenger, personal and shared Bots, and MCP to external systems
-([ADR 0040](docs/adr/0040-collective-host-direction.md)). Its
-accounts are the Household. v1 roles are Owner, Admin, and
+([ADR 0040](docs/adr/0040-collective-host-direction.md)). Host UI
+copy says Collective («коллектив» in RU). Its accounts are the
+Household in Store and code. v1 roles are Owner, Admin, and
 Member
 ([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
 _Avoid_: CRM, tenant, org, workspace, team (as the product noun).
