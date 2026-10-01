@@ -30,6 +30,7 @@ Settled now, even if this repo only scaffolds them:
 | Chat LLM context | System prompt is Manifest (including label and description) plus a Skill catalog (`id` + `description`). History is the last 40 lines (string `content` + Artifact meta note). The triggering user message may use OpenAI content parts. Chat tools start slim; keyword expand adds builder tools on that user turn only. Wake is narrower and has no expand. See [ADR 0032](adr/0032-chat-llm-context-assembly.md) and [ADR 0035](adr/0035-image-artifact-vision.md). |
 | Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, appends one system Chat line (plain string, no parts). This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
 | Pack | Portable recipe, not a Bot and not a Module package. Export Pack from a live Bot is a scrubbed zip (`pack.json` + `skills/` + optional `schedules/` + optional `ui/` + optional README). Public id is `author.slug`; the Bot-part slug transliterates Cyrillic then slugifies (no silent `pack` fallback for a named Bot). Export omits Host seed Skills (`platform-meta-*` / the Host seed allowlist), invents a Schedule name from cadence+time when the live name is empty, and stamps `installed_packs` plus the Bot ref. Apply Pack from a local file, a public `.zip` URL, or an https git remote shows a preview / plan, then writes onto an existing Bot or creates a new Bot. Imported Schedules land paused and carry Pack snapshot provenance. Update replaces only Schedules stamped with the previous snapshot; unlabeled (grandfather) and Owner-created rows stay. Update does not wipe Chat. See [ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md). |
+| Case | Thin layer on a `group` or `room` Thread: status `open` \| `done`, label ≤40, next action ≤120. Not a ticket tracker. Not in this Host yet. See [ADR 0041](adr/0041-case-lite-on-thread.md). |
 
 ## This Host (create Bot + Chat)
 
@@ -878,6 +879,10 @@ and [`docs/deploy.md`](deploy.md)).
 - Peeking another person's bot-thread, auto-grant when a Bot is added
   to a room, and auto-grant to a future Invite
 - Roles beyond Owner and Member, hard-delete of a Member
+- Case inbox / sidebar filters, a Case on a `dm` or bot-thread,
+  Case assignee / due / priority, and a separate Case page
+  ([ADR 0041](adr/0041-case-lite-on-thread.md)). Case-lite
+  fields are accepted direction and are not in this Host yet.
 - OAuth, passkeys, email verify, password reset
 - Mobile native
 - Per-bot domains (the `meal.kosarev.space` pattern is temporary and to be replaced)

@@ -2,6 +2,8 @@
 
 - Status: accepted
 - Date: 2026-10-01
+- Amended: 2026-10-01 — Case-lite Store shape, API, and glossary
+  term **Case** are [ADR 0041](0041-case-lite-on-thread.md).
 
 Nick locked the direction below on 2026-10-01. This record sets
 direction and order only. It does not change [SPEC](../SPEC.md)
@@ -41,8 +43,9 @@ stages, or forecasts.
    of the shipped Host lists the gaps as GitHub issues before any
    implementation.
 2. **Case-lite.** A thin layer on one Thread: a status, a label,
-   and a next action. It is not a ticket tracker. Its own ADR names
-   the Store shape and the glossary term.
+   and a next action. It is not a ticket tracker. Store shape,
+   API, and the glossary term **Case** are
+   [ADR 0041](0041-case-lite-on-thread.md).
 3. **Out of v1:** a library or Pages surface (the OpenAI Spaces
    class).
 
@@ -103,7 +106,8 @@ dedicated tools already do well. The value here is a messenger,
 Bots, and MCP in one self-host Cluster.
 
 The wedge order starts nearest shipped code. Rooms exist and have
-gaps. Case-lite is a few fields on a Thread that already exists.
+gaps. Case-lite is a few fields on a Thread that already exists
+([ADR 0041](0041-case-lite-on-thread.md)).
 A library or Pages surface is a new product area and waits.
 
 ## Consequences
@@ -126,8 +130,9 @@ A library or Pages surface is a new product area and waits.
   issues. That audit is a separate task. This PR has no
   implementation.
 - Later records: the roles ADR (Admin plus the share permission),
-  the Case-lite ADR, and a Bot connection to an external MCP server.
-  The Host has no external MCP client today.
+  and a Bot connection to an external MCP server. The Host has no
+  external MCP client today. Case-lite is
+  [ADR 0041](0041-case-lite-on-thread.md).
 - Later copy: the README tagline and Host strings such as
   "Household on this Host" move to Collective positioning in their
   own PR.
