@@ -1,6 +1,6 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { HostSessionUser } from './owner-auth'
-import { getMember } from '@dostigus/db'
+import { getMember, memberIsAdmin } from '@dostigus/db'
 import { isOwnerSessionUser } from './owner-auth'
 
 export async function requireHostSession(event: object) {
@@ -24,6 +24,22 @@ export async function requireOwnerSession(event: object) {
     throw createError({
       statusCode: 403,
       statusMessage: 'Only the Owner can change this',
+    })
+  }
+  return session
+}
+
+/**
+ * Providers, Members list, Invites, and Dashboard Overview (ADR 0042).
+ * The Admin role is read from the Store, so promote and demote apply on
+ * the next request without a new sign-in.
+ */
+export async function requireOwnerOrAdminSession(event: object) {
+  const session = await requireHostSession(event)
+  if (!isOwnerSessionUser(session.user) && !memberIsAdmin(useStore(), session.user.id)) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Only the Owner or an Admin can change this',
     })
   }
   return session
@@ -54,5 +70,13 @@ export async function withOwnerStore<T>(
   fn: (store: OpenedStore) => T,
 ): Promise<T> {
   await requireOwnerSession(event)
+  return withClusterStore(fn)
+}
+
+export async function withOwnerOrAdminStore<T>(
+  event: object,
+  fn: (store: OpenedStore) => T,
+): Promise<T> {
+  await requireOwnerOrAdminSession(event)
   return withClusterStore(fn)
 }

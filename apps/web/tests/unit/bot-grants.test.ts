@@ -1,9 +1,10 @@
-import { createMember, createOwner, openStore } from '@dostigus/db'
+import { createMember, createOwner, openStore, setMemberRole } from '@dostigus/db'
 import { afterEach, expect, it } from 'vitest'
 import {
   createClusterBot,
   deleteClusterBot,
   grantClusterBot,
+  listClusterBotGrants,
   listClusterBots,
   listClusterMessages,
   revokeClusterBotGrant,
@@ -95,4 +96,55 @@ it('keeps a new Bot personal and shares it only by grant', () => {
   revokeClusterBotGrant(store, ownerBot.bot.id, member.id, ownerView)
   expect(listClusterBots(store, memberView).bots).toEqual([])
   expect(() => listClusterMessages(store, ownerBot.bot.id, memberView)).toThrow(/Bot not found/)
+})
+
+it('lets an Admin grant and revoke any Bot without seeing it', () => {
+  const { store, owner, member, other } = memoryStore()
+  const ownerView = { id: owner.id, role: 'owner' as const }
+  const adminView = { id: member.id, role: 'member' as const }
+  const otherView = { id: other.id, role: 'member' as const }
+  setMemberRole(store, member.id, 'admin')
+
+  const ownerBot = createClusterBot(store, { name: 'House' }, ownerView)
+  const otherBot = createClusterBot(store, { name: 'Shelf' }, otherView)
+
+  grantClusterBot(store, ownerBot.bot.id, { personId: other.id }, adminView)
+  expect(listClusterBotGrants(store, ownerBot.bot.id, adminView).grants.map((grant) => grant.personId))
+    .toEqual([other.id])
+  expect(listClusterBots(store, otherView).bots.map((bot) => bot.id)).toContain(ownerBot.bot.id)
+  revokeClusterBotGrant(store, ownerBot.bot.id, other.id, adminView)
+  expect(listClusterBots(store, otherView).bots.map((bot) => bot.id)).not.toContain(ownerBot.bot.id)
+
+  grantClusterBot(store, otherBot.bot.id, { personId: member.id }, adminView)
+  expect(listClusterBots(store, adminView).bots.map((bot) => bot.id)).toEqual([otherBot.bot.id])
+
+  expect(() => deleteClusterBot(store, ownerBot.bot.id, adminView)).toThrow()
+  expect(() => updateClusterBot(store, otherBot.bot.id, { name: 'Mine' }, adminView))
+    .toThrow('Only the Owner can change this')
+})
+
+it('keeps a grantee Member from re-sharing someone else\'s Bot', () => {
+  const { store, owner, member, other } = memoryStore()
+  const ownerView = { id: owner.id, role: 'owner' as const }
+  const memberView = { id: member.id, role: 'member' as const }
+  const ownerBot = createClusterBot(store, { name: 'House' }, ownerView)
+  grantClusterBot(store, ownerBot.bot.id, { personId: member.id }, ownerView)
+
+  expect(() => grantClusterBot(store, ownerBot.bot.id, { personId: other.id }, memberView))
+    .toThrow('You cannot share this Bot')
+  expect(() => revokeClusterBotGrant(store, ownerBot.bot.id, member.id, memberView))
+    .toThrow('You cannot share this Bot')
+})
+
+it('stops Admin sharing after the Owner removes Admin', () => {
+  const { store, owner, member, other } = memoryStore()
+  const ownerView = { id: owner.id, role: 'owner' as const }
+  const adminView = { id: member.id, role: 'member' as const }
+  const ownerBot = createClusterBot(store, { name: 'House' }, ownerView)
+  setMemberRole(store, member.id, 'admin')
+  grantClusterBot(store, ownerBot.bot.id, { personId: other.id }, adminView)
+  setMemberRole(store, member.id, 'member')
+
+  expect(() => grantClusterBot(store, ownerBot.bot.id, { personId: member.id }, adminView))
+    .toThrow('Bot not found')
 })

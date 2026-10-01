@@ -13,6 +13,7 @@ import {
   listBots,
   listBotSkills,
   listBotThreadMessages,
+  memberIsAdmin,
   requireBot,
   revokeBotGrant,
   StoreError,
@@ -78,9 +79,11 @@ function assertCanChange(store: OpenedStore, id: string, viewer: BotViewer) {
   return bot
 }
 
+/** An Admin grants on any Bot without seeing it in their Bot list (ADR 0042). */
 function assertCanGrant(store: OpenedStore, id: string, viewer: BotViewer) {
-  const bot = assertVisible(store, id, viewer)
-  if (!canGrantBot(bot, viewer)) {
+  const admin = viewer.role === 'member' && memberIsAdmin(store, viewer.id)
+  const bot = admin ? requireBot(store, id) : assertVisible(store, id, viewer)
+  if (!canGrantBot(bot, viewer, admin)) {
     throw new StoreError('You cannot share this Bot', 403)
   }
   return bot

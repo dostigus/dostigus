@@ -4,6 +4,7 @@ import { addHouseholdMember } from '../../server/utils/household'
 import {
   acceptHouseholdInvite,
   createHouseholdInvite,
+  inviteIssuerId,
   inviteOrigin,
   listHouseholdInvites,
   revokeHouseholdInvite,
@@ -140,4 +141,18 @@ it('lets the Owner revoke a pending Invite', () => {
   const revoked = revokeHouseholdInvite(store, created.invite.id)
   expect(revoked.revokedAt).toBeTruthy()
   expect(listHouseholdInvites(store)).toEqual([])
+})
+
+it('records the Cluster Owner on an Invite an Admin creates', () => {
+  const { store, ownerId } = memoryStore()
+  expect(inviteIssuerId(store, { id: ownerId, role: 'owner' })).toBe(ownerId)
+  expect(inviteIssuerId(store, { id: 'admin-member', role: 'member' })).toBe(ownerId)
+  const created = createHouseholdInvite(
+    store,
+    { email: 'new@example.test' },
+    inviteIssuerId(store, { id: 'admin-member', role: 'member' }),
+    'http://localhost:3000',
+  )
+  const row = store.sqlite.prepare('SELECT created_by FROM invites WHERE id = ?').get(created.invite.id) as { created_by: string }
+  expect(row.created_by).toBe(ownerId)
 })

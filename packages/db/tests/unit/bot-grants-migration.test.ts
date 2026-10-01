@@ -15,11 +15,13 @@ import {
 } from '../../src/index'
 
 function applyMemberLocale(sqlite: DatabaseSync) {
-  const migration = STORE_MIGRATIONS.find((item) => item.id === '0022_member_locale')
-  if (!migration) {
-    throw new Error('missing 0022_member_locale')
+  for (const id of ['0022_member_locale', '0027_member_role']) {
+    const migration = STORE_MIGRATIONS.find((item) => item.id === id)
+    if (!migration) {
+      throw new Error(`missing ${id}`)
+    }
+    sqlite.exec(migration.sql)
   }
-  sqlite.exec(migration.sql)
 }
 
 function applyBeforeGrants(sqlite: DatabaseSync) {

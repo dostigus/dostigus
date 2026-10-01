@@ -38,7 +38,7 @@ create Bots, Apply a Pack, and grant any Bot. An Admin opens
 Dashboard read, Providers / LLM, and Members invite/list. An
 Admin does not destroy the Cluster, transfer Owner, wipe the
 Store, or appoint other Admins. Only the Owner promotes or
-demotes an Admin. Not in this Host yet.
+demotes an Admin. Cluster settings and Settings stay Owner.
 _Avoid_: Owner, superuser, moderator.
 
 **Member**:
@@ -63,9 +63,10 @@ treating Settings as a Member-visible switcher.
 The single client app (web/PWA first): Chat + Cards + Sheets. **Host shell**
 is a synonym — prefer Host.
 _Avoid_: Host shell (prefer Host), mini-app, admin (unqualified),
-per-bot SPA. Dashboard is separate chrome (Owner today; Admin
-when [ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)
-is in the Host), not a synonym for Host.
+per-bot SPA. Dashboard is separate chrome (Owner, and an Admin on
+some pages per
+[ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)),
+not a synonym for Host.
 
 **Dashboard**:
 Owner Host chrome under `/dashboard` and `/dashboard/...`. Own
@@ -76,10 +77,9 @@ Providers (`/dashboard/providers`), Members
 (`/dashboard/members`), and Settings
 (`/dashboard/settings`). There are no `/settings` or
 `/members` page routes. Not visible to a Member with role
-`member`. When
-[ADR 0042](docs/adr/0042-admin-role-and-share-permission.md) is
-in the Host, an Admin may read Overview and open Providers and
-Members. Not in this Host yet for Admin.
+`member`. An Admin reads Overview and opens Providers and
+Members, not Cluster settings or Settings
+([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
 _Avoid_: admin panel, treating Dashboard as the Host messenger
 shell, treating Settings as the whole chrome.
 
@@ -304,11 +304,11 @@ Anyone else needs a grant: one row, `bot_id` and `person_id`. "All
 current Members" grants Members who can sign in now. A later Invite does not
 receive those Bots. The Owner may grant or revoke on any Bot. The
 creator may grant or revoke on their own Bot. A grantee cannot
-re-share unless they are also the Owner or the creator. When
-[ADR 0042](docs/adr/0042-admin-role-and-share-permission.md) is
-in the Host, the Owner and an Admin may grant any Bot; a Member
+re-share unless they are also the Owner, an Admin, or the creator.
+An Admin may grant or revoke on any Bot without seeing it; a Member
 grants only a Bot they created and does not grant someone else's
-shared Bot. This Host still uses Owner + creator as above.
+shared Bot
+([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
 Revoke drops list and open. That person's bot-thread rows
 stay. The Host stores `bot_grants`. Migration `0013_bot_grants` copied
 former `shared` Bots into one grant per Member row that existed then,
@@ -586,10 +586,10 @@ _Avoid_: CRM, tenant, org, workspace, team (as the product noun).
 A one-shot link the Owner creates so someone can become a Member. The Store
 keeps a hash of the token, the reserved email, and an expiry. The raw token
 is shown once, on the Invite URL the Owner copies. Accepting it creates a
-Member. When
-[ADR 0042](docs/adr/0042-admin-role-and-share-permission.md) is
-in the Host, an Admin may also create an Invite. This Host still
-requires the Owner. Not a Share link. An Invite does not grant Bots. A later Invite
+Member. An Admin may also create an Invite; the Store records the
+Cluster Owner on it
+([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
+Not a Share link. An Invite does not grant Bots. A later Invite
 does not receive grants made earlier.
 _Avoid_: Share link, guest link, magic link (unqualified), invitee.
 
@@ -609,18 +609,17 @@ _Avoid_: public share, invite (unqualified).
   the Owner always sees the full list; other people need a grant. The
   creator and the Owner may edit the Manifest and delete the Bot. A
   grantee chats on their own bot-thread. Members and the LLM gateway
-  stay with the Owner today. When
-  [ADR 0042](docs/adr/0042-admin-role-and-share-permission.md) is
-  in the Host, an Admin may open Members and Providers. Finding a
+  stay with the Owner, except that an Admin may open Members and
+  Providers
+  ([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)). Finding a
   Bot stays the picker. One bot-thread
   per person. The Host stores `bot_grants`. `dm`, `group`, and `room` are
   in the Host. A room does not grant access.
 - The Owner adds a Member by hand, or creates an Invite for an email and
   copies the link. Accepting an Invite creates a Member and signs them in.
   Sending that link by SMTP is later. An Invite is not a Share link and
-  does not grant Bots. When
-  [ADR 0042](docs/adr/0042-admin-role-and-share-permission.md) is
-  in the Host, an Admin may also create an Invite.
+  does not grant Bots. An Admin may also create an Invite
+  ([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
 - The Owner or a Member creates a Bot from that list. The name starts as
   **New Bot**, with a random flock mark. The Bot is personal to
   its creator

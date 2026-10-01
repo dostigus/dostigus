@@ -1,3 +1,4 @@
+import { DatabaseSync } from 'node:sqlite'
 import { expect, it } from 'vitest'
 import {
   authorNameForPerson,
@@ -9,8 +10,11 @@ import {
   insertMessage,
   listMembers,
   listMessages,
+  memberIsAdmin,
   openStore,
   seedMemberLocale,
+  setMemberRole,
+  STORE_MIGRATIONS,
   StoreError,
   updateMemberLocale,
 } from '../../src/index'
@@ -105,3 +109,36 @@ function findOwnerId(store: ReturnType<typeof memoryStore>): string {
   const row = store.sqlite.prepare('SELECT id FROM owners').get() as { id: string }
   return row.id
 }
+
+it('creates a Member on role member and lets setMemberRole switch admin and member', () => {
+  const store = memoryStore()
+  const member = createMember(store, { displayName: 'Ada', username: 'ada', passwordHash: 'hash:ada' })
+  expect(member.role).toBe('member')
+  expect(setMemberRole(store, member.id, 'admin').role).toBe('admin')
+  expect(findMemberSecretByLogin(store, 'ada')?.role).toBe('admin')
+  expect(memberIsAdmin(store, member.id)).toBe(true)
+  expect(setMemberRole(store, member.id, 'member').role).toBe('member')
+  expect(memberIsAdmin(store, member.id)).toBe(false)
+  expect(() => setMemberRole(store, member.id, 'owner')).toThrow(StoreError)
+  expect(() => setMemberRole(store, 'missing', 'admin')).toThrow('Member not found')
+  store.close()
+})
+
+it('backfills role member on Member rows that existed before 0027_member_role', () => {
+  const sqlite = new DatabaseSync(':memory:')
+  for (const migration of STORE_MIGRATIONS) {
+    if (migration.id === '0027_member_role') {
+      break
+    }
+    sqlite.exec(migration.sql)
+  }
+  sqlite.prepare(`
+    INSERT INTO members (id, display_name, email, username, password_hash, created_at, disabled_at, locale)
+    VALUES ('m1', 'Ada', NULL, 'ada', 'hash:ada', 1, NULL, 'en')
+  `).run()
+  const migration = STORE_MIGRATIONS.find((item) => item.id === '0027_member_role')
+  sqlite.exec(migration!.sql)
+  const store = { sqlite, close: () => sqlite.close() }
+  expect(listMembers(store).map((row) => row.role)).toEqual(['member'])
+  store.close()
+})

@@ -36,6 +36,11 @@ export type Owner = {
 export type MemberId = string
 
 /** Household account under the single Owner. Not a second Owner. */
+/** `admin` opens Providers and Members on Dashboard. Only the Owner sets it. See ADR 0042. */
+export type MemberRole = 'admin' | 'member'
+
+export const MEMBER_ROLES = ['admin', 'member'] as const satisfies readonly MemberRole[]
+
 export type Member = {
   id: MemberId
   displayName: string
@@ -45,6 +50,7 @@ export type Member = {
   disabledAt: string | null
   /** Host UI Locale. Null until first login may seed from `dostigus_locale`. */
   locale: string | null
+  role: MemberRole
 }
 
 /** Host shell is a synonym — prefer Host. */

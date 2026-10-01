@@ -91,6 +91,8 @@ export const members = sqliteTable('members', {
   disabledAt: integer('disabled_at'),
   /** Host UI Locale (`en` | `ru`). Null until first login may seed the cookie. */
   locale: text('locale'),
+  /** `admin` | `member`. The Owner is not a Member row. See ADR 0042. */
+  role: text('role').notNull().default('member'),
 })
 
 /**

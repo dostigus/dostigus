@@ -40,6 +40,7 @@ it('names the preview states agents are asked to shoot', () => {
     'providers-fixture',
     'settings-other',
     'members',
+    'members-admin',
     'narrow',
     'providers-health',
     'providers-shelf',
@@ -234,6 +235,7 @@ it('reuses preview-seed flags and waits for an explicit ready marker', () => {
 
   expect(previewSeedPath(PREVIEW_SHOOT_STATES.members)).toBe('/preview-seed?members=1')
   expect(PREVIEW_SHOOT_STATES.members.ready.selector).toBe('.members h1')
+  expect(previewSeedPath(PREVIEW_SHOOT_STATES['members-admin'])).toBe('/preview-seed?members=1&as=admin')
 
   expect(PREVIEW_SHOOT_STATES.narrow.viewport).toEqual(NARROW_VIEWPORT)
   expect(PREVIEW_SHOOT_STATES.narrow.ready.selector).toBe('.providers h1')

@@ -43,6 +43,7 @@ export type MemberRecord = {
   created_at: number
   disabled_at: number | null
   locale: string | null
+  role: string
 }
 
 /**
@@ -182,6 +183,7 @@ export function toMember(row: MemberRecord): Member {
     createdAt: new Date(row.created_at).toISOString(),
     disabledAt: row.disabled_at == null ? null : new Date(row.disabled_at).toISOString(),
     locale: row.locale ?? null,
+    role: row.role === 'admin' ? 'admin' : 'member',
   }
 }
 

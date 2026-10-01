@@ -23,7 +23,9 @@ import process from 'node:process'
  * `?rooms=1` also seeds a direct message and a room with Bot `preview`.
  * The room line mentions that Bot and stores one reply, then opens the room.
  * `?rooms=1&as=member` signs in the Member on that same room.
- * `?members=1` still opens Members. `?settings=1` opens Dashboard
+ * `?members=1` still opens Members and seeds the preview Member and a
+ * preview Admin. `?members=1&as=admin` signs in that Admin on Members.
+ * `?settings=1` opens Dashboard
  * Overview. `?providers=1` also saves the fixture OpenRouter Provider
  * when the Store has none, then opens Dashboard → Providers.
  * `?readme=1` seeds Mail, Kitchen, and Reader (hardcoded names, Skills,
@@ -54,6 +56,7 @@ export default defineEventHandler(async (event) => {
         threads: previewThreadsRequested(query.threads),
         rooms: previewRoomsRequested(query.rooms),
         readme: previewReadmeRequested(query.readme),
+        members: previewMembersRequested(query.members),
       },
     )
     if (previewProvidersRequested(query.providers)) {
@@ -62,7 +65,11 @@ export default defineEventHandler(async (event) => {
     const asMember = (
       previewThreadsRequested(query.threads) || previewRoomsRequested(query.rooms)
     ) && previewThreadAsMember(query.as)
-    await startOwnerSession(event, asMember && seeded.member ? seeded.member : seeded.user)
+    const asAdmin = previewMembersRequested(query.members) && previewMembersAsAdmin(query.as)
+    const account = asAdmin && seeded.admin
+      ? seeded.admin
+      : asMember && seeded.member ? seeded.member : seeded.user
+    await startOwnerSession(event, account)
     writeLocaleCookie(event, 'en')
     return sendRedirect(event, previewSeedRedirect({
       botId: seeded.botId,

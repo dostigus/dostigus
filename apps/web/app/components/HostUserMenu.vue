@@ -33,14 +33,14 @@
         {{ $t('host.menu.settings') }}
       </KitMenuItem>
       <KitMenuItem
-        v-if="isOwner && !hideMembers"
+        v-if="(isOwner || isAdmin) && !hideMembers"
         :as="NuxtLink"
         to="/dashboard/members"
         @select="close()"
       >
         {{ $t('host.menu.members') }}
       </KitMenuItem>
-      <KitMenuSeparator v-if="isOwner && !(hideSettings && hideMembers)" />
+      <KitMenuSeparator v-if="(isOwner && !(hideSettings && hideMembers)) || (isAdmin && !hideMembers)" />
       <KitMenuItem
         :disabled="busy"
         @select="onLogout"
@@ -65,7 +65,7 @@ withDefaults(defineProps<{
   menuSide: 'top',
 })
 
-const { user, isOwner } = useHostAccount()
+const { user, isOwner, isAdmin } = useHostAccount()
 const { close } = useHostNav()
 const { busy, logout } = useHostLogout()
 

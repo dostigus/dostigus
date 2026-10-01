@@ -82,8 +82,10 @@ export {
   findMemberSecretByLogin,
   getMember,
   listMembers,
+  memberIsAdmin,
   type MemberSecret,
   seedMemberLocale,
+  setMemberRole,
   updateMemberLocale,
 } from './members'
 export {

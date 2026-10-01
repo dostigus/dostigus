@@ -1,4 +1,4 @@
-import { isOwnerPath } from '../utils/owner-paths'
+import { isAdminPath, isOwnerPath } from '../utils/owner-paths'
 
 const AUTH_PATHS = new Set(['/login', '/onboarding'])
 
@@ -11,6 +11,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const { data, refresh } = await useFetch<{
     ownerExists: boolean
     loggedIn: boolean
+    account: { admin?: boolean } | null
   }>('/api/auth/status', {
     key: 'owner-auth-status',
   })
@@ -31,7 +32,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
       return
     }
     if (user.value?.role === 'member' && isOwnerPath(to.path)) {
-      return navigateTo('/')
+      const admin = data.value?.account?.admin === true
+      if (!admin || !isAdminPath(to.path)) {
+        return navigateTo(admin ? '/dashboard' : '/')
+      }
     }
     return
   }

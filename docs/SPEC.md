@@ -70,9 +70,11 @@ What the running Cluster does today:
   (`tier_binds_json`)), `owners` (exactly one)
   Cluster Owner: unique email and/or username, password hash, createdAt),
   and `members` (Household Members: display name, unique email and/or
-  username, password hash, createdAt, disabledAt), and `invites`
+  username, password hash, createdAt, disabledAt, `role` `admin` |
+  `member`, default `member`), and `invites`
   (Household Invite: token hash only, reserved email, expiry, the Owner
-  who created it, used and revoked timestamps). User Chat lines store
+  who created it, used and revoked timestamps; an Invite an Admin
+  creates records the Cluster Owner). User Chat lines store
   `personId` (the Owner id or Member id). Host opens and migrates the
   Store on start. That open may insert meta Skills on a Bot that has
   none of the meta Skill ids. It does not overwrite a Bot that already has
@@ -115,7 +117,16 @@ What the running Cluster does today:
   `/invite/…` while logged out, sees that email, chooses a display name
   and password, and becomes a Member. The Host signs them in. A Member
   uses Bot list and Chat. They may create a Bot. They may edit and delete
-  a Bot they created. They do not open Members or Settings. They do not
+  a Bot they created. They do not open Members or Settings. The Owner
+  makes a Member an Admin, or removes Admin, on the Members list
+  (`PUT /api/members/:id/role`, Owner only). An Admin opens Dashboard
+  Overview, Providers, and Members (list and Invites). The Members list
+  shows an Admin chip; only the Owner sees make Admin / remove Admin,
+  Add Member, and turn off sign-in. Cluster settings and Settings stay
+  with the Owner. The Owner and an Admin grant or revoke any Bot to
+  any Member; a Member grants only a Bot they created. An Admin does
+  not see every Bot and does not edit or delete a Bot they did not
+  create ([ADR 0042](adr/0042-admin-role-and-share-permission.md)). They do not
   edit a Bot they were only granted. Turning off sign-in keeps their name on
   the Chat line and leaves their Bots for the Owner to see. Grant rows stay. Logged-out visitors cannot open those surfaces, except
   an Invite link. Host font is
@@ -885,8 +896,8 @@ and [`docs/deploy.md`](deploy.md)).
   matrix; Admin as a second Owner; Admin appointing Admins;
   hard-delete of a Member
   ([ADR 0042](adr/0042-admin-role-and-share-permission.md)).
-  Admin plus the share permission are accepted direction, not
-  in this Host yet.
+  Admin and the share permission themselves are in this Host; those
+  extras are not.
 - Case inbox / sidebar filters, a Case on a `dm` or bot-thread,
   Case assignee / due / priority, and a separate Case page
   ([ADR 0041](adr/0041-case-lite-on-thread.md)). Case-lite

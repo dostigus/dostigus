@@ -2,6 +2,7 @@ import type { OpenedStore } from '@dostigus/db'
 import type { Invite } from '@dostigus/shared'
 import {
   acceptInvite,
+  getClusterOwnerId,
   issueInvite,
   listPendingInvites,
   readAcceptableInvite,
@@ -9,7 +10,7 @@ import {
   rotateInvite,
 } from '@dostigus/db'
 import { parseInviteEmail, parseMemberDisplayName, parseOwnerPassword } from '@dostigus/shared'
-import { OwnerAuthError } from './owner-auth'
+import { isOwnerSessionUser, OwnerAuthError } from './owner-auth'
 import { readOwnerSession } from './owner-session'
 
 export type InviteOriginInput = {
@@ -68,6 +69,24 @@ export function inviteUrl(origin: string, token: string): string {
 
 export function listHouseholdInvites(store: OpenedStore): Invite[] {
   return listPendingInvites(store)
+}
+
+/**
+ * `invites.created_by` references `owners`. An Admin issues an Invite on
+ * behalf of the Cluster Owner (ADR 0042).
+ */
+export function inviteIssuerId(
+  store: OpenedStore,
+  user: { id?: string, role?: string } | null | undefined,
+): string {
+  if (isOwnerSessionUser(user)) {
+    return user!.id!
+  }
+  const ownerId = getClusterOwnerId(store)
+  if (!ownerId) {
+    throw new OwnerAuthError('This Host needs an Owner first', 409)
+  }
+  return ownerId
 }
 
 export function createHouseholdInvite(

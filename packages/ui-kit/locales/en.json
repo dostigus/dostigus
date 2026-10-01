@@ -834,7 +834,12 @@
     "pendingAria": "Pending invites",
     "turningOff": "Turning off…",
     "titleDoc": "Dostigus · Members",
-    "addSheetInviteHint": "They sign in on this Host and open Chat. An Invite does not grant a Bot."
+    "addSheetInviteHint": "They sign in on this Host and open Chat. An Invite does not grant a Bot.",
+    "roleAdmin": "Admin",
+    "makeAdmin": "Make Admin",
+    "removeAdmin": "Remove Admin",
+    "roleSaving": "Saving…",
+    "roleFailed": "Could not change the role."
   },
   "sheet": {
     "demo": {

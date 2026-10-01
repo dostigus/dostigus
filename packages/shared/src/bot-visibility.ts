@@ -40,9 +40,13 @@ export function canDeleteBot(bot: BotAccess, viewer: BotViewer): boolean {
   return canEditBot(bot, viewer)
 }
 
-/** The Owner grants on any Bot. The creator grants on their own. A grantee cannot re-share. */
-export function canGrantBot(bot: BotAccess, viewer: BotViewer): boolean {
-  return canEditBot(bot, viewer)
+/**
+ * The Owner and an Admin grant on any Bot. The creator grants on their own.
+ * Any other grantee cannot re-share. Pass `admin` when the viewer is an
+ * enabled Member with role `admin` (ADR 0042).
+ */
+export function canGrantBot(bot: BotAccess, viewer: BotViewer, admin = false): boolean {
+  return admin || canEditBot(bot, viewer)
 }
 
 /** Always this viewer's own bot-thread, including a Bot they did not create. */

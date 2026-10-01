@@ -1,6 +1,6 @@
 import type { OpenedStore } from '@dostigus/db'
 import type { Member } from '@dostigus/shared'
-import { createMember, disableMember, listMembers, revokeOutstandingInvitesForEmail } from '@dostigus/db'
+import { createMember, disableMember, listMembers, revokeOutstandingInvitesForEmail, setMemberRole } from '@dostigus/db'
 import { parseMemberDisplayName, parseOwnerIdentifier, parseOwnerPassword } from '@dostigus/shared'
 import { OwnerAuthError } from './owner-auth'
 
@@ -16,6 +16,11 @@ export function listHouseholdMembers(store: OpenedStore): Member[] {
 
 export function disableHouseholdMember(store: OpenedStore, id: string): Member {
   return disableMember(store, id)
+}
+
+/** Owner only: make Admin or remove Admin. An Admin cannot appoint another Admin (ADR 0042). */
+export function setHouseholdMemberRole(store: OpenedStore, id: string, role: unknown): Member {
+  return setMemberRole(store, id, role)
 }
 
 export async function addHouseholdMember(

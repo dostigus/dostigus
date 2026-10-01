@@ -95,6 +95,12 @@ export const PREVIEW_SHOOT_STATES = {
     ready: { selector: '.members h1', count: 1 },
     viewport: DEFAULT_VIEWPORT,
   },
+  'members-admin': {
+    seed: 'members=1&as=admin',
+    ready: { selector: '.members h1', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'members-admin signs in the preview Admin: role chips, no make Admin / remove Admin, no Add Member.',
+  },
   'narrow': {
     seed: 'settings=1',
     thenPath: '/dashboard/providers',
