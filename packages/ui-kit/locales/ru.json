@@ -94,7 +94,11 @@
       "resize": "Ширина списка",
       "loading": "Загружаем чаты…",
       "loadError": "Не получилось загрузить чаты.",
-      "empty": "Пока нет чатов"
+      "empty": "Пока нет чатов",
+      "filterAria": "Фильтр чатов",
+      "filterAll": "Все",
+      "filterCaseOpen": "Открытые Case",
+      "emptyCaseOpen": "Нет открытых Case"
     },
     "threadKind": {
       "dm": "ЛС",
@@ -205,7 +209,23 @@
       "labelTooLong": "Метка не длиннее 40 символов.",
       "nextActionTooLong": "Следующий шаг не длиннее 120 символов.",
       "lineAria": "Case {status}: {summary}. Открыть Case",
-      "lineAddAria": "Добавить Case в этот чат"
+      "lineAddAria": "Добавить Case в этот чат",
+      "followUp": "Напоминание",
+      "followUpAdd": "Напомнить",
+      "followUpChange": "Изменить",
+      "followUpClear": "Убрать",
+      "followUpWhen": "Когда",
+      "followUpWhenHint": "Время кластера, {zone}",
+      "followUpBot": "Бот",
+      "followUpBotPlaceholder": "Выберите бота",
+      "followUpWhat": "Что",
+      "followUpNoWhat": "Следующего шага пока нет. Бот проверит, как идёт Case.",
+      "followUpSummary": "{when} · {bot}",
+      "followUpNoBots": "Добавьте бота в этот чат, чтобы поставить напоминание.",
+      "followUpHint": "Один раз. Бот проснётся в этом чате со следующим шагом.",
+      "followUpWhenRequired": "Выберите дату и время.",
+      "followUpBotRequired": "Выберите бота.",
+      "followUpLine": "Напомнить {when}"
     },
     "botPicker": {
       "titleOwner": "Найти или создать Bot",

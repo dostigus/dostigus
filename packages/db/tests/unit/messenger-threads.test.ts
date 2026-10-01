@@ -29,11 +29,13 @@ function memoryStore() {
 }
 
 function applyThreadCase(sqlite: DatabaseSync) {
-  const migration = STORE_MIGRATIONS.find((item) => item.id === '0026_thread_case')
-  if (!migration) {
-    throw new Error('missing 0026_thread_case')
+  for (const id of ['0026_thread_case', '0028_thread_case_follow_up']) {
+    const migration = STORE_MIGRATIONS.find((item) => item.id === id)
+    if (!migration) {
+      throw new Error(`missing ${id}`)
+    }
+    sqlite.exec(migration.sql)
   }
-  sqlite.exec(migration.sql)
 }
 
 function applyBeforeMessenger(sqlite: DatabaseSync) {

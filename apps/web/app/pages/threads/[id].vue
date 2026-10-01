@@ -61,6 +61,7 @@
         <ThreadCaseLine
           v-if="hasCase"
           :value="thread?.case ?? null"
+          :time-zone="timeZone"
           @open="openRoster(true)"
         />
       </div>
@@ -241,6 +242,7 @@
       :thread="thread"
       :viewer-id="user?.id ?? ''"
       :case-edit="caseEdit"
+      :time-zone="timeZone"
       @added="onParticipantAdded"
       @updated="onThreadUpdated"
     />
@@ -261,6 +263,7 @@ type ChatMessage = Message & { authorName: string | null }
 type Payload = {
   thread: ThreadListItem
   messages: ChatMessage[]
+  timeZone?: string
 }
 
 const route = useRoute()
@@ -321,6 +324,7 @@ const replyBot = ref<ThreadParticipantView | null>(null)
 const threadEl = ref<HTMLElement | null>(null)
 
 const thread = computed(() => data.value?.thread ?? null)
+const timeZone = computed(() => data.value?.timeZone ?? 'UTC')
 const hasCase = computed(() => Boolean(thread.value && isCaseThreadKind(thread.value.kind)))
 const timeline = computed(() => data.value?.messages ?? [])
 const loadError = computed(() => Boolean(error.value))

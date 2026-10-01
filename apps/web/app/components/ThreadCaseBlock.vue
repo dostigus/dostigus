@@ -84,6 +84,107 @@
           {{ $t('host.threadCase.edit') }}
         </KitButton>
       </div>
+
+      <div
+        v-if="current.status === 'open'"
+        class="follow"
+      >
+        <p class="next-key">
+          {{ $t('host.threadCase.followUp') }}
+        </p>
+        <template v-if="!followEditing">
+          <p
+            v-if="current.followUpAt"
+            class="follow-when"
+          >
+            {{ followUpSummary }}
+          </p>
+          <p
+            v-else-if="botOptions.length === 0"
+            class="hint"
+          >
+            {{ $t('host.threadCase.followUpNoBots') }}
+          </p>
+          <div
+            v-if="botOptions.length > 0 || current.followUpAt"
+            class="actions"
+          >
+            <KitButton
+              v-if="botOptions.length > 0"
+              size="sm"
+              variant="ghost"
+              :disabled="busy"
+              @click="startFollowUp"
+            >
+              {{ current.followUpAt ? $t('host.threadCase.followUpChange') : $t('host.threadCase.followUpAdd') }}
+            </KitButton>
+            <KitButton
+              v-if="current.followUpAt"
+              size="sm"
+              variant="ghost"
+              :disabled="busy"
+              @click="clearFollowUp"
+            >
+              {{ $t('host.threadCase.followUpClear') }}
+            </KitButton>
+          </div>
+        </template>
+        <form
+          v-else
+          class="edit"
+          @submit.prevent="saveFollowUp"
+        >
+          <KitField
+            :label="$t('host.threadCase.followUpWhen')"
+            :hint="$t('host.threadCase.followUpWhenHint', { zone })"
+            :error="followErrors.at"
+          >
+            <KitInput
+              ref="followAtEl"
+              v-model="draftAt"
+              name="followUpAt"
+              type="datetime-local"
+              :readonly="busy"
+            />
+          </KitField>
+          <KitField
+            :label="$t('host.threadCase.followUpBot')"
+            :error="followErrors.bot"
+          >
+            <KitSelect
+              v-model="draftBot"
+              name="followUpBotId"
+              :options="botOptions"
+              :placeholder="$t('host.threadCase.followUpBotPlaceholder')"
+              :disabled="busy"
+            />
+          </KitField>
+          <p class="next">
+            <span class="next-key">{{ $t('host.threadCase.followUpWhat') }}</span>
+            {{ current.nextAction || $t('host.threadCase.followUpNoWhat') }}
+          </p>
+          <p class="hint">
+            {{ $t('host.threadCase.followUpHint') }}
+          </p>
+          <div class="actions">
+            <KitButton
+              type="submit"
+              size="sm"
+              :disabled="busy"
+            >
+              {{ busy ? $t('common.saving') : $t('common.save') }}
+            </KitButton>
+            <KitButton
+              size="sm"
+              variant="ghost"
+              :disabled="busy"
+              @click="cancelFollowUp"
+            >
+              {{ $t('common.cancel') }}
+            </KitButton>
+          </div>
+        </form>
+      </div>
     </div>
 
     <form
@@ -152,22 +253,45 @@
 <script setup lang="ts">
 import type { CaseStatus, ThreadCase, ThreadListItem } from '@dostigus/shared'
 import { CASE_LABEL_MAX, CASE_NEXT_ACTION_MAX } from '@dostigus/shared'
-import { KitButton, KitChip, KitField, KitInput, KitListRow, KitToggle } from '@dostigus/ui-kit'
+import { KitButton, KitChip, KitField, KitInput, KitListRow, KitSelect, KitToggle } from '@dostigus/ui-kit'
+import { defaultFollowUpInput, followUpInputValue } from '../utils/case-follow-up'
 import { hostStatusCopy } from '../utils/host-status-copy'
+import { scheduleWhenLabel } from '../utils/schedule-copy'
 
 const props = defineProps<{
   thread: ThreadListItem
   /** Open straight into the form when the Thread has no Case yet. */
   autoEdit?: boolean
+  /** Cluster timezone. Follow-up times are read and written in it. */
+  timeZone?: string
 }>()
 
 const emit = defineEmits<{
   saved: [thread: ThreadListItem]
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const editing = ref(false)
+const followEditing = ref(false)
+const draftAt = ref('')
+const draftBot = ref('')
+const followErrors = reactive({ at: '', bot: '' })
+const followAtEl = ref<InstanceType<typeof KitInput> | null>(null)
+const zone = computed(() => props.timeZone || 'UTC')
+const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' as const)
+const botOptions = computed(() => props.thread.participants
+  .filter((participant) => participant.kind === 'bot')
+  .map((participant) => ({ value: participant.id, label: participant.name })))
+const followUpSummary = computed(() => {
+  const value = current.value
+  if (!value?.followUpAt) {
+    return ''
+  }
+  const when = scheduleWhenLabel(value.followUpAt, zone.value, Date.now(), hostLocale.value)
+  const bot = props.thread.participants.find((item) => item.kind === 'bot' && item.id === value.followUpBotId)?.name
+  return bot ? t('host.threadCase.followUpSummary', { when, bot }) : when
+})
 const busy = ref(false)
 const error = ref('')
 const draftLabel = ref('')
@@ -203,7 +327,55 @@ function cancel() {
   error.value = ''
 }
 
-async function write(body: { status: CaseStatus, label?: string, nextAction?: string }) {
+async function startFollowUp() {
+  const value = current.value
+  draftAt.value = value?.followUpAt
+    ? followUpInputValue(value.followUpAt, zone.value)
+    : defaultFollowUpInput(Date.now(), zone.value)
+  const bots = botOptions.value
+  draftBot.value = value?.followUpBotId ?? (bots.length === 1 ? bots[0]?.value ?? '' : '')
+  followErrors.at = ''
+  followErrors.bot = ''
+  error.value = ''
+  followEditing.value = true
+  await nextTick()
+  followAtEl.value?.focus()
+}
+
+function cancelFollowUp() {
+  followEditing.value = false
+  error.value = ''
+}
+
+async function saveFollowUp() {
+  if (busy.value) {
+    return
+  }
+  followErrors.at = draftAt.value ? '' : t('host.threadCase.followUpWhenRequired')
+  followErrors.bot = draftBot.value ? '' : t('host.threadCase.followUpBotRequired')
+  if (followErrors.at || followErrors.bot) {
+    return
+  }
+  const ok = await write({ followUpAt: draftAt.value, followUpBotId: draftBot.value })
+  if (ok) {
+    followEditing.value = false
+  }
+}
+
+async function clearFollowUp() {
+  if (busy.value) {
+    return
+  }
+  await write({ followUpAt: null })
+}
+
+async function write(body: {
+  status?: CaseStatus
+  label?: string
+  nextAction?: string
+  followUpAt?: string | null
+  followUpBotId?: string
+}) {
   busy.value = true
   error.value = ''
   try {
@@ -282,6 +454,23 @@ async function flip() {
 
 .label {
   font-weight: 700;
+}
+
+.follow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.follow > .next-key,
+.follow-when {
+  margin: 0;
+}
+
+.follow-when {
+  line-height: 1.45;
 }
 
 .next-key {

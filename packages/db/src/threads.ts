@@ -498,19 +498,19 @@ export function listDueCaseFollowUps(store: OpenedStore, now: number): DueCaseFo
   }))
 }
 
-export type CaseFollowUpClaim =
-  | { outcome: 'gone' }
-  | { outcome: 'skipped_done' | 'skipped_bot' }
-  | {
-    outcome: 'fire'
-    threadId: string
-    botId: string
-    /** The person the Bot turn runs for: the first person Participant. */
-    personId: string
-    title: string
-    label: string
-    nextAction: string
-  }
+export type CaseFollowUpClaim
+  = | { outcome: 'gone' }
+    | { outcome: 'skipped_done' | 'skipped_bot' }
+    | {
+      outcome: 'fire'
+      threadId: string
+      botId: string
+      /** The person the Bot turn runs for: the first person Participant. */
+      personId: string
+      title: string
+      label: string
+      nextAction: string
+    }
 
 /**
  * Clears a due follow-up once and says whether to fire it. A `done` Case

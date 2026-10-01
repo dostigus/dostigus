@@ -2,7 +2,7 @@
   <button
     type="button"
     class="case-line"
-    :class="{ empty: !value, bare: value && !summary }"
+    :class="{ empty: !value, bare: value && !summary && !followUp }"
     :aria-label="ariaLabel"
     @click="emit('open')"
   >
@@ -17,6 +17,10 @@
         v-if="summary"
         class="summary"
       >{{ summary }}</span>
+      <span
+        v-if="followUp"
+        class="follow"
+      >{{ followUp }}</span>
     </template>
     <span
       v-else
@@ -28,16 +32,32 @@
 <script setup lang="ts">
 import type { ThreadCase } from '@dostigus/shared'
 import { KitChip } from '@dostigus/ui-kit'
+import { scheduleWhenLabel } from '../utils/schedule-copy'
 
 const props = defineProps<{
   value: ThreadCase | null
+  /** Cluster timezone for the follow-up time. */
+  timeZone?: string
 }>()
 
 const emit = defineEmits<{
   open: []
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+const followUp = computed(() => {
+  if (!props.value?.followUpAt) {
+    return ''
+  }
+  const when = scheduleWhenLabel(
+    props.value.followUpAt,
+    props.timeZone || 'UTC',
+    Date.now(),
+    locale.value === 'ru' ? 'ru' : 'en',
+  )
+  return t('host.threadCase.followUpLine', { when })
+})
 
 const statusText = computed(() => (
   props.value?.status === 'done' ? t('host.threadCase.done') : t('host.threadCase.open')
@@ -45,11 +65,16 @@ const statusText = computed(() => (
 const summary = computed(() => (
   props.value ? [props.value.label, props.value.nextAction].filter(Boolean).join(' · ') : ''
 ))
-const ariaLabel = computed(() => (
-  props.value
-    ? t('host.threadCase.lineAria', { status: statusText.value, summary: summary.value || t('host.threadCase.noText') })
-    : t('host.threadCase.lineAddAria')
-))
+const ariaLabel = computed(() => {
+  if (!props.value) {
+    return t('host.threadCase.lineAddAria')
+  }
+  const base = t('host.threadCase.lineAria', {
+    status: statusText.value,
+    summary: summary.value || t('host.threadCase.noText'),
+  })
+  return followUp.value ? `${followUp.value}. ${base}` : base
+})
 </script>
 
 <style scoped>
@@ -105,5 +130,16 @@ const ariaLabel = computed(() => (
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.follow {
+  flex: none;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.summary + .follow::before {
+  content: '·';
+  margin-inline-end: 0.4rem;
 }
 </style>
