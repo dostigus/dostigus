@@ -111,11 +111,22 @@ that only returns Store data uses `withOwnerStore(event, (store) => …)`,
 which applies the same gate (`members/index.get.ts`,
 `members/invites/index.get.ts`). Bot list and Chat use
 `requireHostSession` / `withHostStore` so a Member can use them. Settings,
-Bot create/delete, and Members stay on the Owner gate. The page gate is
+Bot create/delete, and Members stay on the Owner gate.
+Providers (`settings/llm-gateway*`), the Members list, and Invites use
+`requireOwnerOrAdminSession` / `withOwnerOrAdminStore`
+([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)). That
+gate reads `members.role` from the Store on each request, so promote
+and demote apply without a new sign-in. Member add, turn off sign-in,
+`PUT /api/members/:id/role`, Cluster settings, and Locale stay on
+`requireOwnerSession`. The page gate is
 [`apps/web/app/middleware/owner.global.ts`](apps/web/app/middleware/owner.global.ts):
 `/dashboard` and every `/dashboard/...` page send a Member to
 `/` (`isOwnerPath` in
 [`apps/web/app/utils/owner-paths.ts`](apps/web/app/utils/owner-paths.ts)).
+An Admin may open `/dashboard`, `/dashboard/providers`, and
+`/dashboard/members` (`isAdminPath`); other Dashboard pages send an
+Admin to `/dashboard`. The client reads the Admin flag from
+`GET /api/auth/status` (`account.admin`), not the session cookie.
 Invite accept
 (`/invite/…`, `/api/invites/:token`) stays public while logged out — those
 handlers do not call `requireOwnerSession`.
@@ -346,7 +357,10 @@ not call the LLM gateway. See
 For Members and Invite screenshots, open
 **http://localhost:3000/preview-seed?members=1**. That GET signs in the
 same preview Owner and redirects to `/dashboard/members` (a Member session cannot
-open that page). `?hold=1` and `?activity=` are ignored when `members=1`
+open that page). It also ensures the preview Member (role `member`) and
+a preview Admin (username `preview-admin`, password `preview-admin`,
+role `admin`; a later visit puts that row back on `admin`).
+`?members=1&as=admin` signs in that Admin on the same page. `?hold=1` and `?activity=` are ignored when `members=1`
 is set. **HEAD**
 ignores `?members=1` and still answers **204** or **302** to
 `/bots/preview` with no session cookie.
@@ -457,7 +471,9 @@ that query, that `?kitchen=1` adds one Kitchen button once while
 HEAD ignores that query, that `?system=1` adds three system Skill /
 self-settings lines once while HEAD ignores that query, that `?readme=1`
 opens `/bots/readme-kitchen` after seeding Mail, Kitchen, and Reader
-while HEAD ignores that query, and that `?threads=1` lists Bot `preview` and the Member's Bot for the
+while HEAD ignores that query, that `?members=1&as=admin` opens Members for the preview
+Admin while that Admin gets 403 on Cluster settings and role changes
+and 302 `/dashboard` on Cluster settings and Settings pages, and that `?threads=1` lists Bot `preview` and the Member's Bot for the
 Owner while `?threads=1&as=member` opens a different bot-thread on Bot
 `preview`. HEAD ignores `?threads=1`. `?settings=1` lands on `/dashboard`; `?providers=1`
 lands on `/dashboard/providers`; the catalog answers without the key; a
@@ -496,6 +512,7 @@ explicit ready marker (not network idle), and writes a PNG under
 | `providers-fixture` | `?providers=1` | `.provider` and shelf cards (`.shelf .card:not(.skeleton)`; not the miss banner) | 1440×900 |
 | `settings-other` | `?settings=1` then `/dashboard/cluster` | `.cluster input[name="timezone"]` | 1440×900 |
 | `members` | `?members=1` | `.members h1` | 1440×900 |
+| `members-admin` | `?members=1&as=admin` | `.members h1` (Admin chip, no make Admin / remove Admin) | 1440×900 |
 | `narrow` | `?settings=1` then `/dashboard/providers` | `.providers h1` | 390×844 |
 | `providers-health` | `?providers=1`, clip the health panel | fixture shelf cards | 1440×900 |
 | `providers-shelf` | `?providers=1`, scroll to and clip `.provider .shelf` | fixture shelf cards | 1440×900 |
@@ -599,8 +616,9 @@ LLM gateway key, no `?hold=1`), then calls `dostigus_turns_list` and
 [ADR 0029](docs/adr/0029-turn-journal.md).
 
 Preview Owner: username `preview`, password `preview-owner`. Preview
-Member (only after `?threads=1`): username `preview-member`, password
-`preview-member`. A
+Member (after `?threads=1`, `?rooms=1`, or `?members=1`): username
+`preview-member`, password `preview-member`. Preview Admin (after
+`?members=1`): username `preview-admin`, password `preview-admin`. A
 production Host stays closed. If the Store already has a different Owner,
 GET and HEAD return 409 — point `DATABASE_URL` at a fresh file (for example
 `file:.data/preview.sqlite`) or sign in at `/login`. This is local preview
