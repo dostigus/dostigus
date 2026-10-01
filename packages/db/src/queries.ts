@@ -813,6 +813,10 @@ export function updateBot(
 export function deleteBot(store: OpenedStore, id: string): void {
   requireBot(store, id)
   store.sqlite.prepare('DELETE FROM bots WHERE id = ?').run(id)
+  store.sqlite.prepare(`
+    UPDATE threads SET case_follow_up_at = NULL, case_follow_up_bot_id = NULL
+    WHERE case_follow_up_bot_id = ?
+  `).run(id)
 }
 
 const LLM_GATEWAY_ID = 'cluster'

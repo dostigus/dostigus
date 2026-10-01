@@ -345,6 +345,8 @@ export {
   CASE_NEXT_ACTION_MAX,
   CASE_STATUSES,
   CASE_THREAD_KINDS,
+  caseFollowUpLine,
+  caseFollowUpWakeText,
   type CaseStatus,
   type HouseholdPerson,
   insertRoomMention,

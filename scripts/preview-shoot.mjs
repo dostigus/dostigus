@@ -287,6 +287,27 @@ export const PREVIEW_SHOOT_STATES = {
     viewport: DEFAULT_VIEWPORT,
     hint: 'thread-case-edit taps the Case line; the roster Sheet opens on the Case form only while the Preview room has no Case yet. Use a fresh DATABASE_URL after a Case save.',
   },
+  'case-inbox': {
+    seed: 'rooms=1',
+    clicks: ['.filters .kit-chip:last-child'],
+    ready: { selector: '.filters .kit-chip:last-child[data-selected]', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'case-inbox presses Case open over the messenger list (GET /api/threads?caseStatus=open). Preview room is listed only after a PATCH /api/threads/preview-room/case leaves it open.',
+  },
+  'thread-case-follow-up': {
+    seed: 'rooms=1',
+    clicks: ['.identity'],
+    ready: { selector: '.kit-sheet--end .case .follow', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'thread-case-follow-up opens the Preview room roster Sheet on the Case block follow-up controls. It needs an open Case (PATCH /api/threads/preview-room/case first).',
+  },
+  'thread-case-follow-up-edit': {
+    seed: 'rooms=1',
+    clicks: ['.identity', '.kit-sheet--end .case .follow .kit-button'],
+    ready: { selector: '.kit-sheet--end .case input[name="followUpAt"]', count: 1 },
+    viewport: DEFAULT_VIEWPORT,
+    hint: 'thread-case-follow-up-edit opens the follow-up form (When, Bot, What) in the Case block. It needs an open Case on a room with a Bot.',
+  },
   'onboarding': {
     seed: false,
     thenPath: '/onboarding',

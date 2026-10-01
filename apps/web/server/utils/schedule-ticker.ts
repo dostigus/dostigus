@@ -22,6 +22,7 @@ import {
 import { resolveHostLocale } from '@dostigus/ui-kit/locale'
 import { scheduleDisplayName } from '../../app/utils/schedule-copy'
 import { annotateHistoryWithArtifacts, attachTurnArtifacts, gcArtifacts } from './artifacts'
+import { flushCaseFollowUpWakes, runCaseFollowUps } from './case-follow-up'
 import {
   clearChatActivityPhase,
   readChatActivityPhase,
@@ -37,20 +38,9 @@ import {
   settleChatTurn,
   settleFromReply,
 } from './turn-journal'
+import { applyWakePromptToHistory } from './wake-history'
 
 type ReplyFn = typeof completeAssistantReply
-
-/** Current-turn LLM history: wakeText replaces the stored Schedule-name line. */
-export function applyWakePromptToHistory<T extends { role: string, content: string }>(
-  history: T[],
-  wakeText: string,
-): T[] {
-  const last = history.at(-1)
-  if (!last || last.role !== 'system') {
-    return history
-  }
-  return [...history.slice(0, -1), { ...last, content: wakeText }]
-}
 
 const wakes = new Set<Promise<void>>()
 let timer: ReturnType<typeof setInterval> | undefined
@@ -79,7 +69,7 @@ export function stopScheduleTicker(): void {
 }
 
 export function flushScheduleWakes(): Promise<void> {
-  return Promise.all([...wakes]).then(() => undefined)
+  return Promise.all([...wakes, flushCaseFollowUpWakes()]).then(() => undefined)
 }
 
 export function runScheduleTick(input: {
@@ -115,6 +105,7 @@ export function runScheduleTick(input: {
         console.warn(`Schedule ${schedule.id} failed`, error)
       }
     }
+    runCaseFollowUps({ store, now, env, completeReply })
   } finally {
     ticking = false
   }

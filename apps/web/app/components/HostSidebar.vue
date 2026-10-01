@@ -29,35 +29,57 @@
         <HostPlusMenu :rail="rail" />
       </div>
 
+      <div
+        v-if="!rail"
+        class="filters"
+        role="group"
+        :aria-label="$t('host.sidebar.filterAria')"
+      >
+        <KitChip
+          as="button"
+          :selected="filter === 'all'"
+          @click="setFilter('all')"
+        >
+          {{ $t('host.sidebar.filterAll') }}
+        </KitChip>
+        <KitChip
+          as="button"
+          :selected="filter === 'caseOpen'"
+          @click="setFilter('caseOpen')"
+        >
+          {{ $t('host.sidebar.filterCaseOpen') }}
+        </KitChip>
+      </div>
+
       <nav
         class="list"
-        :class="{ 'list-empty': threads.length === 0 && !pending && !error && !rail }"
+        :class="{ 'list-empty': listed.length === 0 && !listPending && !listError && !rail }"
         :aria-label="$t('host.nav.threads')"
       >
         <p
-          v-if="pending && threads.length === 0"
+          v-if="listPending && listed.length === 0"
           class="status"
         >
           {{ $t('host.sidebar.loading') }}
         </p>
         <p
-          v-else-if="error && threads.length === 0"
+          v-else-if="listError && listed.length === 0"
           class="status error"
         >
           {{ $t('host.sidebar.loadError') }}
         </p>
         <p
-          v-else-if="threads.length === 0 && !rail"
+          v-else-if="listed.length === 0 && !rail"
           class="status"
         >
-          {{ $t('host.sidebar.empty') }}
+          {{ caseOpen ? $t('host.sidebar.emptyCaseOpen') : $t('host.sidebar.empty') }}
         </p>
         <ul
           v-else
           class="bots"
         >
           <li
-            v-for="thread in threads"
+            v-for="thread in listed"
             :key="thread.id"
           >
             <NuxtLink
@@ -150,6 +172,8 @@
 
 <script setup lang="ts">
 import type { ThreadListItem } from '@dostigus/shared'
+import type { HostThreadFilter } from '../composables/useHostThreads'
+import { KitChip } from '@dostigus/ui-kit'
 
 const route = useRoute()
 const { open, narrow, close } = useHostNav()
@@ -164,6 +188,23 @@ const { isLive } = useHostBotActivity()
 
 const dragging = ref(false)
 const rail = computed(() => collapsed.value && !narrow.value)
+const caseInbox = useHostCaseInbox()
+const filter = caseInbox.filter
+const caseOpen = computed(() => filter.value === 'caseOpen' && !rail.value)
+const listed = computed(() => caseOpen.value ? caseInbox.threads.value : threads.value)
+const listPending = computed(() => caseOpen.value ? caseInbox.pending.value : pending.value)
+const listError = computed(() => caseOpen.value ? caseInbox.error.value : error.value)
+
+function setFilter(next: HostThreadFilter) {
+  filter.value = next
+}
+
+watch([caseOpen, threads], ([active]) => {
+  if (active) {
+    void caseInbox.refresh()
+  }
+}, { immediate: true })
+
 const frameStyle = computed(() => {
   if (narrow.value) {
     return undefined
@@ -337,6 +378,13 @@ onUnmounted(() => {
   outline-offset: 2px;
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex: none;
+  padding: 0.15rem 0.7rem 0.45rem;
+}
 .list {
   flex: 1;
   min-height: 0;

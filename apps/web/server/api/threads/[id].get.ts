@@ -1,4 +1,4 @@
-import { authorNameForPerson, getMessengerThread, listThreadMessages } from '@dostigus/db'
+import { authorNameForPerson, effectiveClusterTimeZone, getMessengerThread, listThreadMessages } from '@dostigus/db'
 
 export default defineEventHandler(async (event) => {
   const session = await requireHostSession(event)
@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
         ? authorNameForPerson(store, message.personId)
         : null,
     }))
-    return { thread, messages }
+    return { thread, messages, timeZone: effectiveClusterTimeZone(store).effective }
   } catch (error) {
     throwStoreError(error)
   }

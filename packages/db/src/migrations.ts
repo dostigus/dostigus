@@ -515,6 +515,13 @@ ALTER TABLE \`threads\` ADD \`case_next_action\` text;
 ALTER TABLE \`members\` ADD \`role\` text DEFAULT 'member' NOT NULL;
 `,
   },
+  {
+    id: '0028_thread_case_follow_up',
+    sql: `
+ALTER TABLE \`threads\` ADD \`case_follow_up_at\` integer;
+ALTER TABLE \`threads\` ADD \`case_follow_up_bot_id\` text;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

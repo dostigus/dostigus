@@ -94,7 +94,11 @@
       "resize": "Resize sidebar",
       "loading": "Loading Threads…",
       "loadError": "Could not load Threads.",
-      "empty": "No Threads yet"
+      "empty": "No Threads yet",
+      "filterAria": "Filter Threads",
+      "filterAll": "All",
+      "filterCaseOpen": "Case open",
+      "emptyCaseOpen": "No open Cases"
     },
     "threadKind": {
       "dm": "DM",
@@ -205,7 +209,23 @@
       "labelTooLong": "Label must be 40 characters or fewer.",
       "nextActionTooLong": "Next action must be 120 characters or fewer.",
       "lineAria": "Case {status}: {summary}. Open the Case",
-      "lineAddAria": "Add a Case to this Chat"
+      "lineAddAria": "Add a Case to this Chat",
+      "followUp": "Follow-up",
+      "followUpAdd": "Set follow-up",
+      "followUpChange": "Change",
+      "followUpClear": "Clear",
+      "followUpWhen": "When",
+      "followUpWhenHint": "Cluster time, {zone}",
+      "followUpBot": "Bot",
+      "followUpBotPlaceholder": "Pick a Bot",
+      "followUpWhat": "What",
+      "followUpNoWhat": "No next action yet. The Bot checks where the Case stands.",
+      "followUpSummary": "{when} · {bot}",
+      "followUpNoBots": "Add a Bot to this Chat to set a follow-up.",
+      "followUpHint": "One time. The Bot wakes on this Chat with the next action.",
+      "followUpWhenRequired": "Pick a date and time.",
+      "followUpBotRequired": "Pick a Bot.",
+      "followUpLine": "Follow-up {when}"
     },
     "botPicker": {
       "titleOwner": "Find or create a Bot",

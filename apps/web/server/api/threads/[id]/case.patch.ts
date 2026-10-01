@@ -4,6 +4,8 @@ type PatchBody = {
   status?: unknown
   label?: unknown
   nextAction?: unknown
+  followUpAt?: unknown
+  followUpBotId?: unknown
 }
 
 export default defineEventHandler(async (event) => {
@@ -17,6 +19,8 @@ export default defineEventHandler(async (event) => {
       status: body?.status,
       label: body?.label,
       nextAction: body?.nextAction,
+      followUpAt: body?.followUpAt,
+      followUpBotId: body?.followUpBotId,
     })
     return { thread }
   } catch (error) {

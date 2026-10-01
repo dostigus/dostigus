@@ -186,7 +186,7 @@ function matchesWall(
     && wall.minute === minute
 }
 
-function zonedWallTimeToUtc(
+export function zonedWallTimeToUtc(
   year: number,
   month: number,
   day: number,

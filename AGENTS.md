@@ -546,6 +546,9 @@ explicit ready marker (not network idle), and writes a PNG under
 | `thread-roster-add` | same as `thread-roster`, then click **Add** (`.add-row`) | `.kit-sheet--end .candidate` (Bot **Private notes**) | 1440×900 |
 | `thread-case` | `?rooms=1` | `.identity-stack .case-line` (Case line under the identity pill) | 1440×900 |
 | `thread-case-edit` | `?rooms=1`, click the Case line | `.kit-sheet--end .case input[name="label"]` (only while the room has no Case) | 1440×900 |
+| `case-inbox` | `?rooms=1`, press **Case open** (`.filters .kit-chip:last-child`) | that chip `[data-selected]` (room listed only after an open Case PATCH) | 1440×900 |
+| `thread-case-follow-up` | `?rooms=1`, click `.identity` | `.kit-sheet--end .case .follow` (needs an open Case) | 1440×900 |
+| `thread-case-follow-up-edit` | same as `thread-case-follow-up`, then click the first follow-up button | `.kit-sheet--end .case input[name="followUpAt"]` | 1440×900 |
 | `onboarding` | none, signed out, `/onboarding` | two `input[autocomplete="new-password"]` | 1440×900 |
 | `onboarding-error` | same as `onboarding`, two different passwords, submit | `[role="alert"]` | 1440×900 |
 | `home-empty` | same as `onboarding`, preview Owner login and password, submit | `.empty .kit-button` | 1440×900 |

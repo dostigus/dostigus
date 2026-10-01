@@ -197,6 +197,13 @@
       "when": 1760508000000,
       "tag": "0027_member_role",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "6",
+      "when": 1760594400000,
+      "tag": "0028_thread_case_follow_up",
+      "breakpoints": true
     }
   ]
 }

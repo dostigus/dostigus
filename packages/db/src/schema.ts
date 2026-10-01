@@ -129,6 +129,9 @@ export const threads = sqliteTable('threads', {
   caseStatus: text('case_status'),
   caseLabel: text('case_label'),
   caseNextAction: text('case_next_action'),
+  /** One-shot Case follow-up Wake (ADR 0044). Epoch ms; set with `caseFollowUpBotId`. */
+  caseFollowUpAt: integer('case_follow_up_at'),
+  caseFollowUpBotId: text('case_follow_up_bot_id'),
 }, (table) => [
   index('threads_bot_id_idx').on(table.botId),
 ])

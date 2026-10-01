@@ -1,6 +1,8 @@
-import type { Bot, BotViewer, ThreadCase, ThreadListItem, ThreadMark, ThreadParticipantView } from '@dostigus/shared'
+import type { Bot, BotViewer, CaseStatus, ThreadCase, ThreadListItem, ThreadMark, ThreadParticipantView } from '@dostigus/shared'
+import type { ScheduleClock } from './schedules'
 import type { OpenedStore } from './store'
 import { randomUUID } from 'node:crypto'
+import process from 'node:process'
 import {
   botThreadPersonId,
   CASE_LABEL_MAX,
@@ -14,6 +16,8 @@ import {
 import { authorNameForPerson, getMember, listMembers } from './members'
 import { getOwner } from './owners'
 import { botThreadIdFor, getBot, insertThreadLine, listBots, requireBot, viewerMaySeeBot } from './queries'
+import { zonedWallTimeToUtc } from './schedule-time'
+import { effectiveClusterTimeZone } from './schedules'
 import { StoreError } from './store-error'
 
 const PEOPLE_MAX = 50
@@ -28,7 +32,14 @@ type ThreadRecord = {
   case_status: string | null
   case_label: string | null
   case_next_action: string | null
+  case_follow_up_at: number | null
+  case_follow_up_bot_id: string | null
 }
+
+const THREAD_SELECT = `
+  id, kind, bot_id, title, created_at, case_status, case_label, case_next_action,
+  case_follow_up_at, case_follow_up_bot_id
+`
 
 export function listHouseholdPeople(store: OpenedStore) {
   const people: { id: string, displayName: string, role: 'owner' | 'member' }[] = []
@@ -78,7 +89,18 @@ export function listRoomBotAudience(store: OpenedStore, viewer: BotViewer): Room
   }))
 }
 
-export function listInboxThreads(store: OpenedStore, viewer: BotViewer): ThreadListItem[] {
+/**
+ * The messenger inbox. `caseStatus: 'open'` keeps only `group` and `room`
+ * Threads this person is on whose Case is open (ADR 0044).
+ */
+export function listInboxThreads(
+  store: OpenedStore,
+  viewer: BotViewer,
+  filter: { caseStatus?: 'open' } = {},
+): ThreadListItem[] {
+  if (filter.caseStatus === 'open') {
+    return listOpenCaseThreads(store, viewer)
+  }
   const ids = new Set<string>()
   const joined = store.sqlite.prepare(`
     SELECT thread_id FROM thread_participants
@@ -110,8 +132,31 @@ export function listInboxThreads(store: OpenedStore, viewer: BotViewer): ThreadL
     }
     items.push(botInboxRow(store, bot, viewer.id))
   }
-  items.sort((a, b) => activityMs(b) - activityMs(a) || b.createdAt.localeCompare(a.createdAt))
+  items.sort(byActivity)
   return items
+}
+
+function listOpenCaseThreads(store: OpenedStore, viewer: BotViewer): ThreadListItem[] {
+  const rows = store.sqlite.prepare(`
+    SELECT t.id AS id
+    FROM threads t
+    INNER JOIN thread_participants p
+      ON p.thread_id = t.id AND p.kind = 'person' AND p.ref_id = ?
+    WHERE t.kind IN ('group', 'room') AND t.case_status = 'open'
+  `).all(viewer.id) as { id: string }[]
+  const items: ThreadListItem[] = []
+  for (const row of rows) {
+    const item = readThreadListItem(store, row.id, viewer.id)
+    if (item?.case?.status === 'open') {
+      items.push(item)
+    }
+  }
+  items.sort(byActivity)
+  return items
+}
+
+function byActivity(a: ThreadListItem, b: ThreadListItem): number {
+  return activityMs(b) - activityMs(a) || b.createdAt.localeCompare(a.createdAt)
 }
 
 export function getMessengerThread(
@@ -294,20 +339,39 @@ export function addMessengerParticipant(
 }
 
 /**
- * Writes the Case on a `group` or `room` (ADR 0041). Any person
+ * Writes the Case on a `group` or `room` (ADR 0041, ADR 0044). Any person
  * participant may write. The first write creates the Case with status
  * `open` unless the body sets it. A `dm` or bot-thread is not found.
+ *
+ * `followUpAt` is an ISO instant with an offset, or a `YYYY-MM-DDTHH:MM`
+ * wall clock in the Cluster timezone. It needs `followUpBotId`, a Bot
+ * Participant. `null` clears both. `done` clears both.
  */
 export function updateThreadCase(
   store: OpenedStore,
-  input: { threadId: string, actorId: string, status?: unknown, label?: unknown, nextAction?: unknown },
+  input: {
+    threadId: string
+    actorId: string
+    status?: unknown
+    label?: unknown
+    nextAction?: unknown
+    followUpAt?: unknown
+    followUpBotId?: unknown
+  },
+  clock?: ScheduleClock,
 ): ThreadListItem {
   const current = getMessengerThread(store, input.threadId, input.actorId)
   if (!isCaseThreadKind(current.kind)) {
     throw new StoreError('Thread not found', 404)
   }
-  if (input.status === undefined && input.label === undefined && input.nextAction === undefined) {
-    throw new StoreError('Send a Case status, label, or next action', 400)
+  if (
+    input.status === undefined
+    && input.label === undefined
+    && input.nextAction === undefined
+    && input.followUpAt === undefined
+    && input.followUpBotId === undefined
+  ) {
+    throw new StoreError('Send a Case status, label, next action, or follow-up', 400)
   }
   if (input.status !== undefined && !isCaseStatus(input.status)) {
     throw new StoreError('Case status must be open or done', 400)
@@ -319,14 +383,179 @@ export function updateThreadCase(
     `Case next action must be ${CASE_NEXT_ACTION_MAX} characters or fewer`,
   )
   const status = input.status ?? current.case?.status ?? 'open'
+  const followUp = resolveFollowUp(store, current, status, input, clock)
   store.sqlite.prepare(`
     UPDATE threads
     SET case_status = ?,
       case_label = COALESCE(?, case_label, ''),
-      case_next_action = COALESCE(?, case_next_action, '')
+      case_next_action = COALESCE(?, case_next_action, ''),
+      case_follow_up_at = ?,
+      case_follow_up_bot_id = ?
     WHERE id = ?
-  `).run(status, label ?? null, nextAction ?? null, current.id)
+  `).run(status, label ?? null, nextAction ?? null, followUp.at, followUp.botId, current.id)
   return requireListItem(store, current.id, input.actorId)
+}
+
+function resolveFollowUp(
+  store: OpenedStore,
+  current: ThreadListItem,
+  status: CaseStatus,
+  input: { followUpAt?: unknown, followUpBotId?: unknown },
+  clock?: ScheduleClock,
+): { at: number | null, botId: string | null } {
+  const atGiven = input.followUpAt !== undefined
+  const botGiven = input.followUpBotId !== undefined
+  const at = atGiven
+    ? parseFollowUpAt(store, input.followUpAt, clock)
+    : current.case?.followUpAt ? Date.parse(current.case.followUpAt) : null
+  const botId = botGiven ? followUpBotIdOf(input.followUpBotId) : current.case?.followUpBotId ?? null
+  if (status === 'done') {
+    if (atGiven && at != null) {
+      throw new StoreError('A done Case has no follow-up', 400)
+    }
+    return { at: null, botId: null }
+  }
+  if (at == null) {
+    if (botGiven && botId && !atGiven) {
+      throw new StoreError('Set a follow-up time', 400)
+    }
+    return { at: null, botId: null }
+  }
+  if (!botId) {
+    throw new StoreError('Pick a Bot for the follow-up', 400)
+  }
+  if ((atGiven || botGiven) && !current.participants.some((item) => item.kind === 'bot' && item.id === botId)) {
+    throw new StoreError('The follow-up Bot must be in this Thread', 400)
+  }
+  if (atGiven && at <= (clock?.now ?? Date.now())) {
+    throw new StoreError('Follow-up time must be in the future', 400)
+  }
+  return { at, botId }
+}
+
+const WALL_CLOCK = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/
+const WITH_OFFSET = /(?:Z|[+-]\d{2}:?\d{2})$/i
+
+function parseFollowUpAt(store: OpenedStore, value: unknown, clock?: ScheduleClock): number | null {
+  if (value === null || value === '') {
+    return null
+  }
+  if (typeof value !== 'string') {
+    throw new StoreError('Follow-up time must be a date and time', 400)
+  }
+  const text = value.trim()
+  const wall = WALL_CLOCK.exec(text)
+  if (wall) {
+    const [year, month, day, hour, minute] = wall.slice(1).map(Number) as [number, number, number, number, number]
+    const check = new Date(Date.UTC(year, month - 1, day, hour, minute))
+    if (
+      check.getUTCFullYear() !== year
+      || check.getUTCMonth() !== month - 1
+      || check.getUTCDate() !== day
+      || check.getUTCHours() !== hour
+      || check.getUTCMinutes() !== minute
+    ) {
+      throw new StoreError('Follow-up time must be a date and time', 400)
+    }
+    const timeZone = effectiveClusterTimeZone(store, clock?.env ?? process.env).effective
+    return zonedWallTimeToUtc(year, month, day, hour, minute, timeZone)
+  }
+  const ms = WITH_OFFSET.test(text) ? Date.parse(text) : Number.NaN
+  if (!Number.isFinite(ms)) {
+    throw new StoreError('Follow-up time must be a date and time', 400)
+  }
+  return ms
+}
+
+function followUpBotIdOf(value: unknown): string | null {
+  if (value === null || value === '') {
+    return null
+  }
+  if (typeof value !== 'string') {
+    throw new StoreError('Follow-up Bot must be a Bot id', 400)
+  }
+  return value.trim() || null
+}
+
+/** A `group` or `room` whose Case follow-up is due. See ADR 0044. */
+export type DueCaseFollowUp = {
+  threadId: string
+  botId: string
+  followUpAt: number
+}
+
+export function listDueCaseFollowUps(store: OpenedStore, now: number): DueCaseFollowUp[] {
+  const rows = store.sqlite.prepare(`
+    SELECT id, case_follow_up_at, case_follow_up_bot_id
+    FROM threads
+    WHERE case_follow_up_at IS NOT NULL AND case_follow_up_at <= ?
+    ORDER BY case_follow_up_at ASC, id ASC
+  `).all(now) as { id: string, case_follow_up_at: number, case_follow_up_bot_id: string | null }[]
+  return rows.map((row) => ({
+    threadId: row.id,
+    botId: row.case_follow_up_bot_id ?? '',
+    followUpAt: row.case_follow_up_at,
+  }))
+}
+
+export type CaseFollowUpClaim
+  = | { outcome: 'gone' }
+    | { outcome: 'skipped_done' | 'skipped_bot' }
+    | {
+      outcome: 'fire'
+      threadId: string
+      botId: string
+      /** The person the Bot turn runs for: the first person Participant. */
+      personId: string
+      title: string
+      label: string
+      nextAction: string
+    }
+
+/**
+ * Clears a due follow-up once and says whether to fire it. A `done` Case
+ * or a Bot that left the Thread skips. The Case stays as it was.
+ */
+export function claimCaseFollowUp(store: OpenedStore, due: DueCaseFollowUp): CaseFollowUpClaim {
+  const claimed = store.sqlite.prepare(`
+    UPDATE threads SET case_follow_up_at = NULL, case_follow_up_bot_id = NULL
+    WHERE id = ? AND case_follow_up_at = ?
+  `).run(due.threadId, due.followUpAt)
+  if (Number(claimed.changes) === 0) {
+    return { outcome: 'gone' }
+  }
+  const thread = selectThread(store, due.threadId)
+  if (!thread || !isCaseThreadKind(thread.kind)) {
+    return { outcome: 'gone' }
+  }
+  if (thread.case_status !== 'open') {
+    return { outcome: 'skipped_done' }
+  }
+  const onThread = store.sqlite.prepare(`
+    SELECT 1 AS ok FROM thread_participants
+    WHERE thread_id = ? AND kind = 'bot' AND ref_id = ?
+  `).get(thread.id, due.botId) as { ok: number } | undefined
+  if (!due.botId || !onThread || !getBot(store, due.botId)) {
+    return { outcome: 'skipped_bot' }
+  }
+  const person = store.sqlite.prepare(`
+    SELECT ref_id FROM thread_participants
+    WHERE thread_id = ? AND kind = 'person'
+    ORDER BY rowid ASC
+    LIMIT 1
+  `).get(thread.id) as { ref_id: string } | undefined
+  if (!person) {
+    return { outcome: 'skipped_bot' }
+  }
+  return {
+    outcome: 'fire',
+    threadId: thread.id,
+    botId: due.botId,
+    personId: person.ref_id,
+    title: thread.title,
+    label: thread.case_label ?? '',
+    nextAction: thread.case_next_action ?? '',
+  }
 }
 
 function caseText(value: unknown, max: number, tooLong: string): string | undefined {
@@ -454,7 +683,7 @@ function uniqueIds(values: string[]): string[] {
 
 function selectThread(store: OpenedStore, id: string): ThreadRecord | undefined {
   return store.sqlite.prepare(`
-    SELECT id, kind, bot_id, title, created_at, case_status, case_label, case_next_action
+    SELECT ${THREAD_SELECT}
     FROM threads WHERE id = ?
   `).get(id) as ThreadRecord | undefined
 }
@@ -552,6 +781,8 @@ function caseFor(thread: ThreadRecord): ThreadCase | null {
     status: thread.case_status,
     label: thread.case_label ?? '',
     nextAction: thread.case_next_action ?? '',
+    followUpAt: thread.case_follow_up_at == null ? null : new Date(thread.case_follow_up_at).toISOString(),
+    followUpBotId: thread.case_follow_up_at == null ? null : thread.case_follow_up_bot_id,
   }
 }
 

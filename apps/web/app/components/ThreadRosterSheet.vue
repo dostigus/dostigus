@@ -15,6 +15,7 @@
         class="case-block"
         :thread="thread"
         :auto-edit="caseEdit"
+        :time-zone="timeZone"
         @saved="emit('updated', $event)"
       />
       <KitListRow
@@ -245,6 +246,8 @@ const props = defineProps<{
   viewerId: string
   /** Open the Case form when the Thread has no Case yet. */
   caseEdit?: boolean
+  /** Cluster timezone for the Case follow-up. */
+  timeZone?: string
 }>()
 
 const emit = defineEmits<{

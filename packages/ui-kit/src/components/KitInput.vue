@@ -16,7 +16,7 @@ import { ref } from 'vue'
 import { useKitFieldControl } from '../field'
 
 const props = withDefaults(defineProps<{
-  type?: 'text' | 'email' | 'password' | 'search' | 'url' | 'tel' | 'number' | 'time'
+  type?: 'text' | 'email' | 'password' | 'search' | 'url' | 'tel' | 'number' | 'time' | 'datetime-local'
   /** Overrides the id from `KitField`. */
   id?: string
   invalid?: boolean
