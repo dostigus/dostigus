@@ -751,7 +751,7 @@ async function main() {
       fail(`GET ${page} as Member expected 302 /, got ${hit.response.status} ${where ?? ''}`)
     }
   }
-  note('?settings=1 opens /dashboard; ?providers=1 opens /dashboard/providers; catalog is Owner-only; a Member cannot open /dashboard/...')
+  note('?settings=1 opens /dashboard; ?providers=1 opens /dashboard/providers; a Member gets 403 on the catalog and cannot open /dashboard/...')
 
   note('ok')
 }
