@@ -24,11 +24,33 @@ export const CASE_LABEL_MAX = 40
 
 export const CASE_NEXT_ACTION_MAX = 120
 
-/** Status, label, and next action on one Thread. Not a ticket. */
+/** Status, label, next action, and a one-shot follow-up on one Thread. Not a ticket. See ADR 0044. */
 export type ThreadCase = {
   status: CaseStatus
   label: string
   nextAction: string
+  /** ISO instant. Set together with `followUpBotId`. */
+  followUpAt: string | null
+  /** A Bot Participant on this Thread. */
+  followUpBotId: string | null
+}
+
+/** The visible Wake line for a Case follow-up: label, then Thread title, then «Case». See ADR 0044. */
+export function caseFollowUpLine(input: { label: string, title: string }): string {
+  return input.label.trim() || input.title.trim() || 'Case'
+}
+
+/** LLM wakeText for a Case follow-up turn: the next action, with the label as context. */
+export function caseFollowUpWakeText(input: { label: string, nextAction: string }): string {
+  const label = input.label.trim()
+  const nextAction = input.nextAction.trim()
+  const context = label
+    ? `Case follow-up on this Thread. Case: ${label}.`
+    : 'Case follow-up on this Thread.'
+  const what = nextAction
+    ? `Next action: ${nextAction}`
+    : 'No next action is written. Check where this Case stands.'
+  return `${context}\n${what}\nReply here for the people on this Thread.`
 }
 
 export function isCaseThreadKind(value: string): value is (typeof CASE_THREAD_KINDS)[number] {

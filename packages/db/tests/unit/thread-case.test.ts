@@ -44,10 +44,10 @@ it('sends case null on an untouched group, then creates the Case on the first wr
   expect(getMessengerThread(store, group.id, grace.id).case).toBeNull()
 
   const first = updateThreadCase(store, { threadId: group.id, actorId: grace.id, label: '  Visa  ' })
-  expect(first.case).toEqual({ status: 'open', label: 'Visa', nextAction: '' })
+  expect(first.case).toEqual({ status: 'open', label: 'Visa', nextAction: '', followUpAt: null, followUpBotId: null })
 
   const next = updateThreadCase(store, { threadId: group.id, actorId: owner.id, nextAction: 'Book the consulate slot' })
-  expect(next.case).toEqual({ status: 'open', label: 'Visa', nextAction: 'Book the consulate slot' })
+  expect(next.case).toEqual({ status: 'open', label: 'Visa', nextAction: 'Book the consulate slot', followUpAt: null, followUpBotId: null })
 
   const row = listInboxThreads(store, { id: grace.id, role: 'member' }).find((item) => item.id === group.id)
   expect(row?.case).toEqual(next.case)
@@ -59,11 +59,11 @@ it('flips done and open without archiving the Thread', () => {
   const group = createMessengerThread(store, { kind: 'group', title: 'Trip', actorId: owner.id, personIds: [grace.id] })
 
   const done = updateThreadCase(store, { threadId: group.id, actorId: owner.id, status: 'done' })
-  expect(done.case).toEqual({ status: 'done', label: '', nextAction: '' })
+  expect(done.case).toEqual({ status: 'done', label: '', nextAction: '', followUpAt: null, followUpBotId: null })
   expect(listInboxThreads(store, { id: owner.id, role: 'owner' }).map((item) => item.id)).toContain(group.id)
 
   const reopened = updateThreadCase(store, { threadId: group.id, actorId: grace.id, status: 'open', label: 'Visa' })
-  expect(reopened.case).toEqual({ status: 'open', label: 'Visa', nextAction: '' })
+  expect(reopened.case).toEqual({ status: 'open', label: 'Visa', nextAction: '', followUpAt: null, followUpBotId: null })
   expect(reopened.kind).toBe('group')
 })
 
@@ -74,7 +74,7 @@ it('stores whitespace-only text as empty and keeps the status', () => {
   updateThreadCase(store, { threadId: group.id, actorId: owner.id, status: 'done', label: 'Visa', nextAction: 'Call' })
 
   const cleared = updateThreadCase(store, { threadId: group.id, actorId: owner.id, label: '   ', nextAction: '\n' })
-  expect(cleared.case).toEqual({ status: 'done', label: '', nextAction: '' })
+  expect(cleared.case).toEqual({ status: 'done', label: '', nextAction: '', followUpAt: null, followUpBotId: null })
 })
 
 it('writes a Case on a room', () => {
@@ -90,7 +90,7 @@ it('writes a Case on a room', () => {
     botIds: [expi.id],
   })
   const written = updateThreadCase(store, { threadId: room.id, actorId: grace.id, status: 'open', label: 'Deploy' })
-  expect(written.case).toEqual({ status: 'open', label: 'Deploy', nextAction: '' })
+  expect(written.case).toEqual({ status: 'open', label: 'Deploy', nextAction: '', followUpAt: null, followUpBotId: null })
 })
 
 it('rejects a Case on a dm and a bot-thread as not found', () => {
@@ -134,7 +134,7 @@ it('validates the body', () => {
     ...body,
   })
 
-  expect(() => write({})).toThrow(/status, label, or next action/)
+  expect(() => write({})).toThrow(/status, label, next action, or follow-up/)
   expect(() => write({ status: 'closed' })).toThrow(/open or done/)
   expect(() => write({ label: 'x'.repeat(41) })).toThrow(/40 characters/)
   expect(() => write({ nextAction: 'x'.repeat(121) })).toThrow(/120 characters/)
