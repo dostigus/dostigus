@@ -6,6 +6,7 @@
         <p>{{ $t('members.peopleOnHost') }}</p>
       </div>
       <KitButton
+        v-if="isOwner"
         type="button"
         @click="addOpen = true"
       >
@@ -166,6 +167,7 @@
           {{ $t('members.emptyHint') }}
         </p>
         <KitButton
+          v-if="isOwner"
           type="button"
           @click="addOpen = true"
         >
@@ -187,10 +189,13 @@
           :subtitle="member.email ?? member.username ?? undefined"
         >
           <template #trailing>
+            <KitChip v-if="member.role === 'admin'">
+              {{ $t('members.roleAdmin') }}
+            </KitChip>
             <KitChip v-if="member.disabledAt">
               {{ $t('members.disabled') }}
             </KitChip>
-            <template v-else-if="confirmId === member.id">
+            <template v-else-if="isOwner && confirmId === member.id">
               <KitButton
                 variant="ghost"
                 size="sm"
@@ -206,14 +211,23 @@
                 {{ busyId === member.id ? $t('members.turningOff') : $t('members.disable') }}
               </KitButton>
             </template>
-            <KitButton
-              v-else
-              variant="ghost"
-              size="sm"
-              @click="confirmId = member.id"
-            >
-              {{ $t('members.disable') }}
-            </KitButton>
+            <template v-else-if="isOwner">
+              <KitButton
+                variant="ghost"
+                size="sm"
+                :disabled="busyId === member.id"
+                @click="setRole(member)"
+              >
+                {{ roleButtonLabel(member) }}
+              </KitButton>
+              <KitButton
+                variant="ghost"
+                size="sm"
+                @click="confirmId = member.id"
+              >
+                {{ $t('members.disable') }}
+              </KitButton>
+            </template>
           </template>
         </KitListRow>
       </ul>
@@ -331,6 +345,7 @@ import { hostStatusCopy } from '../../utils/host-status-copy'
 import { memberErrorField } from '../../utils/member-form'
 
 const { t } = useI18n()
+const { isOwner } = useHostAccount()
 
 const { data, error: loadError, refresh } = await useFetch<{ members: Member[] }>('/api/members')
 const members = computed(() => data.value?.members ?? [])
@@ -351,6 +366,7 @@ const confirm = ref('')
 const adding = ref(false)
 const addErrors = ref<Partial<Record<MemberFormField | 'confirm', string>>>({})
 const busyId = ref('')
+const roleBusy = ref(false)
 const confirmId = ref('')
 const message = ref('')
 const messageError = ref(false)
@@ -512,6 +528,33 @@ async function add() {
     addErrors.value = { [memberErrorField(error)]: hostStatusCopy(error, t, 'members.addFailed') }
   } finally {
     adding.value = false
+  }
+}
+
+function roleButtonLabel(member: Member): string {
+  if (busyId.value === member.id && roleBusy.value) {
+    return t('members.roleSaving')
+  }
+  return member.role === 'admin' ? t('members.removeAdmin') : t('members.makeAdmin')
+}
+
+async function setRole(member: Member) {
+  busyId.value = member.id
+  roleBusy.value = true
+  message.value = ''
+  messageError.value = false
+  try {
+    await $fetch(`/api/members/${member.id}/role`, {
+      method: 'PUT',
+      body: { role: member.role === 'admin' ? 'member' : 'admin' },
+    })
+    await refresh()
+  } catch {
+    message.value = t('members.roleFailed')
+    messageError.value = true
+  } finally {
+    busyId.value = ''
+    roleBusy.value = false
   }
 }
 

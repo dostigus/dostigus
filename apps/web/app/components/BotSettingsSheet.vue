@@ -160,7 +160,7 @@
         @applied="onPackApplied"
       />
       <section
-        v-if="canEdit"
+        v-if="canShare"
         class="group"
         aria-labelledby="who-sees-heading"
       >
@@ -362,7 +362,7 @@ const hostLocale = computed(() => locale.value === 'ru' ? 'ru' as const : 'en' a
 
 const open = defineModel<boolean>('open', { required: true })
 
-const { user, isOwner } = useHostAccount()
+const { user, isOwner, isAdmin } = useHostAccount()
 const canEdit = computed(() => {
   if (!props.bot || !user.value?.id) {
     return false
@@ -372,6 +372,7 @@ const canEdit = computed(() => {
     role: isOwner.value ? 'owner' : 'member',
   })
 })
+const canShare = computed(() => canEdit.value || isAdmin.value)
 const shapes = BOT_AVATAR_SHAPES
 const accents = BOT_ACCENT_TOKENS
 const name = ref('')
@@ -497,7 +498,7 @@ function onPackApplied(botId: string) {
 }
 
 async function loadGrants() {
-  if (!props.bot || !canEdit.value) {
+  if (!props.bot || !canShare.value) {
     sharePeople.value = []
     grantedIds.value = new Set()
     return
@@ -508,7 +509,9 @@ async function loadGrants() {
       $fetch<{ grants: GrantRow[] }>(`/api/bots/${props.bot.id}/grants`),
     ])
     const creatorId = props.bot.createdBy
-    sharePeople.value = people.people.filter((person) => person.role === 'member' && person.id !== creatorId)
+    sharePeople.value = people.people.filter((person) => {
+      return person.role === 'member' && person.id !== creatorId && person.id !== user.value?.id
+    })
     grantedIds.value = new Set(grants.grants.map((grant) => grant.personId))
   } catch {
     grantError.value = t('closet.openAccessFailed')

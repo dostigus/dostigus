@@ -834,7 +834,12 @@
     "pendingAria": "Ожидают Invite",
     "turningOff": "Выключаем…",
     "titleDoc": "Dostigus · Members",
-    "addSheetInviteHint": "Они входят на этот Host и открывают Chat. Invite не выдаёт Bot."
+    "addSheetInviteHint": "Они входят на этот Host и открывают Chat. Invite не выдаёт Bot.",
+    "roleAdmin": "Админ",
+    "makeAdmin": "Сделать админом",
+    "removeAdmin": "Снять админа",
+    "roleSaving": "Сохраняем…",
+    "roleFailed": "Не удалось сменить роль."
   },
   "sheet": {
     "demo": {

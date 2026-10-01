@@ -41,10 +41,14 @@
           </span>
         </NuxtLink>
 
-        <p class="group">
+        <p
+          v-if="isOwner"
+          class="group"
+        >
           {{ $t('dashboard.nav.cluster') }}
         </p>
         <NuxtLink
+          v-if="isOwner"
           to="/dashboard/cluster"
           class="item"
           :aria-current="route.path === '/dashboard/cluster' ? 'page' : undefined"
@@ -140,6 +144,7 @@
           </span>
         </NuxtLink>
         <NuxtLink
+          v-if="isOwner"
           to="/dashboard/settings"
           class="item"
           :aria-current="route.path === '/dashboard/settings' ? 'page' : undefined"
@@ -181,6 +186,7 @@
 
 <script setup lang="ts">
 const route = useRoute()
+const { isOwner } = useHostAccount()
 const stacked = ref(false)
 
 let detachStacked = () => {}
