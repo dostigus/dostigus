@@ -2,6 +2,9 @@
 
 - Status: accepted
 - Date: 2026-10-01
+- Amended: 2026-10-01 — Admin day-to-day / Owner keys and
+  destroy is the ops split in
+  [ADR 0043](0043-target-personas.md).
 
 Collective Host direction stays
 [ADR 0040](0040-collective-host-direction.md). One Owner per

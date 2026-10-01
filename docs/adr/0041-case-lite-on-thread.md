@@ -3,7 +3,10 @@
 - Status: accepted
 - Date: 2026-10-01
 - Amended: 2026-10-01 — Admin does not gate Case or roster add
-  ([ADR 0042](0042-admin-role-and-share-permission.md)).
+  ([ADR 0042](0042-admin-role-and-share-permission.md));
+  Case inbox + follow-up Wakes as the next must-have for
+  Team are [ADR 0043](0043-target-personas.md). This
+  record's on-thread v1 inbox stay stands.
 
 Collective Host direction stays
 [ADR 0040](0040-collective-host-direction.md). Threads and Bot

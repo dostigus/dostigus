@@ -5,7 +5,9 @@
 - Amended: 2026-10-01 — Case-lite Store shape, API, and glossary
   term **Case** are [ADR 0041](0041-case-lite-on-thread.md);
   Admin role, share permission, and Store shape are
-  [ADR 0042](0042-admin-role-and-share-permission.md).
+  [ADR 0042](0042-admin-role-and-share-permission.md);
+  Owner-operator and Team audiences are
+  [ADR 0043](0043-target-personas.md).
 
 Nick locked the direction below on 2026-10-01. This record sets
 direction and order only. It does not change [SPEC](../SPEC.md)

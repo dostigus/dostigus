@@ -32,10 +32,11 @@ Settled now, even if this repo only scaffolds them:
 | Pack | Portable recipe, not a Bot and not a Module package. Export Pack from a live Bot is a scrubbed zip (`pack.json` + `skills/` + optional `schedules/` + optional `ui/` + optional README). Public id is `author.slug`; the Bot-part slug transliterates Cyrillic then slugifies (no silent `pack` fallback for a named Bot). Export omits Host seed Skills (`platform-meta-*` / the Host seed allowlist), invents a Schedule name from cadence+time when the live name is empty, and stamps `installed_packs` plus the Bot ref. Apply Pack from a local file, a public `.zip` URL, or an https git remote shows a preview / plan, then writes onto an existing Bot or creates a new Bot. Imported Schedules land paused and carry Pack snapshot provenance. Update replaces only Schedules stamped with the previous snapshot; unlabeled (grandfather) and Owner-created rows stay. Update does not wipe Chat. See [ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md). |
 | Case | Thin layer on a `group` or `room` Thread: status `open` \| `done`, label ≤40, next action ≤120. Not a ticket tracker. Any person Participant writes it with `PATCH /api/threads/:id/case`; the Thread DTO nests `case` (null until the first write). Roster Sheet block and a line under the Chat identity pill. See [ADR 0041](adr/0041-case-lite-on-thread.md). |
 | Admin | Household Member with `members.role` `admin`. Not a second Owner. Opens Dashboard read, Providers / LLM, and Members invite/list. Owner and Admin grant any Bot; a Member grants only a Bot they created. Admin creates Bots and Applies Packs like the Owner. Only the Owner promotes or demotes an Admin. Case and roster stay any person Participant. See [ADR 0042](adr/0042-admin-role-and-share-permission.md). |
+| Personas | Two primary audiences: Owner-operator (Collective N=1) and Team 2–15 (messenger + Bots; run work in Chat with Bots). Product leads with Team. Member is served, not roadmap-optimized. Case inbox + follow-up Wakes are the next must-have to fit Team; not in this Host. See [ADR 0043](adr/0043-target-personas.md). |
 
 ## This Host (create Bot + Chat)
 
-What the running Cluster does today:
+What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)):
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
@@ -898,10 +899,13 @@ and [`docs/deploy.md`](deploy.md)).
   ([ADR 0042](adr/0042-admin-role-and-share-permission.md)).
   Admin and the share permission themselves are in this Host; those
   extras are not.
-- Case inbox / sidebar filters, a Case on a `dm` or bot-thread,
+- Case inbox / sidebar filters, follow-up Wakes, a Case on a `dm` or bot-thread,
   Case assignee / due / priority, and a separate Case page
-  ([ADR 0041](adr/0041-case-lite-on-thread.md)). Case-lite
-  fields are in this Host; those extras stay later or rejected.
+  ([ADR 0041](adr/0041-case-lite-on-thread.md),
+  [ADR 0043](adr/0043-target-personas.md)). Case-lite
+  fields are in this Host. A Case inbox and follow-up Wakes
+  are the next must-have for Team and stay later. The other
+  extras stay later or rejected.
 - OAuth, passkeys, email verify, password reset
 - Mobile native
 - Per-bot domains (the `meal.kosarev.space` pattern is temporary and to be replaced)
