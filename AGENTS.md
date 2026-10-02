@@ -26,8 +26,8 @@
    `GET /api/catalog/packs`); Nick publish is a Bearer,
    not Cluster Admin; Host does not pull a catalog;
    Host [#189](https://github.com/dostigus/dostigus/pull/189)
-   `@dostigus/catalog` is misplaced / to remove (do not
-   expand Host catalog); deep-link Apply is `applyPack=`
+   `@dostigus/catalog` is removed (do not expand Host
+   catalog); deep-link Apply is `applyPack=`
    with the **cloud** mirror zip URL (preview stays 0039;
    handler is a follow-up). Avoid bare
    “cloud agent” — use Builder.

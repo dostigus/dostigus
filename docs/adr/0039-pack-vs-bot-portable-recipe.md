@@ -36,7 +36,7 @@
   Catalog Store on Platform Host, and auto-update
   stay out. Pack format stays this record.
   Host [#189](https://github.com/dostigus/dostigus/pull/189)
-  catalog is misplaced / to remove.
+  catalog is misplaced / removed.
 
 Platform git vs Cluster objects stays
 [ADR 0001](0001-platform-git-vs-in-cluster-bot-packages.md).

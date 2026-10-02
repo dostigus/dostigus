@@ -29,14 +29,14 @@ Settled now, even if this repo only scaffolds them:
 | Artifacts | Persisted Cluster file objects: volume bytes + Store meta + message join. Composer **+** uploads; send takes `artifactIds[]`. Chat slim and Wake gain `dostigus_artifacts_put`. No get tool. Image vision on the triggering line is [ADR 0035](adr/0035-image-artifact-vision.md). See [ADR 0034](adr/0034-artifacts.md). |
 | Chat LLM context | System prompt is Manifest (including label and description) plus a Skill catalog (`id` + `description`). History is the last 40 lines (string `content` + Artifact meta note). The triggering user message may use OpenAI content parts. Chat tools start slim; keyword expand adds builder tools on that user turn only. Wake is narrower and has no expand. See [ADR 0032](adr/0032-chat-llm-context-assembly.md) and [ADR 0035](adr/0035-image-artifact-vision.md). |
 | Chat Cards | The Host injects a Kit Card in the thread after a Schedule change, stored as assistant message parts. A successful Skill upsert or delete, or a Bot self-settings update of name, label, or description, appends one system Chat line (plain string, no parts). This monorepo ships no stock Module packages and no Weather seed. On Bot create the Host inserts missing meta Skills (insert-if-missing, constructor how-to) and does not call `upsertBotSkill`. See [ADR 0030](adr/0030-chat-cards-module-catalog.md). |
-| Pack | Portable recipe, not a Bot and not a Module package. Export Pack from a live Bot is a scrubbed zip (`pack.json` + `skills/` + optional `schedules/` + optional `ui/` + optional README). Public id is `author.slug`; the Bot-part slug transliterates Cyrillic then slugifies (no silent `pack` fallback for a named Bot). Export omits Host seed Skills (`platform-meta-*` / the Host seed allowlist), invents a Schedule name from cadence+time when the live name is empty, and stamps `installed_packs` plus the Bot ref. Apply Pack from a local file, a public `.zip` URL, or an https git remote shows a preview / plan, then writes onto an existing Bot or creates a new Bot. Imported Schedules land paused and carry Pack snapshot provenance. Update replaces only Schedules stamped with the previous snapshot; unlabeled (grandfather) and Owner-created rows stay. Update does not wipe Chat. See [ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md). The public catalog is **Marketplace** on the marketing site (https://dostigus.ru/marketplace) in GitHub repo `dostigus/cloud`; listing source of truth is the **Catalog Store** on that same site / dostigus.ru ([ADR 0047](adr/0047-marketplace-catalog-store.md)); the site owns publish, mirrors, and the public read API; Member Apply uses the cloud mirror zip URL; deep-link Apply (`applyPack=` → `PackApplySheet` preview) is in that record; copy-URL is the fallback. Packs are the first catalog kind; `/packs` 301s to Marketplace; this Host links out and does not pull a live catalog. Platform Host does not run Catalog Store for the public marketplace. Host [#189](https://github.com/dostigus/dostigus/pull/189) `@dostigus/catalog` is misplaced / to remove. Pro stays out of the public field. See [ADR 0045](adr/0045-pack-catalog-on-marketing-site.md). Site public URLs are `prefix_except_default` (unprefixed = RU, EN `/en/...`; [ADR 0046](adr/0046-site-i18n-url-prefix.md)); this Host out-link stays the unprefixed RU URL. |
+| Pack | Portable recipe, not a Bot and not a Module package. Export Pack from a live Bot is a scrubbed zip (`pack.json` + `skills/` + optional `schedules/` + optional `ui/` + optional README). Public id is `author.slug`; the Bot-part slug transliterates Cyrillic then slugifies (no silent `pack` fallback for a named Bot). Export omits Host seed Skills (`platform-meta-*` / the Host seed allowlist), invents a Schedule name from cadence+time when the live name is empty, and stamps `installed_packs` plus the Bot ref. Apply Pack from a local file, a public `.zip` URL, or an https git remote shows a preview / plan, then writes onto an existing Bot or creates a new Bot. Imported Schedules land paused and carry Pack snapshot provenance. Update replaces only Schedules stamped with the previous snapshot; unlabeled (grandfather) and Owner-created rows stay. Update does not wipe Chat. See [ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md). The public catalog is **Marketplace** on the marketing site (https://dostigus.ru/marketplace) in GitHub repo `dostigus/cloud`; listing source of truth is the **Catalog Store** on that same site / dostigus.ru ([ADR 0047](adr/0047-marketplace-catalog-store.md)); the site owns publish, mirrors, and the public read API; Member Apply uses the cloud mirror zip URL; deep-link Apply (`applyPack=` → `PackApplySheet` preview) is in that record; copy-URL is the fallback. Packs are the first catalog kind; `/packs` 301s to Marketplace; this Host links out and does not pull a live catalog. Platform Host does not run Catalog Store for the public marketplace. Host [#189](https://github.com/dostigus/dostigus/pull/189) `@dostigus/catalog` is removed. Pro stays out of the public field. See [ADR 0045](adr/0045-pack-catalog-on-marketing-site.md). Site public URLs are `prefix_except_default` (unprefixed = RU, EN `/en/...`; [ADR 0046](adr/0046-site-i18n-url-prefix.md)); this Host out-link stays the unprefixed RU URL. |
 | Case | Thin layer on a `group` or `room` Thread: status `open` \| `done`, label ≤40, next action ≤120. Not a ticket tracker. Any person Participant writes it with `PATCH /api/threads/:id/case`; the Thread DTO nests `case` (null until the first write). Roster Sheet block and a line under the Chat identity pill. See [ADR 0041](adr/0041-case-lite-on-thread.md). Messenger filter chips (All / Case open) list open Cases the signed-in person is on (`GET /api/threads?caseStatus=open`). One-shot follow-up (`followUpAt`, `followUpBotId`) fires a Wake on that Thread. See [ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md). |
 | Admin | Household Member with `members.role` `admin`. Not a second Owner. Opens Dashboard read, Providers / LLM, and Members invite/list. Owner and Admin grant any Bot; a Member grants only a Bot they created. Admin creates Bots and Applies Packs like the Owner. Only the Owner promotes or demotes an Admin. Case and roster stay any person Participant. See [ADR 0042](adr/0042-admin-role-and-share-permission.md). |
 | Personas | Two primary audiences: Owner-operator (Collective N=1) and Team 2–15 (messenger + Bots; run work in Chat with Bots). Product leads with Team. Member is served, not roadmap-optimized. Case inbox + follow-up Wakes are [ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md) and are in this Host. See [ADR 0043](adr/0043-target-personas.md). |
 
 ## This Host (create Bot + Chat)
 
-What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)); Host [#189](https://github.com/dostigus/dostigus/pull/189) `@dostigus/catalog` is misplaced / deprecated (remove in a follow-up PR; do not expand Host catalog). Deep-link Apply (`applyPack=` cloud mirror zip URL) is not in this Host yet. This Host does not pull a catalog.
+What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)). This Host does not ship `@dostigus/catalog` or `/api/catalog/*`. Deep-link Apply (`applyPack=` cloud mirror zip URL) is not in this Host yet. This Host does not pull a catalog.
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
@@ -85,11 +85,9 @@ What the running Cluster does today. This Host serves an Owner-operator (Collect
 - Catalog Store: **not** on this Host for the public marketplace.
   Listings, mirrors, Nick publish/seed, and public read live on
   `dostigus/cloud` / dostigus.ru
-  ([ADR 0047](adr/0047-marketplace-catalog-store.md)). Host
-  [#189](https://github.com/dostigus/dostigus/pull/189)
-  `@dostigus/catalog` plus `/api/catalog/*` on this Host are
-  misplaced / deprecated — remove in a follow-up PR; do not
-  expand Host catalog. See [`docs/catalog.md`](catalog.md).
+  ([ADR 0047](adr/0047-marketplace-catalog-store.md)). This
+  Host does not ship `@dostigus/catalog` or `/api/catalog/*`.
+  See [`docs/catalog.md`](catalog.md).
 - Owner auth: `nuxt-auth-utils` sealed cookie session. Fresh Cluster →
   `/onboarding` (email or username + password). Later visits → `/login`.
   Register is disabled once an Owner exists. Login accepts the Owner or a
@@ -884,7 +882,7 @@ Module.
   Catalog Store on `dostigus/cloud` / dostigus.ru is
   [ADR 0047](adr/0047-marketplace-catalog-store.md);
   this Host does not pull a catalog. Host #189 catalog
-  is misplaced / to remove.
+  is removed.
 - **Meta Skills.** On Bot create the Host inserts Skill rows
   when each id is absent: `platform-meta-schedules`,
   `platform-meta-skills`, `platform-meta-self-settings`,
@@ -935,10 +933,10 @@ and [`docs/deploy.md`](deploy.md)).
   (`applyPack=` cloud mirror zip URL → `PackApplySheet`)
   is that record, not a Host-pulled index. Host
   [#189](https://github.com/dostigus/dostigus/pull/189)
-  Catalog Store on this Host is misplaced / to
-  remove ([`docs/catalog.md`](catalog.md)). Cloud
-  Catalog Store + site consume, then Host remove,
-  then optional `applyPack=` stay later PRs.
+  Catalog Store on this Host is removed
+  ([`docs/catalog.md`](catalog.md)). Cloud Catalog
+  Store + site consume, then optional `applyPack=`
+  stay later PRs.
   Submit portal, CLI, Publisher role, and a
   Mailer product Pack (IMAP / SMTP) stay later.
   Packs are the first catalog kind; `/packs` 301s to
