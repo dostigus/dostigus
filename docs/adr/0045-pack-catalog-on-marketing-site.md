@@ -11,6 +11,10 @@
   https://dostigus.ru/marketplace, new tab. Pro stays out of
   the public field ([ADR 0040](0040-collective-host-direction.md))
   and is removed from the public site.
+- Amended: 2026-10-02 — Site public URLs are
+  `prefix_except_default` (unprefixed = RU, EN `/en/...`)
+  ([ADR 0046](0046-site-i18n-url-prefix.md)). Host Closet
+  out-link stays https://dostigus.ru/marketplace (RU).
 
 Pack Apply stays
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md): file, public
@@ -84,7 +88,11 @@ Site path is `/marketplace`. Packs sit inside that
 Marketplace. RU and EN, like the existing landing.
 `/packs` and `/packs/:slug` **301** to Marketplace
 (`/marketplace`, and the matching Pack page when that slug
-exists).
+exists). Site public URLs are
+[ADR 0046](0046-site-i18n-url-prefix.md):
+`prefix_except_default`, unprefixed = RU, EN under
+`/en/...`. The Host out-link stays the unprefixed RU URL.
+`/en/packs` 301s like `/packs`.
 
 ### Pro out of the public field
 
@@ -196,7 +204,10 @@ package registry.
 - SPEC “In scope” names Marketplace and the Host out-link.
   SPEC “This Host” names the Closet Параметры Pack row.
   SPEC out of scope still excludes in-product Marketplace
-  Apply and a Host-pulled catalog.
+  Apply and a Host-pulled catalog. Site public URLs
+  (unprefixed = RU, EN `/en/...`) are
+  [ADR 0046](0046-site-i18n-url-prefix.md). The Host
+  out-link stays https://dostigus.ru/marketplace (RU).
 - Kitchen Module seed stays a seed
   ([ADR 0026](0026-kitchen-module-day-1.md)). A Kitchen
   Pack page on the site is a recipe people Apply; it is
