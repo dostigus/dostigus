@@ -4,6 +4,10 @@
 - Date: 2026-09-25
 - Amended: 2026-09-26 — Thread chrome is chat / чат, not the
   loanword Thread in RU UI.
+- Amended: 2026-10-02 — Host `no_prefix` stays. Marketing
+  site locale URLs are
+  [ADR 0046](0046-site-i18n-url-prefix.md), not this
+  record.
 
 Session and Household stay [ADR 0010](0010-owner-auth-session.md) and
 [ADR 0012](0012-household-members.md). Settings information
@@ -209,7 +213,8 @@ always EN, and “LLM reply language is later” on 2026-09-25.
 - MCP tool descriptions
 - README / repo docs translation
 - LLM / Bot reply language
-- `/en` or `/ru` URL prefixes
+- `/en` or `/ru` URL prefixes on the Host. Marketing site
+  prefixes are [ADR 0046](0046-site-i18n-url-prefix.md)
 - Permanent flag chrome
 - A Member-visible switcher on day-1
 - Translating CONTEXT glossary terms into Cyrillic
@@ -222,7 +227,9 @@ always EN, and “LLM reply language is later” on 2026-09-25.
 
 - Custom composable or `vue-i18n` without `@nuxtjs/i18n` —
   rejected. Nuxt module plus typed messages.
-- `strategy: prefix` (`/en`, `/ru`) — rejected. `no_prefix`.
+- `strategy: prefix` (`/en`, `/ru`) — rejected for Host.
+  `no_prefix`. The marketing site is
+  [ADR 0046](0046-site-i18n-url-prefix.md).
 - Browser `Accept-Language` as the Store of truth — rejected.
   Cookie before login; `Member.locale` after.
 - One Cluster-wide Locale and no per-Member column — rejected.

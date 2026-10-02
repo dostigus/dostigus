@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0045, so the next ADR
-is **0046**. Name it `0046-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0046, so the next ADR
+is **0047**. Name it `0047-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one.
 
@@ -68,7 +68,7 @@ English.
 | [0034](0034-artifacts.md) | Artifacts (amended 2026-09-25: image vision is [0035](0035-image-artifact-vision.md); no get tool stays) |
 | [0035](0035-image-artifact-vision.md) | Image Artifact vision |
 | [0036](0036-llm-providers-tier-resolve-escalate.md) | LLM Providers, tier resolve, and escalate (amended 2026-09-25: OpenRouter Settings catalog + quality shelf; Advanced pin is day-1 of this amend for `kind=openrouter`; amended 2026-09-25: Settings IA — Провайдеры / Прочее, health from key + soft catalog probe; amended 2026-09-25: chrome slugs `/dashboard/providers` and `/dashboard/cluster`, no `/settings` redirects [0038](0038-dashboard-chrome.md); amended 2026-09-26: Provider `apiKey` is the only Store SoT; one-shot migrate then drop `llm_gateway.api_key`) |
-| [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) (amended 2026-09-26: Thread chrome is chat / чат) |
+| [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) (amended 2026-09-26: Thread chrome is chat / чат; amended 2026-10-02: Host `no_prefix` stays; Site URL prefix is [0046](0046-site-i18n-url-prefix.md)) |
 | [0038](0038-dashboard-chrome.md) | Dashboard chrome (own layout; Settings is one page; Members under Account; no `/settings` or `/members` redirects) |
 | [0039](0039-pack-vs-bot-portable-recipe.md) | Pack vs Bot portable recipe (Pack ≠ Bot ≠ Module package; Export Pack vs Export Bot backup; HTML `ui/` in a sandboxed iframe; amended 2026-09-28: RU translit, Export Sheet, seed Skill filter, Export stamps snapshot, Schedule provenance; amended 2026-09-28: URL / git Apply; amended 2026-10-02: public Marketplace is [0045](0045-pack-catalog-on-marketing-site.md)) |
 | [0040](0040-collective-host-direction.md) | Collective Host product direction (Collective of 1…N people; messenger + personal / shared Bots + MCP to external systems; Rooms gaps, then Case-lite [0041](0041-case-lite-on-thread.md); roles Owner / Admin / Member [0042](0042-admin-role-and-share-permission.md); audiences Owner-operator and Team 2–15 [0043](0043-target-personas.md); Case inbox + follow-up Wakes [0044](0044-case-inbox-and-follow-up-wakes.md); Packs for verticals; public Marketplace [0045](0045-pack-catalog-on-marketing-site.md); Pro out of public field; no Pages, sales pipeline, light theme, or SaaS cloud in v1) |
@@ -76,4 +76,5 @@ English.
 | [0042](0042-admin-role-and-share-permission.md) | Admin role and share permission (`members.role` `admin` \| `member`; Owner stays [0010](0010-owner-auth-session.md); Admin opens Providers, Members invite/list, Dashboard read; Member grants only own personal Bots; Case / roster stay person Participant; Admin day-to-day / Owner keys [0043](0043-target-personas.md); docs only) |
 | [0043](0043-target-personas.md) | Target personas (Owner-operator = Collective N=1; Team 2–15 leads; Member secondary; Case inbox + follow-up Wakes [0044](0044-case-inbox-and-follow-up-wakes.md); Admin Cluster Bot list + Member onboarding should next; one MCP after first external Collective; docs only) |
 | [0044](0044-case-inbox-and-follow-up-wakes.md) | Case inbox and follow-up Wakes (filter chips on the messenger Threads list, `?caseStatus=open`; one-shot follow-up Wake on the Case Thread; `followUpAt` + `followUpBotId` on `threads`; amends [0027](0027-bot-schedules.md); docs only) |
-| [0045](0045-pack-catalog-on-marketing-site.md) | Marketplace on the marketing site (dostigus.ru `/marketplace`; Packs first catalog kind; `/packs` 301; Host Closet out-link; Pro out of public field; not in-product Apply; amended 2026-10-02: Closet Параметры Pack row) |
+| [0045](0045-pack-catalog-on-marketing-site.md) | Marketplace on the marketing site (dostigus.ru `/marketplace`; Packs first catalog kind; `/packs` 301; Host Closet out-link; Pro out of public field; not in-product Apply; amended 2026-10-02: Closet Параметры Pack row; amended 2026-10-02: Site locale URLs [0046](0046-site-i18n-url-prefix.md)) |
+| [0046](0046-site-i18n-url-prefix.md) | Site i18n URL prefix (dostigus.ru `prefix_except_default`; unprefixed = RU, EN `/en/...`; first visit RU; URL wins over cookie; hreflang + `x-default` RU; one sitemap; Host out-link stays RU; docs only) |

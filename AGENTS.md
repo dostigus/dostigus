@@ -12,9 +12,13 @@
    contract is its interface definition). Pack ≠ Bot ≠ Module package.
    Closet Import accepts a file or a public `.zip` URL / https git
    (shallow), preview → confirm
-   ([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)). Avoid
-   bare “cloud agent” — use Builder. Do not invent synonyms. All repo docs are
-   **English only**.
+   ([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)). Host
+   Locale stays [ADR 0037](docs/adr/0037-host-ui-i18n.md)
+   (`no_prefix`). Marketing site locale URLs are
+   [ADR 0046](docs/adr/0046-site-i18n-url-prefix.md)
+   (`dostigus/cloud`, `prefix_except_default`); do not apply that
+   prefix to Host routes. Avoid bare “cloud agent” — use Builder.
+   Do not invent synonyms. All repo docs are **English only**.
 3. Stay inside SPEC scope. Do not implement agent runtime, Meal port, Builder
    Module-package writer, in-product Marketplace, Share link, or guests. Household
    Members on one Host are in scope

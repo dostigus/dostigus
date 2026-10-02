@@ -105,14 +105,19 @@ Settings as a `/settings` chrome after
 
 **Locale**:
 Host UI language for chrome strings. Day-1 codes `en` and `ru`.
-Default `en`. URLs have no `/en` or `/ru` prefix. Not Cluster
+Default `en`. Host URLs have no `/en` or `/ru` prefix
+([ADR 0037](docs/adr/0037-host-ui-i18n.md)). The marketing
+site (dostigus.ru) is a different surface: unprefixed paths
+are RU, EN is `/en/...`
+([ADR 0046](docs/adr/0046-site-i18n-url-prefix.md)). Not Cluster
 timezone. Not the language of Chat bodies, Skills, MCP tool
 descriptions, or LLM replies. Product glossary terms in this
 file stay Latin script in every Locale; translate only the
 surrounding chrome words. See
 [ADR 0037](docs/adr/0037-host-ui-i18n.md).
 _Avoid_: language (unqualified), i18n (as a product noun),
-treating timezone as Locale, translating Bot / Pack / Host / Cluster /
+treating timezone as Locale, treating dostigus.ru `/en`
+URLs as Host Locale, translating Bot / Pack / Host / Cluster /
 Skill / Schedule / Provider / Policy / Artifact / Member /
 Household / Case / Marketplace.
 
@@ -334,7 +339,11 @@ markdown in that repo. Each Pack page has SEO and a CTA to
 copy the public Pack Apply URL (a `.zip` or an https git
 remote) plus short Host Apply instructions. The Host does
 not pull this catalog. Host v1 is an out-link to
-https://dostigus.ru/marketplace. Pro stays out of the public
+https://dostigus.ru/marketplace (RU; not locale-aware).
+Public pages share one path set in RU (unprefixed) and EN
+(`/en/...`); first visit is RU
+([ADR 0046](docs/adr/0046-site-i18n-url-prefix.md)).
+`/en/packs` 301s like `/packs`. Pro stays out of the public
 field
 ([ADR 0040](docs/adr/0040-collective-host-direction.md)).
 Not an in-product Host marketplace. Not Apply-from-index.
@@ -343,7 +352,7 @@ Marketplace as a Host-pulled catalog or Apply-from-index,
 treating `/packs` as the live path, advertising Pro on the
 public site, treating the catalog as a Host API, treating a
 Pack page as a Module package, a second Module Marketplace
-brand.
+brand, locale-aware Host out-links.
 
 **Bot visibility**:
 Who may see a Bot. A personal Bot plus explicit grants
@@ -815,7 +824,9 @@ _Avoid_: public share, invite (unqualified).
   `packages/ui-kit/locales/{en,ru}.json` (Host
   `apps/web/i18n/locales` is a symlink to that pair). Chat bodies, Skills,
   MCP tool descriptions, and LLM replies are not dictionaries.
-  See [ADR 0037](docs/adr/0037-host-ui-i18n.md). Cluster
+  See [ADR 0037](docs/adr/0037-host-ui-i18n.md). Host URLs
+  stay `no_prefix`. Marketing site public URLs are
+  [ADR 0046](docs/adr/0046-site-i18n-url-prefix.md). Cluster
   timezone is a different setting.
 - A Share link is a narrow public token to one object, not the Cluster.
   Share links and guests are later.
