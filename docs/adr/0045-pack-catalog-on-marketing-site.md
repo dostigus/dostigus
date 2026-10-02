@@ -41,8 +41,10 @@ marketplace. Closet Import stays the Apply path already in
 
 The catalog is on dostigus.ru. Home links to the catalog.
 Each Pack has its own page plus SEO (title, description,
-text). Pages live in the marketing-site repo tree, not in
-this Platform monorepo.
+text). Pages live in GitHub repo `dostigus/cloud`, not in
+this Platform monorepo. Existing `/marketplace` (and
+`content/marketplace/*.yml`) on that site is a Module-pack
+stub — it is **not** the Pack catalog.
 
 ### Host out-link
 
@@ -118,9 +120,12 @@ Import. The missing piece is a public place to find a Pack
 and copy its Apply URL.
 
 A marketing-site catalog keeps SEO, RU/EN landing Locale,
-and Brand on the public site. The Host stays self-host
-first ([ADR 0005](0005-self-host-first.md)): one out-link,
-no live pull.
+and Brand on the public site. That site is GitHub repo
+`dostigus/cloud` (dostigus.ru), not this Platform
+monorepo — do not hunt Host routes or `content/` here for
+the catalog. The Host stays self-host first
+([ADR 0005](0005-self-host-first.md)): one out-link, no
+live pull.
 
 Static frontmatter plus markdown matches a small first
 set (2–3 Packs) and does not need a Host API or a Module

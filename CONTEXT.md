@@ -323,16 +323,21 @@ _Avoid_: Bot, Module package, plugin, extension, bot package
 
 **Pack catalog**:
 Public index of Packs on the marketing site (dostigus.ru):
-`/packs` and `/packs/:slug`. Static frontmatter plus markdown
-in that site's repo. Each Pack page has SEO and a CTA to copy
-the public Pack Apply URL (a `.zip` or an https git remote)
-plus short Host Apply instructions. The Host does not pull
-this catalog. Host v1 is an out-link to the site. Not a
-Module catalog. Not Module Marketplace. Not in-product
-Apply-from-index. See
-[ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md).
+`/packs` and `/packs/:slug`
+([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
+That site lives in GitHub repo `dostigus/cloud`, not this
+Platform monorepo. Existing `/marketplace` (and
+`content/marketplace/*.yml`) on that site is a Module-pack
+stub — it is **not** the Pack catalog. Static frontmatter
+plus markdown in that repo. Each Pack page has SEO and a
+CTA to copy the public Pack Apply URL (a `.zip` or an https
+git remote) plus short Host Apply instructions. The Host
+does not pull this catalog. Host v1 is an out-link to the
+site. Not a Module catalog. Not Module Marketplace. Not
+in-product Apply-from-index.
 _Avoid_: marketplace (as a Host product surface), Module
-Marketplace, treating the catalog as a Host API, treating a
+Marketplace, treating `dostigus/cloud` `/marketplace` as the
+Pack catalog, treating the catalog as a Host API, treating a
 Pack page as a Module package.
 
 **Bot visibility**:
