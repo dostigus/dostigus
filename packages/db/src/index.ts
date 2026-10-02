@@ -58,6 +58,26 @@ export {
   migrateLegacyLlmGatewayApiKey,
 } from './llm-gateway-key'
 export {
+  type BotMailBinding,
+  type BotMailBindingInput,
+  type BotMailBindingView,
+  botMailSecretLiterals,
+  deleteBotMailBinding,
+  getBotMailBinding,
+  getMailAllowlist,
+  mailAllowlistAllows,
+  type MailEndpoint,
+  type MailLogin,
+  normalizeMailAllowlist,
+  normalizeMailHost,
+  parseMailAllowlistEntry,
+  parseMailPort,
+  previewBotMailBinding,
+  setBotMailBinding,
+  setMailAllowlist,
+  toBotMailBindingView,
+} from './mail'
+export {
   type ArtifactRecord,
   avatarColorFromRow,
   avatarShapeFromRow,

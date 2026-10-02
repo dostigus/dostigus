@@ -204,6 +204,13 @@
       "when": 1760594400000,
       "tag": "0028_thread_case_follow_up",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "6",
+      "when": 1760680800000,
+      "tag": "0029_bot_mail",
+      "breakpoints": true
     }
   ]
 }

@@ -32,6 +32,7 @@ import {
   serializePackTree,
   slugifyPackPart,
 } from '@dostigus/shared'
+import { botMailSecretLiterals } from './mail'
 import { isHostSeedSkillId } from './meta-skills'
 import { getOwner } from './owners'
 import { createBot, getClusterOwnerId, listMessages, requireBot, viewerMaySeeBot } from './queries'
@@ -285,8 +286,9 @@ export function exportBotPack(
     uiFiles: installed?.uiFiles ?? [],
     readme,
   }
-  const { tree } = scrubPackTree(raw)
-  asPack(() => assertNoSecretsInPack(tree))
+  const literals = botMailSecretLiterals(store, bot.id)
+  const { tree } = scrubPackTree(raw, { literals })
+  asPack(() => assertNoSecretsInPack(tree, literals))
   stampExportedPack(store, bot.id, tree)
   return tree
 }
