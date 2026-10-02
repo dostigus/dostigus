@@ -2,6 +2,7 @@ import type { OpenedStore } from '@dostigus/db'
 import type { HostLocale } from '@dostigus/ui-kit/locale'
 import type { ChatToolInvokeResult } from './mcp-platform-tools'
 import type { OpenAiChatFunctionTool } from './openai-tools'
+import { randomUUID } from 'node:crypto'
 import { ArtifactTurn } from './artifacts'
 import { ChatCardTurn } from './chat-cards'
 import { chatMcpToolsAsOpenAi, invokeChatMcpTool } from './mcp-platform-tools'
@@ -28,6 +29,7 @@ export function openChatTurn(input: {
   invokeTool: (name: string, args: unknown) => ChatToolInvokeResult | Promise<ChatToolInvokeResult>
 } {
   const cards = new ChatCardTurn(input.locale)
+  const turnKey = randomUUID()
   const artifacts = new ArtifactTurn()
   const allowedTools = chatToolNamesForTurn({
     role: input.role,
@@ -54,6 +56,7 @@ export function openChatTurn(input: {
     artifacts,
     wake: input.wake,
     allowedTools,
+    turnKey,
   })
   return { cards, artifacts, tools, invokeTool }
 }

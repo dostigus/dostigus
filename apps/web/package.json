@@ -19,6 +19,8 @@
     "@nuxt/fonts": "catalog:",
     "@nuxtjs/i18n": "catalog:",
     "@nuxtjs/mcp-toolkit": "catalog:",
+    "imapflow": "catalog:",
+    "nodemailer": "catalog:",
     "nuxt-auth-utils": "catalog:",
     "reka-ui": "catalog:",
     "sharp": "catalog:",
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@types/nodemailer": "catalog:",
     "nuxt": "catalog:",
     "vue-tsc": "catalog:"
   }

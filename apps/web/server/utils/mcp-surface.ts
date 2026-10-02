@@ -33,6 +33,18 @@ export const HTTP_MCP_TOOLS = [
 
 export type HttpMcpTool = typeof HTTP_MCP_TOOLS[number]
 
+/**
+ * Mailer IMAP/SMTP on the Bot's mailbox. On `/mcp`, Chat slim, and Wake.
+ * Send composes a draft; SMTP runs only on a later confirm. See ADR 0048.
+ */
+export const MAIL_MCP_TOOLS = [
+  'dostigus_mail_list',
+  'dostigus_mail_get',
+  'dostigus_mail_send',
+] as const
+
+export type MailMcpTool = typeof MAIL_MCP_TOOLS[number]
+
 /** Artifact put. On `/mcp`, Chat slim, and Wake. No get tool. See ADR 0034. */
 export const ARTIFACT_MCP_TOOLS = [
   'dostigus_artifacts_put',
@@ -82,6 +94,7 @@ export const PLATFORM_MCP_TOOLS = [
   'dostigus_messages_create',
   ...SCHEDULE_MCP_TOOLS,
   ...HTTP_MCP_TOOLS,
+  ...MAIL_MCP_TOOLS,
   ...ARTIFACT_MCP_TOOLS,
   ...TURN_MCP_TOOLS,
   ...KITCHEN_MCP_TOOLS,
@@ -115,6 +128,7 @@ export const CHAT_SLIM_MCP_TOOLS = [
   'dostigus_schedules_delete',
   'dostigus_cluster_timezone_get',
   'dostigus_http_get',
+  ...MAIL_MCP_TOOLS,
   'dostigus_artifacts_put',
   'dostigus_skills_list',
   'dostigus_skills_read',
@@ -145,6 +159,7 @@ export const CREATOR_EXPAND_MCP_TOOLS = [
 /** Wake: narrower than user slim. No Schedule writes, no bots_*, no expand. */
 export const WAKE_CHAT_MCP_TOOLS = [
   'dostigus_http_get',
+  ...MAIL_MCP_TOOLS,
   'dostigus_artifacts_put',
   'dostigus_skills_list',
   'dostigus_skills_read',
