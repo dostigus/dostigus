@@ -10,6 +10,7 @@
 - Amended: 2026-09-26 — Day-1 marketplace track for **Packs** (portable Bot recipes) is [ADR 0039](0039-pack-vs-bot-portable-recipe.md). Module package Marketplace / Apply stays later and separate.
 - Amended: 2026-10-02 — Public Pack catalog is [ADR 0045](0045-pack-catalog-on-marketing-site.md) (marketing site, Host out-link). Module package Marketplace / Apply stays later.
 - Amended: 2026-10-02 — Public catalog is **Marketplace** at `/marketplace` ([ADR 0045](0045-pack-catalog-on-marketing-site.md)). Packs first catalog kind. `/packs` 301s. Module package Apply stays later (a later Marketplace kind, not a second brand).
+- Amended: 2026-10-02 — Marketplace listings live in the Catalog Store ([ADR 0047](0047-marketplace-catalog-store.md)). Host-pulled catalog stays out. Module package Apply stays later.
 
 Assistant parts stay [ADR 0025](0025-chat-bubble-parts.md). Schedules
 and the Wake stay [ADR 0027](0027-bot-schedules.md). The platform
@@ -42,7 +43,9 @@ marketplace / OSS share for **Packs** is
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md). The public
 **Marketplace** is
 [ADR 0045](0045-pack-catalog-on-marketing-site.md)
-(https://dostigus.ru/marketplace, Host out-link). That
+(https://dostigus.ru/marketplace, Host out-link).
+Catalog Store and deep-link Apply are
+[ADR 0047](0047-marketplace-catalog-store.md). That
 track is not Module package Apply.
 
 A missing capability uses the constructor tools already in Chat: Skills
@@ -217,6 +220,7 @@ Module packages as a Marketplace catalog kind are later.
 Day-1 marketplace track for Packs is
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md). The public
 Marketplace is [ADR 0045](0045-pack-catalog-on-marketing-site.md).
+Catalog Store is [ADR 0047](0047-marketplace-catalog-store.md).
 Builder remains the later path that writes a Module package
 ([ADR 0006](0006-day-1-declarative-modules.md)).
 
@@ -330,6 +334,8 @@ Kitchen remains a Host seed with no package row
   [ADR 0039](0039-pack-vs-bot-portable-recipe.md). The public
   Marketplace is
   [ADR 0045](0045-pack-catalog-on-marketing-site.md).
+  Catalog Store is
+  [ADR 0047](0047-marketplace-catalog-store.md).
 - `dostigus_modules_catalog`, `dostigus_modules_apply`, and a platform
   rule that must Apply a matching stock package.
 - A Chat Card after Apply, and a catalog-miss Card.
@@ -369,6 +375,7 @@ Kitchen remains a Host seed with no package row
   `packages/modules/` seed, no catalog or Apply tools, no Card after
   Apply. Module packages as a Marketplace kind are later. Public
   Marketplace is [ADR 0045](0045-pack-catalog-on-marketing-site.md).
+  Catalog Store is [ADR 0047](0047-marketplace-catalog-store.md).
 - A platform rule that must Apply a matching stock package — rejected
   with that seed. Capability gaps use Skills upsert, Schedule tools,
   and Bot self-settings already in Chat.

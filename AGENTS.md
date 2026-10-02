@@ -6,7 +6,7 @@
 2. Use glossary terms from [`CONTEXT.md`](CONTEXT.md) only.
    **Dostigus, Platform, Cluster, Owner, Member, Host, Chat, Card, Sheet, Kit,
    Brand, Sticker, Sheet shell, Bot, Pack, Marketplace, Orchestrator, Builder, Skill, Manifest,
-   Module package, Store, Artifact, MCP surface, Job, Apply, LLM gateway,
+   Module package, Store, Catalog Store, Artifact, MCP surface, Job, Apply, LLM gateway,
    Provider, Policy, Model tier, Household, Share link, Dashboard.**
    Prefer **Host** (Host shell is a synonym). Prefer **MCP surface** (MCP
    contract is its interface definition). Pack ≠ Bot ≠ Module package.
@@ -17,7 +17,12 @@
    (`no_prefix`). Marketing site locale URLs are
    [ADR 0046](docs/adr/0046-site-i18n-url-prefix.md)
    (`dostigus/cloud`, `prefix_except_default`); do not apply that
-   prefix to Host routes. Avoid bare “cloud agent” — use Builder.
+   prefix to Host routes. Marketplace listings live in the
+   **Catalog Store** on Platform
+   ([ADR 0047](docs/adr/0047-marketplace-catalog-store.md)),
+   not the Cluster Store; the site reads a public API; Host
+   does not pull a catalog; deep-link Apply is `applyPack=`
+   (preview stays 0039). Avoid bare “cloud agent” — use Builder.
    Do not invent synonyms. All repo docs are **English only**.
 3. Stay inside SPEC scope. Do not implement agent runtime, Meal port, Builder
    Module-package writer, in-product Marketplace, Share link, or guests. Household
