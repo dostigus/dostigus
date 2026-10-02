@@ -11,9 +11,9 @@
     </p>
     <KitListRow
       as="a"
-      class="catalog"
-      :title="$t('pack.catalog')"
-      :subtitle="$t('pack.catalogHint')"
+      class="marketplace"
+      :title="$t('pack.marketplace')"
+      :subtitle="$t('pack.marketplaceHint')"
       href="https://dostigus.ru/marketplace"
       target="_blank"
       rel="noopener noreferrer"
@@ -382,7 +382,7 @@ function onApplied(botId: string) {
   line-height: 1.45;
 }
 
-.catalog {
+.marketplace {
   margin-inline: -0.7rem;
 }
 

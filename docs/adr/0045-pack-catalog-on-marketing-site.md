@@ -119,7 +119,8 @@ After this ADR merges:
    pages, `/packs` 301, static content, SEO, CTA, Pro
    removed from the public site).
 2. A small Host out-link PR in this Platform repo
-   (https://dostigus.ru/marketplace).
+   (https://dostigus.ru/marketplace). This Host PR is that
+   Closet row.
 
 This PR is ADR plus CONTEXT / SPEC glossary only. No site
 pages. No Host UI. No Port.

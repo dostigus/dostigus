@@ -19,7 +19,7 @@
   image installs `git`.
 - Amended: 2026-10-02 — Public Pack catalog is
   [ADR 0045](0045-pack-catalog-on-marketing-site.md)
-  (marketing site `/packs`, Host out-link). This record's Apply
+  (marketing site `/marketplace`, Host out-link). This record's Apply
   sources stay. In-product catalog Apply stays out.
 - Amended: 2026-10-02 — Public catalog is **Marketplace** at
   `/marketplace` ([ADR 0045](0045-pack-catalog-on-marketing-site.md)).

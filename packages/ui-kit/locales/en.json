@@ -682,8 +682,8 @@
   "pack": {
     "title": "Pack",
     "hint": "Share a recipe, not Chat or secrets.",
-    "catalog": "Pack catalog",
-    "catalogHint": "Open on the site",
+    "marketplace": "Marketplace",
+    "marketplaceHint": "Packs on the site",
     "export": "Export Pack",
     "exportBusy": "Exporting…",
     "apply": "Apply Pack",

@@ -339,10 +339,11 @@ field
 ([ADR 0040](docs/adr/0040-collective-host-direction.md)).
 Not an in-product Host marketplace. Not Apply-from-index.
 _Avoid_: Pack catalog (as a public brand), treating
-Marketplace as a Host product surface, treating `/packs` as
-the live path, advertising Pro on the public site, treating
-the catalog as a Host API, treating a Pack page as a Module
-package, a second Module Marketplace brand.
+Marketplace as a Host-pulled catalog or Apply-from-index,
+treating `/packs` as the live path, advertising Pro on the
+public site, treating the catalog as a Host API, treating a
+Pack page as a Module package, a second Module Marketplace
+brand.
 
 **Bot visibility**:
 Who may see a Bot. A personal Bot plus explicit grants
