@@ -5,7 +5,7 @@
 1. Read [`docs/SPEC.md`](docs/SPEC.md) and the ADR index in [`docs/adr/README.md`](docs/adr/README.md).
 2. Use glossary terms from [`CONTEXT.md`](CONTEXT.md) only.
    **Dostigus, Platform, Cluster, Owner, Member, Host, Chat, Card, Sheet, Kit,
-   Brand, Sticker, Sheet shell, Bot, Pack, Orchestrator, Builder, Skill, Manifest,
+   Brand, Sticker, Sheet shell, Bot, Pack, Marketplace, Orchestrator, Builder, Skill, Manifest,
    Module package, Store, Artifact, MCP surface, Job, Apply, LLM gateway,
    Provider, Policy, Model tier, Household, Share link, Dashboard.**
    Prefer **Host** (Host shell is a synonym). Prefer **MCP surface** (MCP
@@ -16,7 +16,7 @@
    bare “cloud agent” — use Builder. Do not invent synonyms. All repo docs are
    **English only**.
 3. Stay inside SPEC scope. Do not implement agent runtime, Meal port, Builder
-   Module-package writer, marketplace, Share link, or guests. Household
+   Module-package writer, in-product Marketplace, Share link, or guests. Household
    Members on one Host are in scope
    ([ADR 0012](docs/adr/0012-household-members.md)): the Owner adds Members;
    Members use Bot list and Chat. Settings, Bot create/delete, and Members
