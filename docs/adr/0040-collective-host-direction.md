@@ -16,7 +16,9 @@
   field; Packs first catalog kind);
   Catalog Store on `dostigus/cloud` /
   dostigus.ru and deep-link Apply are
-  [ADR 0047](0047-marketplace-catalog-store.md).
+  [ADR 0047](0047-marketplace-catalog-store.md);
+  Mailer IMAP / SMTP Pack is
+  [ADR 0048](0048-mailer-product.md).
 
 Nick locked the direction below on 2026-10-01. This record sets
 direction and order only. It does not change [SPEC](../SPEC.md)

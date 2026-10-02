@@ -119,7 +119,8 @@ _Avoid_: language (unqualified), i18n (as a product noun),
 treating timezone as Locale, treating dostigus.ru `/en`
 URLs as Host Locale, translating Bot / Pack / Host / Cluster /
 Skill / Schedule / Provider / Policy / Artifact / Member /
-Household / Case / Marketplace / Catalog Store.
+Household / Case / Marketplace / Catalog Store /
+Mailer Pack / mail allowlist / Bot mail binding.
 
 **Chat**:
 The lines a person reads and writes on a Thread in the Host.
@@ -328,6 +329,25 @@ on `dostigus/cloud` / dostigus.ru
 See [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
 _Avoid_: Bot, Module package, plugin, extension, bot package
 (unqualified), treating a zip as a live Bot.
+
+**Mailer Pack**:
+Bot Pack id `dostigus.mailer`: soul, Skills, paused
+Schedule templates, and IMAP/SMTP integration stubs
+(env **names** only). Apply creates a new Bot. Not
+`dostigus.mail` (paste-only triage). Secrets never in
+the Pack zip or the catalog mirror. See
+[ADR 0048](docs/adr/0048-mailer-product.md).
+_Avoid_: treating Mailer as `dostigus.mail`, Module
+package, putting credentials in the Pack.
+
+**Bot mail binding**:
+Cluster Store row that binds one IMAP/SMTP mailbox to
+one Bot. The Owner or an Admin writes it in Closet
+after Apply. One mailbox per Bot. Credentials stay on
+the Cluster. See
+[ADR 0048](docs/adr/0048-mailer-product.md).
+_Avoid_: Chat self-settings bind, Member self-bind,
+secrets in the Pack zip or catalog mirror.
 
 **Marketplace**:
 Public catalog on the marketing site
@@ -671,6 +691,16 @@ link-local destinations. The Owner gets and sets it through MCP
 not set it. See [ADR 0031](docs/adr/0031-host-http-get.md).
 _Avoid_: URL allowlist (unqualified), CORS, proxy list, per-Bot
 allowlist.
+
+**mail allowlist**:
+Owner-configured list of host + port pairs that gates
+Host IMAP/SMTP egress (typical ports 993, 465, 587).
+Not Cluster http allowlist. Not
+`DOSTIGUS_HTTP_PROXY` / Bot HTTP egress. The Owner
+sets it on Cluster settings. See
+[ADR 0048](docs/adr/0048-mailer-product.md).
+_Avoid_: reusing http allowlist, Bot HTTP egress,
+per-Bot or per-Member allowlist.
 
 **Model tier**:
 `cheap` | `strong` | `code` (and `toy` for playground / explicit

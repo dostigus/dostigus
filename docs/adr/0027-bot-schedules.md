@@ -7,6 +7,7 @@
 - Amended: 2026-09-24 — Wake Skill catalog matches a user turn; Wake tools are narrower and there is no keyword expand ([ADR 0032](0032-chat-llm-context-assembly.md)). The Wake line and the ticker stay this record.
 - Amended: 2026-09-26 — Visible Wake is the Schedule display name (same string as the Schedules list). `wakeText` is the current-turn LLM prompt only. It is not stored as Chat content.
 - Amended: 2026-10-01 — Case follow-up may fire a Wake on the `group` / `room` Thread that carries the Case ([ADR 0044](0044-case-inbox-and-follow-up-wakes.md)). Personal Schedule fire stays bot-thread-only. Case follow-up is a sibling path, not a Schedule row.
+- Amended: 2026-10-02 — Mailer v1 mailbox check uses this record’s `daily` / `weekly` Wake. No IMAP IDLE and no N-minute poll in [ADR 0048](0048-mailer-product.md). Cadence stays this record.
 
 Chat turns stay [ADR 0011](0011-chat-mcp-tool-loop.md). Activity phases
 stay [ADR 0021](0021-chat-activity-status.md). Bot visibility and
@@ -49,7 +50,9 @@ name (the same string the Schedules list shows: `name`, or truncated
 a user bubble. The Host then starts the Bot turn pipeline
 ([ADR 0011](0011-chat-mcp-tool-loop.md)). The Skill catalog matches a
 user turn. Wake tools are narrower than user slim (HTTP get, Skills
-list/read, Schedule list, messages list/create, timezone get). No
+list/read, Schedule list, messages list/create, timezone get). Mailer
+list / get / send join that Wake list when Host tools land
+([ADR 0048](0048-mailer-product.md)); send stays confirm-gated. No
 Schedule writes, no `dostigus_bots_*`, no keyword expand
 ([ADR 0032](0032-chat-llm-context-assembly.md)). The stored Wake line
 is `system`. Later history sends that stored name as `role: system`.
