@@ -41,6 +41,9 @@ key in the Host.
 | `LLM_DEFAULT_TIER` | no | Default Model tier (`cheap` \| `strong` \| `code` \| `toy`). |
 | `NUXT_AGENT_TOKEN` | no | Bearer for the MCP surface at `/mcp`. Empty → tools stay disabled. |
 | `DOSTIGUS_MCP_TOKEN` | no | Alias for `NUXT_AGENT_TOKEN` when that var is unset. |
+| `CATALOG_DATABASE_URL` | no | Catalog Store SQLite (`file:.data/catalog.sqlite` local default). Not `DATABASE_URL`. See [`catalog.md`](catalog.md). |
+| `DOSTIGUS_CATALOG_PUBLISH_TOKEN` / `NUXT_CATALOG_PUBLISH_TOKEN` | no | Nick-only Catalog Store publish Bearer. Empty → publish disabled. Not Cluster Admin. |
+| `CATALOG_PUBLIC_ORIGIN` | no | Absolute origin for public mirror zip URLs the marketing site consumes. |
 | `HTTPS_PROXY` / `HTTP_PROXY` | no | LLM client outbound proxy ([ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md)). An `https` gateway URL uses `HTTPS_PROXY` if set, else `HTTP_PROXY`. An `http` gateway URL uses `HTTP_PROXY`. Unset or empty = direct. Not used for Bot HTTP egress. |
 | `DOSTIGUS_HTTP_PROXY` | no | Bot HTTP egress (`dostigus_http_get`). One URL for `http` and `https` destinations. Unset or empty = direct. An invalid non-empty URL is a tool error. Never inherits `HTTPS_PROXY`. |
 
