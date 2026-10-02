@@ -98,9 +98,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@dostigus/catalog':
-        specifier: workspace:*
-        version: link:../../packages/catalog
       '@dostigus/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -144,25 +141,6 @@ importers:
       vue-tsc:
         specifier: 'catalog:'
         version: 3.3.11(typescript@5.9.3)
-
-  packages/catalog:
-    dependencies:
-      '@dostigus/shared':
-        specifier: workspace:*
-        version: link:../shared
-      drizzle-orm:
-        specifier: 'catalog:'
-        version: 0.45.3
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.13.6
-      drizzle-kit:
-        specifier: 'catalog:'
-        version: 0.31.11
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
 
   packages/db:
     dependencies:

@@ -24,7 +24,7 @@
   read API, deep-link Apply). Host
   [#189](https://github.com/dostigus/dostigus/pull/189)
   Catalog Store on Platform Host is
-  misplaced / to remove. Host-pulled
+  misplaced / removed. Host-pulled
   catalog and Apply-from-index still
   stand rejected. Marketplace name,
   `/marketplace`, Host out-link, `/packs`

@@ -384,9 +384,8 @@ portal are later. Kitchen, Mail, and Reader migrate from
 read is under dostigus.ru (for example
 `GET /api/catalog/packs`, or the path the site
 documents). Host [#189](https://github.com/dostigus/dostigus/pull/189)
-`@dostigus/catalog` on Platform Host is misplaced /
-deprecated; remove in a follow-up PR. Do not expand
-Host catalog.
+`@dostigus/catalog` on Platform Host is removed.
+Do not expand Host catalog.
 _Avoid_: Cluster Store, treating listings as Cluster
 Artifacts, Catalog Store on Platform Host or a Member
 Cluster, Host-pulled catalog index, auto-publish,

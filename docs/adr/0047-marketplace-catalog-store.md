@@ -11,8 +11,15 @@
   [#189](https://github.com/dostigus/dostigus/pull/189)
   on `dostigus.kosarev.space` was the wrong
   placement. `@dostigus/catalog` in this
-  monorepo is deprecated / to remove. Do
-  not expand Host catalog.
+  monorepo is removed. Do not expand Host
+  catalog.
+- Amended: 2026-10-02 — Host #189 Catalog
+  (`@dostigus/catalog`, `/api/catalog/*`,
+  `CATALOG_*`) is removed from this
+  monorepo. Closet Import stays
+  [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
+  Deep-link `applyPack=` is still a
+  follow-up.
 
 Marketplace on the marketing site stays
 [ADR 0045](0045-pack-catalog-on-marketing-site.md).
@@ -46,11 +53,9 @@ marketplace.
 Host [#189](https://github.com/dostigus/dostigus/pull/189)
 (`@dostigus/catalog` in this Platform
 monorepo, routes on
-`dostigus.kosarev.space`) is **misplaced**.
-Treat it as deprecated / to remove or
-no-op. Remove Catalog from the Host Port
-in a follow-up PR. Do not expand Host
-catalog.
+`dostigus.kosarev.space`) is **misplaced**
+and is **removed** from this monorepo.
+Do not expand Host catalog.
 
 ## Decision
 
@@ -181,11 +186,10 @@ Secrets stay out of the Pack zip.
 landed `@dostigus/catalog` and
 `/api/catalog/*` on Platform Host. That
 was the wrong place for a shared
-Marketplace. Do not expand it. Remove
-Catalog from the Host Port in a
-follow-up PR (no-op or delete). Optional
-Host work after that is deep-link
-`applyPack=` only.
+Marketplace. Those files are removed
+from this monorepo. Do not expand Host
+catalog. Optional Host work after that
+is deep-link `applyPack=` only.
 
 ### Ship order
 
@@ -195,7 +199,7 @@ Host work after that is deep-link
    read API, site consume.
 3. Host: remove the misplaced catalog
    (`@dostigus/catalog` / Host
-   `/api/catalog/*`). Optional
+   `/api/catalog/*`) — landed. Optional
    deep-link handler → existing
    preview / Apply (`PackApplySheet`).
 4. Later: Submit portal, CLI, Mailer
@@ -281,10 +285,9 @@ for its own ADR after this path exists.
   (`applyPack=` cloud mirror zip URL).
 - Host
   [#189](https://github.com/dostigus/dostigus/pull/189)
-  / `@dostigus/catalog` is deprecated
-  / to remove. Do not expand Host
-  catalog. Remove it from the Host
-  Port in a follow-up PR.
+  / `@dostigus/catalog` is removed
+  from this monorepo. Do not expand
+  Host catalog.
 - [ADR 0045](0045-pack-catalog-on-marketing-site.md)
   static-only catalog and
   copy-URL-only CTA stay superseded

@@ -13,7 +13,6 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@dostigus/catalog": "workspace:*",
     "@dostigus/db": "workspace:*",
     "@dostigus/shared": "workspace:*",
     "@dostigus/ui-kit": "workspace:*",
