@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-24
 - Amended: 2026-09-24 — Domain or provider failover lists stay out of scope. Generic soft retry for Host HTTP get is [ADR 0031](0031-host-http-get.md).
+- Amended: 2026-10-02 — Mailer IMAP/SMTP is not Bot HTTP egress and does not use `DOSTIGUS_HTTP_PROXY` ([ADR 0048](0048-mailer-product.md)). The two HTTP paths stay this record.
 
 The LLM gateway stays [ADR 0004](0004-llm-gateway-tiers.md). Host HTTP
 get and the Cluster http allowlist stay

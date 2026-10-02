@@ -37,6 +37,11 @@
   stay out. Pack format stays this record.
   Host [#189](https://github.com/dostigus/dostigus/pull/189)
   catalog is misplaced / removed.
+- Amended: 2026-10-02 — Mailer Pack `dostigus.mailer` is
+  [ADR 0048](0048-mailer-product.md). Format, integration
+  stubs (names only), and secret scrub stay this record.
+  Mailer credentials never enter the Pack zip or the
+  catalog mirror.
 
 Platform git vs Cluster objects stays
 [ADR 0001](0001-platform-git-vs-in-cluster-bot-packages.md).

@@ -14,6 +14,12 @@
 - Amended: 2026-09-26 — Stored Wake content is the Schedule display
   name. The firing turn sends `wakeText` as the triggering system
   line ([ADR 0027](0027-bot-schedules.md)).
+- Amended: 2026-10-02 — When Mailer Host tools land, Chat slim and
+  Wake gain `dostigus_mail_list`, `dostigus_mail_get`, and
+  `dostigus_mail_send` (send gated by confirm). Same class as
+  `dostigus_http_get`. Product locks are
+  [ADR 0048](0048-mailer-product.md). This record does not add
+  the tools.
 
 The tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). Gateway
 and Model tiers stay [ADR 0004](0004-llm-gateway-tiers.md). Schedules
@@ -149,6 +155,9 @@ Before expand, Owner Chat and a creator-Member Chat receive:
 - `dostigus_http_get`
 - `dostigus_artifacts_put`
 - `dostigus_skills_list`, `dostigus_skills_read`
+- `dostigus_mail_list`, `dostigus_mail_get`,
+  `dostigus_mail_send` (send gated by confirm; impl
+  [ADR 0048](0048-mailer-product.md))
 
 #### Outside slim until expand
 
@@ -205,7 +214,9 @@ timezone set, allowlist get and set).
 
 Slim like today's Member set, plus `dostigus_skills_list` and
 `dostigus_skills_read`. Messages, that person's Schedule tools,
-timezone get, Host HTTP get, and `dostigus_artifacts_put` stay. No
+timezone get, Host HTTP get, `dostigus_artifacts_put`, and Mailer
+list / get / send (confirm-gated; impl
+[ADR 0048](0048-mailer-product.md)) stay. No
 Manifest write. No Skill upsert or delete.
 
 #### Room mention
@@ -227,6 +238,9 @@ Wake tools are **narrower than user slim**:
 - `dostigus_schedules_list`
 - `dostigus_messages_list`, `dostigus_messages_create`
 - `dostigus_cluster_timezone_get`
+- `dostigus_mail_list`, `dostigus_mail_get`,
+  `dostigus_mail_send` (send gated by confirm; impl
+  [ADR 0048](0048-mailer-product.md))
 
 No Schedule create, update, pause, resume, or delete on a Wake. No
 `dostigus_bots_*`. No keyword expand to builder tools.

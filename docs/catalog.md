@@ -33,16 +33,23 @@ Apply-from-index.
 
 Member Apply uses the **cloud** mirror zip URL. Deep-link
 Apply is `applyPack=` plus that URL → `PackApplySheet`
-preview. The Host handler is a follow-up. Copy-URL stays
-the fallback.
+preview. The Host handler landed
+([#192](https://github.com/dostigus/dostigus/pull/192)).
+Copy-URL stays the fallback. `dostigus/cloud`
+`docs/catalog.md` may still say the handler is later;
+do not edit that repo from this Host docs PR.
 
 ## Ship order
 
 1. Docs amend (Catalog Store on cloud, not Host) — landed.
 2. Cloud Catalog Store + mirrors + seed + site consume.
 3. Host remove of `#189` catalog — this Host.
-4. Optional Host `applyPack=` deep-link → existing preview /
-   Apply (`PackApplySheet`).
-5. Mailer product Pack later ADR.
+4. Host `applyPack=` deep-link → existing preview /
+   Apply (`PackApplySheet`) — landed
+   ([#192](https://github.com/dostigus/dostigus/pull/192)).
+5. Mailer product locks —
+   [ADR 0048](adr/0048-mailer-product.md). Host IMAP/SMTP
+   tools and Nick publish of `dostigus.mailer` stay later.
+   Do not seed beside `dostigus.mail` in that docs PR.
 
 Ask Nick before merge and before Port.

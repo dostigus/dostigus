@@ -33,10 +33,11 @@ Settled now, even if this repo only scaffolds them:
 | Case | Thin layer on a `group` or `room` Thread: status `open` \| `done`, label ≤40, next action ≤120. Not a ticket tracker. Any person Participant writes it with `PATCH /api/threads/:id/case`; the Thread DTO nests `case` (null until the first write). Roster Sheet block and a line under the Chat identity pill. See [ADR 0041](adr/0041-case-lite-on-thread.md). Messenger filter chips (All / Case open) list open Cases the signed-in person is on (`GET /api/threads?caseStatus=open`). One-shot follow-up (`followUpAt`, `followUpBotId`) fires a Wake on that Thread. See [ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md). |
 | Admin | Household Member with `members.role` `admin`. Not a second Owner. Opens Dashboard read, Providers / LLM, and Members invite/list. Owner and Admin grant any Bot; a Member grants only a Bot they created. Admin creates Bots and Applies Packs like the Owner. Only the Owner promotes or demotes an Admin. Case and roster stay any person Participant. See [ADR 0042](adr/0042-admin-role-and-share-permission.md). |
 | Personas | Two primary audiences: Owner-operator (Collective N=1) and Team 2–15 (messenger + Bots; run work in Chat with Bots). Product leads with Team. Member is served, not roadmap-optimized. Case inbox + follow-up Wakes are [ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md) and are in this Host. See [ADR 0043](adr/0043-target-personas.md). |
+| Mailer | Product Pack `dostigus.mailer`: IMAP + SMTP Host tools, Cluster Bot mail binding, mail allowlist. Apply creates a new Bot. One mailbox per Bot. Draft send until confirm. v1 cadence is Schedule `daily`/`weekly` Wake. Not `dostigus.mail`. See [ADR 0048](adr/0048-mailer-product.md). Host tools and the Pack zip are a later impl PR. |
 
 ## This Host (create Bot + Chat)
 
-What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)). This Host does not ship `@dostigus/catalog` or `/api/catalog/*`. Deep-link Apply (`applyPack=` cloud mirror zip URL) is not in this Host yet. This Host does not pull a catalog.
+What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)). This Host does not ship `@dostigus/catalog` or `/api/catalog/*`. Deep-link Apply (`applyPack=` cloud mirror zip URL) is in this Host ([#192](https://github.com/dostigus/dostigus/pull/192)). This Host does not pull a catalog. Mailer Host IMAP/SMTP tools, Closet bind Sheet, Bot mail binding, and mail allowlist are not in this Host ([ADR 0048](adr/0048-mailer-product.md)).
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
@@ -188,6 +189,10 @@ What the running Cluster does today. This Host serves an Owner-operator (Collect
   ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)).
   Deep-link Apply from that site is
   [ADR 0047](adr/0047-marketplace-catalog-store.md)
+  and is in this Host
+  ([#192](https://github.com/dostigus/dostigus/pull/192)).
+  Mailer Closet bind is
+  [ADR 0048](adr/0048-mailer-product.md)
   and is not in this Host yet.
   ([ADR 0020](adr/0020-bot-closet.md),
   [ADR 0027](adr/0027-bot-schedules.md)). The creator and the Owner open
@@ -437,9 +442,12 @@ them on the assistant line.
   list). `wakeText` is sent to the LLM on that turn only and is not
   stored as Chat content. Then the Host starts a Bot turn
   ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)). The Skill catalog
-  matches a user turn. Wake tools are narrower than user slim (HTTP
+  matches a user turn.   Wake tools are narrower than user slim (HTTP
   get, `dostigus_artifacts_put`, Skills list/read, Schedule list,
-  messages list/create, timezone get). No Schedule writes, no
+  messages list/create, timezone get). Mailer list / get / send
+  join that Wake list when Host tools land
+  ([ADR 0048](adr/0048-mailer-product.md)); send stays
+  confirm-gated. No Schedule writes, no
   `dostigus_bots_*`, no
   keyword expand ([ADR 0032](adr/0032-chat-llm-context-assembly.md)).
   The stored line is `system`. Later history sends that name as
@@ -935,10 +943,18 @@ and [`docs/deploy.md`](deploy.md)).
   [#189](https://github.com/dostigus/dostigus/pull/189)
   Catalog Store on this Host is removed
   ([`docs/catalog.md`](catalog.md)). Cloud Catalog
-  Store + site consume, then optional `applyPack=`
-  stay later PRs.
-  Submit portal, CLI, Publisher role, and a
-  Mailer product Pack (IMAP / SMTP) stay later.
+  Store + site consume stay later PRs
+  on cloud. Host `applyPack=` landed
+  ([#192](https://github.com/dostigus/dostigus/pull/192)).
+  Submit portal, CLI, and Publisher role
+  stay later. Mailer product locks are
+  [ADR 0048](adr/0048-mailer-product.md);
+  Host IMAP/SMTP tools, the Pack zip,
+  Closet bind Sheet, Gmail/Outlook OAuth,
+  IMAP IDLE, interval Schedules, a Module
+  mail store, Member self-bind, and seeding
+  `dostigus.mailer` beside `dostigus.mail`
+  stay later.
   Packs are the first catalog kind; `/packs` 301s to
   Marketplace. Site locale URL prefix is
   [ADR 0046](adr/0046-site-i18n-url-prefix.md)

@@ -20,6 +20,13 @@
   [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
   Deep-link `applyPack=` is still a
   follow-up.
+- Amended: 2026-10-02 — Mailer product
+  locks are
+  [ADR 0048](0048-mailer-product.md).
+  This record stays catalog
+  infrastructure. Do not seed
+  `dostigus.mailer` beside
+  `dostigus.mail` in that docs PR.
 
 Marketplace on the marketing site stays
 [ADR 0045](0045-pack-catalog-on-marketing-site.md).
@@ -166,11 +173,13 @@ of the misplaced catalog.
 
 ### Mailer later
 
-A Mailer product Pack (IMAP / SMTP) is a
-**separate later ADR**. It is the first
-Pack expected to use the new path after
-migrate. This record is catalog
-infrastructure.
+A Mailer product Pack (IMAP / SMTP) is
+[ADR 0048](0048-mailer-product.md). It
+is the first Pack expected to use the
+new path after migrate. This record is
+catalog infrastructure. Do not seed
+`dostigus.mailer` beside
+`dostigus.mail` until Host tools land.
 
 ### Pack format
 
@@ -202,8 +211,10 @@ is deep-link `applyPack=` only.
    `/api/catalog/*`) — landed. Optional
    deep-link handler → existing
    preview / Apply (`PackApplySheet`).
-4. Later: Submit portal, CLI, Mailer
-   product ADR.
+4. Later: Submit portal, CLI. Mailer
+   product locks are
+   [ADR 0048](0048-mailer-product.md)
+   (Host tools + zip after that).
 
 ### Scope of this record
 
@@ -312,10 +323,11 @@ for its own ADR after this path exists.
   `#189` catalog as the public
   marketplace. SPEC out of scope
   still excludes Host-pulled catalog
-  and Apply-from-index. Submit
+  and Apply-from-index.   Submit
   portal, Publisher role, “Update
-  available”, Member / Org bind, and
-  the Mailer product Pack stay later.
+  available”, and Member / Org bind
+  stay later. The Mailer product Pack
+  is [ADR 0048](0048-mailer-product.md).
 - Kitchen Module seed stays a seed
   ([ADR 0026](0026-kitchen-module-day-1.md)).
   A Kitchen listing is a recipe
@@ -323,10 +335,12 @@ for its own ADR after this path exists.
 - Authoring DX names
   `dostigus/pack-template` and a CLI
   validate / submit. Detail is later.
-- Mailer (IMAP / SMTP) waits for its
-  own ADR. It is the first Pack
-  expected on this path after
-  migrate.
+- Mailer (IMAP / SMTP) is
+  [ADR 0048](0048-mailer-product.md).
+  It is the first Pack expected on
+  this path after migrate. Host tools
+  and Nick publish of that zip stay
+  later.
 
 ## Alternatives
 
@@ -375,7 +389,8 @@ for its own ADR after this path exists.
   rejected. Later.
 - Turn this record into the Mailer
   product Pack — rejected. Separate
-  later ADR.
+  record
+  [ADR 0048](0048-mailer-product.md).
 - Advertise Pro on the public site —
   rejected.
   [ADR 0040](0040-collective-host-direction.md).

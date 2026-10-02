@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-23
 - Amended: 2026-09-24 — Параметры gains a «Расписания» block (list + entry to create/detail). Schedules are Store rows, not Manifest fields. See [ADR 0027](0027-bot-schedules.md).
+- Amended: 2026-10-02 — After Mailer Pack Apply, Closet gains an Owner/Admin IMAP + SMTP bind Sheet (masked password, app-password hint, test connection). Product locks are [ADR 0048](0048-mailer-product.md). This record does not add the Sheet.
 
 ## Decision
 

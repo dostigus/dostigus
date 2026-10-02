@@ -30,6 +30,14 @@
   `/marketplace`, Host out-link, `/packs`
   301, Pro out of the public field, and
   Packs as the first kind stay.
+- Amended: 2026-10-02 — Mailer Pack
+  `dostigus.mailer` is
+  [ADR 0048](0048-mailer-product.md).
+  Marketplace listing waits for Host
+  tools, then Nick publish
+  ([ADR 0047](0047-marketplace-catalog-store.md)).
+  Do not seed it beside
+  `dostigus.mail` in that docs PR.
 
 Pack Apply stays
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md): file, public
