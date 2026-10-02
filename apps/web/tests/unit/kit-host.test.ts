@@ -452,7 +452,7 @@ it('uses the Kit mark, sticker, Dialog, and Sheet on the Host', () => {
   expect(packCloset).toContain('pack.urlPlaceholder')
   expect(packCloset).toContain('previewRemote')
   expect(packCloset).toContain('pack.catalog')
-  expect(packCloset).toContain('https://dostigus.ru/packs')
+  expect(packCloset).toContain('https://dostigus.ru/marketplace')
   const packExport = read('app/components/PackExportSheet.vue')
   expect(packExport).toContain('pack.exportAuthor')
   expect(packExport).toContain('pack.exportSlug')

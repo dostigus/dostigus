@@ -14,7 +14,7 @@
       class="catalog"
       :title="$t('pack.catalog')"
       :subtitle="$t('pack.catalogHint')"
-      :href="PACK_CATALOG_URL"
+      href="https://dostigus.ru/marketplace"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -162,8 +162,6 @@
 import type { PackApplyPlan, PackTree } from '@dostigus/shared'
 import { KitButton, KitField, KitInput, KitListRow, KitSheet } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../utils/host-status-copy'
-
-const PACK_CATALOG_URL = 'https://dostigus.ru/marketplace'
 
 type PackExportPreview = {
   author: string
