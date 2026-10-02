@@ -314,10 +314,26 @@ successful Export stamps the installed Pack snapshot and the
 Bot ref. No Chat, no secrets, no host paths. Canonical tree is
 `pack.json` + `skills/` (+ optional `schedules/`, `ui/<id>/`,
 README); share is a zip of that tree. **Pack ≠ Bot ≠ Module
-package.** Day-1 marketplace / OSS share ships Packs. See
-[ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
+package.** Day-1 marketplace / OSS share ships Packs. The
+public **Pack catalog** is on the marketing site
+([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
+See [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
 _Avoid_: Bot, Module package, plugin, extension, bot package
 (unqualified), treating a zip as a live Bot.
+
+**Pack catalog**:
+Public index of Packs on the marketing site (dostigus.ru):
+`/packs` and `/packs/:slug`. Static frontmatter plus markdown
+in that site's repo. Each Pack page has SEO and a CTA to copy
+the public Pack Apply URL (a `.zip` or an https git remote)
+plus short Host Apply instructions. The Host does not pull
+this catalog. Host v1 is an out-link to the site. Not a
+Module catalog. Not Module Marketplace. Not in-product
+Apply-from-index. See
+[ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md).
+_Avoid_: marketplace (as a Host product surface), Module
+Marketplace, treating the catalog as a Host API, treating a
+Pack page as a Module package.
 
 **Bot visibility**:
 Who may see a Bot. A personal Bot plus explicit grants
@@ -437,8 +453,10 @@ _Avoid_: plugin, extension, addon, Bot, Pack.
 Not a day-1 artifact in this monorepo. There is no
 `packages/modules/<id>/` seed and no Host-bundled Apply of platform
 packages. A Marketplace of Module packages is a later cloud product,
-separate from the day-1 Pack share track
-([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)). See
+separate from Pack Apply
+([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)) and from
+the public Pack catalog on the marketing site
+([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)). See
 [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
 _Avoid_: stock seed, registry, plugin gallery, treating Marketplace as day-1,
 treating a Pack catalog as a Module catalog.
@@ -492,6 +510,9 @@ The Pack owns Skills (except Host seed Skills) and Schedules that
 carry that snapshot's provenance. Owner-created and unlabeled
 grandfather Schedules stay. See
 [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
+The Host does not Apply from a live Pack catalog. The public
+catalog is an out-link
+([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
 **Module package Apply** installs a Module package into the live
 Cluster (after staging review). Day-1 does not Apply a stock
 Module package from this repo and does not bundle platform
@@ -499,7 +520,7 @@ packages into the Host image. A Builder Job that Applies a
 Module package, and a Marketplace of Module packages, stay later.
 See [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
 _Avoid_: deploy, merge, ship (unqualified), Host-bundled Apply,
-treating Pack Apply as Module package Apply.
+treating Pack Apply as Module package Apply, Apply-from-index.
 
 **LLM gateway**:
 Cluster capability for LLM calls: OpenAI-compatible shape and
@@ -752,7 +773,10 @@ _Avoid_: public share, invite (unqualified).
   Module packages. This monorepo ships no stock Module packages and no
   Weather seed. A Marketplace of Module packages is later. Day-1
   marketplace / OSS share for Packs is
-  [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md). See
+  [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md). The
+  public Pack catalog is on the marketing site
+  ([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md));
+  this Host links out and does not pull it. See
   [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
 - Host talks to Bots through the MCP surface and renders Cards and Sheets from
   the Kit. The Sheet shell and Brand stickers live in the Kit. An assistant
