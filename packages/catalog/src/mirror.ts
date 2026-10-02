@@ -1,3 +1,5 @@
+import type { CatalogAsset } from './map'
+import type { OpenedCatalogStore } from './store'
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -7,10 +9,9 @@ import {
   asAssetRecord,
   CATALOG_ASSET_BYTES_MAX,
   CATALOG_ASSET_FILENAME_MAX,
-  type CatalogAsset,
+
   toCatalogAsset,
 } from './map'
-import type { OpenedCatalogStore } from './store'
 
 const MIRROR_NAME = /^[a-z0-9][a-z0-9-]{0,31}\.[a-z0-9][a-z0-9-]{0,31}-\d+\.\d+\.\d+\.zip$/
 

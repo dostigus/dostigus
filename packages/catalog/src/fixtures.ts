@@ -1,8 +1,9 @@
+import type { PackTree } from '@dostigus/shared'
 import {
   HOST_ENGINE_VERSION,
   PACK_FORMAT,
+
   parsePackManifest,
-  type PackTree,
 } from '@dostigus/shared'
 
 export type CatalogFixture = {

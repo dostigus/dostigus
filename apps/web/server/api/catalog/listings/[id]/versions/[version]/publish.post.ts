@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { publishCatalogListing, publishCatalogListingFromZip } from '@dostigus/catalog'
 import { requireCatalogPublisher } from '../../../../../../utils/catalog-auth'
 import { catalogMirrorsDirOverride, throwCatalogError, withCatalogStore } from '../../../../../../utils/catalog-store'
@@ -16,7 +17,7 @@ export default defineEventHandler(async (event) => {
         bytes = new Uint8Array(file.data)
       }
     } else {
-      const body = await readBody<{ zipBase64?: string }>(event).catch(() => ({}))
+      const body = await readBody<{ zipBase64?: string }>(event).catch(() => ({ zipBase64: undefined }))
       if (typeof body.zipBase64 === 'string' && body.zipBase64.trim()) {
         bytes = Uint8Array.from(Buffer.from(body.zipBase64, 'base64'))
       }

@@ -85,7 +85,7 @@ export const CATALOG_ORIGIN_MAX = 2_000
 export const CATALOG_ASSET_FILENAME_MAX = 120
 export const CATALOG_ASSET_BYTES_MAX = 2_000_000
 
-const HTTPS_LINK = /^https:\/\/[^\s]+$/i
+const HTTPS_LINK = /^https:\/\/\S+$/i
 
 export function isCatalogListingStatus(value: string): value is CatalogListingStatus {
   return (CATALOG_LISTING_STATUSES as readonly string[]).includes(value)

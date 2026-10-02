@@ -1,8 +1,8 @@
 import type { CatalogListing } from './listings'
-import { getListing } from './listings'
-import { CATALOG_FIXTURES } from './fixtures'
-import { submitCatalogListing } from './publish'
 import type { OpenedCatalogStore } from './store'
+import { CATALOG_FIXTURES } from './fixtures'
+import { getListing } from './listings'
+import { submitCatalogListing } from './publish'
 
 /**
  * Publish Kitchen, Mail, and Reader when those versions are still missing.

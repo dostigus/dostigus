@@ -12,7 +12,7 @@ export default defineEventHandler((event) => {
     }
     const bytes = readCatalogAssetBytes(store, id, catalogAssetsDirOverride())
     setHeader(event, 'content-type', asset.mime)
-    setHeader(event, 'content-length', String(bytes.byteLength))
+    setResponseHeader(event, 'content-length', bytes.byteLength)
     setHeader(event, 'content-disposition', `inline; filename="${asset.filename}"`)
     setHeader(event, 'cache-control', 'public, max-age=31536000, immutable')
     return bytes

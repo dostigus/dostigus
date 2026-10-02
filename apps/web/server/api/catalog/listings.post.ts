@@ -1,5 +1,8 @@
-import { packTreeToZip, parsePackTreeJson } from '@dostigus/shared'
+import type { CatalogPublishInput } from '@dostigus/catalog'
+import type { PackTree } from '@dostigus/shared'
+import { Buffer } from 'node:buffer'
 import { submitCatalogListing } from '@dostigus/catalog'
+import { packTreeToZip, parsePackTreeJson } from '@dostigus/shared'
 import { requireCatalogPublisher } from '../../utils/catalog-auth'
 import { catalogMirrorsDirOverride, throwCatalogError, withCatalogStore } from '../../utils/catalog-store'
 
@@ -19,20 +22,18 @@ type ListingBody = {
   zipBase64?: unknown
 }
 
-function listingFromBody(body: ListingBody) {
-  if (body.listing && typeof body.listing === 'object') {
-    return body.listing
-  }
+function listingFromBody(body: ListingBody): CatalogPublishInput['listing'] {
+  const source = body.listing && typeof body.listing === 'object' ? body.listing : body
   return {
-    author: body.author,
-    authorLink: body.authorLink,
-    title: body.title,
-    short: body.short,
-    long: body.long,
-    screenshots: body.screenshots,
-    assets: body.assets,
-    originUrl: body.originUrl,
-    sortOrder: body.sortOrder,
+    author: source.author,
+    authorLink: source.authorLink,
+    title: source.title,
+    short: source.short,
+    long: source.long,
+    screenshots: source.screenshots,
+    assets: source.assets,
+    originUrl: source.originUrl,
+    sortOrder: source.sortOrder,
   }
 }
 
@@ -61,14 +62,14 @@ export default defineEventHandler(async (event) => {
       const listing = listingField
         ? listingFromBody({ listing: listingField })
         : listingFromBody({
-          author: field('author'),
-          authorLink: field('authorLink'),
-          title: field('title'),
-          short: field('short'),
-          long: field('long'),
-          originUrl: field('originUrl'),
-          sortOrder: field('sortOrder'),
-        })
+            author: field('author'),
+            authorLink: field('authorLink'),
+            title: field('title'),
+            short: field('short'),
+            long: field('long'),
+            originUrl: field('originUrl'),
+            sortOrder: field('sortOrder'),
+          })
       const file = form.find((part) => part.filename && part.data)
       if (!file) {
         throw createError({ statusCode: 400, statusMessage: 'Pack zip is required' })
@@ -86,7 +87,7 @@ export default defineEventHandler(async (event) => {
     const body = await readBody<ListingBody>(event).catch(() => ({} as ListingBody))
     const listing = listingFromBody(body)
     let bytes: Uint8Array | undefined
-    let tree
+    let tree: PackTree | undefined
     if (typeof body.zipBase64 === 'string' && body.zipBase64.trim()) {
       bytes = Uint8Array.from(Buffer.from(body.zipBase64, 'base64'))
     } else if (body.pack != null) {

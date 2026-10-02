@@ -13,7 +13,7 @@ export default defineEventHandler((event) => {
     }
     const bytes = readCatalogMirror(store, listing.mirrorFilename, catalogMirrorsDirOverride())
     setHeader(event, 'content-type', 'application/zip')
-    setHeader(event, 'content-length', String(bytes.byteLength))
+    setResponseHeader(event, 'content-length', bytes.byteLength)
     setHeader(event, 'content-disposition', `attachment; filename="${listing.mirrorFilename}"`)
     setHeader(event, 'cache-control', 'public, max-age=31536000, immutable')
     return bytes

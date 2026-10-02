@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { timingSafeEqual } from 'node:crypto'
 import { catalogPublishToken } from './env'
 import { readAuthorizationHeader } from './mcp-auth'

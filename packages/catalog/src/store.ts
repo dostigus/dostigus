@@ -3,10 +3,10 @@ import { dirname } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { applyCatalogStoreMigrations } from './migrations'
 import {
-  DEFAULT_CATALOG_STORE_URL,
   catalogAssetsDirFromStoreUrl,
   catalogMirrorsDirFromStoreUrl,
   catalogStoreFilePath,
+  DEFAULT_CATALOG_STORE_URL,
 } from './path'
 
 export type OpenedCatalogStore = {

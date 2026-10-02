@@ -1,13 +1,14 @@
+import type { CatalogListing, CatalogListingRecord } from './map'
+import type { OpenedCatalogStore } from './store'
 import { parsePackId, parsePackVersion, parseSemver } from '@dostigus/shared'
 import { CatalogError } from './catalog-error'
 import {
   asListingRecord,
-  type CatalogListing,
-  type CatalogListingRecord,
   listingColumns,
   toCatalogListing,
 } from './map'
-import type { OpenedCatalogStore } from './store'
+
+export type { CatalogListing }
 
 const LISTING_SELECT = listingColumns()
 

@@ -1,13 +1,22 @@
+import type { PackTree } from '@dostigus/shared'
+import type { CatalogListing } from './listings'
+import type { OpenedCatalogStore } from './store'
 import {
   assertNoSecretsInPack,
   PackInputError,
+
+  packTreeToZip,
   parsePackId,
   parsePackVersion,
   parsePackZip,
-  packTreeToZip,
-  type PackTree,
 } from '@dostigus/shared'
 import { CatalogError } from './catalog-error'
+import {
+
+  getListing,
+  markListingPublished,
+  upsertDraftListing,
+} from './listings'
 import {
   CATALOG_LONG_MAX,
   CATALOG_SHORT_MAX,
@@ -20,18 +29,11 @@ import {
   parseCatalogScreenshots,
 } from './map'
 import {
-  type CatalogListing,
-  getListing,
-  markListingPublished,
-  upsertDraftListing,
-} from './listings'
-import {
   catalogMirrorFilename,
   readCatalogDraftMirror,
   writeCatalogDraftMirror,
   writeCatalogMirror,
 } from './mirror'
-import type { OpenedCatalogStore } from './store'
 
 export type CatalogPublishInput = {
   listing: {
