@@ -19,10 +19,14 @@
   `content/packs` plus copy-URL CTA are
   superseded by
   [ADR 0047](0047-marketplace-catalog-store.md)
-  (Catalog Store on Platform, hybrid mirror,
-  public read API, deep-link Apply).
-  Host-pulled catalog and Apply-from-index
-  still stand rejected. Marketplace name,
+  (Catalog Store on `dostigus/cloud` /
+  dostigus.ru, hybrid mirror, public
+  read API, deep-link Apply). Host
+  [#189](https://github.com/dostigus/dostigus/pull/189)
+  Catalog Store on Platform Host is
+  misplaced / to remove. Host-pulled
+  catalog and Apply-from-index still
+  stand rejected. Marketplace name,
   `/marketplace`, Host out-link, `/packs`
   301, Pro out of the public field, and
   Packs as the first kind stay.
@@ -76,11 +80,15 @@ The catalog is on dostigus.ru. Home links to Marketplace.
 Each Pack has its own page plus SEO (title, description,
 text). Pages live in GitHub repo `dostigus/cloud`, not in
 this Platform monorepo. `/marketplace` is Marketplace.
-Listing source of truth is the Catalog Store on Platform
-([ADR 0047](0047-marketplace-catalog-store.md)). The site
-reads a public API. Static `content/packs` and `packs/`
-trees are not the forever publish path. That API is not
-a Host-pulled catalog and not a Module catalog.
+Listing source of truth is the Catalog Store on
+`dostigus/cloud` / dostigus.ru
+([ADR 0047](0047-marketplace-catalog-store.md)). The
+site owns that Store, mirrors, Nick publish, and
+the public read API. Static `content/packs` and
+`packs/` trees are not the forever publish path.
+Platform Host does not run Catalog Store for the
+public marketplace. That API is not a Host-pulled
+catalog and not a Module catalog.
 
 ### Host out-link
 
@@ -125,8 +133,8 @@ marketing-site repo (frontmatter plus markdown) and
 made the page CTA copy the public Pack Apply URL.
 [ADR 0047](0047-marketplace-catalog-store.md)
 supersedes that: listings live in the Catalog Store
-on Platform; the site reads a public API; Member
-Apply uses our mirror zip URL; the CTA deep-links
+on `dostigus/cloud` / dostigus.ru; Member Apply
+uses our cloud mirror zip URL; the CTA deep-links
 into the Host (`applyPack=` → `PackApplySheet`
 preview). Copy-URL is the fallback when the Host
 is unreachable or the origin is not that Host.
@@ -266,10 +274,12 @@ package registry.
 - Dynamic CMS or a Host API as the content source —
   superseded as the sole forever path.
   [ADR 0047](0047-marketplace-catalog-store.md)
-  puts listings in the Catalog Store and gives
-  the site a public read API. CMS as the sole
-  source without that Store still rejected.
-  A Host-pulled catalog API still rejected.
+  puts listings in the Catalog Store on
+  `dostigus/cloud` / dostigus.ru. CMS as the
+  sole source without that Store still
+  rejected. A Host-pulled catalog API still
+  rejected. Catalog Store on Platform Host
+  is rejected (Host #189 misplaced).
 - CTA that Applies inside the Host from the site —
   superseded for deep-link Apply.
   [ADR 0047](0047-marketplace-catalog-store.md)

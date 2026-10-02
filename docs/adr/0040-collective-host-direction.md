@@ -14,7 +14,8 @@
   [ADR 0045](0045-pack-catalog-on-marketing-site.md)
   (`/marketplace`; `/packs` 301; Pro out of the public
   field; Packs first catalog kind);
-  Catalog Store and deep-link Apply are
+  Catalog Store on `dostigus/cloud` /
+  dostigus.ru and deep-link Apply are
   [ADR 0047](0047-marketplace-catalog-store.md).
 
 Nick locked the direction below on 2026-10-01. This record sets
@@ -96,7 +97,8 @@ The Host, the README, the docs, and the public site do not
 advertise a Pro tier. The public Marketplace is
 [ADR 0045](0045-pack-catalog-on-marketing-site.md)
 (https://dostigus.ru/marketplace, Host out-link).
-Catalog Store and deep-link Apply are
+Catalog Store on `dostigus/cloud` / dostigus.ru and
+deep-link Apply are
 [ADR 0047](0047-marketplace-catalog-store.md). An
 in-product Marketplace Apply-from-index is not v1. Packs stay the share
 format
@@ -115,7 +117,8 @@ The SPEC out-of-scope list stays in force. This record does not
 pull Share link, guests, or an agent runtime into scope.
 The public Marketplace is
 [ADR 0045](0045-pack-catalog-on-marketing-site.md).
-Catalog Store and deep-link Apply are
+Catalog Store on `dostigus/cloud` / dostigus.ru and
+deep-link Apply are
 [ADR 0047](0047-marketplace-catalog-store.md).
 Module packages are a later Marketplace kind. Pro stays
 out of the public field.

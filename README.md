@@ -16,7 +16,7 @@ Grok Bot and OpenClaw-style desktop agents keep the loop on someone else’s box
 
 You run a **Cluster**. You add Members to your **Collective**. Bots talk through an **MCP surface** against that Store. You pick **Providers** — OpenRouter first, plus OpenAI and OpenAI-compatible — and bind **Model tiers** instead of baking a model list into the repo.
 
-Day-1 the Host can **Export Pack** from a live Bot and **Apply** from a local file, a public `.zip` URL, or an https git remote (preview, then write onto a Bot). That is not an in-product Marketplace. Public Marketplace is the marketing-site catalog (https://dostigus.ru/marketplace; Host out-link). Listings live in the Catalog Store on Platform (public read API + Nick publish; [docs/catalog.md](docs/catalog.md)); the Host does not pull a catalog. Module packages as a Marketplace kind stay later.
+Day-1 the Host can **Export Pack** from a live Bot and **Apply** from a local file, a public `.zip` URL, or an https git remote (preview, then write onto a Bot). That is not an in-product Marketplace. Public Marketplace is the marketing-site catalog (https://dostigus.ru/marketplace; Host out-link). Listings live in the Catalog Store on dostigus.ru (`dostigus/cloud`; public read API + Nick publish; [docs/catalog.md](docs/catalog.md)); the Host does not pull a catalog and does not run that Store. Module packages as a Marketplace kind stay later.
 
 ## What you get
 
@@ -64,7 +64,7 @@ Scope: [`docs/SPEC.md`](docs/SPEC.md). Glossary: [`CONTEXT.md`](CONTEXT.md). Dec
 
 Early. Self-host first. MIT.
 
-Day-1 Host **Export Pack** / **Apply** from file, public URL, or git (preview → Bot). Public Marketplace is the marketing-site catalog (Host out-link). Listings live in the Catalog Store on Platform; the Host does not pull a catalog. Module packages as a Marketplace kind stay later. This Host already runs Chat, Skills, Schedules, Artifacts, and Collective Members. Do not read that as a store you browse and install. See [`docs/SPEC.md`](docs/SPEC.md).
+Day-1 Host **Export Pack** / **Apply** from file, public URL, or git (preview → Bot). Public Marketplace is the marketing-site catalog (Host out-link). Listings live in the Catalog Store on dostigus.ru; the Host does not pull a catalog and does not run that Store. Module packages as a Marketplace kind stay later. This Host already runs Chat, Skills, Schedules, Artifacts, and Collective Members. Do not read that as a store you browse and install. See [`docs/SPEC.md`](docs/SPEC.md).
 
 ## License
 

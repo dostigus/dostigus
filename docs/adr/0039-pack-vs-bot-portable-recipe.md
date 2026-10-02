@@ -27,13 +27,16 @@
   is https://dostigus.ru/marketplace. This record's Apply
   sources stay. In-product Marketplace Apply stays out.
 - Amended: 2026-10-02 — Marketplace listings live in the
-  Catalog Store
+  Catalog Store on `dostigus/cloud` / dostigus.ru
   ([ADR 0047](0047-marketplace-catalog-store.md)).
-  Member Apply from Marketplace uses our mirror zip
-  URL. Deep-link `applyPack=` opens this record's
-  preview / plan (`PackApplySheet`). File / URL / git
-  Apply stay. Host-pulled catalog and auto-update
+  Member Apply from Marketplace uses the cloud
+  mirror zip URL. Deep-link `applyPack=` opens this
+  record's preview / plan (`PackApplySheet`). File /
+  URL / git Apply stay. Host-pulled catalog,
+  Catalog Store on Platform Host, and auto-update
   stay out. Pack format stays this record.
+  Host [#189](https://github.com/dostigus/dostigus/pull/189)
+  catalog is misplaced / to remove.
 
 Platform git vs Cluster objects stays
 [ADR 0001](0001-platform-git-vs-in-cluster-bot-packages.md).
@@ -65,9 +68,10 @@ Day-1 marketplace / OSS share ships **Packs**. The public
 **Marketplace** is [ADR 0045](0045-pack-catalog-on-marketing-site.md)
 (https://dostigus.ru/marketplace, Host out-link; `/packs`
 301s). Listing source of truth is the Catalog Store
+on `dostigus/cloud` / dostigus.ru
 ([ADR 0047](0047-marketplace-catalog-store.md)). Packs are
-the first catalog kind. Module package
-Apply remains later
+the first catalog kind. Platform Host does not run
+that Store. Module package Apply remains later
 ([ADR 0030](0030-chat-cards-module-catalog.md)).
 
 Seller compatibility class: closer to Cursor skills / OpenMaus
@@ -147,10 +151,11 @@ day-1.
 The public Marketplace that indexes the same format is
 [ADR 0045](0045-pack-catalog-on-marketing-site.md): marketing
 site `/marketplace` first, Host out-link. Listings live in
-the Catalog Store
+the Catalog Store on `dostigus/cloud` / dostigus.ru
 ([ADR 0047](0047-marketplace-catalog-store.md)). Deep-link
-`applyPack=` reuses this preview. That catalog is not a
-Host-pulled index and is not Apply-from-index.
+`applyPack=` reuses this preview with the cloud mirror
+zip URL. That catalog is not a Host-pulled index and is
+not Apply-from-index.
 
 Apply always shows a **preview / plan** before write: Bot
 create vs update, Skills, Schedules (paused), `ui/`, missing
@@ -281,7 +286,8 @@ that loads into the Host process.
   Module package for schema / MCP / Kit bindings.
 - Day-1 marketplace track is Packs. The public Marketplace is
   [ADR 0045](0045-pack-catalog-on-marketing-site.md).
-  Catalog Store and deep-link Apply are
+  Catalog Store on `dostigus/cloud` / dostigus.ru and
+  deep-link Apply are
   [ADR 0047](0047-marketplace-catalog-store.md). Module
   package Apply stays later
   ([ADR 0030](0030-chat-cards-module-catalog.md)).
@@ -314,7 +320,8 @@ that loads into the Host process.
 - In-product Host Marketplace / Apply-from-index. Public
   Marketplace is
   [ADR 0045](0045-pack-catalog-on-marketing-site.md).
-  Catalog Store and deep-link Apply are
+  Catalog Store on `dostigus/cloud` / dostigus.ru and
+  deep-link Apply are
   [ADR 0047](0047-marketplace-catalog-store.md).
   Module packages are a later Marketplace kind.
 - Pack `ui/` iframe host.
