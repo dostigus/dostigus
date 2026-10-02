@@ -8,6 +8,7 @@
 - Amended: 2026-09-24 — Schedule closet list, create Sheet, and detail Sheet are day-1 ([ADR 0027](0027-bot-schedules.md)). Card «Изменить» opens that same detail Sheet. Cards stay. Still no stock Module packages and no Weather seed.
 - Amended: 2026-09-24 — meta Skills stay on the Bot as catalog + `dostigus_skills_read`. Always-on Host rules stay short (`CHAT_SELF_SETTINGS_RULE`, `CHAT_NO_PACKAGE_RULE`). Assembly is [ADR 0032](0032-chat-llm-context-assembly.md). Cards and system lines stay this record.
 - Amended: 2026-09-26 — Day-1 marketplace track for **Packs** (portable Bot recipes) is [ADR 0039](0039-pack-vs-bot-portable-recipe.md). Module package Marketplace / Apply stays later and separate.
+- Amended: 2026-10-02 — Public Pack catalog is [ADR 0045](0045-pack-catalog-on-marketing-site.md) (marketing site, Host out-link). Module package Marketplace / Apply stays later.
 
 Assistant parts stay [ADR 0025](0025-chat-bubble-parts.md). Schedules
 and the Wake stay [ADR 0027](0027-bot-schedules.md). The platform
@@ -36,8 +37,11 @@ Weather seed**. There is no `packages/modules/` catalog seed, no
 Host-bundled Apply of platform packages, and no Open-Meteo Module in
 this repo. A Marketplace of Module packages is a later cloud product.
 It is out of this record's day-1. Day-1 marketplace / OSS share for
-**Packs** is [ADR 0039](0039-pack-vs-bot-portable-recipe.md). That
-track is not Module package Apply.
+**Packs** is [ADR 0039](0039-pack-vs-bot-portable-recipe.md). The
+public Pack catalog is
+[ADR 0045](0045-pack-catalog-on-marketing-site.md)
+(marketing site, Host out-link). That track is not Module
+package Apply.
 
 A missing capability uses the constructor tools already in Chat: Skills
 upsert, Schedule tools, and Bot self-settings
@@ -209,8 +213,9 @@ Skills on Bot create: constructor how-to as plain Skill text, so a new
 Bot can read how those tools work. That seed is not a package. A
 Marketplace of Module packages is later, as a cloud product. Day-1
 marketplace track for Packs is
-[ADR 0039](0039-pack-vs-bot-portable-recipe.md). Builder remains
-the later path that writes a Module package
+[ADR 0039](0039-pack-vs-bot-portable-recipe.md). The public Pack
+catalog is [ADR 0045](0045-pack-catalog-on-marketing-site.md).
+Builder remains the later path that writes a Module package
 ([ADR 0006](0006-day-1-declarative-modules.md)).
 
 [ADR 0025](0025-chat-bubble-parts.md) stores button and status parts
@@ -320,7 +325,9 @@ Kitchen remains a Host seed with no package row
   baking packages into the Host image.
 - Builder Jobs and a cluster coding sandbox.
 - A Marketplace of Module packages (later cloud product). Pack
-  marketplace / OSS share is [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
+  Apply is [ADR 0039](0039-pack-vs-bot-portable-recipe.md). The
+  public Pack catalog is
+  [ADR 0045](0045-pack-catalog-on-marketing-site.md).
 - `dostigus_modules_catalog`, `dostigus_modules_apply`, and a platform
   rule that must Apply a matching stock package.
 - A Chat Card after Apply, and a catalog-miss Card.
@@ -358,7 +365,8 @@ Kitchen remains a Host seed with no package row
 - Ship a stock Weather package (Open-Meteo) and Apply it from a
   Module catalog in this repo — rejected on 2026-09-24. No
   `packages/modules/` seed, no catalog or Apply tools, no Card after
-  Apply. Marketplace is later.
+  Apply. Module package Marketplace is later. Public Pack catalog
+  is [ADR 0045](0045-pack-catalog-on-marketing-site.md).
 - A platform rule that must Apply a matching stock package — rejected
   with that seed. Capability gaps use Skills upsert, Schedule tools,
   and Bot self-settings already in Chat.

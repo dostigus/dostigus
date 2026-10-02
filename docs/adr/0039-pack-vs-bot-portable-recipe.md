@@ -17,6 +17,10 @@
   SSRF matches Host HTTP get. Caps: 25 MB, 60 s. Successful Apply
   stores snapshot `source` (`file` / `url` / `git`). Host runtime
   image installs `git`.
+- Amended: 2026-10-02 — Public Pack catalog is
+  [ADR 0045](0045-pack-catalog-on-marketing-site.md)
+  (marketing site `/packs`, Host out-link). This record's Apply
+  sources stay. In-product catalog Apply stays out.
 
 Platform git vs Cluster objects stays
 [ADR 0001](0001-platform-git-vs-in-cluster-bot-packages.md).
@@ -44,8 +48,10 @@ portable recipe. They are not the same object. A Pack is also
 | **Pack** | Portable recipe: soul / instructions, Skill docs (`SKILL.md`-class / skills files), Schedule **templates** (import paused), integration **stubs**, optional `ui/` HTML mini-apps, optional `suggestedAppearance` (create only), optional human README. Semver `id` + `version` | A live Bot, Chat, secrets, host paths, a Module package |
 | **Module package** | Heavier declarative unit: schema / migrations, MCP tools, Kit UI bindings, Skill diffs ([ADR 0006](0006-day-1-declarative-modules.md)) | A Pack, a Bot |
 
-Day-1 marketplace / OSS share ships **Packs**. Module package
-Apply and Module package Marketplace remain later and separate
+Day-1 marketplace / OSS share ships **Packs**. The public Pack
+catalog is [ADR 0045](0045-pack-catalog-on-marketing-site.md)
+(marketing site, Host out-link). Module package Apply and
+Module package Marketplace remain later and separate
 ([ADR 0030](0030-chat-cards-module-catalog.md)).
 
 Seller compatibility class: closer to Cursor skills / OpenMaus
@@ -122,8 +128,10 @@ works.
 Trust is preview + consent. There is no repo whitelist on
 day-1.
 
-A later Marketplace catalog indexes the same format (cloud /
-site). That catalog is not a Host blocker.
+The public Pack catalog that indexes the same format is
+[ADR 0045](0045-pack-catalog-on-marketing-site.md): marketing
+site first, Host out-link only. That catalog is not a Host
+blocker and is not in-product Apply-from-index.
 
 Apply always shows a **preview / plan** before write: Bot
 create vs update, Skills, Schedules (paused), `ui/`, missing
@@ -252,8 +260,9 @@ that loads into the Host process.
 - Glossary: **Pack ≠ Bot ≠ Module package**. Use Pack for the
   portable recipe. Use Bot for the runtime identity. Use
   Module package for schema / MCP / Kit bindings.
-- Day-1 marketplace track is Packs. Module package Marketplace
-  / Apply stays later
+- Day-1 marketplace track is Packs. The public Pack catalog is
+  [ADR 0045](0045-pack-catalog-on-marketing-site.md). Module
+  package Marketplace / Apply stays later
   ([ADR 0030](0030-chat-cards-module-catalog.md)).
 - `pack.json` + `packFormat` + `engines.dostigus` are the
   Host-compatibility fields. Apply warns or blocks outside
@@ -281,7 +290,9 @@ that loads into the Host process.
 ### Out of scope
 
 - Export Bot backup.
-- Marketplace.
+- Marketplace of Module packages, and an in-product Host Pack
+  catalog / Apply-from-index. Public Pack catalog is
+  [ADR 0045](0045-pack-catalog-on-marketing-site.md).
 - Pack `ui/` iframe host.
 - Private packs, SSH, PAT, LFS, submodules, and auto-update
   from source.

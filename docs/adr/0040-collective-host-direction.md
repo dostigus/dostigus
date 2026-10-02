@@ -9,7 +9,9 @@
   Owner-operator and Team audiences are
   [ADR 0043](0043-target-personas.md);
   Case inbox + follow-up Wakes are
-  [ADR 0044](0044-case-inbox-and-follow-up-wakes.md).
+  [ADR 0044](0044-case-inbox-and-follow-up-wakes.md);
+  the public Pack catalog is
+  [ADR 0045](0045-pack-catalog-on-marketing-site.md).
 
 Nick locked the direction below on 2026-10-01. This record sets
 direction and order only. It does not change [SPEC](../SPEC.md)
@@ -87,8 +89,11 @@ integration in the Host.
 ### Monetization
 
 The Host, the README, and the docs do not advertise a Pro tier.
-A Pack marketplace is likely later. Packs are already the share
-format ([ADR 0039](0039-pack-vs-bot-portable-recipe.md)). The
+The public Pack catalog is
+[ADR 0045](0045-pack-catalog-on-marketing-site.md)
+(marketing site, Host out-link). An in-product Pack
+marketplace Apply is not v1. Packs stay the share format
+([ADR 0039](0039-pack-vs-bot-portable-recipe.md)). The
 self-host Cluster stays the default path
 ([ADR 0005](0005-self-host-first.md)).
 
@@ -100,8 +105,9 @@ self-host Cluster stays the default path
 - SaaS multi-tenant cloud
 
 The SPEC out-of-scope list stays in force. This record does not
-pull Share link, guests, Marketplace, or an agent runtime into
-scope.
+pull Share link, guests, Module Marketplace, or an agent runtime
+into scope. The public Pack catalog is
+[ADR 0045](0045-pack-catalog-on-marketing-site.md).
 
 ## Context
 
