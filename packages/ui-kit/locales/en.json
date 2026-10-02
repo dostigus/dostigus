@@ -728,7 +728,10 @@
       "imapRejected": "the server rejected the user or password",
       "smtpRejected": "the server rejected the user or password",
       "timeout": "the server did not answer in time",
-      "refused": "the server refused the connection"
+      "refused": "the server refused the connection",
+      "unresolved": "the hostname could not be resolved",
+      "blocked": "that address is blocked for mail",
+      "failed": "the request failed"
     }
   },
   "pack": {

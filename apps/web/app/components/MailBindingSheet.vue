@@ -388,6 +388,9 @@ function checkReason(check: MailCheck): string {
   if (allowlist) {
     return t('mailbox.notAllowlisted', { entry: allowlist[1] })
   }
+  if (message === 'blocked destination') {
+    return t('mailbox.error.blocked')
+  }
   return hostStatusCopy({ statusMessage: message }, t, 'mailbox.saveFailed')
 }
 
