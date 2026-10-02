@@ -724,7 +724,11 @@
     "exportConfirm": "Download",
     "exportId": "{author}.{slug}",
     "scheduleNameDaily": "Daily {time}",
-    "scheduleNameWeekly": "Weekly {time}"
+    "scheduleNameWeekly": "Weekly {time}",
+    "deepLinkUrlRequired": "Pack URL is required.",
+    "deepLinkInvalidUrl": "Pack URL is invalid.",
+    "deepLinkHttpsOnly": "Pack Apply uses https only.",
+    "deepLinkZipOnly": "Pack Apply accepts .zip files only."
   },
   "schedule": {
     "gone": "This Schedule is gone.",
