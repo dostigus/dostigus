@@ -13,6 +13,7 @@
       v-if="isOwner"
       v-model:open="memberAddOpen"
     />
+    <HostPackApplySheet />
     <div class="pane">
       <ThreadComposer
         v-if="threadOpen"
@@ -40,6 +41,7 @@ const { open, narrow, close } = useHostNav()
 const { open: createOpen, closeCreate, dismissCreate } = useHostCreate()
 const { open: threadOpen, closeThreadCreate, dismissThreadCreate } = useHostThreadCreate()
 const { open: memberAddOpen, closeMemberAdd } = useHostMemberAdd()
+const { consumeApplyPackParam } = useHostPackApply()
 const { bots, refresh } = await useHostBots()
 const { refresh: refreshThreads } = await useHostThreads()
 
@@ -91,6 +93,7 @@ onMounted(() => {
     query.removeEventListener('change', apply)
     window.removeEventListener('keydown', onKeydown)
   }
+  void consumeApplyPackParam()
 })
 
 onUnmounted(() => {
