@@ -33,7 +33,7 @@ function parseJsonFile(raw: string, label: string): unknown {
 }
 
 export const PACK_FORMAT = 1
-export const HOST_ENGINE_VERSION = '0.1.0'
+export const HOST_ENGINE_VERSION = '0.2.0'
 export const PACK_ID_MAX = 65
 export const PACK_SOUL_MAX = 2_000
 export const PACK_README_MAX = 8_000
@@ -172,6 +172,13 @@ export type PackApplyPlan = {
   warnings: string[]
   blockers: string[]
   chatPreserved: boolean
+}
+
+/** Live IMAP/SMTP mailbox Pack. Not `dostigus.mail` (paste-only triage). See ADR 0048. */
+export const MAILER_PACK_ID = 'dostigus.mailer'
+
+export function isMailerPackSnapshot(installedPackId: string | null | undefined): boolean {
+  return typeof installedPackId === 'string' && installedPackId.startsWith(`${MAILER_PACK_ID}@`)
 }
 
 export function installedPackSnapshotId(packId: string, version: string): string {
@@ -787,9 +794,23 @@ export function parsePackUpload(input: {
   throw new PackInputError('Upload a Pack zip or pack.json')
 }
 
-function redactText(value: string): { text: string, redacted: boolean } {
+/** Cluster-side secrets the export must not carry verbatim (Bot mail binding passwords). */
+export type PackSecretLiterals = readonly string[]
+
+function usableLiterals(literals: PackSecretLiterals): string[] {
+  return [...new Set(literals.filter((value) => value.trim().length >= 4))]
+    .sort((left, right) => right.length - left.length)
+}
+
+function redactTextWith(value: string, literals: PackSecretLiterals = []): { text: string, redacted: boolean } {
   let text = value
   let redacted = false
+  for (const literal of usableLiterals(literals)) {
+    if (text.includes(literal)) {
+      text = text.replaceAll(literal, '[redacted]')
+      redacted = true
+    }
+  }
   for (const pattern of SECRET_PATTERNS) {
     const next = text.replace(pattern, '[redacted]')
     if (next !== text) {
@@ -807,7 +828,12 @@ function redactText(value: string): { text: string, redacted: boolean } {
   return { text, redacted }
 }
 
-export function scrubPackTree(tree: PackTree): { tree: PackTree, redacted: string[] } {
+export function scrubPackTree(
+  tree: PackTree,
+  options: { literals?: PackSecretLiterals } = {},
+): { tree: PackTree, redacted: string[] } {
+  const literals = options.literals ?? []
+  const redactText = (value: string) => redactTextWith(value, literals)
   const redacted: string[] = []
   const soul = redactText(tree.manifest.soul)
   if (soul.redacted) {
@@ -879,8 +905,12 @@ export function scrubPackTree(tree: PackTree): { tree: PackTree, redacted: strin
   }
 }
 
-export function assertNoSecretsInPack(tree: PackTree): void {
+export function assertNoSecretsInPack(tree: PackTree, literals: PackSecretLiterals = []): void {
   const blob = JSON.stringify(packTreeToFiles(tree))
+  const files = Object.values(packTreeToFiles(tree)).join('\n')
+  if (usableLiterals(literals).some((literal) => files.includes(literal))) {
+    throw new PackInputError('Pack export must not include secrets')
+  }
   for (const pattern of SECRET_PATTERNS) {
     pattern.lastIndex = 0
     if (pattern.test(blob)) {

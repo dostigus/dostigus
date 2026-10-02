@@ -2,6 +2,7 @@ import type { OpenedStore, Schedule, ScheduleCadence, ScheduleWeekday } from '@d
 import type { BotViewer } from '@dostigus/shared'
 import type { ArtifactTurn } from './artifacts'
 import type { HostHttpLookup } from './http-get'
+import type { MailTransport } from './mail-client'
 import process from 'node:process'
 import {
   createSchedule,
@@ -31,6 +32,10 @@ export type ScheduleToolContext = {
   personId?: string
   wake?: boolean
   artifacts?: ArtifactTurn
+  /** One Chat turn. A Mailer draft confirms only on a later turn. See ADR 0048. */
+  turnKey?: string
+  /** IMAP/SMTP test double. Production leaves this unset. */
+  mailTransport?: MailTransport
 }
 
 function actorMayManage(schedulePersonId: string, viewer?: BotViewer): boolean {

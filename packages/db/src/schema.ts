@@ -243,6 +243,28 @@ export const clusterSettings = sqliteTable('cluster_settings', {
   timezone: text('timezone'),
   /** JSON array of hostnames. Null or `[]` is allow-all public hosts. */
   httpAllowlist: text('http_allowlist'),
+  /** JSON array of `host:port`. Null or `[]` allows no IMAP/SMTP. See ADR 0048. */
+  mailAllowlist: text('mail_allowlist'),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+/**
+ * Bot mail binding: one IMAP/SMTP mailbox per Bot. Passwords live here like a
+ * Provider `apiKey`, never in a Pack or an API response. Null SMTP user and
+ * password reuse the IMAP login. See ADR 0048.
+ */
+export const botMailBindings = sqliteTable('bot_mail_bindings', {
+  botId: text('bot_id').primaryKey().references(() => bots.id, { onDelete: 'cascade' }),
+  imapHost: text('imap_host').notNull(),
+  imapPort: integer('imap_port').notNull(),
+  imapUser: text('imap_user').notNull(),
+  imapPassword: text('imap_password').notNull(),
+  smtpHost: text('smtp_host').notNull(),
+  smtpPort: integer('smtp_port').notNull(),
+  smtpUser: text('smtp_user'),
+  smtpPassword: text('smtp_password'),
+  updatedBy: text('updated_by'),
+  createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
 })
 
@@ -290,5 +312,6 @@ export type InviteRow = typeof invites.$inferSelect
 export type ScheduleRow = typeof schedules.$inferSelect
 export type TurnRow = typeof turns.$inferSelect
 export type ClusterSettingsRow = typeof clusterSettings.$inferSelect
+export type BotMailBindingRow = typeof botMailBindings.$inferSelect
 export type ArtifactRow = typeof artifacts.$inferSelect
 export type MessageArtifactRow = typeof messageArtifacts.$inferSelect

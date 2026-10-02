@@ -83,6 +83,10 @@ it('lets the Owner or an Admin use Providers, the Members list, and Invites', ()
     'members/invites/index.post.ts',
     'members/invites/[id]/revoke.post.ts',
     'members/invites/[id]/rotate.post.ts',
+    'bots/[id]/mail.get.ts',
+    'bots/[id]/mail.put.ts',
+    'bots/[id]/mail.delete.ts',
+    'bots/[id]/mail/test.post.ts',
   ]
   for (const file of files) {
     const src = readFileSync(join(apiRoot, file), 'utf8')
@@ -101,6 +105,8 @@ it('keeps Cluster settings, Account Settings, Member writes, and roles with the 
     'settings/timezone.put.ts',
     'settings/http-allowlist.get.ts',
     'settings/http-allowlist.put.ts',
+    'settings/mail-allowlist.get.ts',
+    'settings/mail-allowlist.put.ts',
     'settings/locale.get.ts',
     'settings/locale.put.ts',
     'members/index.post.ts',
