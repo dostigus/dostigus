@@ -36,7 +36,7 @@ Settled now, even if this repo only scaffolds them:
 
 ## This Host (create Bot + Chat)
 
-What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)).
+What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. This Host does not pull a catalog.
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
@@ -173,10 +173,13 @@ What the running Cluster does today. This Host serves an Owner-operator (Collect
   to fit it, with padding still sitting past that arrow. The pill opens a
   right Sheet titled Параметры (name, optional label, description, who
   may open the Bot, a large Bot mark, a «Расписания» block for that
-  person's Schedules on this Bot, and Export Pack / Apply Pack).
+  person's Schedules on this Bot, Export Pack / Apply Pack, and a
+  Marketplace out-link to dostigus.ru `/marketplace`).
   Schedules on that Sheet are Store rows, not Manifest fields. Pack
   Apply always shows a preview / plan before write
-  ([ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md)).
+  ([ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md)). The
+  Marketplace row opens the marketing site in a new tab
+  ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)).
   ([ADR 0020](adr/0020-bot-closet.md),
   [ADR 0027](adr/0027-bot-schedules.md)). The creator and the Owner open
   appearance by clicking that mark or

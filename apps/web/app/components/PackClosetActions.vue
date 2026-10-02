@@ -9,6 +9,22 @@
     <p class="hint">
       {{ $t('pack.hint') }}
     </p>
+    <KitListRow
+      as="a"
+      class="catalog"
+      :title="$t('pack.catalog')"
+      :subtitle="$t('pack.catalogHint')"
+      :href="PACK_CATALOG_URL"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <template #trailing>
+        <span
+          class="chevron"
+          aria-hidden="true"
+        >›</span>
+      </template>
+    </KitListRow>
     <div class="row">
       <KitButton
         type="button"
@@ -144,8 +160,10 @@
 
 <script setup lang="ts">
 import type { PackApplyPlan, PackTree } from '@dostigus/shared'
-import { KitButton, KitField, KitInput, KitSheet } from '@dostigus/ui-kit'
+import { KitButton, KitField, KitInput, KitListRow, KitSheet } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../utils/host-status-copy'
+
+const PACK_CATALOG_URL = 'https://dostigus.ru/marketplace'
 
 type PackExportPreview = {
   author: string
@@ -364,6 +382,15 @@ function onApplied(botId: string) {
   color: var(--text-muted);
   font-size: 0.82rem;
   line-height: 1.45;
+}
+
+.catalog {
+  margin-inline: -0.7rem;
+}
+
+.chevron {
+  font-size: 1.25rem;
+  line-height: 1;
 }
 
 .row {

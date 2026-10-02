@@ -6,10 +6,11 @@
   **Marketplace** at `/marketplace` (not a separate Packs brand).
   Packs are the first catalog kind; Module packages and
   integrations later on that same Marketplace. `/packs` and
-  `/packs/:slug` 301 to Marketplace. Host out-link is
-  https://dostigus.ru/marketplace. Pro stays out of the public
-  field ([ADR 0040](0040-collective-host-direction.md)) and is
-  removed from the public site.
+  `/packs/:slug` 301 to Marketplace. Host out-link is Closet
+  Параметры Pack (`PackClosetActions`):
+  https://dostigus.ru/marketplace, new tab. Pro stays out of
+  the public field ([ADR 0040](0040-collective-host-direction.md))
+  and is removed from the public site.
 
 Pack Apply stays
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md): file, public
@@ -21,9 +22,9 @@ Apply stays later
 a Host seed, not a Pack in this Host
 ([ADR 0026](0026-kitchen-module-day-1.md),
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md)). This record
-names the public **Marketplace**. It does not change
-[SPEC](../SPEC.md) "This Host" runtime, the Store, or Host
-code. It does not add marketing-site pages.
+names the public **Marketplace**. The Host out-link is in
+this Host (Closet). It does not add a Store migration, a
+Host-pulled catalog, or marketing-site pages.
 
 Nick locked the first shape on 2026-10-02, then the rename
 below the same day.
@@ -62,11 +63,12 @@ this catalog, not a Host API and not a Module catalog.
 
 ### Host out-link
 
-This Host product grows a simple section or link that
+This Host product has a simple section or link that
 **references** Marketplace only (an out-link:
 https://dostigus.ru/marketplace). No direct catalog
-integration. No Apply-from-index. Placement (Closet,
-Dashboard, or another chrome slot) is the later Host PR.
+integration. No Apply-from-index. Placement is Closet
+Параметры Pack (`PackClosetActions`): a `KitListRow` in
+a new tab.
 
 ### Site visual
 
@@ -168,9 +170,9 @@ package registry.
 
 ## Consequences
 
-- Docs only. No Store migration, route, Host UI, MCP
-  surface, marketing-site page, or Port change in this
-  record.
+- The Host out-link is Closet Параметры Pack. No Store
+  migration, Host-pulled catalog, MCP surface change,
+  marketing-site page, or Port in this record.
 - Glossary: [`CONTEXT.md`](../../CONTEXT.md) uses
   **Marketplace** (not Pack catalog as a public brand).
   Pack Apply stays [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
@@ -190,11 +192,10 @@ package registry.
 - [ADR 0030](0030-chat-cards-module-catalog.md) Module
   package Apply stays later. That later kind lands on
   Marketplace, not on a second public brand.
-- SPEC “In scope” names Marketplace and the Host out-link
-  as accepted direction. SPEC “This Host” stays unchanged
-  until the Host out-link PR. SPEC out of scope still
-  excludes in-product Marketplace Apply and a Host-pulled
-  catalog.
+- SPEC “In scope” names Marketplace and the Host out-link.
+  SPEC “This Host” names the Closet Параметры Pack row.
+  SPEC out of scope still excludes in-product Marketplace
+  Apply and a Host-pulled catalog.
 - Kitchen Module seed stays a seed
   ([ADR 0026](0026-kitchen-module-day-1.md)). A Kitchen
   Pack page on the site is a recipe people Apply; it is

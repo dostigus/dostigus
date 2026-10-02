@@ -682,6 +682,8 @@
   "pack": {
     "title": "Pack",
     "hint": "Рецепт на экспорт. Без Chat и секретов.",
+    "catalog": "Каталог Pack",
+    "catalogHint": "Открыть на сайте",
     "export": "Экспорт Pack",
     "exportBusy": "Экспортируем…",
     "apply": "Apply Pack",
