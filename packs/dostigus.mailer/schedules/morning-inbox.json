@@ -1,0 +1,6 @@
+{
+  "name": "Morning inbox",
+  "cadence": "daily",
+  "timeLocal": "08:00",
+  "wakeText": "Check the inbox with dostigus_mail_list (unseenOnly true). Summarize what needs a reply, what can wait, and what to skip. Draft replies only if the person asked you to; never send."
+}
