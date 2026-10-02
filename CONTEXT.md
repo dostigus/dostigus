@@ -374,7 +374,9 @@ URL. Listing screenshots live in our object storage, not
 inside the Pack zip. Listing ≠ binary. Publish v1 is Nick
 only (not Cluster Admin). A Publisher role and a Submit
 portal are later. Kitchen, Mail, and Reader migrate from
-`dostigus/cloud` static trees onto this Store.
+`dostigus/cloud` static trees onto this Store. Public read
+is `GET /api/catalog/packs` on the Host that holds this
+Store ([`docs/catalog.md`](docs/catalog.md)).
 _Avoid_: Cluster Store, treating listings as Cluster
 Artifacts, Host-pulled catalog index, auto-publish,
 auto-update, secrets in the Pack zip.

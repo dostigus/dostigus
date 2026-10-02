@@ -144,6 +144,13 @@ it('keeps auth status, register, login, and health public', () => {
     join(apiRoot, 'auth/login.post.ts'),
     join(apiRoot, 'invites/[token].get.ts'),
     join(apiRoot, 'invites/[token].post.ts'),
+    join(apiRoot, 'catalog/packs.get.ts'),
+    join(apiRoot, 'catalog/packs.options.ts'),
+    join(apiRoot, 'catalog/packs/[id].get.ts'),
+    join(apiRoot, 'catalog/packs/[id].options.ts'),
+    join(apiRoot, 'catalog/packs/[id]/versions/[version].get.ts'),
+    join(apiRoot, 'catalog/packs/[id]/versions/[version]/zip.get.ts'),
+    join(apiRoot, 'catalog/assets/[id].get.ts'),
     join(import.meta.dirname, '../../server/routes/health.get.ts'),
     join(import.meta.dirname, '../../server/routes/health.head.ts'),
   ]
@@ -221,6 +228,32 @@ it('keeps Invite links reachable while logged out', () => {
   expect(src).toContain('function isInvitePath')
   expect(src).toContain('path.startsWith(\'/invite/\')')
   expect(src).toContain('if (isInvitePath(to.path))')
+})
+
+it('keeps Catalog Store public reads public and Nick publish off the Owner session', () => {
+  const nickFiles = [
+    'catalog/listings.get.ts',
+    'catalog/listings.post.ts',
+    'catalog/listings/[id]/versions/[version]/publish.post.ts',
+    'catalog/seed.post.ts',
+    'catalog/assets.post.ts',
+  ]
+  for (const file of nickFiles) {
+    const src = readFileSync(join(apiRoot, file), 'utf8')
+    expect(src, file).toContain('requireCatalogPublisher')
+    expect(src, file).not.toContain('requireUserSession')
+    expect(src, file).not.toContain('requireOwnerSession')
+    expect(src, file).not.toContain('requireHostSession')
+    expect(src, file).not.toContain('withOwnerStore')
+    expect(src, file).not.toContain('withHostStore')
+    expect(src, file).not.toContain('requireOwnerOrAdminSession')
+  }
+  const publisher = readFileSync(
+    join(import.meta.dirname, '../../server/utils/catalog-auth.ts'),
+    'utf8',
+  )
+  expect(publisher).toContain('catalogPublishToken')
+  expect(publisher).not.toContain('requireUserSession')
 })
 
 it('does not gate the MCP surface on the Host Owner session', () => {

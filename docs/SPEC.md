@@ -36,7 +36,7 @@ Settled now, even if this repo only scaffolds them:
 
 ## This Host (create Bot + Chat)
 
-What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store and deep-link Apply (`applyPack=`) are [ADR 0047](adr/0047-marketplace-catalog-store.md) and are not in this Host yet. This Host does not pull a catalog.
+What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish APIs are in this Host ([ADR 0047](adr/0047-marketplace-catalog-store.md), [`docs/catalog.md`](catalog.md)); deep-link Apply (`applyPack=`) is not. This Host does not pull a catalog.
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
@@ -82,6 +82,21 @@ What the running Cluster does today. This Host serves an Owner-operator (Collect
   Store on start. That open may insert meta Skills on a Bot that has
   none of the meta Skill ids. It does not overwrite a Bot that already has
   any of them.
+- Catalog Store (`@dostigus/catalog`): separate SQLite on
+  `CATALOG_DATABASE_URL` (default `file:.data/catalog.sqlite`).
+  Tables `catalog_listings` (Pack id + version, i18n title / short /
+  long, author string, optional author link, screenshots and assets
+  refs, publish status, origin URL, immutable mirror filename) and
+  `catalog_assets` (hosted listing screenshots). Not the Cluster Store
+  and not Cluster Artifacts. Public read
+  `GET /api/catalog/packs` and
+  `GET /api/catalog/packs/:id` (plus version and zip). Nick-only
+  publish (`DOSTIGUS_CATALOG_PUBLISH_TOKEN` /
+  `NUXT_CATALOG_PUBLISH_TOKEN`) submits a draft, approves to
+  published, and writes `{id}-{version}.zip`.
+  `POST /api/catalog/seed` publishes Kitchen, Mail, and Reader
+  fixtures. See [ADR 0047](adr/0047-marketplace-catalog-store.md)
+  and [`docs/catalog.md`](catalog.md).
 - Owner auth: `nuxt-auth-utils` sealed cookie session. Fresh Cluster →
   `/onboarding` (email or username + password). Later visits → `/login`.
   Register is disabled once an Owner exists. Login accepts the Owner or a
@@ -925,10 +940,11 @@ and [`docs/deploy.md`](deploy.md)).
   the site reads a public API; deep-link Apply
   (`applyPack=` mirror zip URL → `PackApplySheet`)
   is that record, not a Host-pulled index. Catalog
-  Store schema, Nick publish, mirrors, site consume,
-  migrate of Kitchen / Mail / Reader, and the Host
-  `applyPack=` handler are later PRs, not this docs
-  record. Submit portal, CLI, Publisher role, and a
+  Store schema, Nick publish, mirrors, and Kitchen /
+  Mail / Reader seed fixtures are in this Host
+  ([`docs/catalog.md`](catalog.md)). Site consume and
+  the Host `applyPack=` handler stay a later PR.
+  Submit portal, CLI, Publisher role, and a
   Mailer product Pack (IMAP / SMTP) stay later.
   Packs are the first catalog kind; `/packs` 301s to
   Marketplace. Site locale URL prefix is
