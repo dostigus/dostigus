@@ -724,7 +724,11 @@
     "exportConfirm": "Скачать",
     "exportId": "{author}.{slug}",
     "scheduleNameDaily": "Ежедневно {time}",
-    "scheduleNameWeekly": "Еженедельно {time}"
+    "scheduleNameWeekly": "Еженедельно {time}",
+    "deepLinkUrlRequired": "URL Pack обязателен.",
+    "deepLinkInvalidUrl": "Неверный URL Pack.",
+    "deepLinkHttpsOnly": "Pack Apply только для https.",
+    "deepLinkZipOnly": "Pack Apply принимает только .zip."
   },
   "schedule": {
     "gone": "Этого Schedule уже нет.",
