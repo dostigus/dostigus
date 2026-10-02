@@ -26,6 +26,14 @@
   Packs are the first catalog kind. `/packs` 301s. Host out-link
   is https://dostigus.ru/marketplace. This record's Apply
   sources stay. In-product Marketplace Apply stays out.
+- Amended: 2026-10-02 — Marketplace listings live in the
+  Catalog Store
+  ([ADR 0047](0047-marketplace-catalog-store.md)).
+  Member Apply from Marketplace uses our mirror zip
+  URL. Deep-link `applyPack=` opens this record's
+  preview / plan (`PackApplySheet`). File / URL / git
+  Apply stay. Host-pulled catalog and auto-update
+  stay out. Pack format stays this record.
 
 Platform git vs Cluster objects stays
 [ADR 0001](0001-platform-git-vs-in-cluster-bot-packages.md).
@@ -56,7 +64,9 @@ portable recipe. They are not the same object. A Pack is also
 Day-1 marketplace / OSS share ships **Packs**. The public
 **Marketplace** is [ADR 0045](0045-pack-catalog-on-marketing-site.md)
 (https://dostigus.ru/marketplace, Host out-link; `/packs`
-301s). Packs are the first catalog kind. Module package
+301s). Listing source of truth is the Catalog Store
+([ADR 0047](0047-marketplace-catalog-store.md)). Packs are
+the first catalog kind. Module package
 Apply remains later
 ([ADR 0030](0030-chat-cards-module-catalog.md)).
 
@@ -136,8 +146,11 @@ day-1.
 
 The public Marketplace that indexes the same format is
 [ADR 0045](0045-pack-catalog-on-marketing-site.md): marketing
-site `/marketplace` first, Host out-link only. That catalog
-is not a Host blocker and is not in-product Apply-from-index.
+site `/marketplace` first, Host out-link. Listings live in
+the Catalog Store
+([ADR 0047](0047-marketplace-catalog-store.md)). Deep-link
+`applyPack=` reuses this preview. That catalog is not a
+Host-pulled index and is not Apply-from-index.
 
 Apply always shows a **preview / plan** before write: Bot
 create vs update, Skills, Schedules (paused), `ui/`, missing
@@ -267,7 +280,9 @@ that loads into the Host process.
   portable recipe. Use Bot for the runtime identity. Use
   Module package for schema / MCP / Kit bindings.
 - Day-1 marketplace track is Packs. The public Marketplace is
-  [ADR 0045](0045-pack-catalog-on-marketing-site.md). Module
+  [ADR 0045](0045-pack-catalog-on-marketing-site.md).
+  Catalog Store and deep-link Apply are
+  [ADR 0047](0047-marketplace-catalog-store.md). Module
   package Apply stays later
   ([ADR 0030](0030-chat-cards-module-catalog.md)).
 - `pack.json` + `packFormat` + `engines.dostigus` are the
@@ -299,6 +314,8 @@ that loads into the Host process.
 - In-product Host Marketplace / Apply-from-index. Public
   Marketplace is
   [ADR 0045](0045-pack-catalog-on-marketing-site.md).
+  Catalog Store and deep-link Apply are
+  [ADR 0047](0047-marketplace-catalog-store.md).
   Module packages are a later Marketplace kind.
 - Pack `ui/` iframe host.
 - Private packs, SSH, PAT, LFS, submodules, and auto-update

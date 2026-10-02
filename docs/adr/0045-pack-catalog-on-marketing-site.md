@@ -15,6 +15,17 @@
   `prefix_except_default` (unprefixed = RU, EN `/en/...`)
   ([ADR 0046](0046-site-i18n-url-prefix.md)). Host Closet
   out-link stays https://dostigus.ru/marketplace (RU).
+- Amended: 2026-10-02 — Static-only
+  `content/packs` plus copy-URL CTA are
+  superseded by
+  [ADR 0047](0047-marketplace-catalog-store.md)
+  (Catalog Store on Platform, hybrid mirror,
+  public read API, deep-link Apply).
+  Host-pulled catalog and Apply-from-index
+  still stand rejected. Marketplace name,
+  `/marketplace`, Host out-link, `/packs`
+  301, Pro out of the public field, and
+  Packs as the first kind stay.
 
 Pack Apply stays
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md): file, public
@@ -55,6 +66,9 @@ The Host does **not** pull a live catalog. Host v1 has no
 catalog index, no Apply-from-index, and no in-product
 Marketplace. Closet Import stays the Apply path already in
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
+Deep-link Apply from the site (`applyPack=`) is
+[ADR 0047](0047-marketplace-catalog-store.md), not
+Apply-from-index.
 
 ### Marketing site
 
@@ -62,8 +76,11 @@ The catalog is on dostigus.ru. Home links to Marketplace.
 Each Pack has its own page plus SEO (title, description,
 text). Pages live in GitHub repo `dostigus/cloud`, not in
 this Platform monorepo. `/marketplace` is Marketplace.
-`content/marketplace/*.yml` on that site is site content for
-this catalog, not a Host API and not a Module catalog.
+Listing source of truth is the Catalog Store on Platform
+([ADR 0047](0047-marketplace-catalog-store.md)). The site
+reads a public API. Static `content/packs` and `packs/`
+trees are not the forever publish path. That API is not
+a Host-pulled catalog and not a Module catalog.
 
 ### Host out-link
 
@@ -103,11 +120,16 @@ README, and Platform docs still do not advertise Pro.
 
 ### Content and CTA
 
-The catalog is **static** in the marketing-site repo:
-frontmatter plus markdown. The page CTA copies the public
-Pack Apply URL (a `.zip` or an https git remote) and shows
-short “how to Apply in Host” instructions. A deep-link
-into the Host is later, not this record.
+The first lock made the catalog **static** in the
+marketing-site repo (frontmatter plus markdown) and
+made the page CTA copy the public Pack Apply URL.
+[ADR 0047](0047-marketplace-catalog-store.md)
+supersedes that: listings live in the Catalog Store
+on Platform; the site reads a public API; Member
+Apply uses our mirror zip URL; the CTA deep-links
+into the Host (`applyPack=` → `PackApplySheet`
+preview). Copy-URL is the fallback when the Host
+is unreachable or the origin is not that Host.
 
 ### First content
 
@@ -115,8 +137,10 @@ Ship 2–3 **real** Packs plus the Marketplace chrome. Use the
 verticals people already see in this Host (Kitchen, and
 the README fixture Bots Mail and Reader when those recipes
 exist). Publishing those Pack files (zip or git) and the
-markdown pages is the site catalog PR. This record does
-not invent stub paid listings and does not turn the
+markdown pages was the first site catalog PR. Migrate
+those three onto the Catalog Store is
+[ADR 0047](0047-marketplace-catalog-store.md). This record
+does not invent stub paid listings and does not turn the
 Kitchen Module seed into a Pack in this Host.
 
 ### Ship order
@@ -212,9 +236,13 @@ package registry.
   ([ADR 0026](0026-kitchen-module-day-1.md)). A Kitchen
   Pack page on the site is a recipe people Apply; it is
   not an installed Module package.
-- Paid Module packs, Pro checkout, Host deep-link Apply,
-  signing / notarization, and auto-update stay later or
-  rejected as below.
+- Paid Module packs, Pro checkout, signing /
+  notarization, and auto-update stay later or
+  rejected as below. Host deep-link Apply is
+  [ADR 0047](0047-marketplace-catalog-store.md).
+  Static-only catalog and copy-URL-only CTA
+  are superseded there. Host-pulled catalog
+  still stands rejected.
 
 ## Alternatives
 
@@ -236,11 +264,19 @@ package registry.
 - Advertise Pro on the public site — rejected.
   [ADR 0040](0040-collective-host-direction.md) stands.
 - Dynamic CMS or a Host API as the content source —
-  rejected. Static frontmatter plus markdown in the
-  marketing-site repo.
+  superseded as the sole forever path.
+  [ADR 0047](0047-marketplace-catalog-store.md)
+  puts listings in the Catalog Store and gives
+  the site a public read API. CMS as the sole
+  source without that Store still rejected.
+  A Host-pulled catalog API still rejected.
 - CTA that Applies inside the Host from the site —
-  rejected for v1. Copy the public Apply URL plus short
-  Host instructions. Deep-link later.
+  superseded for deep-link Apply.
+  [ADR 0047](0047-marketplace-catalog-store.md)
+  opens the Host with `applyPack=` (preview,
+  then confirm). Apply-from-index and Apply
+  without preview still rejected. Copy-URL
+  stays the fallback.
 - Reuse Kit Vue components 1:1 on the site — rejected as
   a requirement. Tokens, fonts, goose stickers, and Bot
   flock marks yes.
