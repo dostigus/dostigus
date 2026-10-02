@@ -115,6 +115,44 @@
         </KitButton>
       </template>
     </KitPanel>
+
+    <KitPanel
+      as="form"
+      :title="$t('settings.other.mailAllowlist.title')"
+      :description="$t('settings.other.mailAllowlist.hint')"
+      @submit.prevent="saveMailAllowlist"
+    >
+      <KitField
+        :label="$t('settings.other.mailAllowlist.label')"
+        :hint="mailAllowlist && mailAllowlist.length === 0 ? $t('settings.other.mailAllowlist.empty') : undefined"
+        :error="mailAllowlistMessageError ? mailAllowlistMessage : undefined"
+      >
+        <KitTextarea
+          v-model="mailAllowlistInput"
+          name="mail-allowlist"
+          :rows="3"
+          placeholder="imap.example.com:993"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </KitField>
+      <template #actions>
+        <span role="status">
+          <KitChip
+            v-if="mailAllowlistMessage && !mailAllowlistMessageError"
+            tone="ok"
+          >
+            {{ mailAllowlistMessage }}
+          </KitChip>
+        </span>
+        <KitButton
+          type="submit"
+          :disabled="mailAllowlistSaving"
+        >
+          {{ mailAllowlistSaving ? $t('common.saving') : $t('settings.other.mailAllowlist.save') }}
+        </KitButton>
+      </template>
+    </KitPanel>
   </div>
 </template>
 
@@ -164,6 +202,10 @@ const { data: allowlistData, refresh: refreshAllowlist } = await useFetch<{
   hosts: string[]
 }>('/api/settings/http-allowlist')
 
+const { data: mailAllowlistData, refresh: refreshMailAllowlist } = await useFetch<{
+  entries: string[]
+}>('/api/settings/mail-allowlist')
+
 const timezoneInput = ref('')
 const timezoneSaving = ref(false)
 const timezoneMessage = ref('')
@@ -174,6 +216,11 @@ const allowlistSaving = ref(false)
 const allowlistMessage = ref('')
 const allowlistMessageError = ref(false)
 const allowlist = computed(() => allowlistData.value?.hosts)
+const mailAllowlistInput = ref('')
+const mailAllowlistSaving = ref(false)
+const mailAllowlistMessage = ref('')
+const mailAllowlistMessageError = ref(false)
+const mailAllowlist = computed(() => mailAllowlistData.value?.entries)
 const timezoneNote = computed(() => {
   if (timezone.value?.source === 'env') {
     return t('settings.other.timezone.fromEnv', { value: timezone.value.effective })
@@ -189,6 +236,9 @@ watch(timezone, (next) => {
 }, { immediate: true })
 watch(allowlist, (next) => {
   allowlistInput.value = next?.join('\n') ?? ''
+}, { immediate: true })
+watch(mailAllowlist, (next) => {
+  mailAllowlistInput.value = next?.join('\n') ?? ''
 }, { immediate: true })
 
 function timezoneErrorText(error: unknown): string {
@@ -223,6 +273,29 @@ async function saveAllowlist() {
     allowlistMessageError.value = true
   } finally {
     allowlistSaving.value = false
+  }
+}
+
+async function saveMailAllowlist() {
+  mailAllowlistSaving.value = true
+  mailAllowlistMessage.value = ''
+  mailAllowlistMessageError.value = false
+  try {
+    const result = await $fetch<{ entries: string[] }>('/api/settings/mail-allowlist', {
+      method: 'PUT',
+      body: { entries: hostsFromInput(mailAllowlistInput.value) },
+    })
+    mailAllowlistData.value = result
+    mailAllowlistInput.value = result.entries.join('\n')
+    mailAllowlistMessage.value = result.entries.length === 0
+      ? t('settings.other.mailAllowlist.cleared')
+      : t('settings.other.mailAllowlist.saved')
+    await refreshMailAllowlist()
+  } catch (error) {
+    mailAllowlistMessage.value = hostStatusCopy(error, t, 'settings.other.mailAllowlist.invalid')
+    mailAllowlistMessageError.value = true
+  } finally {
+    mailAllowlistSaving.value = false
   }
 }
 

@@ -153,6 +153,39 @@
           </li>
         </ul>
       </section>
+      <section
+        v-if="showMailbox"
+        class="group"
+        aria-labelledby="mailbox-heading"
+      >
+        <h2 id="mailbox-heading">
+          {{ $t('mailbox.title') }}
+        </h2>
+        <ul class="rows">
+          <li>
+            <KitListRow
+              as="button"
+              class="mailbox-row"
+              :title="mailState.binding ? mailState.binding.imap.user : $t('mailbox.notConnected')"
+              :subtitle="mailState.binding ? `${mailState.binding.imap.host}:${mailState.binding.imap.port}` : undefined"
+              @click="mailboxOpen = true"
+            >
+              <template #trailing>
+                <KitChip
+                  v-if="mailOffAllowlist"
+                  tone="warn"
+                >
+                  {{ $t('mailbox.offAllowlist') }}
+                </KitChip>
+                <span
+                  class="chevron"
+                  aria-hidden="true"
+                >›</span>
+              </template>
+            </KitListRow>
+          </li>
+        </ul>
+      </section>
       <PackClosetActions
         v-if="bot"
         :bot-id="bot.id"
@@ -309,6 +342,20 @@
   </KitSheet>
 
   <KitSheet
+    v-model:open="mailboxOpen"
+    edge="end"
+    :title="$t('mailbox.title')"
+    title-align="center"
+    close="icon"
+  >
+    <MailBindingSheet
+      v-if="bot && mailboxOpen"
+      :bot-id="bot.id"
+      @changed="mailState = $event"
+    />
+  </KitSheet>
+
+  <KitSheet
     v-model:open="detailOpen"
     edge="end"
     :title="detailTitle"
@@ -333,6 +380,7 @@ import {
   canEditBot,
   DEFAULT_AVATAR_COLOR,
   DEFAULT_AVATAR_SHAPE,
+  isMailerPackSnapshot,
 } from '@dostigus/shared'
 import {
   KitBotAvatar,
@@ -373,6 +421,20 @@ const canEdit = computed(() => {
   })
 })
 const canShare = computed(() => canEdit.value || isAdmin.value)
+/** Bot mail binding is Owner / Admin in the Closet after Apply. See ADR 0048. */
+const canBindMail = computed(() => isOwner.value || isAdmin.value)
+type MailState = {
+  binding: { imap: { host: string, port: number, user: string } } | null
+  allowlisted: { imap: boolean, smtp: boolean } | null
+}
+const mailState = ref<MailState>({ binding: null, allowlisted: null })
+const mailboxOpen = ref(false)
+const showMailbox = computed(() => Boolean(props.bot && canBindMail.value
+  && (isMailerPackSnapshot(props.bot.installedPackId) || mailState.value.binding)))
+const mailOffAllowlist = computed(() => {
+  const allowlisted = mailState.value.allowlisted
+  return Boolean(allowlisted && (!allowlisted.imap || !allowlisted.smtp))
+})
 const shapes = BOT_AVATAR_SHAPES
 const accents = BOT_ACCENT_TOKENS
 const name = ref('')
@@ -415,6 +477,7 @@ watch(() => props.bot?.id, () => {
   syncFromBot()
   void loadGrants()
   void loadSchedules()
+  void loadMailbox()
 })
 
 watch(open, (isOpen) => {
@@ -422,11 +485,13 @@ watch(open, (isOpen) => {
     syncFromBot()
     void loadGrants()
     void loadSchedules()
+    void loadMailbox()
     playHeroGreet()
     return
   }
   appearanceOpen.value = false
   createOpen.value = false
+  mailboxOpen.value = false
   detailOpen.value = false
   clearTimeout(heroTimer)
   heroGreet.value = false
@@ -470,6 +535,18 @@ async function loadSchedules() {
   }
 }
 
+async function loadMailbox() {
+  if (!props.bot || !canBindMail.value) {
+    mailState.value = { binding: null, allowlisted: null }
+    return
+  }
+  try {
+    mailState.value = await $fetch<MailState>(`/api/bots/${props.bot.id}/mail`)
+  } catch {
+    mailState.value = { binding: null, allowlisted: null }
+  }
+}
+
 function openCreate() {
   createOpen.value = true
 }
@@ -495,6 +572,7 @@ function onPackApplied(botId: string) {
   emit('applied', botId)
   emit('saved')
   void loadSchedules()
+  void loadMailbox()
 }
 
 async function loadGrants() {
