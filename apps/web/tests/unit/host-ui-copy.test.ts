@@ -167,6 +167,10 @@ it('keeps Pack Export Schedule name twins in Locale dictionaries', () => {
   expect(tHost('ru', 'pack.scheduleNameWeekly', { time: '09:30' })).toBe(inventPackScheduleName('weekly', '09:30', 'ru'))
   expect(tHost('en', 'pack.exportTitle')).toBe('Export Pack')
   expect(tHost('ru', 'pack.exportTitle')).toBe('Экспорт Pack')
+  expect(tHost('en', 'pack.marketplace')).toBe('Marketplace')
+  expect(tHost('ru', 'pack.marketplace')).toBe('Marketplace')
+  expect(tHost('en', 'pack.marketplaceHint')).toBe('Packs on the site')
+  expect(tHost('ru', 'pack.marketplaceHint')).toBe('Pack на сайте')
 })
 
 it('keeps Members copy product-facing', () => {
