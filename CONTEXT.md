@@ -323,6 +323,7 @@ package.** Day-1 marketplace / OSS share ships Packs. The
 public catalog is **Marketplace**
 ([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
 Listing source of truth is the **Catalog Store**
+on `dostigus/cloud` / dostigus.ru
 ([ADR 0047](docs/adr/0047-marketplace-catalog-store.md)).
 See [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
 _Avoid_: Bot, Module package, plugin, extension, bot package
@@ -333,14 +334,15 @@ Public catalog on the marketing site
 (https://dostigus.ru/marketplace)
 ([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
 That site lives in GitHub repo `dostigus/cloud`. Listing
-source of truth is the **Catalog Store** on Platform
+source of truth is the **Catalog Store** on that same
+site / dostigus.ru
 ([ADR 0047](docs/adr/0047-marketplace-catalog-store.md)).
-The site reads a public API. It does not own publish.
+The site owns publish, mirrors, and the public read API.
 Packs are the first catalog kind; Module packages and
 integrations are later kinds on the same Marketplace, not a
 separate Packs brand. `/packs` and `/packs/:slug` 301 to
 Marketplace. Each Pack page has SEO and a CTA that
-deep-links into the Host (`applyPack=` our mirror zip URL
+deep-links into the Host (`applyPack=` cloud mirror zip URL
 → `PackApplySheet` preview). Copy-URL is the fallback when
 the Host is unreachable or the origin is not that Host.
 The Host does not pull this catalog. Host v1 Closet is an
@@ -356,29 +358,38 @@ _Avoid_: Pack catalog (as a public brand), treating
 Marketplace as a Host-pulled catalog or Apply-from-index,
 treating `/packs` as the live path, advertising Pro on the
 public site, treating static `content/packs` as the
-forever publish path, treating the catalog as a Host-pulled
-API, treating a Pack page as a Module package, a second
-Module Marketplace brand, locale-aware Host out-links.
+forever publish path, treating Catalog Store as Platform
+Host or a Member Cluster, treating the catalog as a
+Host-pulled API, treating a Pack page as a Module package,
+a second Module Marketplace brand, locale-aware Host
+out-links.
 
 **Catalog Store**:
-Platform-held source of truth for published Marketplace
-Pack listings (title, short and long copy i18n,
-screenshots and assets we host, version, author string,
-publish status, mirror zip pointer)
+Source of truth for published Marketplace Pack listings
+(title, short and long copy i18n, screenshots and assets
+we host, version, author string, publish status, mirror
+zip pointer). Lives with Marketplace on the marketing
+site / dostigus.ru (`dostigus/cloud`)
 ([ADR 0047](docs/adr/0047-marketplace-catalog-store.md)).
-Not the Cluster Store. After Nick approves a listing,
-Platform hosts an immutable `{id}-{version}.zip` (hybrid
-mirror). Author origin (https git or a zip URL) is for
-develop and submit only. Member Apply uses that mirror
-URL. Listing screenshots live in our object storage, not
-inside the Pack zip. Listing ≠ binary. Publish v1 is Nick
-only (not Cluster Admin). A Publisher role and a Submit
+Not the Cluster Store. Not Platform Host. After Nick
+approves a listing, **cloud** hosts an immutable
+`{id}-{version}.zip` (hybrid mirror). Author origin
+(https git or a zip URL) is for develop and submit only.
+Member Apply uses that cloud mirror URL. Listing
+screenshots live in our object storage, not inside the
+Pack zip. Listing ≠ binary. Publish v1 is Nick only
+(not Cluster Admin). A Publisher role and a Submit
 portal are later. Kitchen, Mail, and Reader migrate from
-`dostigus/cloud` static trees onto this Store. Public read
-is `GET /api/catalog/packs` on the Host that holds this
-Store ([`docs/catalog.md`](docs/catalog.md)).
+`dostigus/cloud` static trees onto this Store. Public
+read is under dostigus.ru (for example
+`GET /api/catalog/packs`, or the path the site
+documents). Host [#189](https://github.com/dostigus/dostigus/pull/189)
+`@dostigus/catalog` on Platform Host is misplaced /
+deprecated; remove in a follow-up PR. Do not expand
+Host catalog.
 _Avoid_: Cluster Store, treating listings as Cluster
-Artifacts, Host-pulled catalog index, auto-publish,
+Artifacts, Catalog Store on Platform Host or a Member
+Cluster, Host-pulled catalog index, auto-publish,
 auto-update, secrets in the Pack zip.
 
 **Bot visibility**:
@@ -525,7 +536,8 @@ Cluster database (SQLite day-1) holding domain data + Manifests + Module
 packages. An installed Pack is an immutable snapshot `id@version`
 in `installed_packs`; the Bot holds `installed_pack_id`
 ([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)).
-Not the **Catalog Store** (Marketplace listings,
+Not the **Catalog Store** (Marketplace listings on
+`dostigus/cloud` / dostigus.ru,
 [ADR 0047](docs/adr/0047-marketplace-catalog-store.md)).
 _Avoid_: database (unqualified), repo, treating Cluster
 Store as the Marketplace listing source.
@@ -565,7 +577,7 @@ The Host does not Apply from a live Marketplace index.
 The public Marketplace is an out-link
 (https://dostigus.ru/marketplace,
 [ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
-Deep-link Apply (`applyPack=` our mirror zip URL →
+Deep-link Apply (`applyPack=` cloud mirror zip URL →
 `PackApplySheet` preview) is
 [ADR 0047](docs/adr/0047-marketplace-catalog-store.md).
 Copy-URL is the fallback. Preview / plan still runs
@@ -835,7 +847,8 @@ _Avoid_: public share, invite (unqualified).
   public Marketplace is on the marketing site
   (https://dostigus.ru/marketplace,
   [ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md));
-  listings live in the Catalog Store
+  listings live in the Catalog Store on
+  `dostigus/cloud` / dostigus.ru
   ([ADR 0047](docs/adr/0047-marketplace-catalog-store.md));
   this Host links out and does not pull a catalog. See
   [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).

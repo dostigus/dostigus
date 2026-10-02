@@ -18,13 +18,18 @@
    [ADR 0046](docs/adr/0046-site-i18n-url-prefix.md)
    (`dostigus/cloud`, `prefix_except_default`); do not apply that
    prefix to Host routes. Marketplace listings live in the
-   **Catalog Store** on Platform
-   ([ADR 0047](docs/adr/0047-marketplace-catalog-store.md)),
-   not the Cluster Store; public read is
-   `GET /api/catalog/packs` ([`docs/catalog.md`](docs/catalog.md));
-   Nick publish is a Bearer, not Cluster Admin; Host
-   does not pull a catalog; deep-link Apply is `applyPack=`
-   (preview stays 0039; handler is a follow-up). Avoid bare
+   **Catalog Store** on the marketing site / dostigus.ru
+   (`dostigus/cloud`,
+   [ADR 0047](docs/adr/0047-marketplace-catalog-store.md)),
+   not on Platform Host and not in the Cluster Store;
+   public read is under dostigus.ru (for example
+   `GET /api/catalog/packs`); Nick publish is a Bearer,
+   not Cluster Admin; Host does not pull a catalog;
+   Host [#189](https://github.com/dostigus/dostigus/pull/189)
+   `@dostigus/catalog` is misplaced / to remove (do not
+   expand Host catalog); deep-link Apply is `applyPack=`
+   with the **cloud** mirror zip URL (preview stays 0039;
+   handler is a follow-up). Avoid bare
    “cloud agent” — use Builder.
    Do not invent synonyms. All repo docs are **English only**.
 3. Stay inside SPEC scope. Do not implement agent runtime, Meal port, Builder
