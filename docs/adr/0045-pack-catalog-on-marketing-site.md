@@ -1,29 +1,43 @@
-# ADR 0045: Pack catalog on the marketing site
+# ADR 0045: Marketplace on the marketing site
 
 - Status: accepted
 - Date: 2026-10-02
+- Amended: 2026-10-02 — Nick rename lock: the public catalog is
+  **Marketplace** at `/marketplace` (not a separate Packs brand).
+  Packs are the first catalog kind; Module packages and
+  integrations later on that same Marketplace. `/packs` and
+  `/packs/:slug` 301 to Marketplace. Host out-link is
+  https://dostigus.ru/marketplace. Pro stays out of the public
+  field ([ADR 0040](0040-collective-host-direction.md)) and is
+  removed from the public site.
 
 Pack Apply stays
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md): file, public
 `.zip` URL, or https git, preview / plan, then confirm.
 Collective Host direction stays
 [ADR 0040](0040-collective-host-direction.md). Module package
-Marketplace / Apply stays later
+Apply stays later
 ([ADR 0030](0030-chat-cards-module-catalog.md)). Kitchen stays
 a Host seed, not a Pack in this Host
 ([ADR 0026](0026-kitchen-module-day-1.md),
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md)). This record
-names the public **Pack catalog**. It does not change
+names the public **Marketplace**. It does not change
 [SPEC](../SPEC.md) "This Host" runtime, the Store, or Host
 code. It does not add marketing-site pages.
 
-Nick locked the nine decisions below on 2026-10-02.
+Nick locked the first shape on 2026-10-02, then the rename
+below the same day.
 
 ## Decision
 
-The public Pack catalog lives on the **marketing site**
-(dostigus.ru). It is not an in-product Pack marketplace and
-not a live catalog the Host pulls.
+The public catalog is named **Marketplace**. It lives on the
+**marketing site** (https://dostigus.ru/marketplace). It is
+not an in-product Host marketplace and not a live catalog the
+Host pulls.
+
+Packs are the **first catalog kind**. Module packages and
+integrations are later kinds on that same Marketplace, not a
+separate Packs brand.
 
 This record **is** the later public-catalog track that
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md) and
@@ -33,26 +47,26 @@ The shape is marketing-site-first, Host link-only.
 ### Not in-product Apply
 
 The Host does **not** pull a live catalog. Host v1 has no
-catalog index, no Apply-from-index, and no in-product Pack
-marketplace. Closet Import stays the Apply path already in
+catalog index, no Apply-from-index, and no in-product
+Marketplace. Closet Import stays the Apply path already in
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
 
 ### Marketing site
 
-The catalog is on dostigus.ru. Home links to the catalog.
+The catalog is on dostigus.ru. Home links to Marketplace.
 Each Pack has its own page plus SEO (title, description,
 text). Pages live in GitHub repo `dostigus/cloud`, not in
-this Platform monorepo. Existing `/marketplace` (and
-`content/marketplace/*.yml`) on that site is a Module-pack
-stub — it is **not** the Pack catalog.
+this Platform monorepo. `/marketplace` is Marketplace.
+`content/marketplace/*.yml` on that site is site content for
+this catalog, not a Host API and not a Module catalog.
 
 ### Host out-link
 
 This Host product grows a simple section or link that
-**references** the marketing-site catalog only (an
-out-link). No direct catalog integration. No
-Apply-from-index. Placement (Closet, Dashboard, or another
-chrome slot) is the later Host PR.
+**references** Marketplace only (an out-link:
+https://dostigus.ru/marketplace). No direct catalog
+integration. No Apply-from-index. Placement (Closet,
+Dashboard, or another chrome slot) is the later Host PR.
 
 ### Site visual
 
@@ -64,9 +78,18 @@ The site is **not** required to reuse Kit Vue components
 
 ### Paths and Locale
 
-Site paths are `/packs` (index) and `/packs/:slug`
-(detail). RU and EN, like the existing landing. A
-`/marketplace` Module-pack listing is not this catalog.
+Site path is `/marketplace`. Packs sit inside that
+Marketplace. RU and EN, like the existing landing.
+`/packs` and `/packs/:slug` **301** to Marketplace
+(`/marketplace`, and the matching Pack page when that slug
+exists).
+
+### Pro out of the public field
+
+The marketing site does not advertise a Pro tier. Remove
+Pro from the public site. Pro stays out of the public field
+([ADR 0040](0040-collective-host-direction.md)): Host,
+README, and Platform docs still do not advertise Pro.
 
 ### Content and CTA
 
@@ -78,7 +101,7 @@ into the Host is later, not this record.
 
 ### First content
 
-Ship 2–3 **real** Packs plus the catalog chrome. Use the
+Ship 2–3 **real** Packs plus the Marketplace chrome. Use the
 verticals people already see in this Host (Kitchen, and
 the README fixture Bots Mail and Reader when those recipes
 exist). Publishing those Pack files (zip or git) and the
@@ -90,9 +113,11 @@ Kitchen Module seed into a Pack in this Host.
 
 After this ADR merges:
 
-1. Marketing-site catalog UI (`/packs`, detail pages,
-   static content, SEO, CTA).
-2. A small Host out-link PR in this Platform repo.
+1. Marketing-site Marketplace UI (`/marketplace`, Pack
+   pages, `/packs` 301, static content, SEO, CTA, Pro
+   removed from the public site).
+2. A small Host out-link PR in this Platform repo
+   (https://dostigus.ru/marketplace).
 
 This PR is ADR plus CONTEXT / SPEC glossary only. No site
 pages. No Host UI. No Port.
@@ -109,13 +134,14 @@ the share format and already accepted Apply from a file, a
 public `.zip` URL, or https git. It left “a later
 Marketplace catalog (cloud / site)” unnamed.
 [ADR 0040](0040-collective-host-direction.md) said a Pack
-marketplace was likely later.
+marketplace was likely later, and kept Pro out of the
+public field.
 [ADR 0030](0030-chat-cards-module-catalog.md) kept Module
-package Marketplace later and separate.
+package Apply later and separate.
 
 An in-product Host catalog that Applies from a live index
 would pull a remote feed into the Cluster and blur Pack
-Apply with Module Marketplace. The Host already has Closet
+Apply with a later Module kind. The Host already has Closet
 Import. The missing piece is a public place to find a Pack
 and copy its Apply URL.
 
@@ -127,6 +153,15 @@ the catalog. The Host stays self-host first
 ([ADR 0005](0005-self-host-first.md)): one out-link, no
 live pull.
 
+The first lock on 2026-10-02 named that catalog **Pack
+catalog** at `/packs` and treated existing `/marketplace`
+as a Module-pack stub. The same-day rename lock makes
+**Marketplace** the public name at `/marketplace`, with
+Packs as the first kind and `/packs` as a 301. A separate
+Packs brand would split the public catalog. Advertising
+Pro on the public site would break
+[ADR 0040](0040-collective-host-direction.md).
+
 Static frontmatter plus markdown matches a small first
 set (2–3 Packs) and does not need a Host API or a Module
 package registry.
@@ -136,24 +171,30 @@ package registry.
 - Docs only. No Store migration, route, Host UI, MCP
   surface, marketing-site page, or Port change in this
   record.
-- Glossary: [`CONTEXT.md`](../../CONTEXT.md) adds **Pack
-  catalog**. Pack Apply stays [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
-  Module catalog / Module Marketplace stay later
+- Glossary: [`CONTEXT.md`](../../CONTEXT.md) uses
+  **Marketplace** (not Pack catalog as a public brand).
+  Pack Apply stays [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
+  Module packages are a later Marketplace kind, not a
+  separate brand
   ([ADR 0030](0030-chat-cards-module-catalog.md)).
 - [ADR 0039](0039-pack-vs-bot-portable-recipe.md) “later
-  Marketplace catalog” is this record: marketing site,
-  Host out-link. File / URL / git Apply still stands.
+  Marketplace catalog” is this record: marketing site
+  `/marketplace`, Host out-link
+  https://dostigus.ru/marketplace. File / URL / git Apply
+  still stands.
 - [ADR 0040](0040-collective-host-direction.md) Pack
   marketplace line is this record for the public catalog.
-  In-product marketplace Apply stays out of v1.
+  In-product Marketplace Apply stays out of v1. Pro stays
+  out of the public field; the public site does not
+  advertise Pro.
 - [ADR 0030](0030-chat-cards-module-catalog.md) Module
-  package Marketplace / Apply stays later. Pack catalog
-  is not that product.
-- SPEC “In scope” names the marketing-site catalog and
-  the Host out-link as accepted direction. SPEC “This
-  Host” stays unchanged until the Host out-link PR. SPEC
-  out of scope still excludes in-product marketplace
-  Apply, a Host-pulled catalog, and Module Marketplace.
+  package Apply stays later. That later kind lands on
+  Marketplace, not on a second public brand.
+- SPEC “In scope” names Marketplace and the Host out-link
+  as accepted direction. SPEC “This Host” stays unchanged
+  until the Host out-link PR. SPEC out of scope still
+  excludes in-product Marketplace Apply and a Host-pulled
+  catalog.
 - Kitchen Module seed stays a seed
   ([ADR 0026](0026-kitchen-module-day-1.md)). A Kitchen
   Pack page on the site is a recipe people Apply; it is
@@ -164,16 +205,23 @@ package registry.
 
 ## Alternatives
 
-- In-product Pack marketplace with Apply-from-index —
+- In-product Marketplace with Apply-from-index —
   rejected. Host v1 is an out-link only.
 - Host pulls a live catalog feed — rejected.
-- Catalog as Module Marketplace / Module packages —
-  rejected. Pack ≠ Module package
-  ([ADR 0039](0039-pack-vs-bot-portable-recipe.md)).
-- Host paths `/packs` as the catalog — rejected. Those
-  paths are the marketing site.
-- Keep the public catalog at `/marketplace` — rejected.
-  Paths are `/packs` and `/packs/:slug`.
+- A separate Packs brand beside Marketplace — rejected.
+  Packs are the first kind inside Marketplace.
+- A separate Module Marketplace product name — rejected
+  for the public site. Module packages are a later kind
+  on the same Marketplace.
+- Host paths `/packs` or `/marketplace` as the catalog —
+  rejected. Those paths are the marketing site.
+- Keep the public catalog at `/packs` as the live path —
+  rejected on the 2026-10-02 rename. `/packs` 301s to
+  `/marketplace`.
+- Keep `/marketplace` as a Module-pack stub only —
+  superseded by the rename. `/marketplace` is Marketplace.
+- Advertise Pro on the public site — rejected.
+  [ADR 0040](0040-collective-host-direction.md) stands.
 - Dynamic CMS or a Host API as the content source —
   rejected. Static frontmatter plus markdown in the
   marketing-site repo.

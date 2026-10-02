@@ -114,7 +114,7 @@ surrounding chrome words. See
 _Avoid_: language (unqualified), i18n (as a product noun),
 treating timezone as Locale, translating Bot / Pack / Host / Cluster /
 Skill / Schedule / Provider / Policy / Artifact / Member /
-Household / Case.
+Household / Case / Marketplace.
 
 **Chat**:
 The lines a person reads and writes on a Thread in the Host.
@@ -315,30 +315,34 @@ Bot ref. No Chat, no secrets, no host paths. Canonical tree is
 `pack.json` + `skills/` (+ optional `schedules/`, `ui/<id>/`,
 README); share is a zip of that tree. **Pack ≠ Bot ≠ Module
 package.** Day-1 marketplace / OSS share ships Packs. The
-public **Pack catalog** is on the marketing site
+public catalog is **Marketplace**
 ([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
 See [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
 _Avoid_: Bot, Module package, plugin, extension, bot package
 (unqualified), treating a zip as a live Bot.
 
-**Pack catalog**:
-Public index of Packs on the marketing site (dostigus.ru):
-`/packs` and `/packs/:slug`
+**Marketplace**:
+Public catalog on the marketing site
+(https://dostigus.ru/marketplace)
 ([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
 That site lives in GitHub repo `dostigus/cloud`, not this
-Platform monorepo. Existing `/marketplace` (and
-`content/marketplace/*.yml`) on that site is a Module-pack
-stub — it is **not** the Pack catalog. Static frontmatter
-plus markdown in that repo. Each Pack page has SEO and a
-CTA to copy the public Pack Apply URL (a `.zip` or an https
-git remote) plus short Host Apply instructions. The Host
-does not pull this catalog. Host v1 is an out-link to the
-site. Not a Module catalog. Not Module Marketplace. Not
-in-product Apply-from-index.
-_Avoid_: marketplace (as a Host product surface), Module
-Marketplace, treating `dostigus/cloud` `/marketplace` as the
-Pack catalog, treating the catalog as a Host API, treating a
-Pack page as a Module package.
+Platform monorepo. Packs are the first catalog kind; Module
+packages and integrations are later kinds on the same
+Marketplace, not a separate Packs brand. `/packs` and
+`/packs/:slug` 301 to Marketplace. Static frontmatter plus
+markdown in that repo. Each Pack page has SEO and a CTA to
+copy the public Pack Apply URL (a `.zip` or an https git
+remote) plus short Host Apply instructions. The Host does
+not pull this catalog. Host v1 is an out-link to
+https://dostigus.ru/marketplace. Pro stays out of the public
+field
+([ADR 0040](docs/adr/0040-collective-host-direction.md)).
+Not an in-product Host marketplace. Not Apply-from-index.
+_Avoid_: Pack catalog (as a public brand), treating
+Marketplace as a Host product surface, treating `/packs` as
+the live path, advertising Pro on the public site, treating
+the catalog as a Host API, treating a Pack page as a Module
+package, a second Module Marketplace brand.
 
 **Bot visibility**:
 Who may see a Bot. A personal Bot plus explicit grants
@@ -457,14 +461,15 @@ _Avoid_: plugin, extension, addon, Bot, Pack.
 **Module catalog**:
 Not a day-1 artifact in this monorepo. There is no
 `packages/modules/<id>/` seed and no Host-bundled Apply of platform
-packages. A Marketplace of Module packages is a later cloud product,
-separate from Pack Apply
-([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)) and from
-the public Pack catalog on the marketing site
-([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)). See
-[ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
-_Avoid_: stock seed, registry, plugin gallery, treating Marketplace as day-1,
-treating a Pack catalog as a Module catalog.
+packages. Module packages are a later Marketplace catalog
+kind, not a separate public brand, and stay later than Pack
+Apply
+([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md),
+[ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
+See [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
+_Avoid_: stock seed, registry, plugin gallery, treating
+Marketplace as a Host product surface, treating a Pack page
+as a Module catalog.
 
 **Kitchen Module**:
 Day-1 Cluster domain: pantry items (name, optional qty), one recipe
@@ -515,14 +520,16 @@ The Pack owns Skills (except Host seed Skills) and Schedules that
 carry that snapshot's provenance. Owner-created and unlabeled
 grandfather Schedules stay. See
 [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
-The Host does not Apply from a live Pack catalog. The public
-catalog is an out-link
-([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
+The Host does not Apply from a live Marketplace. The public
+Marketplace is an out-link
+(https://dostigus.ru/marketplace,
+[ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md)).
 **Module package Apply** installs a Module package into the live
 Cluster (after staging review). Day-1 does not Apply a stock
 Module package from this repo and does not bundle platform
 packages into the Host image. A Builder Job that Applies a
-Module package, and a Marketplace of Module packages, stay later.
+Module package, and Module packages as a Marketplace kind,
+stay later.
 See [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
 _Avoid_: deploy, merge, ship (unqualified), Host-bundled Apply,
 treating Pack Apply as Module package Apply, Apply-from-index.
@@ -776,11 +783,12 @@ _Avoid_: public share, invite (unqualified).
 - Builder writes Module packages via Job → Module package Apply.
   Distinct from any Platform git agent. The chat Bot does not write
   Module packages. This monorepo ships no stock Module packages and no
-  Weather seed. A Marketplace of Module packages is later. Day-1
-  marketplace / OSS share for Packs is
+  Weather seed. Module packages as a Marketplace kind are
+  later. Day-1 marketplace / OSS share for Packs is
   [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md). The
-  public Pack catalog is on the marketing site
-  ([ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md));
+  public Marketplace is on the marketing site
+  (https://dostigus.ru/marketplace,
+  [ADR 0045](docs/adr/0045-pack-catalog-on-marketing-site.md));
   this Host links out and does not pull it. See
   [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
 - Host talks to Bots through the MCP surface and renders Cards and Sheets from
