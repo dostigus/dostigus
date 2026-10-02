@@ -188,18 +188,36 @@ function walkStructure(node: MessageStructureObject | undefined, out: BodyParts)
 }
 
 /** Crude HTML to text for a model; enough to read a message, not to render it. */
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: '\'',
+  nbsp: ' ',
+}
+
+/** One pass only: `&amp;lt;` stays the text `&lt;`. */
+function decodeEntity(match: string, body: string): string {
+  if (body.startsWith('#')) {
+    const code = body[1] === 'x' || body[1] === 'X'
+      ? Number.parseInt(body.slice(2), 16)
+      : Number.parseInt(body.slice(1), 10)
+    if (!Number.isFinite(code) || code < 1 || code > 0x10FFFF || (code >= 0xD800 && code <= 0xDFFF)) {
+      return match
+    }
+    return code === 0xA0 ? ' ' : String.fromCodePoint(code)
+  }
+  return NAMED_ENTITIES[body.toLowerCase()] ?? match
+}
+
 export function htmlToText(html: string): string {
   return html
     .replace(/<(script|style|head)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(p|div|li|tr|h[1-6])>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/g, '\'')
+    .replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi, decodeEntity)
     .replace(/[ \t]+/g, ' ')
     .split('\n')
     .map((line) => line.trim())

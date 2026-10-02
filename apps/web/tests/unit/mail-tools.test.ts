@@ -281,3 +281,8 @@ it('flattens HTML mail to text', () => {
   expect(htmlToText('<style>p{}</style><p>Hi&nbsp;<b>Ada</b></p><p>Bye &amp; thanks</p>'))
     .toBe('Hi Ada\nBye & thanks')
 })
+
+it('decodes HTML entities once, not twice', () => {
+  expect(htmlToText('<p>&amp;lt;b&amp;gt; &amp;amp; &lt;i&gt;</p>')).toBe('&lt;b&gt; &amp; <i>')
+  expect(htmlToText('&#60;&#x3E;&QUOT;&apos;&#169; &bogus; &#0; &#xD800;')).toBe('<>"\'© &bogus; &#0; &#xD800;')
+})
