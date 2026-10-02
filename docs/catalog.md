@@ -49,7 +49,9 @@ do not edit that repo from this Host docs PR.
    ([#192](https://github.com/dostigus/dostigus/pull/192)).
 5. Mailer product locks —
    [ADR 0048](adr/0048-mailer-product.md). Host IMAP/SMTP
-   tools and Nick publish of `dostigus.mailer` stay later.
-   Do not seed beside `dostigus.mail` in that docs PR.
+   tools, Closet bind Sheet, mail allowlist, and the Pack
+   tree (`packs/dostigus.mailer`) are in this Host. Nick
+   publish of `dostigus.mailer` to the Catalog Store stays
+   later. Do not seed beside `dostigus.mail`.
 
 Ask Nick before merge and before Port.
