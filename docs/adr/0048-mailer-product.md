@@ -2,6 +2,15 @@
 
 - Status: accepted
 - Date: 2026-10-02
+- Amended: 2026-10-03 — Nick rejected the
+  Cluster mail allowlist (host:port list,
+  empty = deny all, Owner Dashboard form).
+  It is not a Cluster setting. The mailbox
+  server is the Closet Bot mail binding.
+  SSRF stays. Standing rule: future
+  security limits that apply to one Bot
+  or one Pack go on the Bot, not on
+  Cluster settings. Docs only. No Port.
 
 Pack format and Closet Import stay
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
@@ -27,15 +36,36 @@ except the Mailer tools named below.
 
 This record names the **Mailer** product:
 Pack `dostigus.mailer`, Cluster **Bot mail
-binding**, Host IMAP/SMTP tools, and a
-separate **mail allowlist**. It does
-**not** implement Host tools, a Pack
-zip, Closet UI, a Store migration, or a
-Catalog Store seed.
+binding**, and Host IMAP/SMTP tools.
+There is no Cluster **mail allowlist**.
+The 2026-10-02 record was docs only.
+Host tools, Closet bind, and the Pack
+tree later landed in this Host. Nick
+publish of the zip stays later.
 
 Nick locked the fourteen decisions below
-on 2026-10-02. Do not reopen them in
-the impl PR.
+on 2026-10-02. On 2026-10-03 Nick
+rejected the Cluster mail allowlist;
+Egress and Bot vs Cluster security
+limits below are that amend. Do not
+reopen the kept locks.
+
+## Amended
+
+2026-10-03. Cluster settings are only
+about the Cluster itself. A
+host:port mail allowlist for one Pack
+is not a Cluster setting. The mailbox
+server is whatever the Owner or Admin
+sets when binding that Bot in Closet.
+One mailbox per Bot stays. The Host
+still always blocks loopback, private,
+and link-local destinations. Do not
+add Cluster-level allowlists for a
+single Pack. Future security limits
+that apply to one Bot or one Pack go
+on the Bot, not on Cluster settings.
+This amend is docs only. No Port.
 
 `dostigus/cloud` `docs/catalog.md` may
 still say deep-link Apply is later.
@@ -130,19 +160,39 @@ interval cadence in this record.
 
 ### Egress
 
-A separate **mail allowlist** (host +
-ports; typical ports **993**, **465**,
-**587**). It is not the Cluster http
-allowlist. It does not reuse
+The mailbox server is whatever the
+Owner or Admin sets when binding that
+Bot in Closet (IMAP and SMTP host and
+port). There is no Cluster mail
+allowlist: no host:port list, no empty
+= deny all, no Owner Dashboard form.
+A Cluster mail allowlist is not a
+Cluster setting.
+
+IMAP/SMTP does not reuse the Cluster
+http allowlist or
 `DOSTIGUS_HTTP_PROXY` / Bot HTTP egress
 ([ADR 0031](0031-host-http-get.md),
 [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)).
-The Owner sets it on Cluster settings.
-The Host still blocks loopback, private,
-and link-local destinations. Empty-list
-rule and Store field name are the impl
-PR. A mail-specific proxy env is not
-this record.
+The Host still always blocks loopback,
+private, and link-local destinations
+(SSRF). A mail-specific proxy env is
+not this record.
+
+### Bot vs Cluster security limits
+
+Cluster settings are only about the
+Cluster itself (timezone, Cluster http
+allowlist, Locale). Feature-specific
+outbound limits (which mail hosts a
+Bot may use, and similar Pack
+concerns) belong on the Bot: the user
+allows or denies that Bot. Future
+security limits that apply to one Bot
+or one Pack go on the Bot, not on
+Cluster settings. Do not add
+Cluster-level allowlists for a single
+Pack.
 
 ### Catalog id
 
@@ -190,9 +240,10 @@ implement the Pack tree here.
 
 ### Scope of this record
 
-Docs only. No Host IMAP/SMTP tools. No
-Pack zip. No Closet bind Sheet. No
-Store migration. No Port. Ask Nick
+The 2026-10-02 record was docs only.
+Host tools, Closet bind, and the Pack
+tree later landed. This 2026-10-03
+amend is docs only. No Port. Ask Nick
 before merge.
 
 ## Context
@@ -220,9 +271,10 @@ the Pack cannot carry.
 
 A Kitchen-style Module with mail tables
 would invent a mail Store before the
-Host can speak IMAP/SMTP. v1 is the
-same class as Host HTTP get: Host tools
-plus an Owner egress gate.
+Host can speak IMAP/SMTP. v1 is Host
+tools plus the Closet Bot mail binding.
+SSRF blocks stay. There is no Cluster
+mail allowlist.
 
 Gmail / Outlook OAuth would marry
 vendor APIs in Platform code.
@@ -240,6 +292,14 @@ Reusing the Cluster http allowlist or
 egress with IMAP/SMTP ports and
 proxying. Those paths stay HTTP.
 
+A Cluster mail allowlist (host:port
+list, empty = deny all, Owner
+Dashboard form) would put a
+Pack-specific outbound gate on Cluster
+settings. Cluster settings stay
+Cluster-wide. The user allows or
+denies that Bot in Closet.
+
 Chat self-settings or Member self-bind
 would put mailbox passwords on a
 grantee Chat turn. Closet bind stays
@@ -255,25 +315,33 @@ per Bot keeps the recipe 1:1.
 
 ## Consequences
 
-- Docs only. No Host tools, Pack zip,
-  Closet UI, Store column, or Port in
-  this PR.
+- This 2026-10-03 amend is docs only.
+  No Port. Host IMAP/SMTP tools,
+  Closet bind, Bot mail binding, and
+  the Pack tree already landed. Do not
+  change product code, migrations, or
+  UI in this amend.
 - Glossary: **Mailer Pack** is
   `dostigus.mailer`. **Bot mail
   binding** is the Cluster Store
   credential row (one mailbox per Bot).
-  **mail allowlist** is the Owner
-  host+port gate for IMAP/SMTP. They
+  The mailbox server is that bind.
+  There is no **mail allowlist**. They
   are not Cluster http allowlist, not
   Bot HTTP egress, and not
   `dostigus.mail`.
-- SPEC “In scope” names the Mailer
-  product locks. SPEC “This Host”
-  does not gain IMAP/SMTP tools.
-  SPEC out of scope keeps Host tools,
-  the Pack zip, OAuth, IDLE, interval
-  Schedules, a Module mail store, and
-  Member self-bind later.
+- Standing rule (CONTEXT): Cluster
+  settings are only about the Cluster
+  itself. Future security limits that
+  apply to one Bot or one Pack go on
+  the Bot, not on Cluster settings.
+- SPEC “In scope” and “This Host”
+  drop the Cluster mail allowlist.
+  SPEC out of scope keeps OAuth,
+  IDLE, interval Schedules, a Module
+  mail store, and Member self-bind
+  later. A Cluster mail allowlist is
+  rejected.
 - [ADR 0047](0047-marketplace-catalog-store.md)
   “Mailer later” is this record. Nick
   publish of the zip waits for Host
@@ -287,7 +355,9 @@ per Bot keeps the recipe 1:1.
   PR lands. Send stays confirm-gated.
 - [ADR 0031](0031-host-http-get.md)
   Cluster http allowlist stays HTTP
-  get. Mailer uses mail allowlist.
+  get. Mailer does not add a Cluster
+  mail allowlist. IMAP/SMTP host is
+  the Closet bind. SSRF stays.
 - [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md)
   `DOSTIGUS_HTTP_PROXY` stays Bot HTTP
   egress. IMAP/SMTP does not use it.
@@ -337,6 +407,13 @@ per Bot keeps the recipe 1:1.
   `daily` / `weekly` Wake.
 - Reuse Cluster http allowlist for
   IMAP/SMTP — rejected.
+- Cluster mail allowlist (host:port
+  list, empty = deny all, Owner
+  Dashboard form) — rejected
+  2026-10-03. The mailbox server is
+  the Closet bind. SSRF stays.
+  Feature-specific outbound limits
+  belong on the Bot.
 - Reuse `DOSTIGUS_HTTP_PROXY` for
   IMAP/SMTP — rejected.
 - Seed `dostigus.mailer` beside

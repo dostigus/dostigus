@@ -97,11 +97,20 @@ shell, treating Settings as the whole chrome.
 The Owner account page at `/dashboard/settings` inside
 Dashboard. The Host user-menu **Settings** item opens that
 page. Cluster leftover (timezone, http allowlist, Locale
-switcher) is **Cluster settings**, not this page. Not the Bot
+switcher) is **Cluster settings**, not this page. Cluster
+settings are only about the Cluster itself. Future security
+limits that apply to one Bot or one Pack go on the Bot
+(Closet / Bot binding), not on Cluster settings. Do not add
+a Cluster-level allowlist for a single Pack. Mailer mailbox
+host is the Closet bind
+([ADR 0048](docs/adr/0048-mailer-product.md)). Cluster http
+allowlist stays Host HTTP get
+([ADR 0031](docs/adr/0031-host-http-get.md)). Not the Bot
 closet. Not Member-visible.
 _Avoid_: admin panel, Preferences (unqualified), treating
 Settings as a `/settings` chrome after
-[ADR 0038](docs/adr/0038-dashboard-chrome.md).
+[ADR 0038](docs/adr/0038-dashboard-chrome.md), Cluster mail
+allowlist, Cluster-level allowlists for one Pack.
 
 **Locale**:
 Host UI language for chrome strings. Day-1 codes `en` and `ru`.
@@ -120,7 +129,7 @@ treating timezone as Locale, treating dostigus.ru `/en`
 URLs as Host Locale, translating Bot / Pack / Host / Cluster /
 Skill / Schedule / Provider / Policy / Artifact / Member /
 Household / Case / Marketplace / Catalog Store /
-Mailer Pack / mail allowlist / Bot mail binding.
+Mailer Pack / Bot mail binding.
 
 **Chat**:
 The lines a person reads and writes on a Thread in the Host.
@@ -343,11 +352,16 @@ package, putting credentials in the Pack.
 **Bot mail binding**:
 Cluster Store row that binds one IMAP/SMTP mailbox to
 one Bot. The Owner or an Admin writes it in Closet
-after Apply. One mailbox per Bot. Credentials stay on
-the Cluster. See
+after Apply. One mailbox per Bot. The mailbox server
+is the host and port on that bind. Credentials stay on
+the Cluster. The Host always blocks loopback, private,
+and link-local destinations. There is no Cluster mail
+allowlist. See
 [ADR 0048](docs/adr/0048-mailer-product.md).
 _Avoid_: Chat self-settings bind, Member self-bind,
-secrets in the Pack zip or catalog mirror.
+secrets in the Pack zip or catalog mirror, Cluster
+mail allowlist, treating mail hosts as Cluster
+settings.
 
 **Marketplace**:
 Public catalog on the marketing site
@@ -688,19 +702,25 @@ exact hostname match. The Host always blocks loopback, private, and
 link-local destinations. The Owner gets and sets it through MCP
 (`dostigus_cluster_http_allowlist_get`,
 `dostigus_cluster_http_allowlist_set`) and Owner Settings. Members do
-not set it. See [ADR 0031](docs/adr/0031-host-http-get.md).
-_Avoid_: URL allowlist (unqualified), CORS, proxy list, per-Bot
-allowlist.
+not set it. This is a Cluster setting because Host HTTP get is
+Cluster-wide, not a Pack. Feature-specific outbound limits for one
+Bot or one Pack go on the Bot
+([ADR 0048](docs/adr/0048-mailer-product.md)). See
+[ADR 0031](docs/adr/0031-host-http-get.md).
+_Avoid_: URL allowlist (unqualified), CORS, proxy list, Cluster mail
+allowlist, treating a Pack host list as Cluster settings.
 
-**mail allowlist**:
-Owner-configured list of host + port pairs that gates
-Host IMAP/SMTP egress (typical ports 993, 465, 587).
-Not Cluster http allowlist. Not
-`DOSTIGUS_HTTP_PROXY` / Bot HTTP egress. The Owner
-sets it on Cluster settings. See
+**mail allowlist** (rejected):
+Do not use. Nick rejected a Cluster-level host:port
+mail allowlist on 2026-10-03 (empty = deny all, Owner
+Dashboard form). The mailbox server is the Closet
+**Bot mail binding**. SSRF blocks stay. Feature-specific
+outbound limits that apply to one Bot or one Pack go
+on the Bot, not on Cluster settings. See
 [ADR 0048](docs/adr/0048-mailer-product.md).
-_Avoid_: reusing http allowlist, Bot HTTP egress,
-per-Bot or per-Member allowlist.
+_Avoid_: Cluster mail allowlist, treating mail hosts
+as Cluster settings, reusing Cluster http allowlist
+for IMAP/SMTP.
 
 **Model tier**:
 `cheap` | `strong` | `code` (and `toy` for playground / explicit

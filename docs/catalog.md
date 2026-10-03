@@ -49,8 +49,9 @@ do not edit that repo from this Host docs PR.
    ([#192](https://github.com/dostigus/dostigus/pull/192)).
 5. Mailer product locks —
    [ADR 0048](adr/0048-mailer-product.md). Host IMAP/SMTP
-   tools, Closet bind Sheet, mail allowlist, and the Pack
-   tree (`packs/dostigus.mailer`) are in this Host. Nick
+   tools, Closet bind Sheet, Bot mail binding, and the Pack
+   tree (`packs/dostigus.mailer`) are in this Host. There is
+   no Cluster mail allowlist. Nick
    publish of `dostigus.mailer` to the Catalog Store stays
    later. Do not seed beside `dostigus.mail`.
 

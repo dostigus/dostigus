@@ -6,6 +6,7 @@
 - Amended: 2026-09-24 — Bot GET uses Bot HTTP egress env (`DOSTIGUS_HTTP_PROXY`; empty = direct). LLM proxy is [ADR 0033](0033-cluster-outbound-llm-vs-bot-http-proxy.md). Host HTTP get does not use `EnvHttpProxyAgent`.
 - Amended: 2026-09-24 — Soft retry / pursue-result policy lives in the `dostigus_http_get` tool description and `platform-meta-http-get`. Host stays one GET per call. No provider list. No Host URL failover.
 - Amended: 2026-10-02 — Mailer IMAP/SMTP egress uses a separate **mail allowlist** (host + ports), not this Cluster http allowlist ([ADR 0048](0048-mailer-product.md)). GET, SSRF, and `http_allowlist` stay this record.
+- Amended: 2026-10-03 — Cluster mail allowlist is rejected ([ADR 0048](0048-mailer-product.md)). Mailer mailbox host is the Closet Bot mail binding. IMAP/SMTP still does not reuse this Cluster http allowlist. GET, SSRF, and `http_allowlist` stay this record. Cluster settings stay Cluster-wide; Pack/Bot outbound limits go on the Bot.
 
 The Chat tool loop stays [ADR 0011](0011-chat-mcp-tool-loop.md). The
 MCP surface stays [ADR 0009](0009-mcp-toolkit-endpoint.md). Cluster
