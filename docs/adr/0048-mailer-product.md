@@ -7,10 +7,13 @@
   empty = deny all, Owner Dashboard form).
   It is not a Cluster setting. The mailbox
   server is the Closet Bot mail binding.
-  SSRF stays. Standing rule: future
-  security limits that apply to one Bot
-  or one Pack go on the Bot, not on
-  Cluster settings. Docs only. No Port.
+  SSRF stays. Standing rules live in
+  CONTEXT Settings: Bot/Pack limits go
+  on the Bot, not Cluster settings;
+  casual platform for an ordinary user
+  — do not invent extra allowlists or
+  compliance machinery. Docs only. No
+  Port.
 
 Pack format and Closet Import stay
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
@@ -65,7 +68,12 @@ add Cluster-level allowlists for a
 single Pack. Future security limits
 that apply to one Bot or one Pack go
 on the Bot, not on Cluster settings.
-This amend is docs only. No Port.
+Casual-platform rule (CONTEXT
+Settings): Dostigus is for an ordinary
+user, not technicians; security must
+not invent extra lists or compliance
+machinery. This amend is docs only.
+No Port.
 
 `dostigus/cloud` `docs/catalog.md` may
 still say deep-link Apply is later.
@@ -192,7 +200,13 @@ security limits that apply to one Bot
 or one Pack go on the Bot, not on
 Cluster settings. Do not add
 Cluster-level allowlists for a single
-Pack.
+Pack. Casual-platform rule lives in
+CONTEXT Settings: Dostigus is a casual
+platform for an ordinary user, not an
+enterprise product and not for
+technicians. Do not invent extra
+rules, allowlists, or compliance
+machinery.
 
 ### Catalog id
 
@@ -330,11 +344,15 @@ per Bot keeps the recipe 1:1.
   are not Cluster http allowlist, not
   Bot HTTP egress, and not
   `dostigus.mail`.
-- Standing rule (CONTEXT): Cluster
-  settings are only about the Cluster
-  itself. Future security limits that
-  apply to one Bot or one Pack go on
-  the Bot, not on Cluster settings.
+- Standing rules (CONTEXT Settings):
+  Cluster settings are only about the
+  Cluster itself. Future security
+  limits that apply to one Bot or one
+  Pack go on the Bot, not on Cluster
+  settings. Dostigus is a casual
+  platform for an ordinary user; do
+  not invent extra allowlists or
+  compliance machinery.
 - SPEC “In scope” and “This Host”
   drop the Cluster mail allowlist.
   SPEC out of scope keeps OAuth,

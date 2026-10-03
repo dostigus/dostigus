@@ -101,8 +101,14 @@ switcher) is **Cluster settings**, not this page. Cluster
 settings are only about the Cluster itself. Future security
 limits that apply to one Bot or one Pack go on the Bot
 (Closet / Bot binding), not on Cluster settings. Do not add
-a Cluster-level allowlist for a single Pack. Mailer mailbox
-host is the Closet bind
+a Cluster-level allowlist for a single Pack. Dostigus is a
+casual platform for an ordinary user, not an enterprise
+product and not for technicians. Security must not
+introduce entities, lists, or settings the user cannot
+understand. Ship only as many settings and tools as a
+normal person can grasp and as the platform needs to work.
+Do not invent extra rules, allowlists, or compliance
+machinery. Mailer mailbox host is the Closet bind
 ([ADR 0048](docs/adr/0048-mailer-product.md)). Cluster http
 allowlist stays Host HTTP get
 ([ADR 0031](docs/adr/0031-host-http-get.md)). Not the Bot
@@ -110,7 +116,9 @@ closet. Not Member-visible.
 _Avoid_: admin panel, Preferences (unqualified), treating
 Settings as a `/settings` chrome after
 [ADR 0038](docs/adr/0038-dashboard-chrome.md), Cluster mail
-allowlist, Cluster-level allowlists for one Pack.
+allowlist, Cluster-level allowlists for one Pack,
+enterprise compliance lists, extra allowlists a normal
+person cannot grasp.
 
 **Locale**:
 Host UI language for chrome strings. Day-1 codes `en` and `ru`.
