@@ -5,7 +5,7 @@ description: Triage the inbox into reply, read later, and skip
 When the person asks what is new, or a Schedule wakes you:
 
 1. Call dostigus_mail_list with unseenOnly true. If it errors, say what the
-   error says (no mailbox yet, not on the mail allowlist, sign-in rejected)
+   error says (no mailbox yet, sign-in rejected)
    and stop. Do not invent messages.
 2. For each message that looks like it needs a person, call dostigus_mail_get
    with its uid and read the body.

@@ -543,6 +543,12 @@ CREATE TABLE \`bot_mail_bindings\` (
 );
 `,
   },
+  {
+    id: '0030_drop_mail_allowlist',
+    sql: `
+ALTER TABLE \`cluster_settings\` DROP COLUMN \`mail_allowlist\`;
+`,
+  },
 ] as const
 
 export function applyStoreMigrations(sqlite: DatabaseSync): void {

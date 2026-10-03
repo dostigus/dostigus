@@ -417,16 +417,6 @@
         "cleared": "Allowlist cleared. Public hosts are allowed.",
         "invalid": "HTTP allowlist entries are hostnames only."
       },
-      "mailAllowlist": {
-        "title": "Mail allowlist",
-        "hint": "IMAP and SMTP servers Mailer Bots may reach, as host:port, one per line. Typical ports are 993 (IMAP), 465 and 587 (SMTP). Empty allows none. Loopback and private addresses stay blocked.",
-        "empty": "Empty. No Bot can reach a mail server.",
-        "label": "Servers",
-        "save": "Save mail allowlist",
-        "saved": "Mail allowlist saved.",
-        "cleared": "Mail allowlist cleared. No mail server is allowed.",
-        "invalid": "Mail allowlist entries are host:port."
-      },
       "locale": {
         "title": "Locale",
         "hint": "Host chrome language. Product terms such as Bot and Cluster stay in Latin script.",
@@ -692,7 +682,6 @@
   "mailbox": {
     "title": "Mailbox",
     "notConnected": "Not connected",
-    "offAllowlist": "Not allowlisted",
     "hint": "One IMAP and SMTP mailbox for this Bot. Use an app password from your mail provider, not your main password. The login stays in this Cluster and never goes into a Pack.",
     "imap": "Incoming (IMAP)",
     "smtp": "Outgoing (SMTP)",
@@ -703,7 +692,6 @@
     "password": "App password",
     "passwordKeep": "Saved. Leave blank to keep it.",
     "sameLogin": "Same user and password as IMAP",
-    "allowlistHint": "The Owner adds {imap} and {smtp} to the mail allowlist in Cluster settings.",
     "test": "Test connection",
     "testing": "Testing…",
     "imapOk": "IMAP signed in",
@@ -718,7 +706,6 @@
     "removeConfirm": "Remove",
     "loadFailed": "Could not open the mailbox.",
     "saveFailed": "Could not save the mailbox.",
-    "notAllowlisted": "{entry} is not on the mail allowlist.",
     "error": {
       "host": "Enter a mail server hostname.",
       "port": "Port is a number from 1 to 65535.",

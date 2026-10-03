@@ -3,9 +3,6 @@ import { isIP } from 'node:net'
 import { requireBot } from './queries'
 import { StoreError } from './store-error'
 
-/** Same singleton row as Cluster timezone and the Cluster http allowlist. See ADR 0048. */
-const CLUSTER_SETTINGS_ID = 'cluster'
-
 const HOSTNAME_MAX = 253
 const DNS_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
 const USER_MAX = 320
@@ -99,97 +96,6 @@ export function parseMailPort(value: unknown): number | null {
     return null
   }
   return port
-}
-
-function formatEntry(host: string, port: number): string {
-  return isIP(host) === 6 ? `[${host}]:${port}` : `${host}:${port}`
-}
-
-/** One mail allowlist entry: `host:port` (IPv6 as `[addr]:port`). */
-export function parseMailAllowlistEntry(value: unknown): MailEndpoint {
-  if (typeof value !== 'string' || !value.trim()) {
-    throw new StoreError('Mail allowlist entries are host:port', 400)
-  }
-  const raw = value.trim()
-  const bracketed = /^\[([^\]]+)\]:(\d+)$/.exec(raw)
-  const plain = bracketed ? null : /^([^:]+):(\d+)$/.exec(raw)
-  const match = bracketed ?? plain
-  if (!match) {
-    throw new StoreError('Mail allowlist entries are host:port', 400)
-  }
-  const host = normalizeMailHost(match[1])
-  const port = parseMailPort(match[2])
-  if (!host || port == null || (bracketed && isIP(host) !== 6)) {
-    throw new StoreError('Mail allowlist entries are host:port', 400)
-  }
-  return { host, port }
-}
-
-export function normalizeMailAllowlist(entries: unknown): string[] {
-  if (entries == null) {
-    return []
-  }
-  if (!Array.isArray(entries)) {
-    throw new StoreError('Mail allowlist must be an array of host:port entries', 400)
-  }
-  const seen = new Set<string>()
-  const next: string[] = []
-  for (const entry of entries) {
-    const { host, port } = parseMailAllowlistEntry(entry)
-    const key = formatEntry(host, port)
-    if (!seen.has(key)) {
-      seen.add(key)
-      next.push(key)
-    }
-  }
-  return next
-}
-
-function parseMailAllowlistJson(raw: string | null | undefined): string[] {
-  if (raw == null || !raw.trim()) {
-    return []
-  }
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(raw)
-  } catch {
-    throw new StoreError('Mail allowlist is invalid', 500)
-  }
-  if (!Array.isArray(parsed)) {
-    throw new StoreError('Mail allowlist is invalid', 500)
-  }
-  return normalizeMailAllowlist(parsed)
-}
-
-/**
- * Exact host and exact port. An empty mail allowlist allows nothing:
- * IMAP/SMTP carries a password, so the Owner names each server.
- */
-export function mailAllowlistAllows(host: string, port: number, allowlist: readonly string[]): boolean {
-  const normalized = normalizeMailHost(host)
-  if (!normalized || parseMailPort(port) == null) {
-    return false
-  }
-  return allowlist.includes(formatEntry(normalized, port))
-}
-
-export function getMailAllowlist(store: OpenedStore): string[] {
-  const row = store.sqlite.prepare(`
-    SELECT mail_allowlist FROM cluster_settings WHERE id = ?
-  `).get(CLUSTER_SETTINGS_ID) as { mail_allowlist: string | null } | undefined
-  return parseMailAllowlistJson(row?.mail_allowlist)
-}
-
-export function setMailAllowlist(store: OpenedStore, entries: unknown): string[] {
-  const next = normalizeMailAllowlist(entries)
-  store.sqlite.prepare(`
-    INSERT INTO cluster_settings (id, mail_allowlist, updated_at)
-    VALUES (?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      mail_allowlist = excluded.mail_allowlist,
-      updated_at = excluded.updated_at
-  `).run(CLUSTER_SETTINGS_ID, JSON.stringify(next), Date.now())
-  return getMailAllowlist(store)
 }
 
 function readRecord(store: OpenedStore, botId: string): BindingRecord | undefined {

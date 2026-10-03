@@ -7,15 +7,9 @@ import {
   deleteBotMailBinding,
   exportBotPack,
   getBotMailBinding,
-  getClusterHttpAllowlist,
-  getMailAllowlist,
-  mailAllowlistAllows,
-  normalizeMailAllowlist,
   openStore,
   previewBotMailBinding,
   setBotMailBinding,
-  setClusterHttpAllowlist,
-  setMailAllowlist,
   StoreError,
   toBotMailBindingView,
   upsertBotSkill,
@@ -51,66 +45,10 @@ function seed() {
   return { store, owner, bot }
 }
 
-it('denies every mail destination while the mail allowlist is empty', () => {
+it('does not store a Cluster mail allowlist', () => {
   const store = memoryStore()
-  expect(getMailAllowlist(store)).toEqual([])
-  expect(mailAllowlistAllows('imap.example.com', 993, [])).toBe(false)
-  expect(setMailAllowlist(store, [])).toEqual([])
-})
-
-it('stores host:port entries and matches exact host and exact port', () => {
-  const store = memoryStore()
-  expect(setMailAllowlist(store, [
-    'IMAP.Example.com.:993',
-    'imap.example.com:993',
-    'smtp.example.com:465',
-    '[2001:db8::1]:587',
-    '203.0.113.5:587',
-  ])).toEqual([
-    'imap.example.com:993',
-    'smtp.example.com:465',
-    '[2001:db8::1]:587',
-    '203.0.113.5:587',
-  ])
-  const list = getMailAllowlist(store)
-  expect(mailAllowlistAllows('imap.example.com', 993, list)).toBe(true)
-  expect(mailAllowlistAllows('IMAP.EXAMPLE.COM.', 993, list)).toBe(true)
-  expect(mailAllowlistAllows('imap.example.com', 143, list)).toBe(false)
-  expect(mailAllowlistAllows('example.com', 993, list)).toBe(false)
-  expect(mailAllowlistAllows('imap.example.com.evil.test', 993, list)).toBe(false)
-  expect(mailAllowlistAllows('2001:db8::1', 587, list)).toBe(true)
-  expect(mailAllowlistAllows('[2001:db8::1]', 587, list)).toBe(true)
-  expect(mailAllowlistAllows('203.0.113.5', 587, list)).toBe(true)
-})
-
-it('rejects scheme, path, userinfo, wildcard, and missing or bad port entries', () => {
-  for (const bad of [
-    'imap.example.com',
-    'imaps://imap.example.com:993',
-    'imap.example.com:993/inbox',
-    'ada@imap.example.com:993',
-    '*.example.com:993',
-    'imap.example.com:0',
-    'imap.example.com:65536',
-    'imap.example.com:99a',
-    '2001:db8::1:587',
-    '[imap.example.com]:993',
-    ':993',
-    '',
-  ]) {
-    expect(() => normalizeMailAllowlist([bad]), bad).toThrow(StoreError)
-  }
-  expect(() => normalizeMailAllowlist('imap.example.com:993')).toThrow(StoreError)
-})
-
-it('keeps the mail allowlist apart from the Cluster http allowlist', () => {
-  const store = memoryStore()
-  setClusterHttpAllowlist(store, ['api.example.com'])
-  setMailAllowlist(store, ['imap.example.com:993'])
-  expect(getClusterHttpAllowlist(store)).toEqual(['api.example.com'])
-  expect(getMailAllowlist(store)).toEqual(['imap.example.com:993'])
-  setClusterHttpAllowlist(store, [])
-  expect(getMailAllowlist(store)).toEqual(['imap.example.com:993'])
+  const cols = store.sqlite.prepare('PRAGMA table_info(cluster_settings)').all() as Array<{ name: string }>
+  expect(cols.map((col) => col.name)).not.toContain('mail_allowlist')
 })
 
 it('binds one mailbox per Bot, keeps a blank password, and reuses the IMAP login for SMTP', () => {

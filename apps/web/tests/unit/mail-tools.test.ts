@@ -6,7 +6,6 @@ import {
   createOwner,
   openStore,
   setBotMailBinding,
-  setMailAllowlist,
   StoreError,
 } from '@dostigus/db'
 import { afterEach, beforeEach, expect, it } from 'vitest'
@@ -67,7 +66,6 @@ function seed() {
   const member = createMember(store, { displayName: 'Grace', username: 'grace', passwordHash: 'hash:grace' })
   const bot = createBot(store, { name: 'Mailer', createdBy: owner.id }).bot
   const other = createBot(store, { name: 'Other', createdBy: owner.id }).bot
-  setMailAllowlist(store, ['imap.example.com:993', 'smtp.example.com:465'])
   setBotMailBinding(store, bot.id, {
     imapHost: 'imap.example.com',
     imapPort: 993,
@@ -84,43 +82,27 @@ const DRAFT = { to: ['bob@example.org'], subject: 'Dinner', body: 'Seven works.'
 it('connects to the checked address with the bound host as TLS servername', async () => {
   const dest = await resolveMailDestination(
     { host: 'IMAP.example.com', port: 993 },
-    ['imap.example.com:993'],
     publicLookup,
   )
   expect(dest).toEqual({ host: 'imap.example.com', port: 993, address: '198.51.100.7', servername: 'imap.example.com' })
 })
 
-it('refuses a host or port off the mail allowlist before DNS', async () => {
-  let looked = false
-  const lookup = async () => {
-    looked = true
-    return [{ address: '198.51.100.7', family: 4 }]
-  }
-  await expect(resolveMailDestination({ host: 'imap.example.com', port: 143 }, ['imap.example.com:993'], lookup))
-    .rejects
-    .toMatchObject({ statusCode: 403, message: 'imap.example.com:143 is not on the mail allowlist' })
-  await expect(resolveMailDestination({ host: 'imap.example.com', port: 993 }, [], lookup))
-    .rejects
-    .toMatchObject({ statusCode: 403 })
-  expect(looked).toBe(false)
-})
-
-it('blocks loopback, private, link-local, and mapped addresses even when allowlisted', async () => {
-  const cases: Array<[string, string[]]> = [
-    ['127.0.0.1', ['127.0.0.1:993']],
-    ['10.1.2.3', ['10.1.2.3:993']],
-    ['169.254.169.254', ['169.254.169.254:993']],
-    ['[::1]', ['[::1]:993']],
-    ['[fe80::1]', ['[fe80::1]:993']],
-    ['[::ffff:192.168.1.10]', ['[::ffff:192.168.1.10]:993']],
+it('blocks loopback, private, link-local, and mapped addresses', async () => {
+  const cases = [
+    '127.0.0.1',
+    '10.1.2.3',
+    '169.254.169.254',
+    '[::1]',
+    '[fe80::1]',
+    '[::ffff:192.168.1.10]',
   ]
-  for (const [host, allowlist] of cases) {
-    await expect(resolveMailDestination({ host, port: 993 }, allowlist, publicLookup), host)
+  for (const host of cases) {
+    await expect(resolveMailDestination({ host, port: 993 }, publicLookup), host)
       .rejects
       .toMatchObject({ statusCode: 403, message: 'blocked destination' })
   }
   const rebinding = async () => [{ address: '198.51.100.7', family: 4 }, { address: '192.168.0.4', family: 4 }]
-  await expect(resolveMailDestination({ host: 'imap.example.com', port: 993 }, ['imap.example.com:993'], rebinding))
+  await expect(resolveMailDestination({ host: 'imap.example.com', port: 993 }, rebinding))
     .rejects
     .toMatchObject({ message: 'blocked destination' })
 })
@@ -268,13 +250,6 @@ it('reports each side of a test connection without leaking the login', async () 
   expect(result.imap).toEqual({ ok: true, error: null, statusCode: null })
   expect(result.smtp).toEqual({ ok: false, error: 'SMTP sign-in was rejected', statusCode: 401 })
   expect(JSON.stringify(result)).not.toContain('app-password-1234')
-
-  setMailAllowlist(store, ['imap.example.com:993'])
-  const blocked = await testMailBinding(store, getBotMailBinding(store, bot.id)!, {
-    lookup: publicLookup,
-    mailTransport: fakeTransport([]),
-  })
-  expect(blocked.smtp).toMatchObject({ ok: false, statusCode: 403 })
 })
 
 it('flattens HTML mail to text', () => {

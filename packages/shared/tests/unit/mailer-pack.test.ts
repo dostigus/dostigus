@@ -38,7 +38,8 @@ it('parses the dostigus.mailer Pack tree for Nick catalog publish', () => {
   expect(tree.skills.map((skill) => skill.id)).toEqual(['inbox-triage', 'reply-drafts'])
   expect(tree.schedules).toEqual([expect.objectContaining({ cadence: 'daily', timeLocal: '08:00' })])
   expect(tree.manifest.integrations).toEqual([expect.objectContaining({ slug: 'mailbox' })])
-  expect(tree.readme).toContain('mail allowlist')
+  expect(tree.readme).toContain('Closet')
+  expect(tree.readme).not.toContain('mail allowlist')
 
   assertNoSecretsInPack(tree)
   expect(scrubPackTree(tree).redacted).toEqual([])

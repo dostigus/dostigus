@@ -6,12 +6,9 @@ This is not `dostigus.mail` (paste-only triage); both Packs stay.
 
 ## After Apply
 
-1. The Owner adds the IMAP and SMTP servers to the mail allowlist on
-   Dashboard, Cluster settings (for example `imap.example.com:993` and
-   `smtp.example.com:465`).
-2. The Owner or an Admin opens the Bot's Closet, Mailbox, and enters host,
+1. The Owner or an Admin opens the Bot's Closet, Mailbox, and enters host,
    port, user, and an app password. Test connection checks both servers.
-3. Resume the Morning inbox Schedule when you want a daily check. It lands
+2. Resume the Morning inbox Schedule when you want a daily check. It lands
    paused.
 
 ## What the Bot can do

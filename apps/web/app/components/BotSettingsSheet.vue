@@ -171,12 +171,6 @@
               @click="mailboxOpen = true"
             >
               <template #trailing>
-                <KitChip
-                  v-if="mailOffAllowlist"
-                  tone="warn"
-                >
-                  {{ $t('mailbox.offAllowlist') }}
-                </KitChip>
                 <span
                   class="chevron"
                   aria-hidden="true"
@@ -425,16 +419,11 @@ const canShare = computed(() => canEdit.value || isAdmin.value)
 const canBindMail = computed(() => isOwner.value || isAdmin.value)
 type MailState = {
   binding: { imap: { host: string, port: number, user: string } } | null
-  allowlisted: { imap: boolean, smtp: boolean } | null
 }
-const mailState = ref<MailState>({ binding: null, allowlisted: null })
+const mailState = ref<MailState>({ binding: null })
 const mailboxOpen = ref(false)
 const showMailbox = computed(() => Boolean(props.bot && canBindMail.value
   && (isMailerPackSnapshot(props.bot.installedPackId) || mailState.value.binding)))
-const mailOffAllowlist = computed(() => {
-  const allowlisted = mailState.value.allowlisted
-  return Boolean(allowlisted && (!allowlisted.imap || !allowlisted.smtp))
-})
 const shapes = BOT_AVATAR_SHAPES
 const accents = BOT_ACCENT_TOKENS
 const name = ref('')
@@ -537,13 +526,13 @@ async function loadSchedules() {
 
 async function loadMailbox() {
   if (!props.bot || !canBindMail.value) {
-    mailState.value = { binding: null, allowlisted: null }
+    mailState.value = { binding: null }
     return
   }
   try {
     mailState.value = await $fetch<MailState>(`/api/bots/${props.bot.id}/mail`)
   } catch {
-    mailState.value = { binding: null, allowlisted: null }
+    mailState.value = { binding: null }
   }
 }
 
