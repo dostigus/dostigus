@@ -161,13 +161,6 @@
         </template>
       </section>
 
-      <p
-        v-if="allowlistEntries"
-        class="hint"
-      >
-        {{ $t('mailbox.allowlistHint', allowlistEntries) }}
-      </p>
-
       <div
         v-if="checks.length > 0"
         class="checks"
@@ -268,7 +261,6 @@ type MailBindingState = {
     hasPassword: true
     updatedAt: number
   } | null
-  allowlisted: { imap: boolean, smtp: boolean } | null
 }
 type MailCheck = { ok: boolean, error: string | null, statusCode: number | null }
 
@@ -289,7 +281,7 @@ const testing = ref(false)
 const confirming = ref(false)
 const formError = ref('')
 const savedNote = ref('')
-const state = ref<MailBindingState>({ binding: null, allowlisted: null })
+const state = ref<MailBindingState>({ binding: null })
 
 const imapHost = ref('')
 const imapPort = ref('993')
@@ -313,20 +305,6 @@ const canSubmit = computed(() => Boolean(
   && smtpHost.value.trim()
   && String(smtpPort.value).trim(),
 ))
-const allowlistEntries = computed(() => {
-  const imap = imapHost.value.trim()
-  const smtp = smtpHost.value.trim()
-  if (!imap || !smtp) {
-    return null
-  }
-  if (state.value.allowlisted?.imap && state.value.allowlisted.smtp) {
-    return null
-  }
-  return {
-    imap: `${imap.toLowerCase()}:${String(imapPort.value).trim()}`,
-    smtp: `${smtp.toLowerCase()}:${String(smtpPort.value).trim()}`,
-  }
-})
 
 function smtpGuess(host: string): string {
   const trimmed = host.trim()
@@ -384,10 +362,6 @@ function body() {
 
 function checkReason(check: MailCheck): string {
   const message = check.error ?? ''
-  const allowlist = /^(\S+) is not on the mail allowlist$/.exec(message)
-  if (allowlist) {
-    return t('mailbox.notAllowlisted', { entry: allowlist[1] })
-  }
   if (message === 'blocked destination') {
     return t('mailbox.error.blocked')
   }
@@ -450,7 +424,7 @@ async function remove() {
   formError.value = ''
   try {
     await $fetch(`/api/bots/${props.botId}/mail`, { method: 'DELETE' })
-    const next: MailBindingState = { binding: null, allowlisted: null }
+    const next: MailBindingState = { binding: null }
     state.value = next
     imapPassword.value = ''
     smtpPassword.value = ''

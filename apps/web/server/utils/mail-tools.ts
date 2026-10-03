@@ -2,7 +2,7 @@ import type { BotMailBinding, OpenedStore } from '@dostigus/db'
 import type { MailOutgoing, MailTransport } from './mail-client'
 import type { ScheduleToolContext } from './schedule-tools'
 import { randomUUID } from 'node:crypto'
-import { getBotMailBinding, getMailAllowlist, requireBot, StoreError } from '@dostigus/db'
+import { getBotMailBinding, requireBot, StoreError } from '@dostigus/db'
 import { imapSmtpTransport } from './mail-client'
 import { resolveMailDestination } from './mail-net'
 
@@ -94,7 +94,7 @@ function clampLimit(value: unknown): number {
 export async function mailList(store: OpenedStore, input: Record<string, unknown>, ctx?: MailToolContext) {
   const botId = mailBotId(input, ctx)
   const binding = requireBinding(store, botId)
-  const dest = await resolveMailDestination(binding.imap, getMailAllowlist(store), ctx?.lookup)
+  const dest = await resolveMailDestination(binding.imap, ctx?.lookup)
   const messages = await transportFor(ctx).list(dest, binding.imap, {
     limit: clampLimit(input.limit),
     unseenOnly: input.unseenOnly === true,
@@ -109,7 +109,7 @@ export async function mailGet(store: OpenedStore, input: Record<string, unknown>
     throw new StoreError('uid is a positive integer from dostigus_mail_list', 400)
   }
   const binding = requireBinding(store, botId)
-  const dest = await resolveMailDestination(binding.imap, getMailAllowlist(store), ctx?.lookup)
+  const dest = await resolveMailDestination(binding.imap, ctx?.lookup)
   const message = await transportFor(ctx).get(dest, binding.imap, uid)
   if (!message) {
     throw new StoreError('Message not found', 404)
@@ -240,7 +240,7 @@ export async function mailSend(store: OpenedStore, input: Record<string, unknown
   if (draft.turnKey === ctx.turnKey) {
     throw new StoreError('Show the draft and wait. The person confirms on their next message.', 409)
   }
-  const dest = await resolveMailDestination(binding.smtp, getMailAllowlist(store), ctx.lookup)
+  const dest = await resolveMailDestination(binding.smtp, ctx.lookup)
   const sent = await transportFor(ctx).send(dest, binding.smtp, draft.message)
   drafts.delete(draft.id)
   return {
@@ -258,7 +258,6 @@ export async function testMailBinding(
   binding: BotMailBinding,
   ctx?: Pick<MailToolContext, 'lookup' | 'mailTransport'>,
 ): Promise<{ imap: MailCheck, smtp: MailCheck }> {
-  const allowlist = getMailAllowlist(store)
   const transport = ctx?.mailTransport ?? imapSmtpTransport
   const check = async (fn: () => Promise<void>): Promise<MailCheck> => {
     try {
@@ -273,11 +272,11 @@ export async function testMailBinding(
   }
   const [imap, smtp] = await Promise.all([
     check(async () => {
-      const dest = await resolveMailDestination(binding.imap, allowlist, ctx?.lookup)
+      const dest = await resolveMailDestination(binding.imap, ctx?.lookup)
       await transport.verifyImap(dest, binding.imap)
     }),
     check(async () => {
-      const dest = await resolveMailDestination(binding.smtp, allowlist, ctx?.lookup)
+      const dest = await resolveMailDestination(binding.smtp, ctx?.lookup)
       await transport.verifySmtp(dest, binding.smtp)
     }),
   ])

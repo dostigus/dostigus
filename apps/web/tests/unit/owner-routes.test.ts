@@ -105,8 +105,6 @@ it('keeps Cluster settings, Account Settings, Member writes, and roles with the 
     'settings/timezone.put.ts',
     'settings/http-allowlist.get.ts',
     'settings/http-allowlist.put.ts',
-    'settings/mail-allowlist.get.ts',
-    'settings/mail-allowlist.put.ts',
     'settings/locale.get.ts',
     'settings/locale.put.ts',
     'members/index.post.ts',
@@ -121,6 +119,19 @@ it('keeps Cluster settings, Account Settings, Member writes, and roles with the 
     expect(src, file).not.toContain('withHostStore')
     expect(src, file).not.toContain('requireHostSession')
   }
+})
+
+it('does not keep a Cluster mail allowlist on Dashboard or settings API', () => {
+  const cluster = readFileSync(
+    join(import.meta.dirname, '../../app/pages/dashboard/cluster.vue'),
+    'utf8',
+  )
+  expect(cluster).not.toContain('mail-allowlist')
+  expect(cluster).not.toContain('mailAllowlist')
+  expect(cluster).toContain('http-allowlist')
+  const settingsDir = join(apiRoot, 'settings')
+  expect(readdirSync(settingsDir)).not.toContain('mail-allowlist.get.ts')
+  expect(readdirSync(settingsDir)).not.toContain('mail-allowlist.put.ts')
 })
 
 it('answers HEAD /health with the GET content type and no session', () => {

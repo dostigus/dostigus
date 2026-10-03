@@ -243,8 +243,6 @@ export const clusterSettings = sqliteTable('cluster_settings', {
   timezone: text('timezone'),
   /** JSON array of hostnames. Null or `[]` is allow-all public hosts. */
   httpAllowlist: text('http_allowlist'),
-  /** JSON array of `host:port`. Null or `[]` allows no IMAP/SMTP. See ADR 0048. */
-  mailAllowlist: text('mail_allowlist'),
   updatedAt: integer('updated_at').notNull(),
 })
 

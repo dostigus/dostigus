@@ -64,17 +64,12 @@ export {
   botMailSecretLiterals,
   deleteBotMailBinding,
   getBotMailBinding,
-  getMailAllowlist,
-  mailAllowlistAllows,
   type MailEndpoint,
   type MailLogin,
-  normalizeMailAllowlist,
   normalizeMailHost,
-  parseMailAllowlistEntry,
   parseMailPort,
   previewBotMailBinding,
   setBotMailBinding,
-  setMailAllowlist,
   toBotMailBindingView,
 } from './mail'
 export {

@@ -35,7 +35,6 @@ export const HOST_STATUS_MESSAGE_KEYS = {
   'Cluster timezone must be an IANA name': 'settings.other.timezone.invalid',
   'HTTP allowlist entries are hostnames only': 'settings.other.allowlist.invalid',
   'HTTP allowlist entries are hostnames': 'settings.other.allowlist.invalid',
-  'Mail allowlist entries are host:port': 'settings.other.mailAllowlist.invalid',
   'IMAP host is a hostname': 'mailbox.error.host',
   'SMTP host is a hostname': 'mailbox.error.host',
   'IMAP port is 1 to 65535': 'mailbox.error.port',

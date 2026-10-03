@@ -16,7 +16,7 @@
   "integrations": [
     {
       "slug": "mailbox",
-      "reason": "IMAP and SMTP login for this Bot. The Owner or an Admin binds it in the Closet after Apply and adds both servers to the mail allowlist. The values never travel in the Pack.",
+      "reason": "IMAP and SMTP login for this Bot. The Owner or an Admin binds it in the Closet after Apply. The values never travel in the Pack.",
       "env": [
         "MAIL_IMAP_HOST",
         "MAIL_IMAP_PORT",
