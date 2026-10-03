@@ -33,11 +33,11 @@ Settled now, even if this repo only scaffolds them:
 | Case | Thin layer on a `group` or `room` Thread: status `open` \| `done`, label ≤40, next action ≤120. Not a ticket tracker. Any person Participant writes it with `PATCH /api/threads/:id/case`; the Thread DTO nests `case` (null until the first write). Roster Sheet block and a line under the Chat identity pill. See [ADR 0041](adr/0041-case-lite-on-thread.md). Messenger filter chips (All / Case open) list open Cases the signed-in person is on (`GET /api/threads?caseStatus=open`). One-shot follow-up (`followUpAt`, `followUpBotId`) fires a Wake on that Thread. See [ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md). |
 | Admin | Household Member with `members.role` `admin`. Not a second Owner. Opens Dashboard read, Providers / LLM, and Members invite/list. Owner and Admin grant any Bot; a Member grants only a Bot they created. Admin creates Bots and Applies Packs like the Owner. Only the Owner promotes or demotes an Admin. Case and roster stay any person Participant. See [ADR 0042](adr/0042-admin-role-and-share-permission.md). |
 | Personas | Two primary audiences: Owner-operator (Collective N=1) and Team 2–15 (messenger + Bots; run work in Chat with Bots). Product leads with Team. Member is served, not roadmap-optimized. Case inbox + follow-up Wakes are [ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md) and are in this Host. See [ADR 0043](adr/0043-target-personas.md). |
-| Mailer | Product Pack `dostigus.mailer`: IMAP + SMTP Host tools, Cluster Bot mail binding, mail allowlist. Apply creates a new Bot. One mailbox per Bot. Draft send until confirm. v1 cadence is Schedule `daily`/`weekly` Wake. Not `dostigus.mail`. See [ADR 0048](adr/0048-mailer-product.md). Host tools, the Closet bind Sheet, and the Pack tree (`packs/dostigus.mailer`) are in this Host; the published zip is a later Nick publish. |
+| Mailer | Product Pack `dostigus.mailer`: IMAP + SMTP Host tools, Cluster Bot mail binding. Apply creates a new Bot. One mailbox per Bot. The mailbox server is the Closet bind. No Cluster mail allowlist. Draft send until confirm. v1 cadence is Schedule `daily`/`weekly` Wake. Not `dostigus.mail`. See [ADR 0048](adr/0048-mailer-product.md). Host tools, the Closet bind Sheet, and the Pack tree (`packs/dostigus.mailer`) are in this Host; the published zip is a later Nick publish. |
 
 ## This Host (create Bot + Chat)
 
-What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)). This Host does not ship `@dostigus/catalog` or `/api/catalog/*`. Deep-link Apply (`applyPack=` cloud mirror zip URL) is in this Host ([#192](https://github.com/dostigus/dostigus/pull/192)). This Host does not pull a catalog. Mailer Host IMAP/SMTP tools (`dostigus_mail_list`, `dostigus_mail_get`, `dostigus_mail_send`), the Closet Mailbox bind Sheet, Bot mail binding, and the mail allowlist on Cluster settings are in this Host ([ADR 0048](adr/0048-mailer-product.md)). An empty mail allowlist blocks all mail connections. The `dostigus.mailer` Pack tree lives in `packs/dostigus.mailer`; its Catalog Store publish is a later Nick step.
+What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)). This Host does not ship `@dostigus/catalog` or `/api/catalog/*`. Deep-link Apply (`applyPack=` cloud mirror zip URL) is in this Host ([#192](https://github.com/dostigus/dostigus/pull/192)). This Host does not pull a catalog. Mailer Host IMAP/SMTP tools (`dostigus_mail_list`, `dostigus_mail_get`, `dostigus_mail_send`), the Closet Mailbox bind Sheet, and Bot mail binding are in this Host ([ADR 0048](adr/0048-mailer-product.md)). The mailbox server is the Closet bind. There is no Cluster mail allowlist. The Host still blocks loopback, private, and link-local mail destinations. The `dostigus.mailer` Pack tree lives in `packs/dostigus.mailer`; its Catalog Store publish is a later Nick step.
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
@@ -108,7 +108,8 @@ What the running Cluster does today. This Host serves an Owner-operator (Collect
   Settings health are
   [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md). Cluster
   settings (`/dashboard/cluster`) holds the Cluster timezone and the
-  Cluster http allowlist. Settings stays with the Owner.
+  Cluster http allowlist. It does not hold a mail allowlist
+  ([ADR 0048](adr/0048-mailer-product.md)). Settings stays with the Owner.
   Legacy “tier = raw model string” Settings still resolve.
   The `+` replaces the Chat pane with a picker
   ([ADR 0019](adr/0019-bot-picker-and-chat-purpose.md)). Search there
@@ -955,7 +956,12 @@ and [`docs/deploy.md`](deploy.md)).
   IMAP IDLE, interval Schedules, a Module
   mail store, Member self-bind, and seeding
   `dostigus.mailer` beside `dostigus.mail`
-  stay later.
+  stay later. A Cluster mail allowlist is
+  rejected: the mailbox server is the
+  Closet bind; Cluster settings stay
+  Cluster-wide
+  ([ADR 0048](adr/0048-mailer-product.md)
+  2026-10-03 amend).
   Packs are the first catalog kind; `/packs` 301s to
   Marketplace. Site locale URL prefix is
   [ADR 0046](adr/0046-site-i18n-url-prefix.md)
