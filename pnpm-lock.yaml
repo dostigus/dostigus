@@ -43,8 +43,8 @@ catalogs:
       specifier: ^15.0.2
       version: 15.0.2
     nodemailer:
-      specifier: ^10.0.13
-      version: 10.0.13
+      specifier: ^10.1.4
+      version: 10.3.1
     nuxt:
       specifier: ^4.1.2
       version: 4.5.2
@@ -130,7 +130,7 @@ importers:
         version: 2.2.1
       nodemailer:
         specifier: 'catalog:'
-        version: 10.0.13
+        version: 10.3.1
       nuxt-auth-utils:
         specifier: 'catalog:'
         version: 0.5.30(magic-string@1.4.1)(magicast@0.5.5)(oxc-parser@0.141.0)(rolldown@1.2.9)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.9)(rollup@4.63.4)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))
@@ -4610,8 +4610,8 @@ packages:
     resolution: {integrity: sha512-x0InOIyzgdk+eyaWaRJFH5snEtiImgBgblZ2CyPrLmqqcuMQkEvcDPHbzqbD8eDsSeJbVOjn+crzyzHaM4D+/A==}
     engines: {node: '>=18'}
 
-  nodemailer@10.0.13:
-    resolution: {integrity: sha512-SzG86OlvcW/NNhUFC6uROMwRTL4n7MswfQqC/T8mhkmnY1YVa23zUEMYi4ijSeXSl9GLz9ZeTJDUatEDuY5FeQ==}
+  nodemailer@10.3.1:
+    resolution: {integrity: sha512-uF0AFsJC07Y1vdW7p580DKAnh7rAO+4UPSSB3mDCPNDufoiaOebV6JmrzpxB14OjEEEiBsNdYoM2Y+fN8M7BBA==}
     engines: {node: '>=20.0.0'}
 
   nopt@8.1.0:
@@ -10952,7 +10952,7 @@ snapshots:
 
   node-releases@2.0.56: {}
 
-  nodemailer@10.0.13: {}
+  nodemailer@10.3.1: {}
 
   nopt@8.1.0:
     dependencies:
