@@ -46,4 +46,4 @@ catalog:
   vitest: ^3.2.4
   vue: 3.5.43
   vue-tsc: ^3.0.6
-  zod: ^4.4.3
+  zod: ^4.6.6
