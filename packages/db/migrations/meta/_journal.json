@@ -218,6 +218,13 @@
       "when": 1760767200000,
       "tag": "0030_drop_mail_allowlist",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1760853600000,
+      "tag": "0031_projects",
+      "breakpoints": true
     }
   ]
 }

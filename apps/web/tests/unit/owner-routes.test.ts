@@ -110,6 +110,20 @@ it('keeps Cluster settings, Account Settings, Member writes, and roles with the 
     'members/index.post.ts',
     'members/[id]/disable.post.ts',
     'members/[id]/role.put.ts',
+    'projects/index.get.ts',
+    'projects/index.post.ts',
+    'projects/[id].get.ts',
+    'projects/[id].patch.ts',
+    'projects/[id]/token.post.ts',
+    'projects/[id]/tokens/[tokenId]/revoke.post.ts',
+    'projects/[id]/repo.put.ts',
+    'projects/[id]/commands.put.ts',
+    'projects/[id]/tasks.get.ts',
+    'projects/[id]/tasks.post.ts',
+    'tasks/[id].get.ts',
+    'tasks/[id].patch.ts',
+    'tasks/[id]/transition.post.ts',
+    'tasks/[id]/attachments.post.ts',
   ]
   for (const file of files) {
     const src = readFileSync(join(apiRoot, file), 'utf8')

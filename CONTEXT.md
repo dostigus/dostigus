@@ -852,6 +852,15 @@ Providers, the same tools in-process). Memory is Context.
 _Avoid_: a second Architect on the same Project, routing Bot,
 calling every Bot an Architect.
 
+**Project token**:
+A bearer scoped to one Project. The Owner issues it on the Project
+screen. The Store keeps a SHA-256 hash. The raw token is shown once.
+On `/mcp` it enables the factory tools for that Project only.
+`NUXT_AGENT_TOKEN` stays the owner token and is not a Project token.
+([ADR 0052](docs/adr/0052-project-token-and-context-proxy.md)).
+_Avoid_: sharing the owner token with an external Architect, a
+Context token on the Architect.
+
 **Task**:
 What the business sees on the Project board. Modes `quick`, `bug`,
 `feature`, `epic`. Statuses `new`, `grilling`, `awaiting_approval`,

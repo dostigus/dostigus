@@ -1,6 +1,9 @@
+import type { FactoryCaller } from '@dostigus/db'
+import { AsyncLocalStorage } from 'node:async_hooks'
+
 /** Runtime shape on Nitro h3 v1 events. Toolkit H3Event types stay opaque. */
 type McpAuthContext = {
-  context?: { agentOk?: boolean }
+  context?: { agentOk?: boolean, mcpCaller?: FactoryCaller }
 }
 
 type HeaderEvent = {
@@ -59,4 +62,49 @@ export function authorizeMcpAgent(
 
 export function mcpToolsEnabled(event: unknown): boolean {
   return !!(event as McpAuthContext).context?.agentOk
+}
+
+const mcpCallerStorage = new AsyncLocalStorage<FactoryCaller>()
+
+export function bearerToken(authorizationHeader: string | undefined): string {
+  const header = authorizationHeader || ''
+  return header.startsWith('Bearer ') ? header.slice(7) : ''
+}
+
+export function setMcpCaller(event: unknown, caller: FactoryCaller): void {
+  const ev = event as McpAuthContext
+  ev.context ??= {}
+  ev.context.mcpCaller = caller
+  mcpCallerStorage.enterWith(caller)
+}
+
+export function runWithMcpCaller<T>(caller: FactoryCaller, fn: () => T): T {
+  return mcpCallerStorage.run(caller, fn)
+}
+
+export function currentMcpCaller(): FactoryCaller | undefined {
+  return mcpCallerStorage.getStore()
+}
+
+/** Factory tools. A Project token does not set agentOk. See ADR 0052. */
+export function factoryToolsEnabled(event: unknown): boolean {
+  const caller = (event as McpAuthContext).context?.mcpCaller
+  return caller?.kind === 'owner' || caller?.kind === 'project'
+}
+
+export function activeFactoryCaller(): FactoryCaller {
+  const fromStore = currentMcpCaller()
+  if (fromStore) {
+    return fromStore
+  }
+  try {
+    const event = useEvent() as McpAuthContext
+    const caller = event.context?.mcpCaller
+    if (caller) {
+      return caller
+    }
+  } catch {
+    // Unit tests have no Nitro event. The caller is the async store.
+  }
+  throw new Error('MCP caller is missing')
 }

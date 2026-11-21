@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { authorizeMcpAgent, mcpToolsEnabled, readAuthorizationHeader } from '../../server/utils/mcp-auth'
-import { ARTIFACT_MCP_TOOLS, CHAT_MCP_TOOLS, CHAT_SLIM_MCP_TOOLS, CREATOR_EXPAND_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, HTTP_MCP_TOOLS, KITCHEN_MCP_TOOLS, MAIL_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS, SCHEDULE_MCP_TOOLS, SKILL_MCP_TOOLS, SKILL_WRITE_MCP_TOOLS, TURN_MCP_TOOLS, WAKE_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
+import { ARTIFACT_MCP_TOOLS, CHAT_MCP_TOOLS, CHAT_SLIM_MCP_TOOLS, CREATOR_EXPAND_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, FACTORY_MCP_TOOLS, HTTP_MCP_TOOLS, KITCHEN_MCP_TOOLS, MAIL_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS, SCHEDULE_MCP_TOOLS, SKILL_MCP_TOOLS, SKILL_WRITE_MCP_TOOLS, TURN_MCP_TOOLS, WAKE_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
 
 function event() {
   return { context: {} as { agentOk?: boolean } }
@@ -67,6 +67,7 @@ it('lists the Platform MCP surface tools', () => {
     ...ARTIFACT_MCP_TOOLS,
     ...TURN_MCP_TOOLS,
     ...KITCHEN_MCP_TOOLS,
+    ...FACTORY_MCP_TOOLS,
   ])
 })
 
@@ -92,6 +93,9 @@ it('keeps delete off the Chat MCP tool list', () => {
     expect(CHAT_MCP_TOOLS).not.toContain(name)
     expect(MEMBER_CHAT_MCP_TOOLS).not.toContain(name)
     expect(CREATOR_MEMBER_CHAT_MCP_TOOLS).not.toContain(name)
+  }
+  for (const name of FACTORY_MCP_TOOLS) {
+    expect(CHAT_MCP_TOOLS).not.toContain(name)
   }
 })
 
@@ -179,10 +183,16 @@ it('gates every file-based MCP tool with mcpToolsEnabled', () => {
   const dir = join(import.meta.dirname, '../../server/mcp/tools')
   const files = readdirSync(dir).filter((name) => name.endsWith('.ts')).sort()
   expect(files).toEqual([...PLATFORM_MCP_TOOLS].map((name) => `${name}.ts`).sort())
+  const factory = new Set<string>(FACTORY_MCP_TOOLS)
   for (const file of files) {
     const src = readFileSync(join(dir, file), 'utf8')
     const name = file.replace(/\.ts$/, '')
-    expect(src, file).toContain('enabled: mcpToolsEnabled')
+    if (factory.has(name)) {
+      expect(src, file).toContain('enabled: factoryToolsEnabled')
+      expect(src, file).not.toContain('enabled: mcpToolsEnabled')
+    } else {
+      expect(src, file).toContain('enabled: mcpToolsEnabled')
+    }
     expect(src, file).toContain(`'${name}'`)
   }
 })

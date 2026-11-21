@@ -3,8 +3,8 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0051, so the next ADR
-is **0052**. Name it `0052-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0052, so the next ADR
+is **0053**. Name it `0053-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
 number plus one. Proposed titles under
 [Backlog](#proposed-backlog) are not files and do not reserve a number.
@@ -84,14 +84,17 @@ English.
 | [0049](0049-dev-factory-direction.md) | Dev factory direction (supersedes [0040](0040-collective-host-direction.md) direction and [0043](0043-target-personas.md) audiences; amends [0005](0005-self-host-first.md): cloud Host on de2, compose stays possible; business world and technical world; Grill; Approve and Release; Builder is a cloud coding agent; Run replaces Job; Kitchen and Mailer frozen; docs only) |
 | [0050](0050-dev-factory-domain-model.md) | Dev factory domain model (Project, Repo link, Commands, Task modes `quick`/`bug`/`feature`/`epic`, Ticket, Grill session, Decision, Spec, Run / Stage / Gate, Audit, Finding, Retro, Integration; knowledge in git; work in the Store; Architect memory in Context from S1/S2; docs only) |
 | [0051](0051-architect-context-and-skills.md) | Architect, Context, and vendored skills (external Architect via MCP first; built-in Bot later; Project token; dedicated Dostigus Context on de2, URL from `NUXT_CONTEXT_URL`, one area token on the Host, proxy injects `project`; task context pack; Pack `dostigus.architect`; skills under `skills/`; `to-tickets` adapted; docs only) |
+| [0052](0052-project-token-and-context-proxy.md) | Project token and Context proxy (S1: Project, Repo link, Commands, Task, Ticket, Artifact join; owner token vs Project token; `dostigus_projects_create` is owner-only; Context client; first `remember` stores `contextProjectId`; missing env returns `Context not configured`) |
 
 ## Proposed backlog
 
 Not records. Do not create a file until a slice needs more than
 [0049](0049-dev-factory-direction.md),
 [0050](0050-dev-factory-domain-model.md), and
-[0051](0051-architect-context-and-skills.md). Titles come from
-[`docs/mvp.md`](../mvp.md). The next file number is **0052**, whatever
+[0051](0051-architect-context-and-skills.md). The Project token and
+the Context proxy shape are
+[0052](0052-project-token-and-context-proxy.md). Titles come from
+[`docs/mvp.md`](../mvp.md). The next file number is **0053**, whatever
 title is written first.
 
 | Proposed title | Already decided |

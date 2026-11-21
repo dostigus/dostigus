@@ -83,6 +83,34 @@ export const TURN_MCP_TOOLS = [
 
 export type TurnMcpTool = typeof TURN_MCP_TOOLS[number]
 
+/**
+ * Dev factory tools for the external Architect. On `/mcp` only.
+ * Not in the Chat loop. A Project token sees only its Project. See ADR 0052.
+ */
+export const FACTORY_MCP_TOOLS = [
+  'dostigus_projects_list',
+  'dostigus_projects_get',
+  'dostigus_projects_create',
+  'dostigus_projects_update',
+  'dostigus_repos_link',
+  'dostigus_commands_set',
+  'dostigus_tasks_list',
+  'dostigus_tasks_get',
+  'dostigus_tasks_create',
+  'dostigus_tasks_update',
+  'dostigus_tasks_transition',
+  'dostigus_tasks_attach',
+  'dostigus_tickets_list',
+  'dostigus_tickets_create',
+  'dostigus_tickets_update',
+  'dostigus_context_search',
+  'dostigus_context_remember',
+  'dostigus_context_read',
+  'dostigus_context_timeline',
+] as const
+
+export type FactoryMcpTool = typeof FACTORY_MCP_TOOLS[number]
+
 export const PLATFORM_MCP_TOOLS = [
   'dostigus_bots_list',
   'dostigus_bots_get',
@@ -98,18 +126,20 @@ export const PLATFORM_MCP_TOOLS = [
   ...ARTIFACT_MCP_TOOLS,
   ...TURN_MCP_TOOLS,
   ...KITCHEN_MCP_TOOLS,
+  ...FACTORY_MCP_TOOLS,
 ] as const
 
 export type PlatformMcpTool = typeof PLATFORM_MCP_TOOLS[number]
 
-type ChatExcludedMcpTool = 'dostigus_bots_delete' | KitchenMcpTool | TurnMcpTool
+type ChatExcludedMcpTool = 'dostigus_bots_delete' | KitchenMcpTool | TurnMcpTool | FactoryMcpTool
 
 /** Union of tools that may appear in Chat. Slim + expand. See ADR 0032. */
 export const CHAT_MCP_TOOLS = PLATFORM_MCP_TOOLS.filter(
   (name): name is Exclude<PlatformMcpTool, ChatExcludedMcpTool> =>
     name !== 'dostigus_bots_delete'
     && !(KITCHEN_MCP_TOOLS as readonly string[]).includes(name)
-    && !(TURN_MCP_TOOLS as readonly string[]).includes(name),
+    && !(TURN_MCP_TOOLS as readonly string[]).includes(name)
+    && !(FACTORY_MCP_TOOLS as readonly string[]).includes(name),
 )
 
 export type ChatMcpTool = typeof CHAT_MCP_TOOLS[number]
