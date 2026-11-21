@@ -1,9 +1,34 @@
 # Dostigus — MVP spec
 
-Product: **self-host agent OS** — portable bot packages + host UI sheets.
+Product: **cloud dev factory** — one Architect per Project, on the Host.
+Self-host compose remains possible
+([ADR 0005](adr/0005-self-host-first.md), amended by
+[ADR 0049](adr/0049-dev-factory-direction.md)).
 
-This spec is the day-1 / first-scaffold contract. Architecture decisions are in
+This spec is the day-1 / first-scaffold contract plus the factory
+direction. Architecture decisions are in
 [`docs/adr/`](adr/). Glossary: [`CONTEXT.md`](../CONTEXT.md).
+Narrative: [`docs/vision.md`](vision.md). Slices: [`docs/mvp.md`](mvp.md).
+
+## Product direction
+
+Settled in [ADR 0049](adr/0049-dev-factory-direction.md). The business
+sees Projects, Tasks, a Grill, proofs, and the Gates Approve and
+Release. The technical world is Repo links, Commands, Tickets, Runs,
+and Builders. One Architect per Project. Memory is Context from S1
+([ADR 0051](adr/0051-architect-context-and-skills.md)). The domain
+model is [ADR 0050](adr/0050-dev-factory-domain-model.md).
+
+**This Host does not implement that model yet.** The section
+[This Host](#this-host-create-bot--chat) is the Cluster that runs
+today. Slices in [`docs/mvp.md`](mvp.md) add Project, Grill, Runs, and
+the rest. Do not start a slice ahead of that plan. Do not add a second
+agent framework beside the Chat tool loop
+([ADR 0011](adr/0011-chat-mcp-tool-loop.md)).
+
+The design system does not change: Kit, Reka UI, Brand goose, Bot marks
+([ADR 0018](adr/0018-bot-mark-flock.md)), [`docs/ui.md`](ui.md). Kitchen
+and Mailer are frozen.
 
 ## In scope (platform direction)
 
@@ -16,10 +41,10 @@ Settled now, even if this repo only scaffolds them:
 | Host | One app: Chat + Cards + Sheets from the Kit. Sheet shell on Reka UI, plus Brand. See [ADR 0002](adr/0002-host-ui-kit-and-sheets.md) and [ADR 0013](adr/0013-kit-reka-ui-and-brand.md). |
 | MCP surface | Store and UI go through the same tools. See [ADR 0003](adr/0003-mcp-as-bot-store-contract.md). |
 | LLM gateway | User keys; Model tiers `cheap` \| `strong` \| `code` (plus `toy`). Gateway shape + same-model retry: [ADR 0004](adr/0004-llm-gateway-tiers.md). Provider bind, resolve, escalate, OpenRouter Settings catalog: [ADR 0036](adr/0036-llm-providers-tier-resolve-escalate.md). |
-| Self-host first | `docker compose up` is the intended path. See [ADR 0005](adr/0005-self-host-first.md). |
+| Factory run | The factory's default is the cloud Host on de2 (`dostigus.kosarev.space`). `docker compose up` stays possible. See [ADR 0005](adr/0005-self-host-first.md) amended by [ADR 0049](adr/0049-dev-factory-direction.md). |
 | Declarative modules | SQL + templated MCP before arbitrary sandbox. See [ADR 0006](adr/0006-day-1-declarative-modules.md). |
 | Cluster store | Drizzle + SQLite day-1 (Postgres later is fine). |
-| Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). |
+| Pilot shape | Meal-like loop: Chat → button part → Kitchen Sheet. Not a Meal port. See [ADR 0026](adr/0026-kitchen-module-day-1.md). **Frozen.** No new Kitchen features ([ADR 0049](adr/0049-dev-factory-direction.md)). |
 | Threads | One Thread; kinds `dm`, `group`, `bot`, `room` are labels. A Bot is personal to its creator. The Owner always sees it. Other people need an explicit grant (`bot_id` + `person_id`). Bot-threads, direct messages, groups, and rooms are in this Host. See [ADR 0024](adr/0024-threads-and-bot-visibility.md). |
 | Schedules | Store rows that say when the Host wakes a Bot on that person's bot-thread. One Cluster timezone. The Host fires a Wake. See [ADR 0027](adr/0027-bot-schedules.md). Case follow-up is a sibling Wake on the Case Thread, not a Schedule row ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). |
 | Self-settings | A Chat request that the Bot change its name, label, description, Skills, or Schedules writes the Store through the MCP surface. See [ADR 0028](adr/0028-bot-self-settings-via-chat.md). |
@@ -32,12 +57,12 @@ Settled now, even if this repo only scaffolds them:
 | Pack | Portable recipe, not a Bot and not a Module package. Export Pack from a live Bot is a scrubbed zip (`pack.json` + `skills/` + optional `schedules/` + optional `ui/` + optional README). Public id is `author.slug`; the Bot-part slug transliterates Cyrillic then slugifies (no silent `pack` fallback for a named Bot). Export omits Host seed Skills (`platform-meta-*` / the Host seed allowlist), invents a Schedule name from cadence+time when the live name is empty, and stamps `installed_packs` plus the Bot ref. Apply Pack from a local file, a public `.zip` URL, or an https git remote shows a preview / plan, then writes onto an existing Bot or creates a new Bot. Imported Schedules land paused and carry Pack snapshot provenance. Update replaces only Schedules stamped with the previous snapshot; unlabeled (grandfather) and Owner-created rows stay. Update does not wipe Chat. See [ADR 0039](adr/0039-pack-vs-bot-portable-recipe.md). The public catalog is **Marketplace** on the marketing site (https://dostigus.ru/marketplace) in GitHub repo `dostigus/cloud`; listing source of truth is the **Catalog Store** on that same site / dostigus.ru ([ADR 0047](adr/0047-marketplace-catalog-store.md)); the site owns publish, mirrors, and the public read API; Member Apply uses the cloud mirror zip URL; deep-link Apply (`applyPack=` → `PackApplySheet` preview) is in that record; copy-URL is the fallback. Packs are the first catalog kind; `/packs` 301s to Marketplace; this Host links out and does not pull a live catalog. Platform Host does not run Catalog Store for the public marketplace. Host [#189](https://github.com/dostigus/dostigus/pull/189) `@dostigus/catalog` is removed. Pro stays out of the public field. See [ADR 0045](adr/0045-pack-catalog-on-marketing-site.md). Site public URLs are `prefix_except_default` (unprefixed = RU, EN `/en/...`; [ADR 0046](adr/0046-site-i18n-url-prefix.md)); this Host out-link stays the unprefixed RU URL. |
 | Case | Thin layer on a `group` or `room` Thread: status `open` \| `done`, label ≤40, next action ≤120. Not a ticket tracker. Any person Participant writes it with `PATCH /api/threads/:id/case`; the Thread DTO nests `case` (null until the first write). Roster Sheet block and a line under the Chat identity pill. See [ADR 0041](adr/0041-case-lite-on-thread.md). Messenger filter chips (All / Case open) list open Cases the signed-in person is on (`GET /api/threads?caseStatus=open`). One-shot follow-up (`followUpAt`, `followUpBotId`) fires a Wake on that Thread. See [ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md). |
 | Admin | Household Member with `members.role` `admin`. Not a second Owner. Opens Dashboard read, Providers / LLM, and Members invite/list. Owner and Admin grant any Bot; a Member grants only a Bot they created. Admin creates Bots and Applies Packs like the Owner. Only the Owner promotes or demotes an Admin. Case and roster stay any person Participant. See [ADR 0042](adr/0042-admin-role-and-share-permission.md). |
-| Personas | Two primary audiences: Owner-operator (Collective N=1) and Team 2–15 (messenger + Bots; run work in Chat with Bots). Product leads with Team. Member is served, not roadmap-optimized. Case inbox + follow-up Wakes are [ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md) and are in this Host. See [ADR 0043](adr/0043-target-personas.md). |
-| Mailer | Product Pack `dostigus.mailer`: IMAP + SMTP Host tools, Cluster Bot mail binding. Apply creates a new Bot. One mailbox per Bot. The mailbox server is the Closet bind. No Cluster mail allowlist. Draft send until confirm. v1 cadence is Schedule `daily`/`weekly` Wake. Not `dostigus.mail`. See [ADR 0048](adr/0048-mailer-product.md). Host tools, the Closet bind Sheet, and the Pack tree (`packs/dostigus.mailer`) are in this Host; the published zip is a later Nick publish. |
+| Audiences | The factory leads with the Owner-operator (Nick). A non-technical product owner and a small team are later. [ADR 0043](adr/0043-target-personas.md) is superseded by [ADR 0049](adr/0049-dev-factory-direction.md). Case inbox + follow-up Wakes stay for Collective chats ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). |
+| Mailer | Product Pack `dostigus.mailer`: IMAP + SMTP Host tools, Cluster Bot mail binding. Apply creates a new Bot. One mailbox per Bot. The mailbox server is the Closet bind. No Cluster mail allowlist. Draft send until confirm. v1 cadence is Schedule `daily`/`weekly` Wake. Not `dostigus.mail`. See [ADR 0048](adr/0048-mailer-product.md). **Frozen.** No new Mailer features ([ADR 0049](adr/0049-dev-factory-direction.md)). Host tools, the Closet bind Sheet, and the Pack tree (`packs/dostigus.mailer`) are in this Host; the published zip is a later Nick publish. |
 
 ## This Host (create Bot + Chat)
 
-What the running Cluster does today. This Host serves an Owner-operator (Collective N=1) and a Team of 2–15; product leads with the Team ([ADR 0043](adr/0043-target-personas.md)). Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)). This Host does not ship `@dostigus/catalog` or `/api/catalog/*`. Deep-link Apply (`applyPack=` cloud mirror zip URL) is in this Host ([#192](https://github.com/dostigus/dostigus/pull/192)). This Host does not pull a catalog. Mailer Host IMAP/SMTP tools (`dostigus_mail_list`, `dostigus_mail_get`, `dostigus_mail_send`), the Closet Mailbox bind Sheet, and Bot mail binding are in this Host ([ADR 0048](adr/0048-mailer-product.md)). The mailbox server is the Closet bind. There is no Cluster mail allowlist. The Host still blocks loopback, private, and link-local mail destinations. The `dostigus.mailer` Pack tree lives in `packs/dostigus.mailer`; its Catalog Store publish is a later Nick step.
+What the running Cluster does today. The factory direction is [ADR 0049](adr/0049-dev-factory-direction.md). This Host still serves the Owner and Members on Chat and the Dashboard. It does not yet serve Projects, Tasks, or Runs. [ADR 0043](adr/0043-target-personas.md) is superseded. Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)). This Host does not ship `@dostigus/catalog` or `/api/catalog/*`. Deep-link Apply (`applyPack=` cloud mirror zip URL) is in this Host ([#192](https://github.com/dostigus/dostigus/pull/192)). This Host does not pull a catalog. Mailer Host IMAP/SMTP tools (`dostigus_mail_list`, `dostigus_mail_get`, `dostigus_mail_send`), the Closet Mailbox bind Sheet, and Bot mail binding are in this Host ([ADR 0048](adr/0048-mailer-product.md)). The mailbox server is the Closet bind. There is no Cluster mail allowlist. The Host still blocks loopback, private, and link-local mail destinations. The `dostigus.mailer` Pack tree lives in `packs/dostigus.mailer`; its Catalog Store publish is a later Nick step.
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`
@@ -364,7 +389,7 @@ What the running Cluster does today. This Host serves an Owner-operator (Collect
   label, description, and Skills is
   [ADR 0028](adr/0028-bot-self-settings-via-chat.md). See Self-settings.
 - `/health` stays `{ ok: true }`.
-- No seed/demo domain Bot. No Builder or Meal port. Preview
+- No seed/demo domain Bot. No Meal port. Builder Runs are not in this Host yet ([ADR 0049](adr/0049-dev-factory-direction.md)). Preview
   `?kitchen=1` is local tooling, not a domain Bot. The Collective on this Host
   is the Owner plus Members (Household is the Store and code name) ([ADR 0012](adr/0012-household-members.md)),
   including Invites the Owner copies by hand
@@ -928,9 +953,9 @@ and [`docs/deploy.md`](deploy.md)).
 
 ## Out of scope (do not implement yet)
 
-- Full agent runtime (parity with Grok Bot or otherwise)
+- A custom agent-runtime framework beside the Chat tool loop. The factory is [ADR 0049](adr/0049-dev-factory-direction.md). The external Architect calls the MCP surface. The built-in Architect reuses [ADR 0011](adr/0011-chat-mcp-tool-loop.md) in slice S7. Neither is in this Host yet. See [`docs/mvp.md`](mvp.md). Do not start a slice early.
 - Meal product port
-- Builder that writes Module packages (chat Bot ≠ Builder)
+- A Builder that writes Module packages. Builder is a cloud coding agent ([ADR 0049](adr/0049-dev-factory-direction.md)). Module package Apply stays later. Builder Runs are not in this Host yet.
 - In-product Host Marketplace, Apply-from-index, and a
   Host-pulled live catalog. The public Marketplace on the
   marketing site is
@@ -1047,8 +1072,10 @@ and [`docs/deploy.md`](deploy.md)).
   [ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)
   (https://dostigus.ru/marketplace, Host out-link).
   Catalog Store on `dostigus/cloud` / dostigus.ru is
-  [ADR 0047](adr/0047-marketplace-catalog-store.md). Builder Jobs stay
-  out. Chat Cards for Schedule changes are
+  [ADR 0047](adr/0047-marketplace-catalog-store.md). Module package
+  Apply stays later. Builder is
+  [ADR 0049](adr/0049-dev-factory-direction.md), not a Module-package
+  writer. Chat Cards for Schedule changes are
   [ADR 0030](adr/0030-chat-cards-module-catalog.md) and are in this Host.
   Meta Skills on Bot create are in this Host. They are plain Skill
   text, not a stock Module package. A Schedule still only writes a Wake
@@ -1061,7 +1088,8 @@ and [`docs/deploy.md`](deploy.md)).
   Manifest, Skill, or Schedule write. Pushing a raw `/mcp` write into
   an already-open Chat page. The Self-settings write above is in this
   Host ([ADR 0028](adr/0028-bot-self-settings-via-chat.md)).
-- Managed/cloud hosting (optional later; not the default)
+- Multi-tenant SaaS, billing, and a hosted identity. The factory's default run is one cloud Host on de2 ([ADR 0005](adr/0005-self-host-first.md) amended by [ADR 0049](adr/0049-dev-factory-direction.md)). `docker compose` self-host stays possible.
+- New Kitchen features and new Mailer features. Both are frozen ([ADR 0049](adr/0049-dev-factory-direction.md)). The code stays.
 - Artifact S3 / remote blob store, signed or public download URLs,
   gallery / lightbox, virus scan, `dostigus_artifacts_get`,
   sandbox materialize / path-attach, content-addressed blob layout,
@@ -1076,7 +1104,12 @@ and [`docs/deploy.md`](deploy.md)).
   ([ADR 0035](adr/0035-image-artifact-vision.md)). Triggering-line
   vision is in scope. The impl PR lands the Host change.
 
-## Success for later MVPs (not this PR)
+## Success for later MVPs
 
-A self-hosted Cluster that can install a declarative Bot, chat with it, and open
-a Sheet that reads/writes through the same MCP surface.
+The factory MVP is [`docs/mvp.md`](mvp.md): two weeks of Dostigus and
+Inherit run only through Dostigus. This file's "This Host" section is
+the Cluster that already runs. Slices S1–S7 are not implemented here.
+
+A Cluster can already install a declarative Bot, chat with it, and open
+a Sheet that reads and writes through the same MCP surface. That
+remains true. It is not the factory's "done".

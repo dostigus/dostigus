@@ -1,10 +1,16 @@
 # Dostigus — Domain Context
 
-Self-host agent OS: portable Packs + Host UI Sheets. This file
+Cloud dev factory: a business world and a technical world on one Host,
+one Architect per Project. Self-host compose remains possible. This file
 names the domain concepts. Keep these terms stable. Do not invent synonyms in
 code, docs, or UI copy. Host chrome may be `en` or `ru`
 ([ADR 0037](docs/adr/0037-host-ui-i18n.md)); the terms below stay
 Latin script in both Locales.
+
+Direction: [ADR 0049](docs/adr/0049-dev-factory-direction.md).
+Domain model: [ADR 0050](docs/adr/0050-dev-factory-domain-model.md).
+Architect and Context: [ADR 0051](docs/adr/0051-architect-context-and-skills.md).
+Narrative: [`docs/vision.md`](docs/vision.md). Slices: [`docs/mvp.md`](docs/mvp.md).
 
 > Scope lives in [`docs/SPEC.md`](docs/SPEC.md). Decisions live in
 > [`docs/adr/`](docs/adr/). Agent rules: [`AGENTS.md`](AGENTS.md).
@@ -12,8 +18,13 @@ Latin script in both Locales.
 ## Language
 
 **Dostigus**:
-The self-host agent OS (Platform + Cluster runtime).
-_Avoid_: product (unqualified), app (the Host is the client app).
+The cloud dev factory (Platform + Cluster runtime). One Architect per
+Project. The factory runs as a cloud Host on de2. Self-host compose
+remains possible
+([ADR 0005](docs/adr/0005-self-host-first.md), amended by
+[ADR 0049](docs/adr/0049-dev-factory-direction.md)).
+_Avoid_: product (unqualified), app (the Host is the client app),
+Collective Host (superseded direction).
 
 **Platform**:
 The open-source monorepo (`dostigus/dostigus`): Host, Kit, runtimes. Evolves
@@ -30,9 +41,11 @@ Primary account that controls the Cluster. Exactly one Owner per Cluster.
 _Avoid_: Admin (a separate role), user (unqualified).
 
 **Owner-operator**:
-The type-1 primary audience: one person on a Cluster with
-Bots. A Collective of N=1, not a different product. See
-[ADR 0043](docs/adr/0043-target-personas.md).
+The first audience of the factory: one person on a Cluster who runs
+Projects through the Architect. Nick is that person for the MVP. A
+Collective of N=1, not a different product. The Team-led roadmap in
+[ADR 0043](docs/adr/0043-target-personas.md) is superseded by
+[ADR 0049](docs/adr/0049-dev-factory-direction.md).
 _Avoid_: solo user (unqualified), treating Owner-operator as a
 second Host or SKU.
 
@@ -55,9 +68,10 @@ Host for Bot list and Chat. The product role **Member** is
 ([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
 **Member.locale** is this Member's Host UI
 Locale ([ADR 0037](docs/adr/0037-host-ui-i18n.md)).
-A Member with role `member` is a secondary audience:
-served (Bot list and Chat), not the roadmap lead
-([ADR 0043](docs/adr/0043-target-personas.md)).
+A Member with role `member` is served (Bot list and Chat). The
+roadmap lead is the Owner-operator on the factory
+([ADR 0049](docs/adr/0049-dev-factory-direction.md)).
+[ADR 0043](docs/adr/0043-target-personas.md) is superseded.
 _Avoid_: user, guest, account (unqualified), invitee.
 
 **Member.locale**:
@@ -137,7 +151,9 @@ treating timezone as Locale, treating dostigus.ru `/en`
 URLs as Host Locale, translating Bot / Pack / Host / Cluster /
 Skill / Schedule / Provider / Policy / Artifact / Member /
 Household / Case / Marketplace / Catalog Store /
-Mailer Pack / Bot mail binding.
+Mailer Pack / Bot mail binding / Project / Architect /
+Task / Ticket / Grill / Run / Gate / Audit / Retro /
+Integration / Context (the memory service).
 
 **Chat**:
 The lines a person reads and writes on a Thread in the Host.
@@ -238,9 +254,12 @@ Follow-up fires a Wake on that Thread
 ([ADR 0044](docs/adr/0044-case-inbox-and-follow-up-wakes.md)).
 On-thread fields are in this Host. Inbox filter and follow-up
 are not.
-_Avoid_: Ticket, Issue, Case-lite (as a UI noun; that is the
+Project work is a **Task**, not a Case
+([ADR 0049](docs/adr/0049-dev-factory-direction.md),
+[ADR 0050](docs/adr/0050-dev-factory-domain-model.md)).
+_Avoid_: Ticket, Issue, Task, Case-lite (as a UI noun; that is the
 wedge name), treating a Case as a second Thread, treating Case
-inbox as a separate product.
+inbox as a separate product, using a Case as the Project board.
 
 **Card**:
 Inline structured UI in the Chat (button, table, status). Day-1 renders
@@ -352,10 +371,12 @@ Bot Pack id `dostigus.mailer`: soul, Skills, paused
 Schedule templates, and IMAP/SMTP integration stubs
 (env **names** only). Apply creates a new Bot. Not
 `dostigus.mail` (paste-only triage). Secrets never in
-the Pack zip or the catalog mirror. See
-[ADR 0048](docs/adr/0048-mailer-product.md).
+the Pack zip or the catalog mirror. **Frozen.** The code stays.
+No new Mailer features
+([ADR 0049](docs/adr/0049-dev-factory-direction.md),
+[ADR 0048](docs/adr/0048-mailer-product.md)).
 _Avoid_: treating Mailer as `dostigus.mail`, Module
-package, putting credentials in the Pack.
+package, putting credentials in the Pack, new Mailer work.
 
 **Bot mail binding**:
 Cluster Store row that binds one IMAP/SMTP mailbox to
@@ -458,14 +479,23 @@ Admin shares. A Member shares only a Bot they created
 _Avoid_: public, secret, hidden.
 
 **Orchestrator**:
-Optional Bot that routes inbox ideas / digests (hybrid topology; not required
-day-1).
-_Avoid_: router, dispatcher (use Orchestrator).
+The Host component that accepts triggers and starts Runs. A ticker in
+the shape of the Schedule ticker, a queue of Runs in the Store, and
+polling of Builder status and of GitHub. Not a Bot.
+([ADR 0049](docs/adr/0049-dev-factory-direction.md)).
+The ticker itself is a later slice. The old meaning, a Bot that routes
+inbox ideas, is retired.
+_Avoid_: router, dispatcher (use Orchestrator), routing Bot.
 
 **Builder**:
-Cluster-side coding worker that emits a Module package. Distinct from any
-Platform git agent.
-_Avoid_: cloud agent (bare), codegen bot, authoring agent.
+A cloud coding agent the Architect starts for a Ticket. A Cursor cloud
+agent or Codex. The Architect picks the Builder and starts it at effort
+High. Not a Module-package writer. Distinct from a person editing this
+monorepo by hand. When the Orchestrator starts a Cursor cloud agent,
+that agent is a Builder.
+([ADR 0049](docs/adr/0049-dev-factory-direction.md)).
+_Avoid_: cloud agent (bare; say Builder), codegen bot, authoring agent,
+treating a Builder as the writer of a Module package.
 
 **Skill**:
 Instructions a Bot follows. Not executable UI and not a
@@ -569,8 +599,10 @@ tables, MCP tools, and Sheet are the seed of a Module package. There is
 no Apply runtime yet, so this seed is not an installed Module package.
 [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md) does not put
 Kitchen in a catalog.
-Not a Meal port.
-_Avoid_: Meal, meal planner, Cook app, plugin.
+Not a Meal port. **Frozen.** The seed stays. No new Kitchen features
+([ADR 0049](docs/adr/0049-dev-factory-direction.md),
+[ADR 0026](docs/adr/0026-kitchen-module-day-1.md)).
+_Avoid_: Meal, meal planner, Cook app, plugin, new Kitchen work.
 
 **Store**:
 Cluster database (SQLite day-1) holding domain data + Manifests + Module
@@ -603,8 +635,11 @@ surface as the runtime term.
 _Avoid_: API, REST, RPC (unqualified). Prefer MCP surface over MCP contract.
 
 **Job**:
-Approved request to run a Builder for a missing module/feature.
-_Avoid_: ticket, task (unqualified).
+Retired. Do not use it. The business unit of work is a **Task**. One
+execution of one Stage is a **Run**. The old meaning was an approved
+request to run a Builder that writes a Module package.
+_Avoid_: Job in new docs and UI, ticket (use Ticket or Task), task
+(unqualified; say Task).
 
 **Apply**:
 Two distinct writes. **Pack Apply** installs a Pack onto an
@@ -626,9 +661,10 @@ before write.
 **Module package Apply** installs a Module package into the live
 Cluster (after staging review). Day-1 does not Apply a stock
 Module package from this repo and does not bundle platform
-packages into the Host image. A Builder Job that Applies a
-Module package, and Module packages as a Marketplace kind,
-stay later.
+packages into the Host image. Module package Apply, and Module
+packages as a Marketplace kind, stay later. A Builder does not
+write Module packages
+([ADR 0049](docs/adr/0049-dev-factory-direction.md)).
 See [ADR 0030](docs/adr/0030-chat-cards-module-catalog.md).
 _Avoid_: deploy, merge, ship (unqualified), Host-bundled Apply,
 treating Pack Apply as Module package Apply, Apply-from-index.
@@ -752,30 +788,26 @@ persona is an audience, not a synonym for Collective
 ([ADR 0043](docs/adr/0043-target-personas.md)).
 
 **Collective**:
-The 1…N people on one Cluster: a family, a startup, or a small
-enterprise. The product direction is the **Collective Host**: a
-messenger, personal and shared Bots, and MCP to external systems
-([ADR 0040](docs/adr/0040-collective-host-direction.md)). Primary
-audiences are the **Owner-operator** (Collective N=1) and the
-**Team** of 2–15; product leads with Team
-([ADR 0043](docs/adr/0043-target-personas.md)). Host UI
-copy says Collective («коллектив» in RU). Its accounts are the
-Household in Store and code. v1 roles are Owner, Admin, and
-Member
+The 1…N people on one Cluster. Host UI copy may say Collective
+(«коллектив» in RU). Its accounts are the Household in Store and
+code. v1 roles are Owner, Admin, and Member
 ([ADR 0042](docs/adr/0042-admin-role-and-share-permission.md)).
-_Avoid_: CRM, tenant, org, workspace, team (as the product noun;
-the Team persona in
-[ADR 0043](docs/adr/0043-target-personas.md) is an audience,
-not a synonym for Collective).
+The product direction is the dev factory, not the Collective Host
+([ADR 0049](docs/adr/0049-dev-factory-direction.md) supersedes
+[ADR 0040](docs/adr/0040-collective-host-direction.md)). Plain
+Collective chats may still carry a Case. Project work is a Task.
+_Avoid_: CRM, tenant, org, workspace, team (as the product noun),
+treating Collective Host as the current direction.
 
 **Team**:
-The type-2 primary audience: 2–15 people on one Cluster who
-run work in Chat with Bots. Messenger + Bots. CRM-shaped
-work, not a sales CRM. Product leads with this audience.
-Collective stays the product noun. See
-[ADR 0043](docs/adr/0043-target-personas.md).
+A later audience: a few people on one Project, business plus one or
+two technical people. Not the roadmap lead. Collective stays the word
+for the people on a Cluster. The Team-led roadmap in
+[ADR 0043](docs/adr/0043-target-personas.md) is superseded by
+[ADR 0049](docs/adr/0049-dev-factory-direction.md).
 _Avoid_: treating Team as a synonym for Collective, sales
-team, org, treating Team as Host UI copy (say Collective).
+team, org, treating Team as Host UI copy (say Collective),
+treating Team as the current roadmap lead.
 
 **Invite**:
 A one-shot link the Owner creates so someone can become a Member. The Store
@@ -792,9 +824,143 @@ _Avoid_: Share link, guest link, magic link (unqualified), invitee.
 Narrow public token to one object, not the whole Cluster.
 _Avoid_: public share, invite (unqualified).
 
+**Project**:
+The HQ of one product on the Cluster: board, Architect, linked repo,
+Commands, Integrations, and the Context project id. A Cluster holds
+many Projects. Not a Cluster, not a git repo, and not a Collective.
+([ADR 0050](docs/adr/0050-dev-factory-domain-model.md)).
+_Avoid_: repo (unqualified), workspace, tenant, Collective.
+
+**Repo link**:
+The git repo a Project works in. Provider `github`, `fullName`,
+default branch, and `docsLayout` (paths for ADRs, Specs, and the
+glossary). One Task touches one Repo link. GitHub stays the git host.
+The factory does not open GitHub issues.
+_Avoid_: remote (unqualified), treating the Platform monorepo as the
+only Repo link.
+
+**Commands**:
+The strings on a Repo link a Builder runs: `setup`, `lint`, `test`,
+`check`, `run`, `preview`. The `checks` Stage runs these.
+_Avoid_: script (unqualified), package.json (as the product noun).
+
+**Architect**:
+The one Bot for a Project. External first (Grok Bot through the MCP
+surface with a Project token). Built-in later (a Bot on the Host,
+Providers, the same tools in-process). Memory is Context.
+([ADR 0051](docs/adr/0051-architect-context-and-skills.md)).
+_Avoid_: a second Architect on the same Project, routing Bot,
+calling every Bot an Architect.
+
+**Task**:
+What the business sees on the Project board. Modes `quick`, `bug`,
+`feature`, `epic`. Statuses `new`, `grilling`, `awaiting_approval`,
+`in_work`, `awaiting_acceptance`, `released`, `dropped`. Not a Case,
+not a Ticket, not a GitHub issue.
+_Avoid_: Job, issue, Case, ticket (use Ticket when you mean the
+technical slice).
+
+**Ticket**:
+A technical slice of a Task, cut by `to-tickets`. The business does
+not see it. `blockedBy` names other Tickets. Not a GitHub issue.
+_Avoid_: GitHub issue, Case, Job, calling a Ticket a Task in the
+business UI.
+
+**Grill**:
+The activity of questioning a Task in rounds until the frontier is
+empty or the outcome is drop, split, or needs research. Each question
+has options and one recommended answer. "Task not needed" (`drop`)
+is a normal outcome. Required for `feature` and `epic`. Short for
+`bug`. Optional for `quick`, with a written reason and a visible flag.
+_Avoid_: interview (unqualified), standup, review (a review is a
+Stage).
+
+**Grill session**:
+The Store record of one Grill: open or done, an outcome, and its
+questions. Tied to a Task or to an Audit.
+_Avoid_: a second noun for the same record, questionnaire (upstream
+skill name; the product noun is Grill session).
+
+**Decision**:
+A Store link to an ADR file in the linked repo (path and pull
+request). Not the ADR file itself, and not a Context row.
+_Avoid_: calling [`docs/adr/`](docs/adr/) the only place a Decision
+can point. A Project's Decisions point at that Project's repo.
+
+**Spec**:
+A Store link to a spec file in the linked repo for one Task. Not
+[`docs/SPEC.md`](docs/SPEC.md), which is this Platform's contract.
+_Avoid_: treating `docs/SPEC.md` as a Task Spec, OpenSpec.
+
+**Run**:
+One execution of one Stage by one runner (`cursor`, `codex`, or
+`architect`), one attempt. Status `queued`, `running`, `passed`,
+`failed`, or `cancelled`. Replaces Job.
+_Avoid_: Job, build (unqualified), workflow run (as a second noun).
+
+**Stage**:
+A step a mode runs: `plan`, `implement`, `checks`, `review`,
+`visual`, `release`, `retro`. Order depends on the Task mode.
+_Avoid_: phase (Activity phase is a different noun), step
+(unqualified).
+
+**Gate**:
+A person's decision the pipeline waits on. Kinds `approve` (Approve)
+and `release` (Release). The MCP surface may request and read a Gate.
+It cannot pass one.
+_Avoid_: check (a check is a Stage), approval comment on GitHub as
+the Gate.
+
+**Audit**:
+A scheduled comparison of docs, ADRs, Specs, or code with the repo.
+A Schedule on the Architect starts it. It produces Findings. A
+Finding can become a Grill question, a Ticket, or be closed.
+_Avoid_: lint (lint is a Command), retro (Retro follows a Task).
+
+**Finding**:
+One claim from an Audit: severity, claim, evidence path and line,
+proposal.
+_Avoid_: bug (a bug is a Task mode), issue.
+
+**Retro**:
+The record after a Task: observations and proposals. An accepted
+proposal becomes a Ticket. Categories: `navigation`, `checks`,
+`standards`, `agents_md`, `tools`, `access`.
+_Avoid_: Audit, postmortem (as a second product noun).
+
+**Integration**:
+A Project's connection outward: kind `mcp`, `http`, `dokploy`,
+`github`, or `context`. Name, URL, secret ref, scopes, read-only
+flag. Secret values stay in the Store, like a Provider key. Callers
+see names. `kind=context` is required from S1. Not a Pack integration
+stub (those are env names inside a Pack).
+_Avoid_: Provider (an LLM gateway instance), Pack stub, plugin.
+
+**Context**:
+The Architect's long-term memory. The service at
+`context.kosarev.space`
+([hmbanan666/context](https://github.com/hmbanan666/context)).
+Distilled facts and decisions tagged with the Project, a project
+profile the Owner writes, a weekly journal, and a task context pack.
+Not Chat LLM context. Not this file. The Store keeps the Context
+project id. It does not copy the corpus. In the MVP from S1 and S2
+([ADR 0051](docs/adr/0051-architect-context-and-skills.md)).
+_Avoid_: Chat LLM context, [`CONTEXT.md`](CONTEXT.md) (this glossary),
+prompt dump, a second memory store inside Dostigus.
+
+**Task context pack**:
+One Context `search` with `mode: "pack"` for a Project and a Task
+query. Context sizes it with `budgetBytes` (default 8192). The
+factory treats that cap as the N-token budget: profile first (about
+a fifth), then distilled decisions and facts, then at most two
+journal cards and two uncited sources. The Architect loads one at
+the start of a Grill session and at the start of a Run.
+_Avoid_: Pack (a Pack is a portable Bot recipe), prompt dump,
+copying the pack into the Store.
+
 ## Relationships
 
-- Platform ≠ Cluster. Git is only for the Platform. A Cluster is not a git repo.
+- Platform ≠ Cluster. The Platform git repo is this monorepo. A Cluster is not a git repo. A Project has a Repo link. That repo holds the Project's ADRs, Specs, and glossary. Tasks, Tickets, Grill sessions, Runs, and Gates live in the Store. The Architect's long-term memory is Context.
 - A Cluster has one Owner, a Store, Bots, Module packages, installed
   Pack snapshots, and its Household. One Cluster is one Household.
   **Pack ≠ Bot ≠ Module package.**
@@ -894,12 +1060,14 @@ _Avoid_: public share, invite (unqualified).
   [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md).
 - The Kitchen Module is Cluster Store data, MCP tools, and a Kit Sheet.
   It is the seed of a Module package. It is not a Meal port, not a Bot,
-  and not a Pack.
-- Builder writes Module packages via Job → Module package Apply.
-  Distinct from any Platform git agent. The chat Bot does not write
-  Module packages. This monorepo ships no stock Module packages and no
-  Weather seed. Module packages as a Marketplace kind are
-  later. Day-1 marketplace / OSS share for Packs is
+  and not a Pack. It is frozen: no new Kitchen features. Mailer is
+  frozen the same way.
+- A Builder is a cloud coding agent the Architect starts. A Run is
+  one Stage on one runner. Job is retired. The chat Bot does not
+  write Module packages. Module package Apply stays later. This
+  monorepo ships no stock Module packages and no Weather seed.
+  Module packages as a Marketplace kind are later. Day-1
+  marketplace / OSS share for Packs is
   [ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md). The
   public Marketplace is on the marketing site
   (https://dostigus.ru/marketplace,

@@ -3,10 +3,11 @@
 Read this index before changing the Platform. Glossary:
 [`CONTEXT.md`](../../CONTEXT.md). Scope: [`docs/SPEC.md`](../SPEC.md).
 
-**Next number = max + 1.** The highest file is ADR 0048, so the next ADR
-is **0049**. Name it `0049-short-kebab-title.md` (four digits). When you
+**Next number = max + 1.** The highest file is ADR 0051, so the next ADR
+is **0052**. Name it `0052-short-kebab-title.md` (four digits). When you
 add a record, add a row here and set the next number to that file’s
-number plus one.
+number plus one. Proposed titles under
+[Backlog](#proposed-backlog) are not files and do not reserve a number.
 
 ## Usual headings
 
@@ -36,7 +37,7 @@ English.
 | [0002](0002-host-ui-kit-and-sheets.md) | Host UI kit and Sheets (amended 2026-09-26: Pack HTML `ui/` is a sandboxed iframe in the Sheet shell [0039](0039-pack-vs-bot-portable-recipe.md); amended 2026-09-28: Kit form and surface primitives [0013](0013-kit-reka-ui-and-brand.md)) |
 | [0003](0003-mcp-as-bot-store-contract.md) | MCP as the Bot ↔ store contract |
 | [0004](0004-llm-gateway-tiers.md) | LLM gateway and model tiers (amended 2026-09-24: one transient retry, Russian error copy; Chat assembly [0032](0032-chat-llm-context-assembly.md); amended 2026-09-25: triggering-line image parts [0035](0035-image-artifact-vision.md); amended 2026-09-25: bind / resolve / escalate [0036](0036-llm-providers-tier-resolve-escalate.md); OpenRouter Policy `free` on cheap/toy for casual supersedes “roulette is toy only”; amended 2026-09-25: OpenRouter Settings catalog stays [0036](0036-llm-providers-tier-resolve-escalate.md); amended 2026-09-26: Store key is Provider `apiKey` only [0036](0036-llm-providers-tier-resolve-escalate.md)) |
-| [0005](0005-self-host-first.md) | Self-host first |
+| [0005](0005-self-host-first.md) | Self-host first (amended 2026-11-21: the factory runs as a cloud Host on de2; compose stays possible [0049](0049-dev-factory-direction.md)) |
 | [0006](0006-day-1-declarative-modules.md) | Day-1 declarative modules (before arbitrary sandbox; Pack HTML ui is [0039](0039-pack-vs-bot-portable-recipe.md), not this sandbox) |
 | [0007](0007-platform-image-tags.md) | Platform image tags |
 | [0008](0008-host-store-routes.md) | Host Store routes for Bots and Chat |
@@ -57,7 +58,7 @@ English.
 | [0023](0023-household-member-invites.md) | Household Member Invites (an Invite does not grant Bots; [0024](0024-threads-and-bot-visibility.md)) |
 | [0024](0024-threads-and-bot-visibility.md) | Threads and Bot visibility (amended 2026-09-24: personal Bot + grants; amended 2026-10-01: roster Sheet, add a person or Bot after create, first Bot makes a `group` a `room`) |
 | [0025](0025-chat-bubble-parts.md) | Chat bubble parts (Bot visibility stays [0024](0024-threads-and-bot-visibility.md); Artifact refs are the join, not `parts_json` [0034](0034-artifacts.md)) |
-| [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 |
+| [0026](0026-kitchen-module-day-1.md) | Kitchen Module day-1 (frozen 2026-11-21 by [0049](0049-dev-factory-direction.md); seed stays; no new Kitchen features) |
 | [0027](0027-bot-schedules.md) | Host Bot Schedules (amended 2026-09-24: closet list, create/detail Sheets; Wake tools [0032](0032-chat-llm-context-assembly.md); amended 2026-09-26: visible Wake is the Schedule name, `wakeText` is LLM-only; amended 2026-10-01: Case follow-up Wake on the Case Thread is a sibling path [0044](0044-case-inbox-and-follow-up-wakes.md); personal Schedule stays bot-thread-only; amended 2026-10-02: Mailer v1 check cadence is existing `daily`/`weekly` Wake [0048](0048-mailer-product.md); no IMAP IDLE, no N-minute poll) |
 | [0028](0028-bot-self-settings-via-chat.md) | Bot self-settings via Chat (amended 2026-09-24: closet Schedule list stays [0027](0027-bot-schedules.md); Skill `description` + catalog [0032](0032-chat-llm-context-assembly.md)) |
 | [0029](0029-turn-journal.md) | Turn journal (amended 2026-09-24: harness smoke; Schedule run history reads journal rows; amended 2026-09-25: modelId / modelTier / visionParts observability; amended 2026-09-25: servedModelId + token usage on the Turn; amended 2026-09-25: escalate may resolve more than once [0036](0036-llm-providers-tier-resolve-escalate.md); journal stays last successful / last attempted resolve + llmCallCount) |
@@ -71,12 +72,40 @@ English.
 | [0037](0037-host-ui-i18n.md) | Host UI i18n (EN/RU) (amended 2026-09-26: Thread chrome is chat / чат; amended 2026-10-02: Host `no_prefix` stays; Site URL prefix is [0046](0046-site-i18n-url-prefix.md)) |
 | [0038](0038-dashboard-chrome.md) | Dashboard chrome (own layout; Settings is one page; Members under Account; no `/settings` or `/members` redirects) |
 | [0039](0039-pack-vs-bot-portable-recipe.md) | Pack vs Bot portable recipe (Pack ≠ Bot ≠ Module package; Export Pack vs Export Bot backup; HTML `ui/` in a sandboxed iframe; amended 2026-09-28: RU translit, Export Sheet, seed Skill filter, Export stamps snapshot, Schedule provenance; amended 2026-09-28: URL / git Apply; amended 2026-10-02: public Marketplace is [0045](0045-pack-catalog-on-marketing-site.md); amended 2026-10-02: cloud Catalog Store + deep-link Apply [0047](0047-marketplace-catalog-store.md); amended 2026-10-02: Mailer Pack `dostigus.mailer` is [0048](0048-mailer-product.md); secrets still never in the zip) |
-| [0040](0040-collective-host-direction.md) | Collective Host product direction (Collective of 1…N people; messenger + personal / shared Bots + MCP to external systems; Rooms gaps, then Case-lite [0041](0041-case-lite-on-thread.md); roles Owner / Admin / Member [0042](0042-admin-role-and-share-permission.md); audiences Owner-operator and Team 2–15 [0043](0043-target-personas.md); Case inbox + follow-up Wakes [0044](0044-case-inbox-and-follow-up-wakes.md); Packs for verticals; public Marketplace [0045](0045-pack-catalog-on-marketing-site.md); Catalog Store on cloud [0047](0047-marketplace-catalog-store.md); Mailer IMAP/SMTP Pack [0048](0048-mailer-product.md); Pro out of public field; no Pages, sales pipeline, light theme, or SaaS cloud in v1) |
+| [0040](0040-collective-host-direction.md) | Collective Host product direction (superseded by [0049](0049-dev-factory-direction.md); historical: Collective of 1…N people; messenger + personal / shared Bots + MCP; Rooms gaps, then Case-lite [0041](0041-case-lite-on-thread.md); roles [0042](0042-admin-role-and-share-permission.md); audiences [0043](0043-target-personas.md); Case inbox [0044](0044-case-inbox-and-follow-up-wakes.md); Marketplace [0045](0045-pack-catalog-on-marketing-site.md); Catalog Store [0047](0047-marketplace-catalog-store.md); Mailer [0048](0048-mailer-product.md)) |
 | [0041](0041-case-lite-on-thread.md) | Case-lite on a Thread (Case on `group` / `room` only; status `open` \| `done`, label ≤40, nextAction ≤120; person Participant PATCH; nullable `threads` columns; on-thread UI; Case inbox + follow-up Wakes [0044](0044-case-inbox-and-follow-up-wakes.md)) |
 | [0042](0042-admin-role-and-share-permission.md) | Admin role and share permission (`members.role` `admin` \| `member`; Owner stays [0010](0010-owner-auth-session.md); Admin opens Providers, Members invite/list, Dashboard read; Member grants only own personal Bots; Case / roster stay person Participant; Admin day-to-day / Owner keys [0043](0043-target-personas.md); docs only) |
-| [0043](0043-target-personas.md) | Target personas (Owner-operator = Collective N=1; Team 2–15 leads; Member secondary; Case inbox + follow-up Wakes [0044](0044-case-inbox-and-follow-up-wakes.md); Admin Cluster Bot list + Member onboarding should next; one MCP after first external Collective; docs only) |
+| [0043](0043-target-personas.md) | Target personas (superseded by [0049](0049-dev-factory-direction.md); historical: Owner-operator = Collective N=1; Team 2–15 led the roadmap; Member secondary) |
 | [0044](0044-case-inbox-and-follow-up-wakes.md) | Case inbox and follow-up Wakes (filter chips on the messenger Threads list, `?caseStatus=open`; one-shot follow-up Wake on the Case Thread; `followUpAt` + `followUpBotId` on `threads`; amends [0027](0027-bot-schedules.md); docs only) |
 | [0045](0045-pack-catalog-on-marketing-site.md) | Marketplace on the marketing site (dostigus.ru `/marketplace`; Packs first catalog kind; `/packs` 301; Host Closet out-link; Pro out of public field; not in-product Apply; amended 2026-10-02: Closet Параметры Pack row; amended 2026-10-02: Site locale URLs [0046](0046-site-i18n-url-prefix.md); amended 2026-10-02: Catalog Store on cloud + deep-link Apply [0047](0047-marketplace-catalog-store.md) supersede static-only catalog and copy-URL-only CTA; amended 2026-10-02: Mailer listing after Host tools [0048](0048-mailer-product.md)) |
 | [0046](0046-site-i18n-url-prefix.md) | Site i18n URL prefix (dostigus.ru `prefix_except_default`; unprefixed = RU, EN `/en/...`; first visit RU; URL wins over cookie; hreflang + `x-default` RU; one sitemap; Host out-link stays RU; docs only) |
 | [0047](0047-marketplace-catalog-store.md) | Marketplace Catalog Store (on marketing site / dostigus.ru, not Platform Host; hybrid `{id}-{version}.zip` mirror; public read API; deep-link `applyPack=` cloud zip → `PackApplySheet`; Host #189 misplaced / removed; Host-pulled catalog still rejected; Nick publish v1; migrate Kitchen / Mail / Reader; docs only; amended 2026-10-02: Mailer product is [0048](0048-mailer-product.md)) |
-| [0048](0048-mailer-product.md) | Mailer product (IMAP / SMTP Pack `dostigus.mailer`; Cluster Bot mail binding; mailbox host is Closet bind; no Cluster mail allowlist; Host `dostigus_mail_list` / `mail_get` / `mail_send`; draft send until confirm; one mailbox per Bot; `daily`/`weekly` Wake; not `dostigus.mail`; Pack/Bot security limits stay on the Bot; casual-platform rule in CONTEXT Settings; amended 2026-10-03 docs only) |
+| [0048](0048-mailer-product.md) | Mailer product (frozen 2026-11-21 by [0049](0049-dev-factory-direction.md); IMAP / SMTP Pack `dostigus.mailer`; Cluster Bot mail binding; mailbox host is Closet bind; no Cluster mail allowlist; Host `dostigus_mail_list` / `mail_get` / `mail_send`; draft send until confirm; one mailbox per Bot; `daily`/`weekly` Wake; not `dostigus.mail`; no new Mailer features) |
+| [0049](0049-dev-factory-direction.md) | Dev factory direction (supersedes [0040](0040-collective-host-direction.md) direction and [0043](0043-target-personas.md) audiences; amends [0005](0005-self-host-first.md): cloud Host on de2, compose stays possible; business world and technical world; Grill; Approve and Release; Builder is a cloud coding agent; Run replaces Job; Kitchen and Mailer frozen; docs only) |
+| [0050](0050-dev-factory-domain-model.md) | Dev factory domain model (Project, Repo link, Commands, Task modes `quick`/`bug`/`feature`/`epic`, Ticket, Grill session, Decision, Spec, Run / Stage / Gate, Audit, Finding, Retro, Integration; knowledge in git; work in the Store; Architect memory in Context from S1/S2; docs only) |
+| [0051](0051-architect-context-and-skills.md) | Architect, Context, and vendored skills (external Architect via MCP first; built-in Bot later; Project token; Context at `context.kosarev.space` is memory from S1/S2; task context pack; Pack `dostigus.architect`; skills under `skills/`; `to-tickets` adapted; docs only) |
+
+## Proposed backlog
+
+Not records. Do not create a file until a slice needs more than
+[0049](0049-dev-factory-direction.md),
+[0050](0050-dev-factory-domain-model.md), and
+[0051](0051-architect-context-and-skills.md). Titles come from
+[`docs/mvp.md`](../mvp.md). The next file number is **0052**, whatever
+title is written first.
+
+| Proposed title | Already decided |
+| --- | --- |
+| Task, Ticket, and the board (Host UI; GitHub issues unused) | Shape in [0050](0050-dev-factory-domain-model.md) |
+| Grill session: rounds, options, recommended answer, outcomes (Host UI) | Shape in [0050](0050-dev-factory-domain-model.md) |
+| Knowledge in git: Decisions and Specs as repo files, Store keeps refs | [0050](0050-dev-factory-domain-model.md) |
+| Run, Stage, and Gate: mode routes, retry cap, human-only gates | Shape in [0050](0050-dev-factory-domain-model.md) |
+| Builder runners: Cursor cloud agents API and Codex on de2 | Named in [0049](0049-dev-factory-direction.md); adapter contract open |
+| Orchestrator in the Host | Redefined in [0049](0049-dev-factory-direction.md); ticker open |
+| Visual proof and automated review | Named in [0049](0049-dev-factory-direction.md) |
+| Release through Dokploy | Named in [0049](0049-dev-factory-direction.md) |
+| Vendored skills update process | First vendor is [0051](0051-architect-context-and-skills.md) |
+| Audit runs and Findings to Grill | Shape in [0050](0050-dev-factory-domain-model.md) |
+| Retro loop | Shape in [0050](0050-dev-factory-domain-model.md) |
+| Project Integrations and secrets | Shape in [0050](0050-dev-factory-domain-model.md) |
+| Freeze Kitchen and Mailer | Decided in [0049](0049-dev-factory-direction.md). No further record unless unfreezing |

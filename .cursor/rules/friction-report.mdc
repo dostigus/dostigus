@@ -3,7 +3,7 @@ description: Report process friction before finishing a PR or final report
 alwaysApply: true
 ---
 
-Before finishing a pull request or a final report, include a short **Friction** section. This applies to every Cursor agent on this repo (a Platform git agent, distinct from Builder). Prefer honest process pain over a clean story. Do not skip the section because checks are green.
+Before finishing a pull request or a final report, include a short **Friction** section. This applies to every Cursor agent on this repo, including a Builder the Orchestrator started and an agent editing the Platform by hand. Prefer honest process pain over a clean story. Do not skip the section because checks are green.
 
 Required bullets (write “none” when a bullet is empty):
 

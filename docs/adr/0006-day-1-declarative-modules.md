@@ -6,6 +6,10 @@
   mini-app ([ADR 0039](0039-pack-vs-bot-portable-recipe.md)), not
   arbitrary in-cluster module code. This record stays declarative
   Module packages.
+- Amended: 2026-11-21 — "Builder Job" below uses the retired meaning.
+  Job is retired. A Builder does not write a Module package
+  ([ADR 0049](0049-dev-factory-direction.md)). Declarative Module
+  packages stay this record.
 
 ## Decision
 

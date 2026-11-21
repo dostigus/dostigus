@@ -42,8 +42,10 @@
 Pack Apply stays
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md): file, public
 `.zip` URL, or https git, preview / plan, then confirm.
-Collective Host direction stays
-[ADR 0040](0040-collective-host-direction.md). Module package
+Product direction is [ADR 0049](0049-dev-factory-direction.md).
+The historical Collective Host direction was
+[ADR 0040](0040-collective-host-direction.md). This catalog stays.
+Module package
 Apply stays later
 ([ADR 0030](0030-chat-cards-module-catalog.md)). Kitchen stays
 a Host seed, not a Pack in this Host

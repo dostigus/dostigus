@@ -12,9 +12,14 @@
   [ADR 0044](0044-case-inbox-and-follow-up-wakes.md).
   On-thread fields, person-Participant write, and no
   `/cases` page still stand.
+- Amended: 2026-11-21 — Case stays for plain Collective chats
+  (`group` / `room`). Project work is a Task
+  ([ADR 0049](0049-dev-factory-direction.md),
+  [ADR 0050](0050-dev-factory-domain-model.md)).
 
-Collective Host direction stays
-[ADR 0040](0040-collective-host-direction.md). Threads and Bot
+Product direction is
+[ADR 0049](0049-dev-factory-direction.md). This record's on-thread
+shape stays for those chats. Threads and Bot
 visibility stay [ADR 0024](0024-threads-and-bot-visibility.md).
 Household Members stay [ADR 0012](0012-household-members.md).
 This record names the glossary term, the Store shape, and the

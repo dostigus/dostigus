@@ -1,6 +1,9 @@
 # Deploy a Cluster
 
-Self-host path ([ADR 0005](adr/0005-self-host-first.md)). Day-1 is one Host
+The factory's default run is the cloud Host on de2
+([ADR 0049](adr/0049-dev-factory-direction.md)). This page is the
+self-host path, which remains possible
+([ADR 0005](adr/0005-self-host-first.md)). Day-1 is one Host
 image; the Cluster Store lives on a named Docker volume, not in the image.
 
 ## Local compose

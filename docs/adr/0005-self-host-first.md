@@ -2,20 +2,31 @@
 
 - Status: accepted
 - Date: 2026-09-21
+- Amended: 2026-11-21 — The dev factory runs as a cloud Host on de2
+  (`dostigus.kosarev.space`, Dokploy). Compose below stays a possible
+  Cluster. It is not the factory default. See
+  [ADR 0049](0049-dev-factory-direction.md). Multi-tenant SaaS, billing,
+  and a hosted identity stay out.
 
 ## Decision
 
-The default product path is self-host: `docker compose up` against
-`docker/compose.yml`. Optional managed hosting may come later. Day-1 Cluster
-store is Drizzle + SQLite (Postgres later is fine). Household users and
-marketplace are not day-1. Public share is narrow object links, not a hosted
-multi-tenant cloud.
+The factory's run is the cloud Host on de2
+([ADR 0049](0049-dev-factory-direction.md)). Self-host remains possible:
+`docker compose up` against `docker/compose.yml`. The original default
+was self-host, with managed hosting later. That default is amended.
+Day-1 Cluster store is Drizzle + SQLite (Postgres later is fine).
+Household users and marketplace are not day-1. Public share is narrow
+object links, not a hosted multi-tenant cloud.
 
 ## Context
 
-Dostigus is an agent OS you run. Cloud-first would invert the trust model
-(keys, notes, Bot data). Compose is the smallest honest “run this at home”
-surface.
+Dostigus began as an agent OS you run. Cloud-first, for that shape,
+would invert the trust model (keys, notes, Bot data). Compose is the
+smallest honest “run this at home” surface. The factory in
+[ADR 0049](0049-dev-factory-direction.md) is a different default: one
+cloud Host Nick operates, still this image and this Store, not a
+multi-tenant service. Compose stays for a Cluster that is not that
+factory.
 
 ## Consequences
 
@@ -35,5 +46,8 @@ surface.
 
 ## Alternatives
 
-- Managed-only — rejected as the default.
+- Managed-only, with no compose path — rejected. Compose stays.
 - Kubernetes-first — rejected for day-1; compose is enough.
+- Keeping self-host as the factory default after
+  [ADR 0049](0049-dev-factory-direction.md) — rejected. The factory
+  runs on de2. Compose remains possible.

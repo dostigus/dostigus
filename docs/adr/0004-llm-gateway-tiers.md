@@ -8,6 +8,7 @@
 - Amended: 2026-09-25 — Binding, resolve, and escalate are [ADR 0036](0036-llm-providers-tier-resolve-escalate.md). This record still owns the OpenAI-compatible gateway shape and transient *same-model* retry (timeout / abort / network / HTTP 429 / HTTP 5xx on that one completion). Escalate is an upshift of Model tier / Provider after a soft or hard failure. [ADR 0036](0036-llm-providers-tier-resolve-escalate.md) supersedes the sentence that free / random model roulette is toy only: OpenRouter Policy `free` is allowed on `cheap` and `toy` for casual.
 - Amended: 2026-09-25 — OpenRouter Settings catalog, quality shelf, Advanced pin, and Settings information architecture stay [ADR 0036](0036-llm-providers-tier-resolve-escalate.md). This record still owns the gateway shape and the same-model retry.
 - Amended: 2026-09-26 — The Store key lives on Provider `apiKey` only ([ADR 0036](0036-llm-providers-tier-resolve-escalate.md)). This record still owns the gateway shape, the same-model retry, and the compose env override.
+- Amended: 2026-11-21 — **Builder** is a cloud coding agent ([ADR 0049](0049-dev-factory-direction.md)). The chat Bot is still not a Builder. A Builder does not write Module packages. **Job** in the consequences below is the retired term.
 
 ## Decision
 
