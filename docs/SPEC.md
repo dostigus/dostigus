@@ -15,7 +15,10 @@ Narrative: [`docs/vision.md`](vision.md). Slices: [`docs/mvp.md`](mvp.md).
 Settled in [ADR 0049](adr/0049-dev-factory-direction.md). The business
 sees Projects, Tasks, a Grill, proofs, and the Gates Approve and
 Release. The technical world is Repo links, Commands, Tickets, Runs,
-and Builders. One Architect per Project. Memory is Context from S1
+and Builders. One Architect per Project. Memory is a Context instance
+dedicated to Dostigus, from S1. The Host reads `NUXT_CONTEXT_URL` and
+`NUXT_CONTEXT_TOKEN` (area `dostigus`). The Architect reaches Context
+only through the Host proxy
 ([ADR 0051](adr/0051-architect-context-and-skills.md)). The domain
 model is [ADR 0050](adr/0050-dev-factory-domain-model.md).
 

@@ -24,10 +24,14 @@ long-term memory lives in Context.**
 The linked repo holds ADRs, Specs, and the glossary. Agents read them
 from git without the Host. The Store holds the Project, the board, Grill
 sessions, Runs, Gates, Audits, Retros, and links to those files. Context
-(https://github.com/hmbanan666/context, `context.kosarev.space`) holds
-distilled facts and decisions for the Project, the project profile, the
-journal, and the task context pack. The Store does not copy that corpus.
-It stores the Context project id.
+([hmbanan666/context](https://github.com/hmbanan666/context)) holds
+facts and decisions for the Project, the project profile, the journal,
+and the task context pack. The instance is dedicated to Dostigus. The
+Host reaches it through `NUXT_CONTEXT_URL` and `NUXT_CONTEXT_TOKEN`
+([ADR 0051](0051-architect-context-and-skills.md)). The Store does not
+copy that corpus. It stores the Context project id. Grill sessions,
+Runs, and Gates stay Store rows. Context receives the resulting
+decision and a `note` document keyed `grill-<id>`.
 
 **Job** is not a term. A unit of business work is a **Task**. A technical
 slice of a Task is a **Ticket**. One execution of one Stage is a **Run**.
@@ -147,47 +151,49 @@ record is. The skill file can follow later.
 ### Integration
 
 A connection from the Project to something outside the Host: `projectId`,
-`kind` (`mcp` | `http` | `dokploy` | `github` | `context`), `name`,
-`url`, `secretRef`, `scopes`, `readOnly`.
+`kind` (`mcp` | `http` | `dokploy` | `github`), `name`, `url`,
+`secretRef`, `scopes`, `readOnly`.
 
 Secret values stay in the Store, the same way a Provider `apiKey` does.
 Callers see names, not values.
 
-`kind=context` is the binding to Context for this Project (URL
-`https://context.kosarev.space/mcp`, `contextProjectId`). It is required
-from slice S1, not a later extra. The external Architect may hold the
-Context credential on that agent in S1. The Host still stores the project
-id and the URL. A Host-held secret is required when the built-in
-Architect calls Context in-process
+Context is not an Integration row. One Host process, one area token,
+one URL in env. Every Project on that Cluster uses that instance. The
+Project row holds `contextProjectId` only
 ([ADR 0051](0051-architect-context-and-skills.md)).
 
 ### Context memory (not a Store table)
 
-Context stores immutable sources and distills facts and decisions tagged
-with the project id. The Owner writes the **project profile**. Context's
-tidy writes the weekly **journal**. A **task context pack** is one
-`search` with `mode: "pack"` for that project and a Task query.
+Context stores immutable sources. Facts and decisions are tagged with
+the project id. The project profile is a document, `doc.type: profile`,
+written through `remember`. Context's tidy writes the weekly
+**journal** when it has one. The distill processor may stay off. A
+**task context pack** is one `search` with `mode: "pack"` for that
+project and a Task query.
 
 Context sizes the pack with `budgetBytes` (512–65536, default 8192). The
 factory treats that cap as the N-token budget for the Task. The pack
-keeps the profile to about a fifth of the budget, then distilled
-decisions and facts ranked for the query (proposed decisions stay
-labelled), then at most two matching journals and two uncited sources.
-The Architect loads a pack at the start of a Grill session and at the
-start of a Run. Dostigus does not re-host those rows.
+keeps the profile to about a fifth of the budget, then decisions and
+facts ranked for the query (proposed rows stay labelled), then at most
+two matching journals and two uncited sources. The Architect loads a
+pack at the start of a Grill session and at the start of a Run, through
+the Host proxy. Dostigus does not re-host those rows.
 
-Closing a Grill session that proceeds writes the decisions through
-Context `remember`, with the project id. An ADR that lands may also be
-stored as a Context document (`doc` type `adr`). Slice S2 is done only
-when a later session can cite that decision from a pack without rereading
-the Chat thread.
+Closing a Grill session that proceeds writes the resulting decision
+(`metadata.kind: decision`, status proposed until the Owner approves
+it in the Host) and a `note` document keyed `grill-<id>`. The Grill
+session itself stays in the Store. Slice S2 is done only when a later
+session can cite that decision from a pack without rereading the Chat
+thread.
 
 ## Context
 
 [ADR 0049](0049-dev-factory-direction.md) names the factory and leaves
 the nouns to this record. The Russian MVP draft treated Context as a
 later Integration. Nick changed that: Context is the Architect's memory
-from S1 and S2. This record is that change, together with
+from S1 and S2, on an instance dedicated to Dostigus. It is not a
+personal Context and not a per-Project Integration. This record is
+that change, together with
 [ADR 0051](0051-architect-context-and-skills.md).
 
 Case already exists on Collective chats. Reusing Case for the board
@@ -225,3 +231,7 @@ later and is not what a Builder does.
 - Let the Architect pass Approve and Release through MCP — rejected.
 - Unlimited implement retries — rejected. The cap is 3, then the
   Architect decides.
+- Use a personal Context, or store its URL on the Project — rejected.
+  One dedicated instance. The URL is `NUXT_CONTEXT_URL`.
+- Give the Architect the Context token — rejected. The Host holds
+  the area token and injects `project`.

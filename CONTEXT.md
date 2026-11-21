@@ -929,24 +929,33 @@ proposal becomes a Ticket. Categories: `navigation`, `checks`,
 _Avoid_: Audit, postmortem (as a second product noun).
 
 **Integration**:
-A Project's connection outward: kind `mcp`, `http`, `dokploy`,
-`github`, or `context`. Name, URL, secret ref, scopes, read-only
-flag. Secret values stay in the Store, like a Provider key. Callers
-see names. `kind=context` is required from S1. Not a Pack integration
-stub (those are env names inside a Pack).
-_Avoid_: Provider (an LLM gateway instance), Pack stub, plugin.
+A Project's connection outward: kind `mcp`, `http`, `dokploy`, or
+`github`. Name, URL, secret ref, scopes, read-only flag. Secret
+values stay in the Store, like a Provider key. Callers see names.
+Not a Pack integration stub (those are env names inside a Pack).
+Context is not an Integration. The Host has one Context for the
+Cluster.
+_Avoid_: Provider (an LLM gateway instance), Pack stub, plugin,
+treating Context as a per-Project Integration.
 
 **Context**:
-The Architect's long-term memory. The service at
-`context.kosarev.space`
+The Architect's long-term memory. A Context instance dedicated to
+Dostigus, on de2, run by the Context maintainer
 ([hmbanan666/context](https://github.com/hmbanan666/context)).
-Distilled facts and decisions tagged with the Project, a project
-profile the Owner writes, a weekly journal, and a task context pack.
-Not Chat LLM context. Not this file. The Store keeps the Context
-project id. It does not copy the corpus. In the MVP from S1 and S2
+The Host reads the URL from `NUXT_CONTEXT_URL` and the bearer from
+`NUXT_CONTEXT_TOKEN` (one token, area `dostigus`). The Architect
+reaches it only through the Dostigus MCP surface. The Host proxies
+the call and injects `project`. Facts and decisions are tagged with
+the Project. The profile is a document (`doc.type: profile`). A
+weekly journal and a task context pack are reads. The Store keeps
+`contextProjectId`. It does not copy the corpus. Grill sessions,
+Runs, and Gates stay in the Store. A Grill that proceeds also writes
+the decision and a `note` document keyed `grill-<id>`. In the MVP
+from S1 and S2
 ([ADR 0051](docs/adr/0051-architect-context-and-skills.md)).
 _Avoid_: Chat LLM context, [`CONTEXT.md`](CONTEXT.md) (this glossary),
-prompt dump, a second memory store inside Dostigus.
+prompt dump, a personal Context, a hardcoded Context host, a second
+memory store inside Dostigus, an Architect-held Context token.
 
 **Task context pack**:
 One Context `search` with `mode: "pack"` for a Project and a Task

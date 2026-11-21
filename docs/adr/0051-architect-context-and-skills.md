@@ -2,6 +2,11 @@
 
 - Status: accepted
 - Date: 2026-11-21
+- Amended: 2026-11-21 — Nick: Architect memory is a Context
+  instance dedicated to Dostigus, on de2, run by the Context
+  maintainer. It is not a personal Context. The Host holds one
+  area token. The URL is `NUXT_CONTEXT_URL`. This record does not
+  name a host.
 
 Direction is [ADR 0049](0049-dev-factory-direction.md). The domain model
 is [ADR 0050](0050-dev-factory-domain-model.md). The Chat tool loop the
@@ -55,6 +60,11 @@ Audit and Retro: `dostigus_audits_start`, `dostigus_findings_put`,
 
 HQ: `dostigus_integrations_list`, `dostigus_integrations_call`.
 
+Context proxy: `dostigus_context_search`, `dostigus_context_remember`,
+`dostigus_context_read`, `dostigus_context_timeline`. The Host injects
+area `dostigus` and `project`. The caller does not send the Context
+bearer.
+
 Release: `dostigus_releases_start`.
 
 Already on the MCP surface, and still available: `dostigus_messages_create`
@@ -64,32 +74,66 @@ Already on the MCP surface, and still available: `dostigus_messages_create`
 ### Memory is Context, from S1
 
 The Architect's long-term memory is **Context**
-([hmbanan666/context](https://github.com/hmbanan666/context),
-`context.kosarev.space`). It is not "the Chat thread plus the repo,
-until later".
+([hmbanan666/context](https://github.com/hmbanan666/context)). The
+instance is dedicated to Dostigus. It runs on de2. The Context
+maintainer runs it. It is not Nick's personal Context, and this
+record does not name that other host.
 
-Context's tools are its own: `search`, `remember`, `read`, `timeline`.
-Dostigus does not rename them. The Architect calls Context with a token
-bound to the Project (`--project` on that service). `search` with
-`mode: "pack"` returns one **task context pack** inside the byte budget
-described in [ADR 0050](0050-dev-factory-domain-model.md). `remember`
-writes a note, a fact, or a decision tagged with that project.
+The public URL is not final. The Host reads it from
+`NUXT_CONTEXT_URL`. Docs do not hardcode a host. The credential is
+`NUXT_CONTEXT_TOKEN`: one area token for area `dostigus`, held by
+the Host process. It is not a per-Project secret and not a token on
+the Architect.
+
+The external Architect and the built-in Architect reach Context only
+through the Dostigus MCP surface. The Host proxies
+`search`, `remember`, `read`, and `timeline`. The tools on that
+surface are `dostigus_context_search`, `dostigus_context_remember`,
+`dostigus_context_read`, and `dostigus_context_timeline`. The caller
+does not send `project`, the area, or the Context bearer. The Host
+sets area `dostigus`, sends `NUXT_CONTEXT_TOKEN`, and injects
+`project` from the Project row.
+
+`search` with `mode: "pack"` returns one **task context pack** inside
+the byte budget in [ADR 0050](0050-dev-factory-domain-model.md).
 `read` loads a profile, a journal, or a document by id.
 
-From **S1**: creating the Dostigus Project records `contextProjectId`
-and the Context URL on the `kind=context` Integration. The external
-Architect can fetch a task context pack for that id before it cuts
-Tickets. The profile is readable.
+Grill sessions, Runs, and Gates stay in the Store. Context does not
+store those rows. When a Grill session closes with `proceed`, the
+Host writes two things: the resulting decision, and a `note` document
+whose key is `grill-<id>` (the Grill session id). An ADR that merges
+may also be stored as a Context document (`doc` type `adr`).
 
-From **S2**: a Grill session that proceeds is written to Context with
-the project id. An ADR that merges may be stored as a Context document.
-A later session loads a pack and can cite the earlier decision without
-the old Chat thread.
+From **S1**: the Host has `NUXT_CONTEXT_URL` and
+`NUXT_CONTEXT_TOKEN`. The first `remember` for a Project creates the
+Context project (token flag `--create-projects`). The Host stores the
+returned id on `contextProjectId`. The external Architect reads a
+task context pack through the proxy before it cuts Tickets.
 
-The built-in Architect (S7) uses the same Context project. If it cannot
-hold the credential itself, the Host stores that secret like a Provider
-key and calls Context in-process. S1 does not require that proxy. The
-external Architect already can.
+From **S2**: a later session loads a pack and can cite the earlier
+decision without the old Chat thread.
+
+The built-in Architect (S7) uses the same proxy and the same env
+token. It does not hold a second Context credential.
+
+#### Context capabilities this record relies on
+
+These are being added upstream in Context. S1 and S2 depend on them.
+The Dostigus instance may leave the distill processor off. Facts and
+decisions do not wait for that processor.
+
+- Token flag `--create-projects`. The Host creates a Context project
+  on the first `remember` for a Dostigus Project.
+- `remember.metadata.kind` is `decision` or `fact`. Context stores
+  that row immediately as **proposed**. No distill pass is required.
+- Token flag `--may-approve`. The Host may send
+  `metadata.status: approved` only for the Owner's explicit approve
+  click in the Host. That click approves a proposed fact or decision.
+  It is not a Gate. Gates stay in the Store, and the MCP surface
+  still cannot pass a Gate.
+- `doc.type: profile` on `remember` writes the project profile.
+- A Grill that proceeds also writes `doc` type `note`, key
+  `grill-<id>`, with the session id from the Store.
 
 ### Skills
 
@@ -128,12 +172,13 @@ Task on Dostigus.
 
 Chat history is a thin memory. The repo holds the decisions that were
 written down. Neither is a project profile, a journal, or a pack that
-fits a budget. Context already does those three, on
-`context.kosarev.space`, with a project id on each distilled fact and
-decision. The MVP draft said to add it later as an ordinary
-Integration. That waits too long: S1 and S2 are when the Architect
-starts to accumulate decisions. Those decisions have to be recoverable
-on the next Task.
+fits a budget. Context does those three, on a project id. The MVP
+draft said to add it later, and the first draft of this record pointed
+the Host at a personal Context. Nick rejected both on 2026-11-21.
+Memory is a Context instance for Dostigus only, from S1. The
+Architect never holds that credential. One area token on the Host
+keeps every Project in area `dostigus`, and the Host injects which
+project a call is for.
 
 `.cursor/skills/` is for agents editing this monorepo (Host and Kit
 taste). Architect skills do not go there. They would load into every
@@ -143,10 +188,13 @@ Platform editing session.
 
 - Docs and vendored skill files only. No MCP handler, no Project token
   issuer, and no Pack zip in this record.
-- S1 done includes a Context project id on the Dostigus Project and a
-  pack the external Architect can read.
-- S2 done includes a Grill outcome stored in Context and read back
-  from a later pack.
+- S1 done includes `NUXT_CONTEXT_URL` and `NUXT_CONTEXT_TOKEN` on the
+  Host, a `contextProjectId` created on first `remember`, and a pack
+  the external Architect reads through the proxy.
+- S2 done includes a Grill `proceed` that writes a proposed decision
+  and a `note` document keyed `grill-<id>`, then a later pack that
+  cites that decision. An Owner approve click in the Host is what
+  sets `metadata.status: approved`.
 - Pack `dostigus.architect` is the delivery name. The tree in
   `skills/` is the source of the Skill files inside it.
 - The overlay in `skills/README.md` is binding for every vendored
@@ -159,11 +207,17 @@ Platform editing session.
 - A second tool set for the built-in Bot — rejected. One list.
 - Memory is the repo and the Task thread until a later Integration —
   rejected. Context starts at S1.
-- Copy Context rows into the Store — rejected. The Store keeps the
-  project id and the Integration link.
+- Copy Context rows into the Store — rejected. The Store keeps
+  `contextProjectId`. The URL and the area token stay in Host env.
 - Fetch skills from GitHub at run time — rejected. They are vendored.
 - Install the vendored skills into `.cursor/skills/` — rejected. That
   directory is for Platform editing.
 - Leave `to-tickets` publishing GitHub issues — rejected. The board
   is Tasks and Tickets.
 - Let the Project token pass a Gate — rejected.
+- Use a personal Context as Dostigus memory — rejected on
+  2026-11-21. The instance is dedicated to Dostigus.
+- Give the external Architect its own Context token — rejected.
+  One area token stays on the Host. The Architect uses the proxy.
+- Hardcode the Context host — rejected. The URL is not final.
+  `NUXT_CONTEXT_URL` is the only place it lives.

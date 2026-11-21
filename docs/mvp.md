@@ -26,12 +26,20 @@ The model those nouns point at is
 [ADR 0050](adr/0050-dev-factory-domain-model.md). This plan does not
 repeat every field.
 
-**Context** (https://github.com/hmbanan666/context,
-`context.kosarev.space`) is the Architect's long-term memory from S1
-and S2: distilled facts and decisions tagged with the Project, the
-project profile, the journal, and a task context pack inside a budget
-(`budgetBytes` on Context; the factory treats that cap as N tokens).
-The draft of this plan said "not in the MVP". That is reversed.
+**Context** (https://github.com/hmbanan666/context) is the Architect's
+long-term memory from S1 and S2. The instance is dedicated to
+Dostigus, on de2, run by the Context maintainer. It is not a personal
+Context. The Host connects with `NUXT_CONTEXT_URL` and
+`NUXT_CONTEXT_TOKEN` (area `dostigus`, one token on the Host). The
+external Architect reaches Context only through Dostigus MCP. The
+Host proxies and injects `project`. The URL is configurable. These
+docs do not name a host. Memory is facts and decisions tagged with
+the Project, the project profile, the journal, and a task context
+pack inside a budget (`budgetBytes` on Context; the factory treats
+that cap as N tokens). Grill sessions, Runs, and Gates stay in the
+Store. Context receives the resulting decision and a `note` document
+keyed `grill-<id>`. The draft of this plan said "not in the MVP".
+That is reversed.
 
 ## Where it runs
 
@@ -108,10 +116,14 @@ in-process ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)). One set:
   `dostigus_artifacts_put`, `dostigus_skills_*`,
   `dostigus_schedules_*`, `dostigus_turns_*`
 
-Context is not in that list. The Architect calls Context's own tools
-(`search`, `remember`, `read`, `timeline`) with a project-scoped
-token. A Gate cannot be passed through MCP. `gates` only requests.
-A person decides in the Host.
+Context proxy: `dostigus_context_search`,
+`dostigus_context_remember`, `dostigus_context_read`,
+`dostigus_context_timeline`. The Host adds area `dostigus`, the
+bearer from `NUXT_CONTEXT_TOKEN`, and `project` from the Project.
+The Architect does not call Context itself. A Gate cannot be passed
+through MCP. `gates` only requests. A person decides in the Host.
+Approving a proposed fact or decision is a separate Owner click. It
+sends `metadata.status: approved`. It does not pass a Gate.
 
 ## Slices
 
@@ -134,26 +146,31 @@ Orchestrator. Job is absent.
 for Project, Repo link, Commands, Task, Ticket. A Project screen on
 the Host, Kit only: a board by status, a Task card with attachments,
 Chat with the Architect (bot-thread). MCP tools for the Project,
-Tasks, and Tickets. A Project token. The Project row stores
-`contextProjectId` and the Context URL. The external Architect can
-load a task context pack for that id.
+Tasks, and Tickets. A Project token. The Host has `NUXT_CONTEXT_URL`
+and `NUXT_CONTEXT_TOKEN`. The first `remember` creates the Context
+project (`--create-projects`) and the Host stores
+`contextProjectId`. The external Architect loads a task context pack
+through the proxy.
 Done: Nick creates the Dostigus Project and three real Tasks on it.
 Grok Bot, through MCP, reads them, cuts Tickets, and moves statuses.
 From that day Dostigus gets no new GitHub issues. The same Bot reads
-a task context pack for the Project from Context before it cuts
-Tickets.
+a task context pack for the Project through the Host before it cuts
+Tickets. It has no Context token of its own.
 
 **S2. Grill, and decisions in Context.** Grill session and questions.
 A Sheet of rounds: options on Kit chips, the recommended answer
 marked, one control that accepts every recommendation, free text for
 another answer. A Chat line when new questions are waiting. Decision
 and Spec are links to a pull request. On close with outcome
-`proceed`, the Architect `remember`s the decisions in Context under
-the project id.
+`proceed`, the Host writes the resulting decision to Context
+(`metadata.kind: decision`, proposed immediately, no distill
+processor) and a `note` document keyed `grill-<id>`. The Grill
+session stays in the Store. The Owner's approve click in the Host
+sets `metadata.status: approved` (`--may-approve` on the area token).
 Done: one real Dostigus Task goes through at least two rounds in the
 UI and produces a merged ADR. Another closes as "not needed". A later
-session loads a task context pack and cites the merged decision
-without the old Chat thread.
+session loads a task context pack through the Host and cites the
+merged decision without the old Chat thread.
 
 **S3. Runs through Cursor cloud agents, and Gates.** A runner adapter
 for Cursor, the Orchestrator ticker, Gates Approve and Release, a
@@ -225,8 +242,11 @@ reversal.
    repo, through pull requests, so agents can read them without
    Dostigus. Tasks, Tickets, Grills, Runs, and Gates in the Store.
    Architect memory in Context, not in the Store.
-4. **Architect memory.** Context, from S1 and S2. The draft recommended
-   waiting. That recommendation is rejected.
+4. **Architect memory.** A Context instance dedicated to Dostigus,
+   from S1 and S2. The Host holds `NUXT_CONTEXT_URL` and one area
+   token. The Architect uses the Host proxy. The draft recommended
+   waiting, and an earlier note in this plan pointed at a personal
+   Context. Both are rejected.
 5. **Codex in the first pipeline?** S3 is Cursor cloud agents only.
    Codex on de2 is the second adapter in S4, behind the same Run
    interface.

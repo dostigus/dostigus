@@ -43,6 +43,8 @@ key in the Host.
 | `LLM_MODEL_CHEAP` / `LLM_MODEL_STRONG` / `LLM_MODEL_CODE` / `LLM_MODEL_TOY` | no | Per–Model tier override. |
 | `LLM_DEFAULT_TIER` | no | Default Model tier (`cheap` \| `strong` \| `code` \| `toy`). |
 | `NUXT_AGENT_TOKEN` | no | Bearer for the MCP surface at `/mcp`. Empty → tools stay disabled. |
+| `NUXT_CONTEXT_URL` | no | Base URL of the Context instance dedicated to Dostigus. Configurable. Docs do not fix a host. Unset → the Host does not call Context ([ADR 0051](adr/0051-architect-context-and-skills.md)). |
+| `NUXT_CONTEXT_TOKEN` | no | One area token for area `dostigus` on that instance. The Host holds it and proxies Architect calls. Not a personal Context token. |
 | `DOSTIGUS_MCP_TOKEN` | no | Alias for `NUXT_AGENT_TOKEN` when that var is unset. |
 | `HTTPS_PROXY` / `HTTP_PROXY` | no | LLM client outbound proxy ([ADR 0033](adr/0033-cluster-outbound-llm-vs-bot-http-proxy.md)). An `https` gateway URL uses `HTTPS_PROXY` if set, else `HTTP_PROXY`. An `http` gateway URL uses `HTTP_PROXY`. Unset or empty = direct. Not used for Bot HTTP egress. |
 | `DOSTIGUS_HTTP_PROXY` | no | Bot HTTP egress (`dostigus_http_get`). One URL for `http` and `https` destinations. Unset or empty = direct. An invalid non-empty URL is a tool error. Never inherits `HTTPS_PROXY`. |

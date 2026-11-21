@@ -13,8 +13,10 @@
    contract is its interface definition). Pack ≠ Bot ≠ Module package.
    **Job** is retired. A **Run** is one Stage. **Builder** is a cloud coding
    agent the Architect starts (Cursor cloud agent or Codex), not a
-   Module-package writer. **Context** is the Architect's memory service,
-   not this glossary and not Chat LLM context. **Case** is only for plain
+   Module-package writer. **Context** is the Architect's memory service
+   (a Dostigus instance; `NUXT_CONTEXT_URL`; the Host holds the area
+   token and proxies), not this glossary and not Chat LLM context.
+   **Case** is only for plain
    Collective chats. Kitchen and Mailer are frozen.
    Closet Import accepts a file or a public `.zip` URL / https git
    (shallow), preview → confirm

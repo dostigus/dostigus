@@ -91,12 +91,17 @@ writes ADRs, and starts agents. The built-in Architect is the last
 slice.
 
 Long-term memory is **Context**
-([hmbanan666/context](https://github.com/hmbanan666/context),
-`context.kosarev.space`): distilled facts and decisions tagged with the
-Project, a project profile, a journal, and a task context pack inside
-a budget. It is in the MVP from S1 and S2
+([hmbanan666/context](https://github.com/hmbanan666/context)): a
+Context instance dedicated to Dostigus, on de2, run by the Context
+maintainer. It is not a personal Context. The Host reads the URL from
+`NUXT_CONTEXT_URL` and holds one area token (`NUXT_CONTEXT_TOKEN`,
+area `dostigus`). The Architect reaches Context only through the
+Dostigus MCP surface. The Host proxies the call and injects the
+Project. Facts and decisions are tagged with that Project. A project
+profile, a journal, and a task context pack sit inside a budget. It
+is in the MVP from S1 and S2
 ([ADR 0051](adr/0051-architect-context-and-skills.md)), not a later
-add-on.
+add-on. The URL is not fixed in these docs.
 
 ## Builders
 

@@ -23,7 +23,8 @@ tracker (often GitHub). On Dostigus:
 - Human **Gates** (Approve, Release) are not tool calls. The Architect
   requests a Gate. A person decides it in the Host.
 - Before a Grill session or a Run, the Architect loads a **task context
-  pack** from **Context** for that Project
+  pack** through the Host proxy of **Context**. It does not call Context
+  with its own token. The Host injects the Project
   ([ADR 0051](../docs/adr/0051-architect-context-and-skills.md)).
 
 ## Run stages
