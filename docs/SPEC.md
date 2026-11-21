@@ -22,10 +22,13 @@ only through the Host proxy
 ([ADR 0051](adr/0051-architect-context-and-skills.md)). The domain
 model is [ADR 0050](adr/0050-dev-factory-domain-model.md).
 
-**This Host does not implement that model yet.** The section
+**This Host implements slice S1 of that model.** Projects, the
+board, Tickets, a Project token, and the Context proxy are in this
+Host ([ADR 0052](adr/0052-project-token-and-context-proxy.md)).
+Grill sessions, Runs, and Gates are later slices. The section
 [This Host](#this-host-create-bot--chat) is the Cluster that runs
-today. Slices in [`docs/mvp.md`](mvp.md) add Project, Grill, Runs, and
-the rest. Do not start a slice ahead of that plan. Do not add a second
+today, including that S1 surface. Do not start a slice ahead of
+[`docs/mvp.md`](mvp.md). Do not add a second
 agent framework beside the Chat tool loop
 ([ADR 0011](adr/0011-chat-mcp-tool-loop.md)).
 
@@ -65,7 +68,7 @@ Settled now, even if this repo only scaffolds them:
 
 ## This Host (create Bot + Chat)
 
-What the running Cluster does today. The factory direction is [ADR 0049](adr/0049-dev-factory-direction.md). This Host still serves the Owner and Members on Chat and the Dashboard. It does not yet serve Projects, Tasks, or Runs. [ADR 0043](adr/0043-target-personas.md) is superseded. Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)). This Host does not ship `@dostigus/catalog` or `/api/catalog/*`. Deep-link Apply (`applyPack=` cloud mirror zip URL) is in this Host ([#192](https://github.com/dostigus/dostigus/pull/192)). This Host does not pull a catalog. Mailer Host IMAP/SMTP tools (`dostigus_mail_list`, `dostigus_mail_get`, `dostigus_mail_send`), the Closet Mailbox bind Sheet, and Bot mail binding are in this Host ([ADR 0048](adr/0048-mailer-product.md)). The mailbox server is the Closet bind. There is no Cluster mail allowlist. The Host still blocks loopback, private, and link-local mail destinations. The `dostigus.mailer` Pack tree lives in `packs/dostigus.mailer`; its Catalog Store publish is a later Nick step.
+What the running Cluster does today. The factory direction is [ADR 0049](adr/0049-dev-factory-direction.md). This Host serves the Owner and Members on Chat and the Dashboard, and it serves Projects: a board of Tasks, Task attachments (Artifacts), Tickets on the MCP surface, a Project token, and a Context proxy (`NUXT_CONTEXT_URL`, `NUXT_CONTEXT_TOKEN`). Grill, Runs, and Gates are not in this Host yet. [ADR 0043](adr/0043-target-personas.md) is superseded. Case inbox filter chips and follow-up Wakes are in this Host ([ADR 0044](adr/0044-case-inbox-and-follow-up-wakes.md)). Closet Параметры Pack section has an out-link to Marketplace on dostigus.ru `/marketplace` ([ADR 0045](adr/0045-pack-catalog-on-marketing-site.md)); Packs live inside that public name. That href stays the unprefixed RU URL ([ADR 0046](adr/0046-site-i18n-url-prefix.md)). Catalog Store public read and Nick publish belong on dostigus.ru (`dostigus/cloud`, [ADR 0047](adr/0047-marketplace-catalog-store.md)). This Host does not ship `@dostigus/catalog` or `/api/catalog/*`. Deep-link Apply (`applyPack=` cloud mirror zip URL) is in this Host ([#192](https://github.com/dostigus/dostigus/pull/192)). This Host does not pull a catalog. Mailer Host IMAP/SMTP tools (`dostigus_mail_list`, `dostigus_mail_get`, `dostigus_mail_send`), the Closet Mailbox bind Sheet, and Bot mail binding are in this Host ([ADR 0048](adr/0048-mailer-product.md)). The mailbox server is the Closet bind. There is no Cluster mail allowlist. The Host still blocks loopback, private, and link-local mail destinations. The `dostigus.mailer` Pack tree lives in `packs/dostigus.mailer`; its Catalog Store publish is a later Nick step.
 
 - Store (`@dostigus/db`): Drizzle schema + SQLite on `DATABASE_URL`. Tables
   `bots` (name, Manifest: `modelTier` default `strong`, `avatarShape`

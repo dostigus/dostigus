@@ -67,7 +67,12 @@ it('reuses HostUserMenu and omits Settings on the Dashboard rail', () => {
   expect(menu).toContain('hideMembers')
   expect(menu).toContain('isOwner && !hideSettings')
   expect(menu).toContain('(isOwner || isAdmin) && !hideMembers')
-  expect(layout.match(/v-if="isOwner"/g)).toHaveLength(3)
+  // Owner-only Dashboard nav items each add a `v-if="isOwner"`.
+  // Cluster settings is two (group + link), Account settings is one,
+  // and Projects is two (group + link). Raise this when another Owner item lands.
+  expect(layout.match(/v-if="isOwner"/g)).toHaveLength(5)
+  expect(layout).toContain('to="/dashboard/projects"')
+  expect(layout).toContain('dashboard.nav.projects')
   expect(menu).toContain('to="/dashboard/settings"')
   expect(menu).toContain('to="/dashboard/members"')
   expect(menu).not.toContain('to="/members"')

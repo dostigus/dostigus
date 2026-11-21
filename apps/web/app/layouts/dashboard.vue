@@ -111,6 +111,34 @@
           </span>
         </NuxtLink>
 
+        <p
+          v-if="isOwner"
+          class="group"
+        >
+          {{ $t('dashboard.nav.factory') }}
+        </p>
+        <NuxtLink
+          v-if="isOwner"
+          to="/dashboard/projects"
+          class="item"
+          :aria-current="route.path.startsWith('/dashboard/projects') ? 'page' : undefined"
+        >
+          <span
+            class="glyph"
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M5 6.5h3.2v11H5z" />
+              <path d="M10.4 6.5h3.2v7h-3.2z" />
+              <path d="M15.8 6.5H19v9h-3.2z" />
+            </svg>
+          </span>
+          <span class="item-copy">
+            <span class="item-label">{{ $t('dashboard.nav.projects') }}</span>
+            <span class="item-hint">{{ $t('dashboard.nav.projectsHint') }}</span>
+          </span>
+        </NuxtLink>
+
         <p class="group">
           {{ $t('dashboard.nav.account') }}
         </p>

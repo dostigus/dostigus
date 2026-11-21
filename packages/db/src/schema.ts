@@ -297,6 +297,103 @@ export const messageArtifacts = sqliteTable('message_artifacts', {
   index('message_artifacts_artifact_id_idx').on(table.artifactId),
 ])
 
+/**
+ * One product on the Cluster. contextProjectId is the Context project
+ * created on the first remember. See ADR 0050 and ADR 0052.
+ */
+export const projects = sqliteTable('projects', {
+  id: text('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+  ownerId: text('owner_id').notNull().references(() => owners.id),
+  architectBotId: text('architect_bot_id').references(() => bots.id, { onDelete: 'set null' }),
+  architectMode: text('architect_mode').notNull().default('external'),
+  previewUrl: text('preview_url'),
+  status: text('status').notNull().default('active'),
+  contextProjectId: text('context_project_id'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+/** Bearer hash for the external Architect. The raw token is shown once. */
+export const projectTokens = sqliteTable('project_tokens', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  tokenHash: text('token_hash').notNull().unique(),
+  label: text('label').notNull().default(''),
+  createdAt: integer('created_at').notNull(),
+  revokedAt: integer('revoked_at'),
+}, (table) => [
+  index('project_tokens_project_id_idx').on(table.projectId),
+])
+
+/** The git repo a Project works in. One row per Project in S1. */
+export const repoLinks = sqliteTable('repo_links', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull().unique().references(() => projects.id, { onDelete: 'cascade' }),
+  provider: text('provider').notNull().default('github'),
+  fullName: text('full_name').notNull(),
+  defaultBranch: text('default_branch').notNull().default('main'),
+  docsLayoutJson: text('docs_layout_json').notNull().default('{"adrs":"docs/adr","specs":"docs","glossary":"CONTEXT.md"}'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+/** Builder command strings on a Repo link. */
+export const commands = sqliteTable('commands', {
+  id: text('id').primaryKey(),
+  repoLinkId: text('repo_link_id').notNull().unique().references(() => repoLinks.id, { onDelete: 'cascade' }),
+  setup: text('setup'),
+  lint: text('lint'),
+  test: text('test'),
+  check: text('check'),
+  run: text('run'),
+  preview: text('preview'),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+/** What the business sees on the Project board. */
+export const tasks = sqliteTable('tasks', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  body: text('body').notNull().default(''),
+  mode: text('mode').notNull(),
+  status: text('status').notNull().default('new'),
+  createdBy: text('created_by').notNull(),
+  grillPolicy: text('grill_policy').notNull(),
+  grillSkipReason: text('grill_skip_reason'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (table) => [
+  index('tasks_project_id_idx').on(table.projectId),
+])
+
+/** A technical slice of a Task. The business board does not list these. */
+export const tickets = sqliteTable('tickets', {
+  id: text('id').primaryKey(),
+  taskId: text('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  brief: text('brief').notNull().default(''),
+  blockedByJson: text('blocked_by_json').notNull().default('[]'),
+  builderHint: text('builder_hint'),
+  status: text('status').notNull().default('ready'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (table) => [
+  index('tickets_task_id_idx').on(table.taskId),
+])
+
+/** A Task attachment. The bytes stay on the Artifact. */
+export const taskArtifacts = sqliteTable('task_artifacts', {
+  taskId: text('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+  artifactId: text('artifact_id').notNull().references(() => artifacts.id, { onDelete: 'cascade' }),
+  createdAt: integer('created_at').notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.taskId, table.artifactId] }),
+  index('task_artifacts_artifact_id_idx').on(table.artifactId),
+])
+
 export type InstalledPackRow = typeof installedPacks.$inferSelect
 export type BotRow = typeof bots.$inferSelect
 export type BotGrantRow = typeof botGrants.$inferSelect
@@ -313,3 +410,10 @@ export type ClusterSettingsRow = typeof clusterSettings.$inferSelect
 export type BotMailBindingRow = typeof botMailBindings.$inferSelect
 export type ArtifactRow = typeof artifacts.$inferSelect
 export type MessageArtifactRow = typeof messageArtifacts.$inferSelect
+export type ProjectRow = typeof projects.$inferSelect
+export type ProjectTokenRow = typeof projectTokens.$inferSelect
+export type RepoLinkRow = typeof repoLinks.$inferSelect
+export type CommandRow = typeof commands.$inferSelect
+export type TaskRow = typeof tasks.$inferSelect
+export type TicketRow = typeof tickets.$inferSelect
+export type TaskArtifactRow = typeof taskArtifacts.$inferSelect

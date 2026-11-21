@@ -1,4 +1,4 @@
-import type { OpenedStore } from '@dostigus/db'
+import type { FactoryCaller, OpenedStore } from '@dostigus/db'
 import type { BotViewer } from '@dostigus/shared'
 import type { ZodRawShape } from 'zod'
 import type { ArtifactTurn } from './artifacts'
@@ -25,6 +25,7 @@ import {
   upsertClusterSkill,
   withClusterStore,
 } from './cluster-bots'
+import { FACTORY_TOOL_SPECS } from './factory-mcp-tools'
 import { clusterHttpAllowlistGet, clusterHttpAllowlistSet, clusterHttpGet } from './http-allowlist-tools'
 import {
   addClusterPantry,
@@ -59,7 +60,7 @@ export type PlatformToolSpec = {
     input: Record<string, unknown>,
     store: OpenedStore,
     viewer?: BotViewer,
-    ctx?: ScheduleToolContext,
+    ctx?: ScheduleToolContext & { factoryCaller?: FactoryCaller },
   ) => unknown | Promise<unknown>
 }
 
@@ -479,6 +480,7 @@ const PLATFORM_TOOL_SPECS: Record<PlatformMcpTool, PlatformToolSpec> = {
     },
     run: (input, store) => turnsGet(store, input),
   },
+  ...FACTORY_TOOL_SPECS,
 }
 
 export function platformToolSpec(name: PlatformMcpTool): PlatformToolSpec {

@@ -143,7 +143,10 @@ runs `requireHostSession` → `requireUserSession`. No session is **401**.
 A Member session is **403** (`Only the Owner can change this`). A read
 that only returns Store data uses `withOwnerStore(event, (store) => …)`,
 which applies the same gate (`members/index.get.ts`,
-`members/invites/index.get.ts`). Bot list and Chat use
+`members/invites/index.get.ts`). Project routes under `/api/projects`
+and `/api/tasks` use that Owner gate
+([ADR 0052](docs/adr/0052-project-token-and-context-proxy.md)).
+Bot list and Chat use
 `requireHostSession` / `withHostStore` so a Member can use them. Settings,
 Bot create/delete, and Members stay on the Owner gate.
 Providers (`settings/llm-gateway*`), the Members list, and Invites use

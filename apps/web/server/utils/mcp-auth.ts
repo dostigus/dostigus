@@ -1,6 +1,9 @@
+import type { FactoryCaller } from '@dostigus/db'
+import { createHash, timingSafeEqual } from 'node:crypto'
+
 /** Runtime shape on Nitro h3 v1 events. Toolkit H3Event types stay opaque. */
 type McpAuthContext = {
-  context?: { agentOk?: boolean }
+  context?: { agentOk?: boolean, mcpCaller?: FactoryCaller }
 }
 
 type HeaderEvent = {
@@ -50,7 +53,8 @@ export function authorizeMcpAgent(
   if (!header.startsWith('Bearer ')) {
     return
   }
-  if (header.slice(7) === expectedToken) {
+  const given = header.slice('Bearer '.length)
+  if (bearerMatches(given, expectedToken)) {
     const ev = event as McpAuthContext
     ev.context ??= {}
     ev.context.agentOk = true
@@ -59,4 +63,38 @@ export function authorizeMcpAgent(
 
 export function mcpToolsEnabled(event: unknown): boolean {
   return !!(event as McpAuthContext).context?.agentOk
+}
+
+export function bearerToken(authorizationHeader: string | undefined): string {
+  const header = authorizationHeader || ''
+  return header.startsWith('Bearer ') ? header.slice('Bearer '.length) : ''
+}
+
+/** SHA-256 then timingSafeEqual so token length does not leak. */
+export function bearerMatches(given: string, expected: string): boolean {
+  const left = createHash('sha256').update(given).digest()
+  const right = createHash('sha256').update(expected).digest()
+  return timingSafeEqual(left, right)
+}
+
+export function setMcpCaller(event: unknown, caller: FactoryCaller): void {
+  const ev = event as McpAuthContext
+  ev.context ??= {}
+  ev.context.mcpCaller = caller
+}
+
+/** Factory tools. A Project token does not set agentOk. See ADR 0052. */
+export function factoryToolsEnabled(event: unknown): boolean {
+  const caller = (event as McpAuthContext).context?.mcpCaller
+  return caller?.kind === 'owner' || caller?.kind === 'project'
+}
+
+/** Caller for this request. Nitro asyncContext keeps useEvent on this request only. */
+export function activeFactoryCaller(): FactoryCaller {
+  const event = useEvent() as McpAuthContext
+  const caller = event.context?.mcpCaller
+  if (!caller) {
+    throw new Error('MCP caller is missing')
+  }
+  return caller
 }

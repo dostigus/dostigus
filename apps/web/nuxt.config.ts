@@ -38,7 +38,7 @@ export default defineNuxtConfig({
   mcp: {
     name: 'Dostigus',
     route: '/mcp',
-    description: 'Cluster Store MCP surface: Bots, Chat messages, and Schedules.',
+    description: 'Cluster Store MCP surface: Bots, Chat, Schedules, and Projects.',
     instructions: 'Call dostigus_bots_*, dostigus_messages_*, and dostigus_schedules_* against the Cluster Store. The Host UI uses the same Store helpers. dostigus_cluster_timezone_get reads the Cluster timezone. dostigus_cluster_timezone_set is Owner only. dostigus_http_get GETs a public URL. dostigus_cluster_http_allowlist_get and dostigus_cluster_http_allowlist_set are Owner only. dostigus_artifacts_put stores an Artifact and attaches it to the current assistant message. There is no dostigus_artifacts_get.',
     // Cursor / IDE clients are not same-origin
     security: { allowedOrigins: '*' },
@@ -46,6 +46,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Bearer for /mcp (NUXT_AGENT_TOKEN or DOSTIGUS_MCP_TOKEN). Empty → tools stay disabled.
     agentToken: process.env.NUXT_AGENT_TOKEN || process.env.DOSTIGUS_MCP_TOKEN || '',
+    // Context MCP (NUXT_CONTEXT_URL, NUXT_CONTEXT_TOKEN). Empty leaves the proxy unconfigured.
+    contextUrl: process.env.NUXT_CONTEXT_URL || '',
+    contextToken: process.env.NUXT_CONTEXT_TOKEN || '',
     // Sealed Host Owner session. NUXT_SESSION_PASSWORD (≥32 chars) is required in production.
     session: {
       password: process.env.NUXT_SESSION_PASSWORD || '',
@@ -80,6 +83,9 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    experimental: {
+      asyncContext: true,
+    },
     publicAssets: [
       {
         dir: brandDir,
