@@ -140,6 +140,7 @@ export { artifactsDirFromStoreUrl, COMPOSE_STORE_URL, DEFAULT_STORE_URL, storeFi
 export {
   ARCHITECT_MODES,
   type ArchitectMode,
+  artifactOnProject,
   attachTaskArtifact,
   bindContextProject,
   COMMAND_KEYS,

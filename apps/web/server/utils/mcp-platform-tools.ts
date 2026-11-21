@@ -1,4 +1,4 @@
-import type { OpenedStore } from '@dostigus/db'
+import type { FactoryCaller, OpenedStore } from '@dostigus/db'
 import type { BotViewer } from '@dostigus/shared'
 import type { ZodRawShape } from 'zod'
 import type { ArtifactTurn } from './artifacts'
@@ -60,7 +60,7 @@ export type PlatformToolSpec = {
     input: Record<string, unknown>,
     store: OpenedStore,
     viewer?: BotViewer,
-    ctx?: ScheduleToolContext,
+    ctx?: ScheduleToolContext & { factoryCaller?: FactoryCaller },
   ) => unknown | Promise<unknown>
 }
 

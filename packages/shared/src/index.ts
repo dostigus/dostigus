@@ -105,6 +105,14 @@ export {
   serializeChatParts,
 } from './chat-parts'
 export {
+  COMMAND_KEYS,
+  type CommandKey,
+  TASK_MODES,
+  TASK_STATUSES,
+  type TaskMode,
+  type TaskStatus,
+} from './factory'
+export {
   INVITE_TTL_MS,
   parseInviteEmail,
 } from './invite'

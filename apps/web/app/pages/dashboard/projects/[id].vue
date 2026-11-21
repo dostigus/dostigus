@@ -272,10 +272,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Commands, Project, ProjectTokenView, Task, TaskMode, TaskStatus } from '@dostigus/db'
-import type { Artifact } from '@dostigus/shared'
+import type { Commands, Project, ProjectTokenView, Task } from '@dostigus/db'
+import type { Artifact, TaskMode, TaskStatus } from '@dostigus/shared'
 import type { KitSelectOption } from '@dostigus/ui-kit'
-import { COMMAND_KEYS, TASK_MODES, TASK_STATUSES } from '@dostigus/db'
+import { COMMAND_KEYS, TASK_MODES, TASK_STATUSES } from '@dostigus/shared'
 import { KitButton, KitChip, KitField, KitInput, KitListRow, KitPanel, KitSelect, KitTextarea } from '@dostigus/ui-kit'
 import { hostStatusCopy } from '../../../utils/host-status-copy'
 import { boardColumns } from '../../../utils/project-board'

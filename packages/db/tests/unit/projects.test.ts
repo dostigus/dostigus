@@ -1,3 +1,7 @@
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { ARTIFACT_PENDING_TTL_MS } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import {
   attachTaskArtifact,
@@ -6,9 +10,12 @@ import {
   createTask,
   createTicket,
   findProjectIdByToken,
+  getArtifact,
   insertArtifactRow,
   issueProjectToken,
   linkRepo,
+  listOrphanArtifactIds,
+  listPendingArtifactIds,
   listProjects,
   listTasks,
   openStore,
@@ -17,6 +24,7 @@ import {
   slugFromName,
   StoreError,
   transitionTask,
+  updateProject,
   updateTicket,
 } from '../../src/index'
 
@@ -111,6 +119,58 @@ it('scopes a Project token to one Project and drops it after revoke', () => {
   })).toThrow(StoreError)
   revokeProjectToken(store, first.id, issued.id)
   expect(findProjectIdByToken(store, issued.token)).toBeUndefined()
+})
+
+it('keeps a Task attachment through garbage collection a day later', () => {
+  const store = memoryStore()
+  const project = createProject(store, owner, { name: 'Dostigus', slug: 'dostigus' })
+  const task = createTask(store, owner, project.id, { title: 'Shot', mode: 'bug' })
+  const old = Date.now() - ARTIFACT_PENDING_TTL_MS - 5_000
+  const artifact = insertArtifactRow(store, {
+    filename: 'board.png',
+    mime: 'image/png',
+    byteSize: 12,
+    contentHash: 'abc',
+    actorPersonId: project.ownerId,
+    createdAt: old,
+  })
+  attachTaskArtifact(store, owner, task.id, artifact.id)
+  const later = Date.now() + ARTIFACT_PENDING_TTL_MS
+  expect(listPendingArtifactIds(store, later)).not.toContain(artifact.id)
+  expect(listOrphanArtifactIds(store)).not.toContain(artifact.id)
+  expect(getArtifact(store, artifact.id)?.id).toBe(artifact.id)
+})
+
+it('returns 409 when two creates race on the same slug', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dostigus-slug-'))
+  const url = `file:${join(dir, 'cluster.sqlite')}`
+  const first = openStore(url)
+  const second = openStore(url)
+  opened.push(first, second)
+  createOwner(first, { username: 'nick', passwordHash: 'hash:nick' })
+  const results = await Promise.allSettled([
+    Promise.resolve().then(() => createProject(first, owner, { name: 'Dostigus', slug: 'dostigus' })),
+    Promise.resolve().then(() => createProject(second, owner, { name: 'Dostigus', slug: 'dostigus' })),
+  ])
+  const rejected = results.filter((result) => result.status === 'rejected')
+  const fulfilled = results.filter((result) => result.status === 'fulfilled')
+  expect(fulfilled).toHaveLength(1)
+  expect(rejected).toHaveLength(1)
+  const reason = (rejected[0] as PromiseRejectedResult).reason as StoreError
+  expect(reason).toBeInstanceOf(StoreError)
+  expect(reason.statusCode).toBe(409)
+})
+
+it('keeps release, Project status, and Commands with the Owner', () => {
+  const store = memoryStore()
+  const project = createProject(store, owner, { name: 'Dostigus', slug: 'dostigus' })
+  linkRepo(store, owner, project.id, { fullName: 'dostigus/dostigus' })
+  const task = createTask(store, owner, project.id, { title: 'Ship', mode: 'quick' })
+  const projectCaller = { kind: 'project' as const, projectId: project.id }
+  expect(() => transitionTask(store, projectCaller, task.id, 'released')).toThrow(/release/)
+  expect(() => updateProject(store, projectCaller, project.id, { status: 'archived' })).toThrow(/Owner/)
+  expect(() => setCommands(store, projectCaller, project.id, { check: 'pnpm check' })).toThrow(/Owner/)
+  expect(transitionTask(store, owner, task.id, 'released').status).toBe('released')
 })
 
 it('cuts Tickets with blockedBy on the same Task', () => {

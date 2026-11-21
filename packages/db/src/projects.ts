@@ -1,6 +1,7 @@
-import type { Artifact } from '@dostigus/shared'
+import type { Artifact, CommandKey, TaskMode, TaskStatus } from '@dostigus/shared'
 import type { OpenedStore } from './store'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
+import { COMMAND_KEYS, TASK_MODES, TASK_STATUSES } from '@dostigus/shared'
 import { getCompleteArtifact, toPublicArtifact } from './artifacts'
 import { createBot } from './queries'
 import { StoreError } from './store-error'
@@ -11,28 +12,14 @@ export type ProjectStatus = typeof PROJECT_STATUSES[number]
 export const ARCHITECT_MODES = ['external', 'builtin'] as const
 export type ArchitectMode = typeof ARCHITECT_MODES[number]
 
-export const TASK_MODES = ['quick', 'bug', 'feature', 'epic'] as const
-export type TaskMode = typeof TASK_MODES[number]
-
-export const TASK_STATUSES = [
-  'new',
-  'grilling',
-  'awaiting_approval',
-  'in_work',
-  'awaiting_acceptance',
-  'released',
-  'dropped',
-] as const
-export type TaskStatus = typeof TASK_STATUSES[number]
+export { COMMAND_KEYS, TASK_MODES, TASK_STATUSES }
+export type { CommandKey, TaskMode, TaskStatus }
 
 export const TICKET_STATUSES = ['ready', 'in_work', 'done', 'dropped'] as const
 export type TicketStatus = typeof TICKET_STATUSES[number]
 
 export const GRILL_POLICIES = ['required', 'short', 'skipped'] as const
 export type GrillPolicy = typeof GRILL_POLICIES[number]
-
-export const COMMAND_KEYS = ['setup', 'lint', 'test', 'check', 'run', 'preview'] as const
-export type CommandKey = typeof COMMAND_KEYS[number]
 
 export type FactoryCaller
   = | { kind: 'owner' }
@@ -190,7 +177,7 @@ function iso(ms: number): string {
 }
 
 function writeTxn<T>(store: OpenedStore, run: () => T): T {
-  store.sqlite.exec('BEGIN')
+  store.sqlite.exec('BEGIN IMMEDIATE')
   try {
     const result = run()
     store.sqlite.exec('COMMIT')
@@ -458,29 +445,39 @@ export function createProject(
   const name = capped(input.name, 120, 'Name')
   const slug = input.slug ? assertSlug(input.slug.trim()) : slugFromName(name)
   const previewUrl = assertPreviewUrl(input.previewUrl)
-  const taken = store.sqlite.prepare('SELECT id FROM projects WHERE slug = ?').get(slug)
-  if (taken) {
-    throw new StoreError('A Project with that slug already exists', 409)
-  }
   const id = randomUUID()
   const now = nowMs()
   const owner = ownerId(store)
-  return writeTxn(store, () => {
-    const bot = createBot(store, {
-      name,
-      label: 'Architect',
-      description: 'Architect for this Project.',
-      createdBy: owner,
+  try {
+    return writeTxn(store, () => {
+      const taken = store.sqlite.prepare('SELECT id FROM projects WHERE slug = ?').get(slug)
+      if (taken) {
+        throw new StoreError('A Project with that slug already exists', 409)
+      }
+      const bot = createBot(store, {
+        name,
+        label: 'Architect',
+        description: 'Architect for this Project.',
+        createdBy: owner,
+      })
+      store.sqlite.prepare(`
+        INSERT INTO projects (
+          id, slug, name, owner_id, architect_bot_id, architect_mode, preview_url,
+          status, context_project_id, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, 'external', ?, 'active', NULL, ?, ?)
+      `).run(id, slug, name, owner, bot.bot.id, previewUrl, now, now)
+      return projectForCaller(store, caller, id)
     })
-    store.sqlite.prepare(`
-      INSERT INTO projects (
-        id, slug, name, owner_id, architect_bot_id, architect_mode, preview_url,
-        status, context_project_id, created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, 'external', ?, 'active', NULL, ?, ?)
-    `).run(id, slug, name, owner, bot.bot.id, previewUrl, now, now)
-    return projectForCaller(store, caller, id)
-  })
+  } catch (error) {
+    if (error instanceof StoreError) {
+      throw error
+    }
+    if (error instanceof Error && /UNIQUE constraint failed/i.test(error.message)) {
+      throw new StoreError('A Project with that slug already exists', 409)
+    }
+    throw error
+  }
 }
 
 export function updateProject(
@@ -495,6 +492,9 @@ export function updateProject(
   },
 ): Project {
   const current = projectForCaller(store, caller, projectId)
+  if (caller.kind === 'project' && (input.status !== undefined || input.architectMode !== undefined)) {
+    throw new StoreError('Only the Owner can change this', 403)
+  }
   const name = input.name === undefined ? current.name : capped(input.name, 120, 'Name')
   const previewUrl = input.previewUrl === undefined ? current.previewUrl : assertPreviewUrl(input.previewUrl)
   const status = input.status === undefined
@@ -583,6 +583,9 @@ export function setCommands(
   input: Partial<Record<CommandKey, string | null>>,
 ): Project {
   const project = projectForCaller(store, caller, projectId)
+  if (caller.kind === 'project') {
+    throw new StoreError('Only the Owner can change this', 403)
+  }
   if (!project.repo) {
     throw new StoreError('Link a repo before setting Commands', 400)
   }
@@ -816,6 +819,9 @@ export function transitionTask(
 ): Task {
   const current = getTask(store, caller, taskId)
   const next = assertEnum(status, TASK_STATUSES, 'task status')
+  if (caller.kind === 'project' && next === 'released') {
+    throw new StoreError('Only the Owner can release a Task', 403)
+  }
   store.sqlite.prepare('UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?').run(next, nowMs(), current.id)
   return getTask(store, caller, taskId)
 }
@@ -826,11 +832,28 @@ export function attachTaskArtifact(store: OpenedStore, caller: FactoryCaller, ta
   if (!artifact) {
     throw new StoreError('Artifact not found', 404)
   }
+  const joinedAt = nowMs()
   store.sqlite.prepare(`
     INSERT OR IGNORE INTO task_artifacts (task_id, artifact_id, created_at)
     VALUES (?, ?, ?)
-  `).run(task.id, artifactId, nowMs())
+  `).run(task.id, artifactId, joinedAt)
+  if (artifact.last_joined_at == null) {
+    store.sqlite.prepare(`
+      UPDATE artifacts SET last_joined_at = ? WHERE id = ? AND last_joined_at IS NULL
+    `).run(joinedAt, artifactId)
+  }
   return getTask(store, caller, taskId)
+}
+
+export function artifactOnProject(store: OpenedStore, artifactId: string, projectId: string): boolean {
+  const row = store.sqlite.prepare(`
+    SELECT 1 AS ok
+    FROM task_artifacts
+    INNER JOIN tasks ON tasks.id = task_artifacts.task_id
+    WHERE task_artifacts.artifact_id = ? AND tasks.project_id = ?
+    LIMIT 1
+  `).get(artifactId, projectId) as { ok?: number } | undefined
+  return Boolean(row)
 }
 
 function parseBlockedBy(json: string): string[] {

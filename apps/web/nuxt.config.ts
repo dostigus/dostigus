@@ -83,6 +83,9 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    experimental: {
+      asyncContext: true,
+    },
     publicAssets: [
       {
         dir: brandDir,

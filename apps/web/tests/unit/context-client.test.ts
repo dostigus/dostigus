@@ -99,7 +99,8 @@ it('calls Context over streamable HTTP and keeps the bearer on the Host', async 
     scope: 'dostigus',
     mode: 'pack',
   })
-  expect(seen.map((call) => call.method)).toEqual(['initialize', 'notifications/initialized', 'tools/call'])
+  expect(seen.map((call) => call.method).slice(0, 3)).toEqual(['initialize', 'notifications/initialized', 'tools/call'])
+  expect(seen).toHaveLength(4)
   expect(seen.every((call) => call.auth === 'Bearer area-token')).toBe(true)
   const toolCall = seen.find((call) => call.method === 'tools/call')
   expect(toolCall?.session).toBe('sess-1')

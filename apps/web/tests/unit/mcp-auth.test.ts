@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
-import { authorizeMcpAgent, mcpToolsEnabled, readAuthorizationHeader } from '../../server/utils/mcp-auth'
+import { authorizeMcpAgent, bearerMatches, mcpToolsEnabled, readAuthorizationHeader } from '../../server/utils/mcp-auth'
 import { ARTIFACT_MCP_TOOLS, CHAT_MCP_TOOLS, CHAT_SLIM_MCP_TOOLS, CREATOR_EXPAND_MCP_TOOLS, CREATOR_MEMBER_CHAT_MCP_TOOLS, FACTORY_MCP_TOOLS, HTTP_MCP_TOOLS, KITCHEN_MCP_TOOLS, MAIL_MCP_TOOLS, MEMBER_CHAT_MCP_TOOLS, PLATFORM_MCP_TOOLS, SCHEDULE_MCP_TOOLS, SKILL_MCP_TOOLS, SKILL_WRITE_MCP_TOOLS, TURN_MCP_TOOLS, WAKE_CHAT_MCP_TOOLS } from '../../server/utils/mcp-surface'
 
 function event() {
@@ -42,6 +42,12 @@ it('reads Authorization from Node, Headers, and plain header maps', () => {
     req: { headers: { authorization: 'Bearer req' } },
   })).toBe('Bearer req')
   expect(readAuthorizationHeader({})).toBeUndefined()
+})
+
+it('compares bearer tokens in constant time', () => {
+  expect(bearerMatches('secret', 'secret')).toBe(true)
+  expect(bearerMatches('secret', 'secreT')).toBe(false)
+  expect(bearerMatches('short', 'a-much-longer-token')).toBe(false)
 })
 
 it('authorizes a matching Bearer token so tools can enable', () => {

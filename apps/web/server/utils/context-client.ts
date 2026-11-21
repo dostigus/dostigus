@@ -1,8 +1,7 @@
-import process from 'node:process'
-
 /**
  * Host client for the Context MCP surface. The URL comes from
- * NUXT_CONTEXT_URL. Docs do not name a host. See ADR 0052.
+ * runtimeConfig (`NUXT_CONTEXT_URL`, `NUXT_CONTEXT_TOKEN`). Docs do not
+ * name a host. See ADR 0052.
  */
 export class ContextClientError extends Error {
   constructor(message: string) {
@@ -29,9 +28,13 @@ type JsonRpc = {
   error?: { message?: string }
 }
 
-export function contextConfigFromEnv(env: NodeJS.ProcessEnv = process.env): ContextConfig | null {
-  const url = env.NUXT_CONTEXT_URL?.trim() ?? ''
-  const token = env.NUXT_CONTEXT_TOKEN?.trim() ?? ''
+const CONTEXT_TIMEOUT_MS = 15_000
+
+/** The only read of the Context URL and token. Nuxt maps NUXT_CONTEXT_* onto these keys. */
+export function contextConfigFromRuntime(): ContextConfig | null {
+  const config = useRuntimeConfig()
+  const url = String(config.contextUrl ?? '').trim()
+  const token = String(config.contextToken ?? '').trim()
   if (!url || !token) {
     return null
   }
@@ -62,33 +65,63 @@ export async function callContextTool(
   fetchImpl: typeof fetch = fetch,
 ): Promise<unknown> {
   const endpoint = contextMcpEndpoint(config.url)
-  const init = await postRpc(endpoint, config.token, {
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'initialize',
-    params: {
-      protocolVersion: '2025-03-26',
-      capabilities: {},
-      clientInfo: { name: 'dostigus-host', version: '0.0.0' },
-    },
-  }, undefined, fetchImpl)
-  if (init.message.error) {
-    throw new ContextClientError(init.message.error.message || 'Context initialize failed')
+  let session: string | undefined
+  try {
+    const init = await postRpc(endpoint, config.token, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-03-26',
+        capabilities: {},
+        clientInfo: { name: 'dostigus-host', version: '0.0.0' },
+      },
+    }, undefined, fetchImpl)
+    session = init.session
+    if (init.message.error) {
+      throw new ContextClientError(init.message.error.message || 'Context initialize failed')
+    }
+    await postRpc(endpoint, config.token, {
+      jsonrpc: '2.0',
+      method: 'notifications/initialized',
+    }, session, fetchImpl)
+    const called = await postRpc(endpoint, config.token, {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/call',
+      params: { name, arguments: args },
+    }, session, fetchImpl)
+    if (called.message.error) {
+      throw new ContextClientError(called.message.error.message || 'Context tool failed')
+    }
+    session = called.session ?? session
+    return unwrapToolResult(called.message.result)
+  } finally {
+    await closeContextSession(endpoint, config.token, session, fetchImpl)
   }
-  await postRpc(endpoint, config.token, {
-    jsonrpc: '2.0',
-    method: 'notifications/initialized',
-  }, init.session, fetchImpl)
-  const called = await postRpc(endpoint, config.token, {
-    jsonrpc: '2.0',
-    id: 2,
-    method: 'tools/call',
-    params: { name, arguments: args },
-  }, init.session, fetchImpl)
-  if (called.message.error) {
-    throw new ContextClientError(called.message.error.message || 'Context tool failed')
+}
+
+async function closeContextSession(
+  endpoint: string,
+  token: string,
+  session: string | undefined,
+  fetchImpl: typeof fetch,
+): Promise<void> {
+  if (!session) {
+    return
   }
-  return unwrapToolResult(called.message.result)
+  try {
+    await fetchImpl(endpoint, {
+      method: 'DELETE',
+      headers: {
+        'authorization': `Bearer ${token}`,
+        'mcp-session-id': session,
+      },
+      signal: AbortSignal.timeout(CONTEXT_TIMEOUT_MS),
+    })
+  } catch {
+    // The tool result is already in hand. Closing the session is best-effort.
+  }
 }
 
 async function postRpc(
@@ -109,6 +142,7 @@ async function postRpc(
         ...(session ? { 'mcp-session-id': session } : {}),
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(CONTEXT_TIMEOUT_MS),
     })
   } catch {
     throw new ContextClientError('Context did not respond')

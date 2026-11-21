@@ -1,5 +1,5 @@
-import type { TaskStatus } from '@dostigus/db'
-import { TASK_STATUSES } from '@dostigus/db'
+import type { TaskStatus } from '@dostigus/shared'
+import { TASK_STATUSES } from '@dostigus/shared'
 
 export type BoardTask = {
   id: string

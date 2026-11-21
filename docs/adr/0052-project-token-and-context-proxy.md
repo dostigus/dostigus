@@ -62,7 +62,15 @@ On `/mcp`:
 - A Project token does not set that gate. Existing Cluster tools
   (Bots, messages, Schedules, and the rest) stay disabled. The
   factory tools below are enabled and forced to that Project. A
-  `projectId` for another Project is rejected.
+  `projectId` for another Project is rejected. The caller is read
+  from the request event (`event.context.mcpCaller`) for that HTTP
+  request only. The owner bearer is compared with SHA-256 and
+  `timingSafeEqual`.
+- A Project token cannot set Task status `released`, change
+  `architectMode`, change Project `status`, or set Commands. Those
+  stay with the owner token and the Owner session. It also cannot
+  attach an Artifact id that is not already on a Task in its
+  Project. It can store bytes and attach those.
 
 `dostigus_projects_create` is owner-token and Owner-session only. It
 is not in the [ADR 0051](0051-architect-context-and-skills.md) list.
@@ -72,12 +80,15 @@ Project token cannot create one.
 Factory tools are not in the Chat tool loop. The built-in Architect
 is slice S7.
 
-`dostigus_tasks_transition` may set any business status. The board
-and the Architect both move cards. Ticket status changes go through
+`dostigus_tasks_transition` may set any business status except that a
+Project token cannot set `released`. The board and the Architect
+both move the other cards. Ticket status changes go through
 `dostigus_tickets_update`.
 
-`dostigus_tasks_attach` joins an existing Artifact, or stores one
-from `bytesBase64` and joins it.
+`dostigus_tasks_attach` joins an Artifact and marks it in use so
+garbage collection does not delete it while a Task links it. A
+Project token may pass `bytesBase64`, or an `artifactId` that is
+already on a Task in that Project.
 
 ### Context proxy
 
@@ -106,9 +117,11 @@ the pack in bytes. The factory treats that cap as the N-token budget
 at about 4 bytes per token. The Host does not convert the number.
 
 `read` has no `project` argument on Context. The Host rejects a
-`profile:` or `doc:` id that names a different Context project.
-Other ids are passed through. The area token is cluster-wide. That
-limit is upstream.
+`profile:` or `doc:` id that names a different Context project
+before the call. After the call it returns 403 unless the result's
+`profile.projectId` is this Project's `contextProjectId`, or an
+`associations` entry names that project id. A source id with neither
+is refused. The area token stays on the Host.
 
 When either env var is missing, every proxy tool returns the error
 `Context not configured`. The Project screen does not call Context

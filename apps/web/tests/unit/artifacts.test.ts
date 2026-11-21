@@ -2,8 +2,8 @@ import { Buffer } from 'node:buffer'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createBot, createMember, createOwner, insertArtifactRow, insertMessage, openStore } from '@dostigus/db'
-import { ARTIFACT_CLUSTER_QUOTA_BYTES } from '@dostigus/shared'
+import { attachTaskArtifact, createBot, createMember, createOwner, createProject, createTask, getArtifact, insertArtifactRow, insertMessage, openStore } from '@dostigus/db'
+import { ARTIFACT_CLUSTER_QUOTA_BYTES, ARTIFACT_PENDING_TTL_MS } from '@dostigus/shared'
 import { afterEach, expect, it } from 'vitest'
 import {
   annotateHistoryWithArtifacts,
@@ -314,4 +314,32 @@ it('writes bytesBase64 through putArtifactFromTool', async () => {
   })
   expect(artifact.filename).toBe('note.txt')
   expect(artifact.byteSize).toBe(text.byteLength)
+})
+
+it('keeps a Task attachment when GC runs a day later', () => {
+  const { store, owner, dir } = seedOwner()
+  const project = createProject(store, { kind: 'owner' }, { name: 'Dostigus', slug: 'dostigus' })
+  const task = createTask(store, { kind: 'owner' }, project.id, { title: 'Shot', mode: 'bug' })
+  const old = Date.now() - ARTIFACT_PENDING_TTL_MS - 5_000
+  const kept = insertArtifactRow(store, {
+    filename: 'board.png',
+    mime: 'image/png',
+    byteSize: 4,
+    contentHash: 'kept',
+    actorPersonId: owner.id,
+    createdAt: old,
+  })
+  const loose = insertArtifactRow(store, {
+    filename: 'loose.png',
+    mime: 'image/png',
+    byteSize: 4,
+    contentHash: 'loose',
+    actorPersonId: owner.id,
+    createdAt: old,
+  })
+  attachTaskArtifact(store, { kind: 'owner' }, task.id, kept.id)
+  const { deleted } = gcArtifacts(store, { now: Date.now(), dir })
+  expect(deleted).toContain(loose.id)
+  expect(deleted).not.toContain(kept.id)
+  expect(getArtifact(store, kept.id)?.id).toBe(kept.id)
 })

@@ -1,7 +1,7 @@
 import { findProjectIdByToken } from '@dostigus/db'
 import { useStore } from '../utils/cluster-store'
 import { agentToken } from '../utils/env'
-import { authorizeMcpAgent, bearerToken, readAuthorizationHeader, setMcpCaller } from '../utils/mcp-auth'
+import { authorizeMcpAgent, bearerMatches, bearerToken, readAuthorizationHeader, setMcpCaller } from '../utils/mcp-auth'
 
 /**
  * Soft Bearer auth (toolkit docs): never throw 401 — clients treat it as OAuth.
@@ -17,7 +17,7 @@ export default defineMcpHandler({
     if (!bearer) {
       return
     }
-    if (owner && bearer === owner) {
+    if (owner && bearerMatches(bearer, owner)) {
       setMcpCaller(event, { kind: 'owner' })
       return
     }

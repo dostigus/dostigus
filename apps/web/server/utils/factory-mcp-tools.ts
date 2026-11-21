@@ -1,9 +1,11 @@
-import type { OpenedStore } from '@dostigus/db'
+import type { FactoryCaller, OpenedStore } from '@dostigus/db'
 import type { ZodRawShape } from 'zod'
+import type { ContextConfig } from './context-client'
 import type { PlatformToolSpec } from './mcp-platform-tools'
 import type { FACTORY_MCP_TOOLS } from './mcp-surface'
 import { createHash } from 'node:crypto'
 import {
+  artifactOnProject,
   attachTaskArtifact,
   bindContextProject,
   createProject,
@@ -31,26 +33,38 @@ import {
   CONTEXT_PACK_BUDGET_MIN,
   CONTEXT_SCOPE,
   ContextClientError,
-  contextConfigFromEnv,
+
+  contextConfigFromRuntime,
 } from './context-client'
 import { activeFactoryCaller } from './mcp-auth'
 
 type FactoryToolName = typeof FACTORY_MCP_TOOLS[number]
 
 export type ContextDeps = {
-  env?: NodeJS.ProcessEnv
+  config?: ContextConfig | null
   fetchImpl?: typeof fetch
+  caller?: FactoryCaller
 }
 
 const projectId = z.string().min(1)
 const taskId = z.string().min(1)
 
-function caller() {
+function requireCaller(explicit?: FactoryCaller): FactoryCaller {
+  if (explicit) {
+    return explicit
+  }
   return activeFactoryCaller()
 }
 
+function resolveContext(deps?: ContextDeps): ContextConfig | null {
+  if (deps && 'config' in deps) {
+    return deps.config ?? null
+  }
+  return contextConfigFromRuntime()
+}
+
 function missingContext(deps?: ContextDeps): { error: string } | undefined {
-  if (!contextConfigFromEnv(deps?.env)) {
+  if (!resolveContext(deps)) {
     return { error: CONTEXT_NOT_CONFIGURED }
   }
   return undefined
@@ -65,7 +79,7 @@ async function contextCall(
   args: Record<string, unknown>,
   deps?: ContextDeps,
 ): Promise<unknown> {
-  const config = contextConfigFromEnv(deps?.env)
+  const config = resolveContext(deps)
   if (!config) {
     return { error: CONTEXT_NOT_CONFIGURED }
   }
@@ -103,7 +117,7 @@ export async function proxyContextSearch(
   if (missing) {
     return missing
   }
-  const project = projectForCaller(store, caller(), text(input.projectId))
+  const project = projectForCaller(store, requireCaller(deps?.caller), text(input.projectId))
   if (!project.contextProjectId) {
     return { error: 'Context project is not created yet' }
   }
@@ -131,7 +145,7 @@ export async function proxyContextRemember(
   if (missing) {
     return missing
   }
-  const project = projectForCaller(store, caller(), text(input.projectId))
+  const project = projectForCaller(store, requireCaller(deps?.caller), text(input.projectId))
   const body = text(input.text)?.trim() ?? ''
   if (!body) {
     throw new StoreError('text is required', 400)
@@ -161,7 +175,7 @@ export async function proxyContextRead(
   if (missing) {
     return missing
   }
-  const project = projectForCaller(store, caller(), text(input.projectId))
+  const project = projectForCaller(store, requireCaller(deps?.caller), text(input.projectId))
   if (!project.contextProjectId) {
     return { error: 'Context project is not created yet' }
   }
@@ -170,11 +184,16 @@ export async function proxyContextRead(
     throw new StoreError('id is required', 400)
   }
   assertContextReadId(project.contextProjectId, id)
-  return contextCall('read', {
+  const result = await contextCall('read', {
     version: 1,
     scope: CONTEXT_SCOPE,
     id,
   }, deps)
+  if (contextFailed(result)) {
+    return result
+  }
+  assertReadBelongs(project.contextProjectId, result)
+  return result
 }
 
 export async function proxyContextTimeline(
@@ -186,7 +205,7 @@ export async function proxyContextTimeline(
   if (missing) {
     return missing
   }
-  const project = projectForCaller(store, caller(), text(input.projectId))
+  const project = projectForCaller(store, requireCaller(deps?.caller), text(input.projectId))
   if (!project.contextProjectId) {
     return { error: 'Context project is not created yet' }
   }
@@ -212,6 +231,23 @@ function assertContextReadId(contextProjectId: string, id: string): void {
   }
 }
 
+function assertReadBelongs(contextProjectId: string, result: unknown): void {
+  if (!result || typeof result !== 'object') {
+    throw new StoreError('This token is scoped to another Project', 403)
+  }
+  const record = result as {
+    profile?: { projectId?: string }
+    associations?: Array<{ projectId?: string }>
+  }
+  if (record.profile?.projectId === contextProjectId) {
+    return
+  }
+  if (record.associations?.some((entry) => entry.projectId === contextProjectId)) {
+    return
+  }
+  throw new StoreError('This token is scoped to another Project', 403)
+}
+
 function contextFailed(result: unknown): boolean {
   return !!result && typeof result === 'object' && typeof (result as { error?: unknown }).error === 'string'
 }
@@ -223,30 +259,33 @@ function idempotencyKey(contextId: string, body: string, given: string | undefin
   return createHash('sha256').update(`${contextId}\n${body}`).digest('hex')
 }
 
-async function attach(store: OpenedStore, input: Record<string, unknown>) {
-  const task = getTask(store, caller(), String(input.taskId))
+async function attach(store: OpenedStore, input: Record<string, unknown>, who: FactoryCaller) {
+  const task = getTask(store, who, String(input.taskId))
   const artifactId = text(input.artifactId)
   if (artifactId) {
-    return { task: attachTaskArtifact(store, caller(), task.id, artifactId) }
+    if (who.kind === 'project' && !artifactOnProject(store, artifactId, task.projectId)) {
+      throw new StoreError('This token is scoped to another Project', 403)
+    }
+    return { task: attachTaskArtifact(store, who, task.id, artifactId) }
   }
   if (!text(input.bytesBase64)) {
     throw new StoreError('Give artifactId or bytesBase64', 400)
   }
-  const project = projectForCaller(store, caller(), task.projectId)
+  const project = projectForCaller(store, who, task.projectId)
   const artifact = await putArtifactFromTool(store, {
     filename: input.filename,
     mime: input.mime,
     bytesBase64: input.bytesBase64,
     actorPersonId: project.ownerId,
   })
-  return { task: attachTaskArtifact(store, caller(), task.id, artifact.id), artifact }
+  return { task: attachTaskArtifact(store, who, task.id, artifact.id), artifact }
 }
 
 function tool(
   name: FactoryToolName,
   description: string,
   inputSchema: ZodRawShape,
-  run: PlatformToolSpec['run'],
+  run: (input: Record<string, unknown>, store: OpenedStore, who: FactoryCaller) => unknown,
   readOnly = false,
 ): PlatformToolSpec {
   return {
@@ -255,7 +294,10 @@ function tool(
     chat: false,
     ...(readOnly ? { annotations: { readOnlyHint: true } } : {}),
     inputSchema,
-    run,
+    run: (input, store, _viewer, ctx) => {
+      const explicit = (ctx as { factoryCaller?: FactoryCaller } | undefined)?.factoryCaller
+      return run(input, store, requireCaller(explicit))
+    },
   }
 }
 
@@ -264,14 +306,14 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
     'dostigus_projects_list',
     'List Projects this caller can see. The owner token sees every Project. A Project token sees only its Project. Each row includes the Repo link, Commands, the Architect Bot id, and contextProjectId when Context has been created.',
     {},
-    (_input, store) => ({ projects: listProjects(store, caller()) }),
+    (_input, store, who) => ({ projects: listProjects(store, who) }),
     true,
   ),
   dostigus_projects_get: tool(
     'dostigus_projects_get',
     'Get one Project by projectId, including its Repo link and Commands. A Project token may only get its own Project.',
     { projectId },
-    (input, store) => ({ project: projectForCaller(store, caller(), String(input.projectId)) }),
+    (input, store, who) => ({ project: projectForCaller(store, who, String(input.projectId)) }),
     true,
   ),
   dostigus_projects_create: tool(
@@ -282,8 +324,8 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       slug: z.string().min(1).optional(),
       previewUrl: z.string().optional(),
     },
-    (input, store) => ({
-      project: createProject(store, caller(), {
+    (input, store, who) => ({
+      project: createProject(store, who, {
         name: String(input.name),
         slug: text(input.slug),
         previewUrl: text(input.previewUrl),
@@ -300,8 +342,8 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       status: z.enum(['active', 'archived']).optional(),
       architectMode: z.enum(['external', 'builtin']).optional(),
     },
-    (input, store) => ({
-      project: updateProject(store, caller(), String(input.projectId), {
+    (input, store, who) => ({
+      project: updateProject(store, who, String(input.projectId), {
         name: text(input.name),
         previewUrl: input.previewUrl === undefined ? undefined : (input.previewUrl as string | null),
         status: text(input.status),
@@ -322,8 +364,8 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
         glossary: z.string().min(1).optional(),
       }).optional(),
     },
-    (input, store) => ({
-      project: linkRepo(store, caller(), String(input.projectId), {
+    (input, store, who) => ({
+      project: linkRepo(store, who, String(input.projectId), {
         fullName: String(input.fullName),
         defaultBranch: text(input.defaultBranch),
         docsLayout: input.docsLayout as { adrs?: string, specs?: string, glossary?: string } | undefined,
@@ -342,8 +384,8 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       run: z.string().nullable().optional(),
       preview: z.string().nullable().optional(),
     },
-    (input, store) => ({
-      project: setCommands(store, caller(), String(input.projectId), {
+    (input, store, who) => ({
+      project: setCommands(store, who, String(input.projectId), {
         setup: input.setup as string | null | undefined,
         lint: input.lint as string | null | undefined,
         test: input.test as string | null | undefined,
@@ -357,14 +399,14 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
     'dostigus_tasks_list',
     'List Tasks on a Project, newest first. Each Task includes mode, status, grillPolicy, and attachments (Artifact meta, no bytes).',
     { projectId },
-    (input, store) => ({ tasks: listTasks(store, caller(), String(input.projectId)) }),
+    (input, store, who) => ({ tasks: listTasks(store, who, String(input.projectId)) }),
     true,
   ),
   dostigus_tasks_get: tool(
     'dostigus_tasks_get',
     'Get one Task by taskId, including attachments. A Project token can only read Tasks on its Project.',
     { taskId },
-    (input, store) => ({ task: getTask(store, caller(), String(input.taskId)) }),
+    (input, store, who) => ({ task: getTask(store, who, String(input.taskId)) }),
     true,
   ),
   dostigus_tasks_create: tool(
@@ -376,8 +418,8 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       body: z.string().optional(),
       mode: z.enum(['quick', 'bug', 'feature', 'epic']),
     },
-    (input, store) => ({
-      task: createTask(store, caller(), String(input.projectId), {
+    (input, store, who) => ({
+      task: createTask(store, who, String(input.projectId), {
         title: String(input.title),
         body: text(input.body),
         mode: String(input.mode),
@@ -395,8 +437,8 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       grillPolicy: z.enum(['required', 'short', 'skipped']).optional(),
       grillSkipReason: z.string().nullable().optional(),
     },
-    (input, store) => ({
-      task: updateTask(store, caller(), String(input.taskId), {
+    (input, store, who) => ({
+      task: updateTask(store, who, String(input.taskId), {
         title: text(input.title),
         body: text(input.body),
         mode: text(input.mode),
@@ -420,8 +462,8 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
         'dropped',
       ]),
     },
-    (input, store) => ({
-      task: transitionTask(store, caller(), String(input.taskId), String(input.status)),
+    (input, store, who) => ({
+      task: transitionTask(store, who, String(input.taskId), String(input.status)),
     }),
   ),
   dostigus_tasks_attach: tool(
@@ -434,13 +476,13 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       mime: z.string().min(1).optional(),
       bytesBase64: z.string().min(1).optional(),
     },
-    (input, store) => attach(store, input),
+    (input, store, who) => attach(store, input, who),
   ),
   dostigus_tickets_list: tool(
     'dostigus_tickets_list',
     'List Tickets on a Task, oldest first. The business board does not show Tickets. blockedBy names other Ticket ids on the same Task.',
     { taskId },
-    (input, store) => ({ tickets: listTickets(store, caller(), String(input.taskId)) }),
+    (input, store, who) => ({ tickets: listTickets(store, who, String(input.taskId)) }),
     true,
   ),
   dostigus_tickets_create: tool(
@@ -454,8 +496,8 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       builderHint: z.string().nullable().optional(),
       status: z.enum(['ready', 'in_work', 'done', 'dropped']).optional(),
     },
-    (input, store) => ({
-      ticket: createTicket(store, caller(), String(input.taskId), {
+    (input, store, who) => ({
+      ticket: createTicket(store, who, String(input.taskId), {
         title: String(input.title),
         brief: text(input.brief),
         blockedBy: Array.isArray(input.blockedBy) ? input.blockedBy as string[] : undefined,
@@ -475,8 +517,8 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       builderHint: z.string().nullable().optional(),
       status: z.enum(['ready', 'in_work', 'done', 'dropped']).optional(),
     },
-    (input, store) => ({
-      ticket: updateTicket(store, caller(), String(input.id), {
+    (input, store, who) => ({
+      ticket: updateTicket(store, who, String(input.id), {
         title: text(input.title),
         brief: text(input.brief),
         blockedBy: Array.isArray(input.blockedBy) ? input.blockedBy as string[] : undefined,
@@ -494,7 +536,7 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       mode: z.enum(['pack']).optional(),
       budgetBytes: z.number().int().min(CONTEXT_PACK_BUDGET_MIN).max(CONTEXT_PACK_BUDGET_MAX).optional(),
     },
-    (input, store) => proxyContextSearch(store, input),
+    (input, store, who) => proxyContextSearch(store, input, { caller: who }),
     true,
   ),
   dostigus_context_remember: tool(
@@ -505,7 +547,7 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       text: z.string().min(1).max(8192),
       idempotencyKey: z.string().min(1).max(128).optional(),
     },
-    (input, store) => proxyContextRemember(store, input),
+    (input, store, who) => proxyContextRemember(store, input, { caller: who }),
   ),
   dostigus_context_read: tool(
     'dostigus_context_read',
@@ -514,7 +556,7 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       projectId: projectId.optional(),
       id: z.string().min(1).max(220),
     },
-    (input, store) => proxyContextRead(store, input),
+    (input, store, who) => proxyContextRead(store, input, { caller: who }),
     true,
   ),
   dostigus_context_timeline: tool(
@@ -526,7 +568,7 @@ export const FACTORY_TOOL_SPECS: Record<FactoryToolName, PlatformToolSpec> = {
       until: z.string().optional(),
       limit: z.number().int().min(1).max(20).optional(),
     },
-    (input, store) => proxyContextTimeline(store, input),
+    (input, store, who) => proxyContextTimeline(store, input, { caller: who }),
     true,
   ),
 }

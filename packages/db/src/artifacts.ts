@@ -254,6 +254,9 @@ export function listOrphanArtifactIds(store: OpenedStore): string[] {
       AND NOT EXISTS (
         SELECT 1 FROM message_artifacts WHERE message_artifacts.artifact_id = artifacts.id
       )
+      AND NOT EXISTS (
+        SELECT 1 FROM task_artifacts WHERE task_artifacts.artifact_id = artifacts.id
+      )
   `).all() as { id: string }[]
   return rows.map((row) => row.id)
 }
@@ -265,6 +268,9 @@ export function listPendingArtifactIds(store: OpenedStore, now: number): string[
     WHERE status = 'complete'
       AND last_joined_at IS NULL
       AND created_at <= ?
+      AND NOT EXISTS (
+        SELECT 1 FROM task_artifacts WHERE task_artifacts.artifact_id = artifacts.id
+      )
   `).all(cutoff) as { id: string }[]
   return rows.map((row) => row.id)
 }

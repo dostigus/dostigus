@@ -1,5 +1,5 @@
 import type { FactoryCaller } from '@dostigus/db'
-import { AsyncLocalStorage } from 'node:async_hooks'
+import { createHash, timingSafeEqual } from 'node:crypto'
 
 /** Runtime shape on Nitro h3 v1 events. Toolkit H3Event types stay opaque. */
 type McpAuthContext = {
@@ -53,7 +53,8 @@ export function authorizeMcpAgent(
   if (!header.startsWith('Bearer ')) {
     return
   }
-  if (header.slice(7) === expectedToken) {
+  const given = header.slice('Bearer '.length)
+  if (bearerMatches(given, expectedToken)) {
     const ev = event as McpAuthContext
     ev.context ??= {}
     ev.context.agentOk = true
@@ -64,26 +65,22 @@ export function mcpToolsEnabled(event: unknown): boolean {
   return !!(event as McpAuthContext).context?.agentOk
 }
 
-const mcpCallerStorage = new AsyncLocalStorage<FactoryCaller>()
-
 export function bearerToken(authorizationHeader: string | undefined): string {
   const header = authorizationHeader || ''
-  return header.startsWith('Bearer ') ? header.slice(7) : ''
+  return header.startsWith('Bearer ') ? header.slice('Bearer '.length) : ''
+}
+
+/** SHA-256 then timingSafeEqual so token length does not leak. */
+export function bearerMatches(given: string, expected: string): boolean {
+  const left = createHash('sha256').update(given).digest()
+  const right = createHash('sha256').update(expected).digest()
+  return timingSafeEqual(left, right)
 }
 
 export function setMcpCaller(event: unknown, caller: FactoryCaller): void {
   const ev = event as McpAuthContext
   ev.context ??= {}
   ev.context.mcpCaller = caller
-  mcpCallerStorage.enterWith(caller)
-}
-
-export function runWithMcpCaller<T>(caller: FactoryCaller, fn: () => T): T {
-  return mcpCallerStorage.run(caller, fn)
-}
-
-export function currentMcpCaller(): FactoryCaller | undefined {
-  return mcpCallerStorage.getStore()
 }
 
 /** Factory tools. A Project token does not set agentOk. See ADR 0052. */
@@ -92,19 +89,12 @@ export function factoryToolsEnabled(event: unknown): boolean {
   return caller?.kind === 'owner' || caller?.kind === 'project'
 }
 
+/** Caller for this request. Nitro asyncContext keeps useEvent on this request only. */
 export function activeFactoryCaller(): FactoryCaller {
-  const fromStore = currentMcpCaller()
-  if (fromStore) {
-    return fromStore
+  const event = useEvent() as McpAuthContext
+  const caller = event.context?.mcpCaller
+  if (!caller) {
+    throw new Error('MCP caller is missing')
   }
-  try {
-    const event = useEvent() as McpAuthContext
-    const caller = event.context?.mcpCaller
-    if (caller) {
-      return caller
-    }
-  } catch {
-    // Unit tests have no Nitro event. The caller is the async store.
-  }
-  throw new Error('MCP caller is missing')
+  return caller
 }
