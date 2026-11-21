@@ -210,12 +210,25 @@ function ownerId(store: OpenedStore): string {
 }
 
 export function slugFromName(name: string): string {
-  const slug = name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 64)
+  let slug = ''
+  let hyphen = false
+  for (const char of name.trim().toLowerCase()) {
+    const alnum = (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')
+    if (!alnum) {
+      if (slug.length > 0) {
+        hyphen = true
+      }
+      continue
+    }
+    if (hyphen && slug.length < 64) {
+      slug += '-'
+    }
+    hyphen = false
+    if (slug.length >= 64) {
+      break
+    }
+    slug += char
+  }
   return assertSlug(slug)
 }
 

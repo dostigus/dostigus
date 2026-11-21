@@ -14,6 +14,7 @@ import {
   openStore,
   revokeProjectToken,
   setCommands,
+  slugFromName,
   StoreError,
   transitionTask,
   updateTicket,
@@ -35,6 +36,13 @@ afterEach(() => {
 })
 
 const owner = { kind: 'owner' as const }
+
+it('builds a slug without a backtracking hyphen pattern', () => {
+  expect(slugFromName('Dostigus Project')).toBe('dostigus-project')
+  expect(slugFromName('  Hello!! World  ')).toBe('hello-world')
+  expect(slugFromName(`${'a'.repeat(10)}${'-'.repeat(10_000)}b`)).toBe(`${'a'.repeat(10)}-b`)
+  expect(() => slugFromName('---')).toThrow(StoreError)
+})
 
 it('creates a Project, an Architect Bot, and a board of Tasks', () => {
   const store = memoryStore()
