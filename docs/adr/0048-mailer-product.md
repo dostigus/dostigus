@@ -14,6 +14,9 @@
   — do not invent extra allowlists or
   compliance machinery. Docs only. No
   Port.
+- Amended: 2026-11-21 — Mailer is frozen
+  ([ADR 0049](0049-dev-factory-direction.md)). The product below
+  stays. No new Mailer features.
 
 Pack format and Closet Import stay
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md).

@@ -6,8 +6,10 @@
   destroy is the ops split in
   [ADR 0043](0043-target-personas.md).
 
-Collective Host direction stays
-[ADR 0040](0040-collective-host-direction.md). One Owner per
+Product direction is [ADR 0049](0049-dev-factory-direction.md).
+The historical Collective Host direction was
+[ADR 0040](0040-collective-host-direction.md). This record's roles stay.
+One Owner per
 Cluster stays [ADR 0010](0010-owner-auth-session.md). Household
 Members stay [ADR 0012](0012-household-members.md). Threads and
 Bot visibility stay [ADR 0024](0024-threads-and-bot-visibility.md).

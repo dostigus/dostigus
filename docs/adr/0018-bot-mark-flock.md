@@ -2,6 +2,9 @@
 
 - Status: accepted
 - Date: 2026-09-22
+- Amended: 2026-11-21 — The `work` row said "Host Job surface".
+  Job is retired ([ADR 0049](0049-dev-factory-direction.md)). The row
+  now says Run. The motion is unchanged.
 
 ## Decision
 
@@ -53,7 +56,7 @@ pivots are set per part instead of relying on a default origin.
 | `idle` | slow breath, small head settle, rare blink | sidebar rows, Chat pill at rest |
 | `think` | bill up, long sway, gaze searching | Chat pill while a reply is in flight; pending Chat mark only when no key is set |
 | `reply` | jaw talks three syllables a cycle, head rides them, one wing flick | Chat pill as the reply lands |
-| `work` | steady flap | Kit only — no Host Job surface yet |
+| `work` | steady flap | Kit only — no Host Run surface yet |
 | `greet` | one nod and a wing wave, then still | Chat open, and the picked bird in the editor |
 | `listen` | leans in, gaze forward, slower blink | Chat composer focused |
 | `celebrate` | one hop and a wing cheer | Chat pill after the reply finishes |

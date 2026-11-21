@@ -1,13 +1,15 @@
 # ADR 0043: Target personas
 
-- Status: accepted
+- Status: superseded by [ADR 0049](0049-dev-factory-direction.md)
 - Date: 2026-10-01
 - Amended: 2026-10-01 — Case inbox + follow-up Wakes are
   [ADR 0044](0044-case-inbox-and-follow-up-wakes.md).
   This record still names the audiences and the
   should-next nodes.
 
-Collective Host direction stays
+Product direction is
+[ADR 0049](0049-dev-factory-direction.md), which supersedes this
+record. The historical direction was
 [ADR 0040](0040-collective-host-direction.md). Case stays
 [ADR 0041](0041-case-lite-on-thread.md). Admin and the share
 permission stay
@@ -24,6 +26,12 @@ external MCP client.
 Nick locked the decisions below on 2026-10-01.
 
 ## Decision
+
+> Superseded on 2026-11-21 by
+> [ADR 0049](0049-dev-factory-direction.md). The factory leads with Nick
+> as Owner-operator. A non-technical product owner and a small team come
+> later. Team 2–15 is not the roadmap lead. The text under this note is
+> the historical decision.
 
 The Host has **two primary audiences**. Both are primary.
 Product work **leads with type 2**. Type 1 is the same

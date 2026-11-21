@@ -28,6 +28,10 @@ export default antfu(
       'dist/**',
       // Vendored Taste v2 upstream. Keep its bytes identical to the source.
       '.cursor/skills/design-taste-frontend/**',
+      // Vendored mattpocock/skills (MIT). Upstream bytes stay identical.
+      // Dostigus text in that tree is README.md, NOTICE.md, and the
+      // to-tickets adaptation. See skills/NOTICE.md.
+      'skills/**',
     ],
   },
 )

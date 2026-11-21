@@ -3,10 +3,13 @@
 - Status: accepted
 - Date: 2026-10-01
 
-Collective Host direction stays
-[ADR 0040](0040-collective-host-direction.md). Case-lite stays
-[ADR 0041](0041-case-lite-on-thread.md). Audiences stay
-[ADR 0043](0043-target-personas.md). Personal Schedules stay
+Product direction is [ADR 0049](0049-dev-factory-direction.md).
+Case stays for plain Collective chats. The historical direction was
+[ADR 0040](0040-collective-host-direction.md). This record stays.
+Case-lite stays
+[ADR 0041](0041-case-lite-on-thread.md). Audiences in
+[ADR 0043](0043-target-personas.md) are superseded by
+[ADR 0049](0049-dev-factory-direction.md). Personal Schedules stay
 [ADR 0027](0027-bot-schedules.md). Threads stay
 [ADR 0024](0024-threads-and-bot-visibility.md). This record
 names the Case inbox filter and the Case follow-up Wake. It

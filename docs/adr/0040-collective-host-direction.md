@@ -1,6 +1,6 @@
 # ADR 0040: Collective Host product direction
 
-- Status: accepted
+- Status: superseded by [ADR 0049](0049-dev-factory-direction.md)
 - Date: 2026-10-01
 - Amended: 2026-10-01 — Case-lite Store shape, API, and glossary
   term **Case** are [ADR 0041](0041-case-lite-on-thread.md);
@@ -31,6 +31,12 @@ stay [ADR 0024](0024-threads-and-bot-visibility.md). Packs stay
 [ADR 0039](0039-pack-vs-bot-portable-recipe.md).
 
 ## Decision
+
+> Superseded as product direction on 2026-11-21 by
+> [ADR 0049](0049-dev-factory-direction.md). The Collective Host is not
+> the direction. Case remains for plain Collective chats. Kitchen and
+> Mailer are frozen. Roles, Threads, Marketplace, and the Mailer code
+> cited below stay. The text under this note is the historical decision.
 
 **Collective Host** is the product direction name. A Host serves a
 **Collective**: the 1…N people on one Cluster. A family, a startup,

@@ -1,6 +1,8 @@
 # Dostigus 🪿
 
-Self-host agent OS for a Collective — a family, a startup, or a small enterprise — with Bots, Chat, and Schedules on your machine. Not another chatbot UI.
+A cloud dev factory. The business sees Tasks, a Grill, proofs, and two buttons, Approve and Release. One Architect per Project runs the repo, the Builders, and the deploy. Direction: [`docs/vision.md`](docs/vision.md), [`docs/mvp.md`](docs/mvp.md), [ADR 0049](docs/adr/0049-dev-factory-direction.md).
+
+The Host that runs today is still Chat, Bots, and Dashboard on one Cluster. Projects and Runs are the next slices, not this checkout's behavior yet. Self-host compose remains possible. The factory's default is the cloud Host on de2.
 
 ![Kitchen Chat on the Host with Mail and Reader in the sidebar](docs/images/chat-system.png)
 
@@ -12,7 +14,7 @@ Self-host agent OS for a Collective — a family, a startup, or a small enterpri
 
 ## Why
 
-Grok Bot and OpenClaw-style desktop agents keep the loop on someone else’s box, or on a laptop that has to stay awake. Dostigus is the other shape: **your Host**, a SQLite **Store**, and **your** keys.
+The factory keeps the business on one Bot and the repo work on Builders, with a Grill before code and Gates before merge and deploy. The running Cluster is still **your Host**: a SQLite **Store** and **your** keys. Grok Bot can be the external Architect. It is not a second product.
 
 You run a **Cluster**. You add Members to your **Collective**. Bots talk through an **MCP surface** against that Store. You pick **Providers** — OpenRouter first, plus OpenAI and OpenAI-compatible — and bind **Model tiers** instead of baking a model list into the repo.
 
@@ -29,12 +31,13 @@ Day-1 the Host can **Export Pack** from a live Bot and **Apply** from a local fi
 - **Artifact** — a persisted Cluster file (upload or Bot put), joined onto a Chat line.
 - **Provider** — an Owner-connected LLM gateway instance (OpenRouter, OpenAI, or OpenAI-compatible).
 - **Model tier** — `cheap` / `strong` / `code` (plus `toy`): each binds to a Provider + Policy.
-- **Collective** — the Owner, Admins, and Members on one Cluster.
+- **Collective** — the Owner, Admins, and Members on one Cluster. Plain chats may carry a Case. Project work is a Task.
 - **MCP surface** — the tools a Bot (and the Host) use to read and write the Store.
+- **Project, Architect, Task, Builder, Run** — the factory nouns. Defined in [`CONTEXT.md`](CONTEXT.md). Not shipped in this Host yet.
 
 ## Quick start
 
-Self-host is the intended path:
+The factory runs at `dostigus.kosarev.space`. Self-host remains possible:
 
 ```bash
 docker compose -f docker/compose.yml up --build
@@ -62,7 +65,7 @@ Scope: [`docs/SPEC.md`](docs/SPEC.md). Glossary: [`CONTEXT.md`](CONTEXT.md). Dec
 
 ## Status
 
-Early. Self-host first. MIT.
+Early. Direction is the dev factory ([ADR 0049](docs/adr/0049-dev-factory-direction.md)). The cloud Host on de2 is the factory run. Compose remains possible. MIT.
 
 Day-1 Host **Export Pack** / **Apply** from file, public URL, or git (preview → Bot). Public Marketplace is the marketing-site catalog (Host out-link). Listings live in the Catalog Store on dostigus.ru; the Host does not pull a catalog and does not run that Store. Module packages as a Marketplace kind stay later. This Host already runs Chat, Skills, Schedules, Artifacts, and Collective Members. Do not read that as a store you browse and install. See [`docs/SPEC.md`](docs/SPEC.md).
 

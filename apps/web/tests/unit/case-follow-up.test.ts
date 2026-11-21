@@ -27,8 +27,11 @@ afterEach(async () => {
   }
 })
 
-const SET_AT = Date.parse('2026-10-01T10:00:00.000Z')
-const DUE_AT = Date.parse('2026-10-01T10:05:00.000Z')
+// finishTurn drops rows older than TURN_RETENTION_MS against wall-clock
+// Date.now(). A fixed October 2026 stamp is outside that window once the
+// suite runs later, so the due instant tracks the clock.
+const DUE_AT = Date.now()
+const SET_AT = DUE_AT - 5 * 60 * 1000
 
 function room(input: { label?: string, nextAction?: string } = {}) {
   const store = openStore('file::memory:')

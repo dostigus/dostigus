@@ -6,10 +6,18 @@
 2. Use glossary terms from [`CONTEXT.md`](CONTEXT.md) only.
    **Dostigus, Platform, Cluster, Owner, Member, Host, Chat, Card, Sheet, Kit,
    Brand, Sticker, Sheet shell, Bot, Pack, Marketplace, Orchestrator, Builder, Skill, Manifest,
-   Module package, Store, Catalog Store, Artifact, MCP surface, Job, Apply, LLM gateway,
-   Provider, Policy, Model tier, Household, Share link, Dashboard.**
+   Module package, Store, Catalog Store, Artifact, MCP surface, Run, Apply, LLM gateway,
+   Provider, Policy, Model tier, Household, Share link, Dashboard, Project, Architect,
+   Task, Ticket, Grill, Gate, Audit, Retro, Integration, Context.**
    Prefer **Host** (Host shell is a synonym). Prefer **MCP surface** (MCP
    contract is its interface definition). Pack ≠ Bot ≠ Module package.
+   **Job** is retired. A **Run** is one Stage. **Builder** is a cloud coding
+   agent the Architect starts (Cursor cloud agent or Codex), not a
+   Module-package writer. **Context** is the Architect's memory service
+   (a Dostigus instance; `NUXT_CONTEXT_URL`; the Host holds the area
+   token and proxies), not this glossary and not Chat LLM context.
+   **Case** is only for plain
+   Collective chats. Kitchen and Mailer are frozen.
    Closet Import accepts a file or a public `.zip` URL / https git
    (shallow), preview → confirm
    ([ADR 0039](docs/adr/0039-pack-vs-bot-portable-recipe.md)). Host
@@ -30,10 +38,19 @@
    catalog); deep-link Apply is `applyPack=`
    with the **cloud** mirror zip URL (preview stays 0039;
    handler is a follow-up). Avoid bare
-   “cloud agent” — use Builder.
+   “cloud agent” — use **Builder** when you mean the agent the Architect
+   starts. A Cursor cloud agent VM that is only editing this monorepo is
+   not, by that fact, a Builder.
    Do not invent synonyms. All repo docs are **English only**.
-3. Stay inside SPEC scope. Do not implement agent runtime, Meal port, Builder
-   Module-package writer, in-product Marketplace, Share link, or guests. Household
+   Direction: [ADR 0049](docs/adr/0049-dev-factory-direction.md),
+   [docs/vision.md](docs/vision.md), [docs/mvp.md](docs/mvp.md).
+3. Stay inside SPEC scope and [`docs/mvp.md`](docs/mvp.md). Do not start a
+   factory slice early. Do not add a custom agent-runtime framework; the
+   built-in Architect reuses the Chat tool loop
+   ([ADR 0011](docs/adr/0011-chat-mcp-tool-loop.md)) and is slice S7. The
+   external Architect (MCP, first) is the S1 path. Meal port, in-product
+   Marketplace, Share link, and guests stay out. A Builder does not write
+   Module packages. Kitchen and Mailer are frozen. Household
    Members on one Host are in scope
    ([ADR 0012](docs/adr/0012-household-members.md)): the Owner adds Members;
    Members use Bot list and Chat. Settings, Bot create/delete, and Members
@@ -684,7 +701,9 @@ and always blocks loopback, private, and link-local destinations
 ([ADR 0031](docs/adr/0031-host-http-get.md)). The Host process polls
 due Schedules. See [ADR 0027](docs/adr/0027-bot-schedules.md).
 
-Self-host compose (Store volume + published image): see [`docs/deploy.md`](docs/deploy.md).
+The factory runs as the cloud Host on de2
+([ADR 0049](docs/adr/0049-dev-factory-direction.md)). Self-host compose
+(Store volume + published image) remains possible: see [`docs/deploy.md`](docs/deploy.md).
 
 ```
 docker compose -f docker/compose.yml up --build
@@ -695,8 +714,8 @@ docker compose -f docker/compose.yml up --build
 Before finishing a pull request or a final report, include a short **Friction**
 section. The same requirement is in
 [`.cursor/rules/friction-report.mdc`](.cursor/rules/friction-report.mdc). It
-applies to every Cursor agent on this repo (a Platform git agent, distinct
-from Builder).
+applies to every Cursor agent on this repo, including a Builder the
+Orchestrator started and an agent editing the Platform by hand.
 
 Required bullets (write “none” when a bullet is empty):
 
